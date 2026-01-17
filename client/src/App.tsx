@@ -1,16 +1,79 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/use-auth";
+
 import NotFound from "@/pages/not-found";
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import MentorPortal from "@/pages/MentorPortal";
+import MenteeDetails from "@/pages/MenteeDetails";
+import Messages from "@/pages/Messages";
+import Admin from "@/pages/Admin";
+
+// Protected Route Wrapper
+function ProtectedRoute({ 
+  component: Component, 
+  allowedRoles 
+}: { 
+  component: React.ComponentType, 
+  allowedRoles?: string[] 
+}) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Redirect to="/dashboard" />; // Or unauthorized page
+  }
+
+  return <Component />;
+}
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
+      <Route path="/login" component={Login} />
+      
+      {/* Root redirect */}
+      <Route path="/">
+        {() => {
+           const { user } = useAuth();
+           if (!user) return <Redirect to="/login" />;
+           if (user.role === 'admin') return <Redirect to="/admin" />;
+           if (user.role === 'mentor') return <Redirect to="/mentor" />;
+           return <Redirect to="/dashboard" />;
+        }}
+      </Route>
+
+      <Route path="/dashboard">
+        <ProtectedRoute component={Dashboard} allowedRoles={['participant']} />
+      </Route>
+
+      <Route path="/mentor">
+        <ProtectedRoute component={MentorPortal} allowedRoles={['mentor', 'admin']} />
+      </Route>
+      
+      <Route path="/mentor/mentee/:id">
+        <ProtectedRoute component={MenteeDetails} allowedRoles={['mentor', 'admin']} />
+      </Route>
+
+      <Route path="/messages">
+        <ProtectedRoute component={Messages} />
+      </Route>
+
+      <Route path="/admin">
+        <ProtectedRoute component={Admin} allowedRoles={['admin']} />
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );
@@ -20,8 +83,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
         <Router />
+        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );
