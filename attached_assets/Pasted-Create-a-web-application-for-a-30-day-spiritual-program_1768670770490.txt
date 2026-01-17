@@ -1,0 +1,66 @@
+Create a web application for a 30-day spiritual program.
+
+User Roles:
+
+Participant: Can view daily prayers and submit answers.
+
+Mentor: Can view their assigned participants' progress and chat with them.
+
+Admin: Can create users, assign participants to mentors, and assign participants to 'Track A,' 'Track B,' or 'Track C.'
+
+Database Requirements:
+
+Create a 'Users' table with fields for: name, email, password, role, track_id, mentor_id, and start_date.
+
+Create a 'DailyContent' table with fields for: day_number, morning_scripture, morning_meditation, evening_catechism, evening_assignment, and is_reflection_day (boolean).
+
+Create a 'UserAnswers' table to store daily text responses from participants.
+
+Use a PostgreSQL database."
+
+Prompt 2: Time-Gating and Track Logic
+"Implement the individual 30-day progression logic.
+
+Time-Gating:
+
+Calculate a user's current day based on their 'start_date.'
+
+Users must only see content for their current day and all previous days.
+
+Future days (up to 30) must remain locked and unclickable.
+
+Track-Specific Content:
+
+On the daily dashboard, display a 'Weekly Requirements' sidebar. - If a user is Track A, show: 'Abstinence Fridays Only.' - If a user is Track B, show: 'Fasting Fridays and Sunday Rosary.' - If a user is Track C, show: 'Fasting Wednesdays and Fridays, Daily Rosary, and Weekly Holy Hour.' 
+
+
+
+Display these requirements based on the user's assigned track from the database."
+
+Prompt 3: The Daily Dashboard UI
+"Build the main dashboard for Participants.
+
+Structure: - Split the screen into two sections: 'Morning Prayer' and 'Evening Prayer.' - Morning Section: Show the Scripture and Meditation text. - Evening Section: Show the Catechism and Assignments. - Daily Questions: For Days 1-5 of each week, provide three text boxes for 'Questions to Consider.' - Day 6 Logic: Every 6th day, replace the questions with a single large text area for a 'Written Reflection.' 
+
+
+
+
+
+Visuals: Use a calm, professional design. Use serif fonts (like Playfair Display or Merriweather). Include a progress bar showing 'Day X of 30.'"
+
+Prompt 4: Mentor Portal and Chat
+"Create the Mentor interface and 1-on-1 chat system.
+
+Mentor Features:
+
+Mentors see a list of their assigned participants.
+
+Clicking a participant opens a 'Progress View' where the mentor can read all previously submitted daily answers and reflections.
+
+Chat System:
+
+Implement a private 1-on-1 message board between each Participant and their Mentor.
+
+Mentors should receive a visual notification (like a red dot) when a participant sends a new message.
+
+Participants can only chat with their assigned mentor."
