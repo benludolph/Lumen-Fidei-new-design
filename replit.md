@@ -38,8 +38,23 @@ The server uses a modular structure with separate files for routes, authenticati
 - `dailyContent`: 30 days of structured content including morningScriptureRef, morningScriptureText, morningMeditation, morningPrayer, eveningCatechismRef, eveningCatechism, eveningSummary, and eveningQuestions (JSON array)
 - `userAnswers`: Participant daily reflection submissions linked to user and day
 - `messages`: Chat messages between mentors and participants
-- `trackRequirements`: Week-by-week morning/evening prayer requirements for each track (A, B, C)
+- `trackRequirements`: Week-by-week morning/evening prayer requirements for each track (A, B, C). References practice names that match entries in practiceResources.
 - `prayerCompletions`: Tracks when users mark morning/evening prayers as complete. Has unique constraint on (userId, dayNumber, period) to prevent duplicates.
+- `practiceResources`: Full text content for prayers and practice instructions (Prayer Against Retaliation, Miracle Prayer, Examen, Lectio Divina, Silence, Rosary). Includes type (prayer/practice), duration, and order fields.
+
+### Week Structure
+- 5 weeks with 6 days each (30 days total)
+- Day 6 of each week is a reflection day (isReflectionDay=true)
+- Week 1 Theme: "God's Loving Plan for Humanity" - covers spiritual reality, angels/demons, Original Sin, heaven/hell/purgatory
+
+### Practice Resources Content
+The practiceResources table contains full content for:
+- **Prayer Against Retaliation**: Protection prayer for spiritual warfare
+- **Miracle Prayer**: Surrender and commitment to Christ
+- **Examen – St Ignatius**: 5-step daily reflection practice (10-15 min)
+- **Lectio Divina – 10 Minutes**: 4-movement Scripture prayer
+- **Silence – 5 Minutes**: Contemplative awareness practice
+- **Rosary – OP + 1 Decade**: Opening prayers plus one decade meditation
 
 ### Prayer Completion Tracking
 Users can mark morning and evening prayers as complete via buttons on the Dashboard. A day is considered "complete" when BOTH morning and evening prayers are marked. Progress is calculated based on days with both prayers completed.
