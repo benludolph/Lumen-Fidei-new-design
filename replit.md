@@ -34,10 +34,16 @@ The server uses a modular structure with separate files for routes, authenticati
 - **Migrations**: Drizzle Kit with `db:push` command for schema synchronization
 
 **Core Tables**:
-- `users`: Stores all user data with role (participant/mentor/admin), track assignment (A/B/C), mentor relationships, and start dates for time-gating
-- `dailyContent`: 30 days of morning scripture/meditation and evening catechism/assignments
+- `users`: Stores all user data with role (participant/mentor/admin), track assignment (A/B/C), mentor relationships, and start dates for time-gating. Passwords are hashed with bcrypt.
+- `dailyContent`: 30 days of structured content including morningScriptureRef, morningScriptureText, morningMeditation, morningPrayer, eveningCatechismRef, eveningCatechism, eveningSummary, and eveningQuestions (JSON array)
 - `userAnswers`: Participant daily reflection submissions linked to user and day
 - `messages`: Chat messages between mentors and participants
+- `trackRequirements`: Week-by-week morning/evening prayer requirements for each track (A, B, C)
+
+### Security
+- Passwords are hashed using bcryptjs before storage
+- API responses are sanitized to never expose password hashes
+- Session-based authentication with secure cookies
 
 ### Time-Gating Logic
 User progress is calculated from their `startDate` field. Current day = difference between now and start date + 1, clamped between 1 and 30. Users can only access content for their current day and previous days.
