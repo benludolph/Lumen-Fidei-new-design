@@ -120,9 +120,10 @@ export default function Dashboard() {
                     <Card>
                       <CardHeader>
                         <CardTitle className="font-serif">Scripture</CardTitle>
+                        <p className="text-sm text-muted-foreground">{dayContent.morningScriptureRef}</p>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
-                        {dayContent.morningScripture}
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic">
+                        "{dayContent.morningScriptureText}"
                       </CardContent>
                     </Card>
                     
@@ -130,25 +131,65 @@ export default function Dashboard() {
                       <CardHeader>
                         <CardTitle className="font-serif">Meditation</CardTitle>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
                         {dayContent.morningMeditation}
                       </CardContent>
                     </Card>
+                    
+                    {dayContent.morningPrayer && (
+                      <Card className="bg-primary/5 border-primary/20">
+                        <CardHeader>
+                          <CardTitle className="font-serif">Closing Prayer</CardTitle>
+                        </CardHeader>
+                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic whitespace-pre-wrap">
+                          {dayContent.morningPrayer}
+                        </CardContent>
+                      </Card>
+                    )}
                   </TabsContent>
                   
                   <TabsContent value="evening" className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                      <Card>
                       <CardHeader>
                         <CardTitle className="font-serif">Catechism</CardTitle>
+                        {dayContent.eveningCatechismRef && (
+                          <p className="text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
+                        )}
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
                         {dayContent.eveningCatechism}
                       </CardContent>
                     </Card>
                     
+                    {dayContent.eveningSummary && (
+                      <Card className="bg-secondary/50">
+                        <CardHeader>
+                          <CardTitle className="font-serif text-lg">Summary of Key Concepts</CardTitle>
+                        </CardHeader>
+                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                          {dayContent.eveningSummary}
+                        </CardContent>
+                      </Card>
+                    )}
+                    
+                    {dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
+                      <Card className="border-primary/20">
+                        <CardHeader>
+                          <CardTitle className="font-serif">Questions to Consider</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ol className="list-decimal pl-4 space-y-3 text-muted-foreground">
+                            {(dayContent.eveningQuestions as string[]).map((q, idx) => (
+                              <li key={idx} className="leading-relaxed">{q}</li>
+                            ))}
+                          </ol>
+                        </CardContent>
+                      </Card>
+                    )}
+                    
                     <AssignmentSection 
                       day={selectedDay} 
-                      prompt={dayContent.eveningAssignment} 
+                      prompt="Reflect on today's readings and answer the questions above in your own words."
                       existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
                     />
                   </TabsContent>

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -19,11 +19,32 @@ export const users = pgTable("users", {
 export const dailyContent = pgTable("daily_content", {
   id: serial("id").primaryKey(),
   dayNumber: integer("day_number").notNull().unique(),
-  morningScripture: text("morning_scripture").notNull(),
-  morningMeditation: text("morning_meditation").notNull(),
-  eveningCatechism: text("evening_catechism").notNull(),
-  eveningAssignment: text("evening_assignment").notNull(),
-  isReflectionDay: boolean("is_reflection_day").default(false).notNull(),
+  weekNumber: integer("week_number").notNull(), // 1-5
+  weekTitle: text("week_title").notNull(), // e.g., "God's Loving Plan for Humanity"
+  
+  // Morning content
+  morningScriptureRef: text("morning_scripture_ref").notNull(), // e.g., "John 14:23"
+  morningScriptureText: text("morning_scripture_text").notNull(), // The actual verse
+  morningMeditation: text("morning_meditation").notNull(), // Reflection text
+  morningPrayer: text("morning_prayer"), // Optional closing prayer
+  
+  // Evening content  
+  eveningCatechismRef: text("evening_catechism_ref"), // e.g., "CCC #214-227"
+  eveningCatechism: text("evening_catechism").notNull(), // Catechism content
+  eveningSummary: text("evening_summary"), // Summary of key concepts
+  eveningQuestions: json("evening_questions").$type<string[]>(), // Reflection questions as JSON array
+  
+  isReflectionDay: boolean("is_reflection_day").default(false).notNull(), // Day 6 of each week
+});
+
+// Track-specific requirements by week
+export const trackRequirements = pgTable("track_requirements", {
+  id: serial("id").primaryKey(),
+  track: text("track", { enum: ["A", "B", "C"] }).notNull(),
+  weekNumber: integer("week_number").notNull(), // 1-5
+  morningPractices: json("morning_practices").$type<string[]>().notNull(), // e.g., ["Prayer Against Retaliation", "Miracle Prayer"]
+  eveningPractices: json("evening_practices").$type<string[]>().notNull(), // e.g., ["Examen – St Ignatius", "Lectio Divina – 10 Minutes"]
+  additionalRequirements: json("additional_requirements").$type<string[]>(), // e.g., ["Abstinence Fridays Only", "Monthly Confession"]
 });
 
 export const userAnswers = pgTable("user_answers", {
@@ -80,9 +101,16 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 // === BASE SCHEMAS ===
 
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
-export const insertDailyContentSchema = createInsertSchema(dailyContent).omit({ id: true });
+export const insertDailyContentSchema = createInsertSchema(dailyContent, {
+  eveningQuestions: z.array(z.string()).optional().nullable(),
+}).omit({ id: true });
 export const insertUserAnswerSchema = createInsertSchema(userAnswers).omit({ id: true, createdAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, isRead: true, createdAt: true });
+export const insertTrackRequirementsSchema = createInsertSchema(trackRequirements, {
+  morningPractices: z.array(z.string()),
+  eveningPractices: z.array(z.string()),
+  additionalRequirements: z.array(z.string()).optional().nullable(),
+}).omit({ id: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -97,6 +125,9 @@ export type InsertUserAnswer = z.infer<typeof insertUserAnswerSchema>;
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+export type TrackRequirement = typeof trackRequirements.$inferSelect;
+export type InsertTrackRequirement = z.infer<typeof insertTrackRequirementsSchema>;
 
 // Request/Response types
 
@@ -118,3 +149,6 @@ export type AnswerResponse = UserAnswer;
 // Chat
 export type SendMessageRequest = { receiverId: number; content: string };
 export type MessageResponse = Message & { senderName?: string }; // Enriched with sender name
+
+// Track Requirements
+export type TrackRequirementResponse = TrackRequirement;

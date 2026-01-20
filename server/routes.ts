@@ -1,9 +1,20 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth } from "./auth";
+import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import type { User } from "@shared/schema";
+
+// Helper to strip sensitive fields from user objects
+function sanitizeUser(user: User): Omit<User, 'password'> {
+  const { password, ...safeUser } = user;
+  return safeUser;
+}
+
+function sanitizeUsers(users: User[]): Omit<User, 'password'>[] {
+  return users.map(sanitizeUser);
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -16,26 +27,34 @@ export async function registerRoutes(
   
   app.get(api.users.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    // Only admin or mentors can view list
-    if (req.user!.role === 'participant') return res.sendStatus(403);
 
     const role = req.query.role as "participant" | "mentor" | undefined;
+    
+    // Participants can only see their own mentor
+    if (req.user!.role === 'participant') {
+      if (req.user!.mentorId) {
+        const mentor = await storage.getUser(req.user!.mentorId);
+        if (mentor) {
+          return res.json(sanitizeUsers([mentor]));
+        }
+      }
+      return res.json([]);
+    }
     
     // Mentors only see their own mentees
     if (req.user!.role === 'mentor') {
       const allUsers = await storage.getAllUsers();
       const mentees = allUsers.filter(u => u.mentorId === req.user!.id);
-      return res.json(mentees);
+      return res.json(sanitizeUsers(mentees));
     }
     
     // Admin sees all
     if (role) {
       const users = await storage.getUsersByRole(role);
-      res.json(users);
+      res.json(sanitizeUsers(users));
     } else {
       const users = await storage.getAllUsers();
-      res.json(users);
+      res.json(sanitizeUsers(users));
     }
   });
 
@@ -60,8 +79,13 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Email already taken" });
       }
       
-      const user = await storage.createUser(input);
-      res.status(201).json(user);
+      // Hash the password before storing
+      const hashedPassword = await hashPassword(input.password);
+      const user = await storage.createUser({
+        ...input,
+        password: hashedPassword
+      });
+      res.status(201).json(sanitizeUser(user));
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });
@@ -77,7 +101,7 @@ export async function registerRoutes(
     const input = api.users.update.input.parse(req.body);
     
     const updated = await storage.updateUser(userId, input);
-    res.json(updated);
+    res.json(sanitizeUser(updated));
   });
 
   // === Content ===
@@ -193,6 +217,51 @@ export async function registerRoutes(
     
     res.status(201).json(message);
   });
+
+  // === Track Requirements ===
+  
+  app.get(api.trackRequirements.list.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const track = req.params.track as "A" | "B" | "C";
+    const reqs = await storage.getAllTrackRequirements(track);
+    res.json(reqs);
+  });
+
+  app.get(api.trackRequirements.get.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const track = req.params.track as "A" | "B" | "C";
+    const week = Number(req.params.week);
+    const req_ = await storage.getTrackRequirements(track, week);
+    if (!req_) return res.status(404).json({ message: "Requirements not found" });
+    res.json(req_);
+  });
+
+  // === Admin Routes ===
+
+  app.post(api.admin.createContent.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const input = api.admin.createContent.input.parse(req.body);
+    const content = await storage.upsertDailyContent(input);
+    res.status(201).json(content);
+  });
+
+  app.delete(api.admin.deleteUser.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const userId = Number(req.params.id);
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    await storage.deleteUser(userId);
+    res.json({ message: "User deleted" });
+  });
   
   // Seed Data
   await seed();
@@ -201,71 +270,208 @@ export async function registerRoutes(
 }
 
 async function seed() {
-    const existing = await storage.getAllDailyContent();
-    if (existing.length > 0) return;
-    
-    console.log("Seeding daily content...");
-    
-    // Create Admin if not exists
+    // Seed users if needed
     const users = await storage.getAllUsers();
     if (users.length === 0) {
+        console.log("Seeding users...");
+        
+        // Hash passwords for security
+        const adminHash = await hashPassword("admin");
+        const passwordHash = await hashPassword("password");
+        
         await storage.createUser({
             name: "Admin User",
             email: "admin@example.com",
-            password: "admin", // In real app, hash this
+            password: adminHash,
             role: "admin",
             startDate: new Date(),
         });
         
-        // Create a Mentor
-         const mentor = await storage.createUser({
+        const mentor = await storage.createUser({
             name: "Mentor Mike",
             email: "mentor@example.com",
-            password: "password",
+            password: passwordHash,
             role: "mentor",
             startDate: new Date(),
         });
         
-        // Create a Participant
         await storage.createUser({
             name: "Participant Paul",
             email: "paul@example.com",
-            password: "password",
+            password: passwordHash,
             role: "participant",
             track: "A",
             mentorId: mentor.id,
-            startDate: new Date(), // Starts today
+            startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // Started 3 days ago
         });
     }
 
-    const scriptures = [
-        "Genesis 1:1 - In the beginning God created the heavens and the earth.",
-        "Psalm 23:1 - The Lord is my shepherd; I shall not want.",
-        "John 3:16 - For God so loved the world...",
-        "Romans 8:28 - And we know that in all things God works for the good...",
-        "Philippians 4:13 - I can do all things through Christ who strengthens me.",
-        "Jeremiah 29:11 - For I know the plans I have for you..." // Day 6
-    ];
+    // Seed track requirements if needed
+    const existingReqs = await storage.getAllTrackRequirements("A");
+    if (existingReqs.length === 0) {
+        console.log("Seeding Track A requirements...");
+        
+        // Track A Week 1
+        await storage.createTrackRequirement({
+            track: "A",
+            weekNumber: 1,
+            morningPractices: ["Prayer Against Retaliation", "Miracle Prayer"],
+            eveningPractices: ["Examen – St Ignatius", "Lectio Divina – 10 Minutes"],
+            additionalRequirements: ["Abstinence Fridays Only", "Monthly Confession, or as Needed"]
+        });
+        
+        // Track A Week 2
+        await storage.createTrackRequirement({
+            track: "A",
+            weekNumber: 2,
+            morningPractices: ["Prayer Against Retaliation", "Miracle Prayer"],
+            eveningPractices: ["Examen – St Ignatius", "Silence – 5 Minutes", "Lectio Divina – 10 Minutes"],
+            additionalRequirements: ["Abstinence Fridays Only", "Monthly Confession, or as Needed"]
+        });
+        
+        // Track A Week 3
+        await storage.createTrackRequirement({
+            track: "A",
+            weekNumber: 3,
+            morningPractices: ["Prayer Against Retaliation", "Miracle Prayer"],
+            eveningPractices: ["Examen – St Ignatius", "Silence – 5 Minutes", "Lectio Divina – 10 Minutes"],
+            additionalRequirements: ["Abstinence Fridays Only", "Monthly Confession, or as Needed"]
+        });
+        
+        // Track A Week 4
+        await storage.createTrackRequirement({
+            track: "A",
+            weekNumber: 4,
+            morningPractices: ["Prayer Against Retaliation", "Miracle Prayer", "Silence – 5 Minutes", "Lectio Divina – 10 Minutes"],
+            eveningPractices: ["Rosary – OP + 1 Decade", "Examen – St Ignatius"],
+            additionalRequirements: ["Abstinence Fridays Only", "Monthly Confession, or as Needed"]
+        });
+        
+        // Track A Week 5
+        await storage.createTrackRequirement({
+            track: "A",
+            weekNumber: 5,
+            morningPractices: ["Prayer Against Retaliation", "Miracle Prayer", "Silence – 5 Minutes", "Lectio Divina – 10 Minutes"],
+            eveningPractices: ["Rosary – OP + 1 Decade", "Examen – St Ignatius"],
+            additionalRequirements: ["Abstinence Fridays Only", "Monthly Confession, or as Needed"]
+        });
+    }
+
+    // Seed daily content if needed
+    const existing = await storage.getAllDailyContent();
+    if (existing.length === 0) {
+        console.log("Seeding daily content...");
+        
+        const weekTitles = [
+            "God's Loving Plan for Humanity",
+            "Understanding God's Love",
+            "Walking in Faith",
+            "Prayer and Devotion",
+            "Living Your Calling"
+        ];
+        
+        // First, seed placeholder content for all 30 days
+        for (let i = 1; i <= 30; i++) {
+            const weekNumber = Math.ceil(i / 6);
+            const isReflection = i % 6 === 0;
+            
+            await storage.createDailyContent({
+                dayNumber: i,
+                weekNumber: weekNumber,
+                weekTitle: weekTitles[weekNumber - 1],
+                morningScriptureRef: `Scripture Reference - Day ${i}`,
+                morningScriptureText: `Scripture text for Day ${i} will be added.`,
+                morningMeditation: `Morning meditation for Day ${i} will be added.`,
+                morningPrayer: null,
+                eveningCatechismRef: `CCC Reference - Day ${i}`,
+                eveningCatechism: `Catechism content for Day ${i} will be added.`,
+                eveningSummary: null,
+                eveningQuestions: null,
+                isReflectionDay: isReflection
+            });
+        }
+        
+        // Now update Day 1 with the actual content from the document
+        await storage.upsertDailyContent({
+            dayNumber: 1,
+            weekNumber: 1,
+            weekTitle: "God's Loving Plan for Humanity",
+            morningScriptureRef: "John 14:23",
+            morningScriptureText: "Jesus said to His disciples: \"Whoever loves Me will keep My word, and My Father will love him, and We will come to him and make Our dwelling with him.\"",
+            morningMeditation: `Do you want our Lord to come to you and dwell within the depths of your soul? Presumably the answer is an easy "Yes." The way to make this happen is to love God and keep His word. When you do that, the Blessed Trinity will come and dwell within you.
+
+It's interesting that the love of God appears to be contingent upon our love of Him. In other words, does God only love us when we love Him first? Strictly speaking, God loves us with a perfect love regardless of whether we love Him or not. But with that said, love takes on a whole new form when it is received and reciprocated. Therefore, when we choose to love God we suddenly realize that our love of Him opens the door for Him to come and dwell within us, transforming us and making our heart His holy sanctuary. What a glorious gift!
+
+It's also interesting to note that love of God means, in part, that we are obedient to Him. But that's the nature of God. He is Love itself and, therefore, loving Him necessarily involves a complete submission of your will to His. Perfect obedience to Him in all things is a powerful way of loving Him. It's a way of allowing Him to dwell within you and, in that act, to take over your will. Only then can you love Him even more fully with your whole being.
+
+Reflect, today, especially upon your desire to have the Most Holy Trinity come and dwell within your soul. This should be the primary goal of our lives. If God lives within us then all else in life will fall into place. All things will work for the good and God will be glorified in and through us. Make the choice to love Him through your obedience this day, and your relationship of love will grow by leaps and bounds.`,
+            morningPrayer: `Lord, I do love You and desire to love You in a more perfect way this day. Help me to submit to Your perfect will in all things. Help me to embrace perfect obedience to You always. In that act of love and submission, come and make Your dwelling within me. Jesus, I trust in You.
+
+—Philip Neri`,
+            eveningCatechismRef: "CCC #214-227",
+            eveningCatechism: `THE PROFESSION OF THE CHRISTIAN FAITH
+
+God, "He Who Is", Is Truth and Love
+
+God, "HE WHO IS", revealed himself to Israel as the One "abounding in steadfast love and faithfulness". These two terms express summarily the riches of the divine name. In all His works God displays, not only His kindness, goodness, grace and steadfast love, but also His trustworthiness, constancy, faithfulness and truth. "I give thanks to Your name for Your steadfast love and Your faithfulness." He is the Truth, for "God is light and in Him there is no darkness"; "God is love", as the apostle John teaches.
+
+God Is Truth
+
+"The sum of Your word is truth; and every one of Your righteous ordinances endures forever." "And now, O LORD God, You are God, and Your words are true"; this is why God's promises always come true. God is Truth itself, whose words cannot deceive. This is why one can abandon oneself in full trust to the truth and faithfulness of His Word in all things. The beginning of sin and of man's fall was due to a lie of the tempter who induced doubt of God's Word, kindness and faithfulness.
+
+God's truth is His wisdom, which commands the whole created order and governs the world. God, who alone made heaven and earth, can alone impart true knowledge of every created thing in relation to Himself.
+
+God is also truthful when he reveals Himself—the teaching that comes from God is "true instruction." When He sends His Son into the world it will be "to bear witness to the truth": "We know that the Son of God has come and has given us understanding, to know Him who is true."
+
+God is Love
+
+In the course of its history, Israel was able to discover that God had only one reason to reveal Himself to them, a single motive for choosing them from among all peoples as His special possession: His sheer gratuitous love. And thanks to the prophets Israel understood that it was again out of love that God never stopped saving them and pardoning their unfaithfulness and sins.
+
+God's love for Israel is compared to a father's love for his son. His love for His people is stronger than a mother's for her children. God loves His people more than a bridegroom his beloved; His love will be victorious over even the worst infidelities and will extend to His most precious gift: "God so loved the world that He gave His only Son."
+
+God's love is "everlasting": "For the mountains may depart and the hills be removed, but My steadfast love shall not depart from you." Through Jeremiah, God declares to His people, "I have loved you with an everlasting love; therefore I have continued my faithfulness to you."
+
+But St. John goes even further when he affirms that "God is love." God's very being is love. By sending His only Son and the Spirit of Love in the fullness of time, God has revealed His innermost secret: God Himself is an eternal exchange of love, Father, Son and Holy Spirit, and He has destined us to share in that exchange.
+
+The Implications of Faith in One God
+
+Believing in God, the only One, and loving Him with all our being has enormous consequences for our whole life.
+
+It means coming to know God's greatness and majesty: "Behold, God is great, and we know Him not." Therefore, we must "serve God first."
+
+It means living in thanksgiving: if God is the only One, everything we are and have comes from Him: "What have you that you did not receive?" "What shall I render to the LORD for all His bounty to me?"
+
+It means knowing the unity and true dignity of all men: everyone is made in the image and likeness of God.
+
+It means making good use of created things: faith in God, the only One, leads us to use everything that is not God only insofar as it brings us closer to Him, and to detach ourselves from it insofar as it turns us away from Him:
+
+My Lord and my God, take from me everything that distances me from You.
+My Lord and my God, give me everything that brings me closer to You.
+My Lord and my God, detach me from myself to give my all to You.
+
+It means trusting God in every circumstance, even in adversity. A prayer of St. Teresa of Jesus wonderfully expresses this trust:
+
+Let nothing trouble you. Let nothing frighten you.
+Everything passes. God never changes.
+Patience obtains all.
+Whoever has God wants for nothing.
+God alone is enough.`,
+            eveningSummary: `God's Nature: God is love and truth and He wills our good. He is trustworthy and faithful and continually showers His mercy upon His children despite our unfaithfulness.
+
+The Holy Trinity: The one true God is triune with three distinct persons, the Father, the Son, and the Holy Spirit. When we obey God's laws, Christ dwells in our hearts through the power of the Holy Spirit as granted through the Father's glory (Eph 3: 14–19).
+
+God's Love for All Creation: God's love is perfect and everlasting. It is far greater than the love that any human can offer. It is sacrificial and is made manifest in the offering of His only son, Jesus, to die on the cross to atone for our sins and to bring us to salvation.
+
+Misconceptions About God: People often believe that we must earn God's love. In fact, God's love is steadfast and always available to us, but we must be willing to repent of our sins and make our hearts a suitable home for Him so He can guide us in all things.`,
+            eveningQuestions: [
+                "Am I obeying all of God's commandments or do I sometimes choose to follow my will rather than His?",
+                "Do I love God above all things and all people? If not, what or who have I placed before God in my heart? (e.g. money, power, beauty, spouse, children)",
+                "Do I trust God in all circumstances of my life? If not, why not?",
+                "What can I do to make my heart and soul a more fit dwelling place for God?"
+            ],
+            isReflectionDay: false
+        });
+    }
     
-    const meditations = [
-        "Reflect on the power of creation in your own life.",
-        "Consider how God guides you daily.",
-        "Meditate on the depth of God's love.",
-        "Trust in the greater plan.",
-        "Find strength in your faith today.",
-        "Write a reflection on your first week."
-    ];
-
-    for (let i = 1; i <= 30; i++) {
-        const isReflection = i % 6 === 0;
-        await storage.createDailyContent({
-            dayNumber: i,
-            morningScripture: scriptures[(i-1) % scriptures.length],
-            morningMeditation: meditations[(i-1) % meditations.length],
-            eveningCatechism: `Catechism lesson for Day ${i}.`,
-            eveningAssignment: isReflection ? "Weekly Reflection" : `Complete the daily assignment for Day ${i}.`,
-            isReflectionDay: isReflection
-        });
-    }
     console.log("Seeding complete.");
 }

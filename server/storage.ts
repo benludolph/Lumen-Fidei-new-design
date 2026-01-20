@@ -1,10 +1,11 @@
 import { db } from "./db";
 import {
-  users, dailyContent, userAnswers, messages,
+  users, dailyContent, userAnswers, messages, trackRequirements,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
-  type Message, type InsertMessage
+  type Message, type InsertMessage,
+  type TrackRequirement, type InsertTrackRequirement
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc } from "drizzle-orm";
 
@@ -16,11 +17,18 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
 
   // Daily Content
   getDailyContent(dayNumber: number): Promise<DailyContent | undefined>;
   getAllDailyContent(): Promise<DailyContent[]>;
   createDailyContent(content: InsertDailyContent): Promise<DailyContent>;
+  upsertDailyContent(content: InsertDailyContent): Promise<DailyContent>;
+
+  // Track Requirements
+  getTrackRequirements(track: "A" | "B" | "C", weekNumber: number): Promise<TrackRequirement | undefined>;
+  getAllTrackRequirements(track: "A" | "B" | "C"): Promise<TrackRequirement[]>;
+  createTrackRequirement(req: InsertTrackRequirement): Promise<TrackRequirement>;
 
   // Answers
   getUserAnswers(userId: number): Promise<UserAnswer[]>;
@@ -29,6 +37,7 @@ export interface IStorage {
   // Chat
   getMessages(user1Id: number, user2Id: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  markMessagesAsRead(senderId: number, receiverId: number): Promise<void>;
   
   // session store
   sessionStore: any;
@@ -69,6 +78,10 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
   // Daily Content
   async getDailyContent(dayNumber: number): Promise<DailyContent | undefined> {
     const [content] = await db.select().from(dailyContent).where(eq(dailyContent.dayNumber, dayNumber));
@@ -82,6 +95,36 @@ export class DatabaseStorage implements IStorage {
   async createDailyContent(content: InsertDailyContent): Promise<DailyContent> {
     const [newContent] = await db.insert(dailyContent).values(content).returning();
     return newContent;
+  }
+
+  async upsertDailyContent(content: InsertDailyContent): Promise<DailyContent> {
+    const existing = await this.getDailyContent(content.dayNumber);
+    if (existing) {
+      const [updated] = await db.update(dailyContent)
+        .set(content)
+        .where(eq(dailyContent.dayNumber, content.dayNumber))
+        .returning();
+      return updated;
+    }
+    return this.createDailyContent(content);
+  }
+
+  // Track Requirements
+  async getTrackRequirements(track: "A" | "B" | "C", weekNumber: number): Promise<TrackRequirement | undefined> {
+    const [req] = await db.select().from(trackRequirements)
+      .where(and(eq(trackRequirements.track, track), eq(trackRequirements.weekNumber, weekNumber)));
+    return req;
+  }
+
+  async getAllTrackRequirements(track: "A" | "B" | "C"): Promise<TrackRequirement[]> {
+    return await db.select().from(trackRequirements)
+      .where(eq(trackRequirements.track, track))
+      .orderBy(asc(trackRequirements.weekNumber));
+  }
+
+  async createTrackRequirement(req: InsertTrackRequirement): Promise<TrackRequirement> {
+    const [newReq] = await db.insert(trackRequirements).values(req).returning();
+    return newReq;
   }
 
   // Answers
@@ -113,6 +156,12 @@ export class DatabaseStorage implements IStorage {
   async createMessage(message: InsertMessage): Promise<Message> {
     const [newMessage] = await db.insert(messages).values(message).returning();
     return newMessage;
+  }
+
+  async markMessagesAsRead(senderId: number, receiverId: number): Promise<void> {
+    await db.update(messages)
+      .set({ isRead: true })
+      .where(and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)));
   }
 }
 

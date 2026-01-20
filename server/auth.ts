@@ -3,12 +3,30 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { type Express } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
-import type { User } from "@shared/schema";
+import { type User as SchemaUser } from "@shared/schema";
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
 
 declare global {
   namespace Express {
-    interface User extends import("@shared/schema").User {}
+    interface User {
+      id: number;
+      name: string;
+      email: string;
+      password: string;
+      role: "participant" | "mentor" | "admin";
+      track: "A" | "B" | "C" | null;
+      mentorId: number | null;
+      startDate: Date | null;
+    }
   }
 }
 
@@ -47,9 +65,18 @@ export function setupAuth(app: Express) {
         if (!user) {
           return done(null, false, { message: "Incorrect email." });
         }
-        // Simple password check (in production, use bcrypt)
-        if (user.password !== password) {
-          return done(null, false, { message: "Incorrect password." });
+        // Check password - support both hashed and plain text for demo
+        const isValidHash = user.password.startsWith('$2');
+        if (isValidHash) {
+          const isValid = await verifyPassword(password, user.password);
+          if (!isValid) {
+            return done(null, false, { message: "Incorrect password." });
+          }
+        } else {
+          // Plain text comparison for demo accounts
+          if (user.password !== password) {
+            return done(null, false, { message: "Incorrect password." });
+          }
         }
         return done(null, user);
       } catch (err) {

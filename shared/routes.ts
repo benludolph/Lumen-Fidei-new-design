@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, users, dailyContent, userAnswers, messages } from './schema';
+import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, users, dailyContent, userAnswers, messages, trackRequirements } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -132,6 +132,44 @@ export const api = {
       },
     },
   },
+  trackRequirements: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/track-requirements/:track/:week',
+      responses: {
+        200: z.custom<typeof trackRequirements.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    list: {
+      method: 'GET' as const,
+      path: '/api/track-requirements/:track',
+      responses: {
+        200: z.array(z.custom<typeof trackRequirements.$inferSelect>()),
+      },
+    },
+  },
+  admin: {
+    createContent: {
+      method: 'POST' as const,
+      path: '/api/admin/content',
+      input: insertDailyContentSchema,
+      responses: {
+        201: z.custom<typeof dailyContent.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
+    deleteUser: {
+      method: 'DELETE' as const,
+      path: '/api/users/:id',
+      responses: {
+        200: z.object({ message: z.string() }),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
@@ -149,3 +187,7 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
 // Type exports
 export type LoginRequest = z.infer<typeof api.auth.login.input>;
 export type User = typeof users.$inferSelect;
+export type SendMessageRequest = z.infer<typeof api.chat.send.input>;
+export type CreateUserRequest = z.infer<typeof api.users.create.input>;
+export type UpdateUserRequest = z.infer<typeof api.users.update.input>;
+export type CreateAnswerRequest = z.infer<typeof api.answers.create.input>;

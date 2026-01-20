@@ -19,15 +19,11 @@ export default function Messages() {
   const initialUserId = searchParams.get('user');
 
   // Logic: 
-  // If participant -> can only chat with Mentor
-  // If mentor -> can chat with all assigned mentees
+  // If participant -> can only chat with Mentor (API returns just their mentor)
+  // If mentor -> can chat with all assigned mentees (API returns their mentees)
   
-  const { data: participants } = useUsers(user?.role === 'participant' ? 'mentor' : 'participant');
-  
-  // Filter contacts based on role
-  const contacts = user?.role === 'participant' 
-    ? participants?.filter(u => u.id === user.mentorId) 
-    : participants?.filter(u => u.mentorId === user?.id);
+  // API returns filtered list based on user's role - participants get their mentor, mentors get their mentees
+  const { data: contacts } = useUsers();
 
   const [selectedContactId, setSelectedContactId] = useState<number | null>(
     initialUserId ? Number(initialUserId) : (contacts?.[0]?.id || null)
