@@ -39,6 +39,25 @@ The server uses a modular structure with separate files for routes, authenticati
 - `userAnswers`: Participant daily reflection submissions linked to user and day
 - `messages`: Chat messages between mentors and participants
 - `trackRequirements`: Week-by-week morning/evening prayer requirements for each track (A, B, C)
+- `prayerCompletions`: Tracks when users mark morning/evening prayers as complete. Has unique constraint on (userId, dayNumber, period) to prevent duplicates.
+
+### Prayer Completion Tracking
+Users can mark morning and evening prayers as complete via buttons on the Dashboard. A day is considered "complete" when BOTH morning and evening prayers are marked. Progress is calculated based on days with both prayers completed.
+
+### Admin Progress Dashboard
+Admins have a "Progress" tab showing all participants with:
+- Current day in program (1-30)
+- Days completed (both prayers marked)
+- Progress bar visualization
+- Today's morning/evening completion status
+- Assigned mentor name
+
+### Mobile Responsive Design
+Dashboard is fully responsive with:
+- Collapsible day selector grid on mobile
+- Stacked layout (morning above evening) on small screens
+- Collapsible track requirements panel
+- Tested at 400px viewport width
 
 ### Security
 - Passwords are hashed using bcryptjs before storage
