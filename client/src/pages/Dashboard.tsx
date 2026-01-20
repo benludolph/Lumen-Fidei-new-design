@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useDailyContent, useAllContent } from "@/hooks/use-content";
 import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
 import { useUserPrayerCompletions, useMarkPrayerComplete, useUnmarkPrayerComplete } from "@/hooks/use-prayer-completions";
+import { useTrackRequirements, usePracticeResources } from "@/hooks/use-track-requirements";
 import { Shell } from "@/components/layout/Shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, BookOpen, Clock } from "lucide-react";
 import { useState, useMemo } from "react";
 import { differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -33,10 +34,17 @@ export default function Dashboard() {
 
   const [selectedDay, setSelectedDay] = useState(currentDay);
   
+  // Calculate week number (6 days per week)
+  const currentWeek = useMemo(() => Math.ceil(selectedDay / 6), [selectedDay]);
+  
   // Fetch lists
   const { data: contentList } = useAllContent();
   const { data: answers } = useUserAnswers(user?.id);
   const { data: prayerCompletions } = useUserPrayerCompletions();
+  
+  // Fetch track requirements and practice resources
+  const { data: trackReqs } = useTrackRequirements(user?.track as "A" | "B" | "C" | null, currentWeek);
+  const { data: practiceResources } = usePracticeResources();
   
   // Get content for selected day
   const { data: dayContent, isLoading } = useDailyContent(selectedDay);
@@ -294,76 +302,39 @@ export default function Dashboard() {
                 className="w-full justify-between"
                 data-testid="button-toggle-requirements"
               >
-                <span className="font-serif font-bold">Track {user.track} Requirements</span>
+                <span className="font-serif font-bold">Week {currentWeek} Practices</span>
                 {requirementsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <Card className="bg-secondary/30 border-none mt-2">
                 <CardContent className="text-sm space-y-4 pt-4">
-                  <p className="text-muted-foreground">
-                    Welcome to the {user.track} track. Here are your requirements for this week:
-                  </p>
-                  <ul className="list-disc pl-4 space-y-2 text-muted-foreground">
-                    {user.track === 'A' && (
-                      <>
-                        <li>Complete daily morning prayers (15 min)</li>
-                        <li>Evening reflection (10 min)</li>
-                        <li>1 Hour Holy Hour weekly</li>
-                      </>
-                    )}
-                    {user.track === 'B' && (
-                      <>
-                        <li>Complete daily prayers (30 min)</li>
-                        <li>Evening Examen</li>
-                        <li>Bi-weekly fasting</li>
-                      </>
-                    )}
-                    {user.track === 'C' && (
-                      <>
-                        <li>Strict schedule adherence</li>
-                        <li>Cold showers</li>
-                        <li>No unnecessary internet</li>
-                      </>
-                    )}
-                  </ul>
+                  <TrackRequirementsPanel 
+                    trackReqs={trackReqs} 
+                    practiceResources={practiceResources} 
+                    track={user.track}
+                    week={currentWeek}
+                  />
                 </CardContent>
               </Card>
             </CollapsibleContent>
           </Collapsible>
         ) : (
-          <div className="col-span-3 border-l border-border pl-6">
+          <div className="col-span-3 border-l border-border pl-6 overflow-y-auto custom-scrollbar">
             <Card className="bg-secondary/30 border-none sticky top-0">
-              <CardHeader>
-                <CardTitle className="text-lg">Track {user.track}</CardTitle>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Track {user.track}</CardTitle>
+                  <Badge variant="outline">Week {currentWeek}</Badge>
+                </div>
               </CardHeader>
               <CardContent className="text-sm space-y-4">
-                <p className="text-muted-foreground">
-                  Welcome to the {user.track} track. Here are your requirements for this week:
-                </p>
-                <ul className="list-disc pl-4 space-y-2 text-muted-foreground">
-                  {user.track === 'A' && (
-                    <>
-                      <li>Complete daily morning prayers (15 min)</li>
-                      <li>Evening reflection (10 min)</li>
-                      <li>1 Hour Holy Hour weekly</li>
-                    </>
-                  )}
-                  {user.track === 'B' && (
-                    <>
-                      <li>Complete daily prayers (30 min)</li>
-                      <li>Evening Examen</li>
-                      <li>Bi-weekly fasting</li>
-                    </>
-                  )}
-                  {user.track === 'C' && (
-                    <>
-                      <li>Strict schedule adherence</li>
-                      <li>Cold showers</li>
-                      <li>No unnecessary internet</li>
-                    </>
-                  )}
-                </ul>
+                <TrackRequirementsPanel 
+                  trackReqs={trackReqs} 
+                  practiceResources={practiceResources} 
+                  track={user.track}
+                  week={currentWeek}
+                />
               </CardContent>
             </Card>
           </div>
@@ -497,6 +468,158 @@ function ContentSkeleton() {
       </div>
       <Skeleton className="h-[200px] w-full rounded-xl" />
       <Skeleton className="h-[200px] w-full rounded-xl" />
+    </div>
+  );
+}
+
+interface TrackRequirementsPanelProps {
+  trackReqs: any;
+  practiceResources: any[] | undefined;
+  track: string | null;
+  week: number;
+}
+
+function TrackRequirementsPanel({ trackReqs, practiceResources, track, week }: TrackRequirementsPanelProps) {
+  const [expandedPractice, setExpandedPractice] = useState<string | null>(null);
+  
+  const getPracticeResource = (practiceName: string) => {
+    return practiceResources?.find(r => r.name === practiceName);
+  };
+  
+  const togglePractice = (name: string) => {
+    setExpandedPractice(expandedPractice === name ? null : name);
+  };
+
+  if (!trackReqs) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        Loading requirements for Week {week}...
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Morning Practices */}
+      {trackReqs.morningPractices && trackReqs.morningPractices.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Sun className="w-4 h-4 text-amber-500" />
+            <span className="font-semibold text-sm">Morning Practices</span>
+          </div>
+          <div className="space-y-2">
+            {(trackReqs.morningPractices as string[]).map((practice) => {
+              const resource = getPracticeResource(practice);
+              const isExpanded = expandedPractice === practice;
+              
+              return (
+                <div key={practice} className="rounded-md border border-border/50 overflow-hidden">
+                  <button
+                    onClick={() => resource && togglePractice(practice)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-2 text-left text-sm",
+                      resource && "cursor-pointer hover:bg-secondary/50"
+                    )}
+                    data-testid={`practice-${practice.replace(/\s+/g, '-').toLowerCase()}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-3 h-3 text-muted-foreground" />
+                      <span>{practice}</span>
+                    </div>
+                    {resource && (
+                      <ChevronDown className={cn(
+                        "w-4 h-4 transition-transform",
+                        isExpanded && "rotate-180"
+                      )} />
+                    )}
+                  </button>
+                  {resource && isExpanded && (
+                    <div className="p-3 bg-secondary/30 border-t border-border/50">
+                      {resource.duration && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                          <Clock className="w-3 h-3" />
+                          <span>{resource.duration}</span>
+                        </div>
+                      )}
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap prose prose-sm max-w-none">
+                        {resource.content}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      
+      {/* Evening Practices */}
+      {trackReqs.eveningPractices && trackReqs.eveningPractices.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Moon className="w-4 h-4 text-indigo-500" />
+            <span className="font-semibold text-sm">Evening Practices</span>
+          </div>
+          <div className="space-y-2">
+            {(trackReqs.eveningPractices as string[]).map((practice) => {
+              const resource = getPracticeResource(practice);
+              const isExpanded = expandedPractice === practice;
+              
+              return (
+                <div key={practice} className="rounded-md border border-border/50 overflow-hidden">
+                  <button
+                    onClick={() => resource && togglePractice(practice)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-2 text-left text-sm",
+                      resource && "cursor-pointer hover:bg-secondary/50"
+                    )}
+                    data-testid={`practice-${practice.replace(/\s+/g, '-').toLowerCase()}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-3 h-3 text-muted-foreground" />
+                      <span>{practice}</span>
+                    </div>
+                    {resource && (
+                      <ChevronDown className={cn(
+                        "w-4 h-4 transition-transform",
+                        isExpanded && "rotate-180"
+                      )} />
+                    )}
+                  </button>
+                  {resource && isExpanded && (
+                    <div className="p-3 bg-secondary/30 border-t border-border/50">
+                      {resource.duration && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                          <Clock className="w-3 h-3" />
+                          <span>{resource.duration}</span>
+                        </div>
+                      )}
+                      <div className="text-sm text-muted-foreground whitespace-pre-wrap prose prose-sm max-w-none">
+                        {resource.content}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      
+      {/* Additional Requirements */}
+      {trackReqs.additionalRequirements && trackReqs.additionalRequirements.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Check className="w-4 h-4 text-green-500" />
+            <span className="font-semibold text-sm">Additional</span>
+          </div>
+          <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+            {(trackReqs.additionalRequirements as string[]).map((req, idx) => (
+              <li key={idx}>{req}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
