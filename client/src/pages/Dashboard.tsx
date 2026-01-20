@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useDailyContent, useAllContent } from "@/hooks/use-content";
 import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
+import { useUserPrayerCompletions, useMarkPrayerComplete, useUnmarkPrayerComplete } from "@/hooks/use-prayer-completions";
 import { Shell } from "@/components/layout/Shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,13 +9,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Lock, CheckCircle2, Circle, Sun, Moon } from "lucide-react";
+import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useMemo } from "react";
 import { differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+  const [timelineOpen, setTimelineOpen] = useState(false);
+  const [requirementsOpen, setRequirementsOpen] = useState(false);
   
   // Calculate current day based on start date
   const currentDay = useMemo(() => {
@@ -30,68 +36,132 @@ export default function Dashboard() {
   // Fetch lists
   const { data: contentList } = useAllContent();
   const { data: answers } = useUserAnswers(user?.id);
+  const { data: prayerCompletions } = useUserPrayerCompletions();
   
   // Get content for selected day
   const { data: dayContent, isLoading } = useDailyContent(selectedDay);
   
   if (!user || user.role !== 'participant') return null; // Or redirect
 
-  // Function to check if day is completed
+  // Function to check if day is completed (both morning and evening prayers done)
   const isDayCompleted = (day: number) => {
-    return answers?.some(a => a.dayNumber === day) ?? false;
+    const morningDone = prayerCompletions?.some(c => c.dayNumber === day && c.period === "morning");
+    const eveningDone = prayerCompletions?.some(c => c.dayNumber === day && c.period === "evening");
+    return morningDone && eveningDone;
+  };
+  
+  // Check individual period completion
+  const isPeriodCompleted = (day: number, period: "morning" | "evening") => {
+    return prayerCompletions?.some(c => c.dayNumber === day && c.period === period) ?? false;
   };
 
   return (
     <Shell>
-      <div className="grid grid-cols-12 gap-8 h-[calc(100vh-6rem)]">
-        {/* Left Sidebar - Timeline */}
-        <div className="col-span-3 border-r border-border pr-6 overflow-y-auto custom-scrollbar">
-          <div className="mb-6">
-            <h2 className="font-serif text-xl font-bold">Your Journey</h2>
-            <p className="text-sm text-muted-foreground">Day {currentDay} of 30</p>
+      <div className={cn(
+        "flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-8",
+        "h-auto lg:h-[calc(100vh-6rem)]"
+      )}>
+        {/* Timeline - Collapsible on mobile */}
+        {isMobile ? (
+          <Collapsible open={timelineOpen} onOpenChange={setTimelineOpen} className="w-full">
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between mb-4"
+                data-testid="button-toggle-timeline"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-serif font-bold">Day {selectedDay}</span>
+                  <span className="text-muted-foreground">of 30</span>
+                </div>
+                {timelineOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mb-4">
+              <Card className="p-4">
+                <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+                  {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
+                    const isLocked = day > currentDay;
+                    const isCompleted = isDayCompleted(day);
+                    const isActive = day === selectedDay;
+                    
+                    return (
+                      <button
+                        key={day}
+                        disabled={isLocked}
+                        onClick={() => {
+                          setSelectedDay(day);
+                          setTimelineOpen(false);
+                        }}
+                        className={cn(
+                          "aspect-square flex flex-col items-center justify-center rounded-lg text-xs font-bold transition-all",
+                          isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-secondary",
+                          isLocked && "opacity-40 cursor-not-allowed hover:bg-transparent"
+                        )}
+                      >
+                        <span>{day}</span>
+                        {!isLocked && isCompleted && (
+                          <CheckCircle2 className={cn("w-3 h-3 mt-0.5", isActive ? "text-white" : "text-green-600")} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          <div className="col-span-3 border-r border-border pr-6 overflow-y-auto custom-scrollbar">
+            <div className="mb-6">
+              <h2 className="font-serif text-xl font-bold">Your Journey</h2>
+              <p className="text-sm text-muted-foreground">Day {currentDay} of 30</p>
+            </div>
+            
+            <div className="space-y-2">
+              {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
+                const isLocked = day > currentDay;
+                const isCompleted = isDayCompleted(day);
+                const isActive = day === selectedDay;
+                
+                return (
+                  <button
+                    key={day}
+                    disabled={isLocked}
+                    onClick={() => setSelectedDay(day)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-3 rounded-lg text-sm transition-all",
+                      isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-secondary",
+                      isLocked && "opacity-50 cursor-not-allowed hover:bg-transparent"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
+                        isActive ? "bg-white/20" : "bg-muted"
+                      )}>
+                        {day}
+                      </span>
+                      <span className="font-medium">Day {day}</span>
+                    </div>
+                    {isLocked ? (
+                      <Lock className="w-4 h-4 opacity-50" />
+                    ) : isCompleted ? (
+                      <CheckCircle2 className={cn("w-4 h-4", isActive ? "text-white" : "text-green-600")} />
+                    ) : (
+                      <Circle className="w-4 h-4 opacity-30" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => {
-              const isLocked = day > currentDay;
-              const isCompleted = isDayCompleted(day);
-              const isActive = day === selectedDay;
-              
-              return (
-                <button
-                  key={day}
-                  disabled={isLocked}
-                  onClick={() => setSelectedDay(day)}
-                  className={cn(
-                    "w-full flex items-center justify-between p-3 rounded-lg text-sm transition-all",
-                    isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-secondary",
-                    isLocked && "opacity-50 cursor-not-allowed hover:bg-transparent"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={cn(
-                      "flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
-                      isActive ? "bg-white/20" : "bg-muted"
-                    )}>
-                      {day}
-                    </span>
-                    <span className="font-medium">Day {day}</span>
-                  </div>
-                  {isLocked ? (
-                    <Lock className="w-4 h-4 opacity-50" />
-                  ) : isCompleted ? (
-                    <CheckCircle2 className={cn("w-4 h-4", isActive ? "text-white" : "text-green-600")} />
-                  ) : (
-                    <Circle className="w-4 h-4 opacity-30" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* Main Content Area */}
-        <div className="col-span-6 overflow-y-auto custom-scrollbar px-2">
+        <div className={cn(
+          "overflow-y-auto custom-scrollbar px-2",
+          !isMobile && "col-span-6"
+        )}>
           {isLoading ? (
              <ContentSkeleton />
           ) : dayContent ? (
@@ -146,6 +216,12 @@ export default function Dashboard() {
                         </CardContent>
                       </Card>
                     )}
+                    
+                    <MarkCompleteButton 
+                      day={selectedDay}
+                      period="morning"
+                      isCompleted={isPeriodCompleted(selectedDay, "morning")}
+                    />
                   </TabsContent>
                   
                   <TabsContent value="evening" className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -192,6 +268,12 @@ export default function Dashboard() {
                       prompt="Reflect on today's readings and answer the questions above in your own words."
                       existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
                     />
+                    
+                    <MarkCompleteButton 
+                      day={selectedDay}
+                      period="evening"
+                      isCompleted={isPeriodCompleted(selectedDay, "evening")}
+                    />
                   </TabsContent>
                 </Tabs>
               )}
@@ -203,44 +285,136 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Right Sidebar - Track Requirements */}
-        <div className="col-span-3 border-l border-border pl-6">
-          <Card className="bg-secondary/30 border-none sticky top-0">
-            <CardHeader>
-              <CardTitle className="text-lg">Track {user.track}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm space-y-4">
-              <p className="text-muted-foreground">
-                Welcome to the {user.track} track. Here are your requirements for this week:
-              </p>
-              <ul className="list-disc pl-4 space-y-2 text-muted-foreground">
-                {user.track === 'A' && (
-                  <>
-                    <li>Complete daily morning prayers (15 min)</li>
-                    <li>Evening reflection (10 min)</li>
-                    <li>1 Hour Holy Hour weekly</li>
-                  </>
-                )}
-                {user.track === 'B' && (
-                  <>
-                    <li>Complete daily prayers (30 min)</li>
-                    <li>Evening Examen</li>
-                    <li>Bi-weekly fasting</li>
-                  </>
-                )}
-                {user.track === 'C' && (
-                  <>
-                    <li>Strict schedule adherence</li>
-                    <li>Cold showers</li>
-                    <li>No unnecessary internet</li>
-                  </>
-                )}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Right Sidebar - Track Requirements (collapsible on mobile) */}
+        {isMobile ? (
+          <Collapsible open={requirementsOpen} onOpenChange={setRequirementsOpen} className="w-full mt-4">
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full justify-between"
+                data-testid="button-toggle-requirements"
+              >
+                <span className="font-serif font-bold">Track {user.track} Requirements</span>
+                {requirementsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Card className="bg-secondary/30 border-none mt-2">
+                <CardContent className="text-sm space-y-4 pt-4">
+                  <p className="text-muted-foreground">
+                    Welcome to the {user.track} track. Here are your requirements for this week:
+                  </p>
+                  <ul className="list-disc pl-4 space-y-2 text-muted-foreground">
+                    {user.track === 'A' && (
+                      <>
+                        <li>Complete daily morning prayers (15 min)</li>
+                        <li>Evening reflection (10 min)</li>
+                        <li>1 Hour Holy Hour weekly</li>
+                      </>
+                    )}
+                    {user.track === 'B' && (
+                      <>
+                        <li>Complete daily prayers (30 min)</li>
+                        <li>Evening Examen</li>
+                        <li>Bi-weekly fasting</li>
+                      </>
+                    )}
+                    {user.track === 'C' && (
+                      <>
+                        <li>Strict schedule adherence</li>
+                        <li>Cold showers</li>
+                        <li>No unnecessary internet</li>
+                      </>
+                    )}
+                  </ul>
+                </CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+        ) : (
+          <div className="col-span-3 border-l border-border pl-6">
+            <Card className="bg-secondary/30 border-none sticky top-0">
+              <CardHeader>
+                <CardTitle className="text-lg">Track {user.track}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-4">
+                <p className="text-muted-foreground">
+                  Welcome to the {user.track} track. Here are your requirements for this week:
+                </p>
+                <ul className="list-disc pl-4 space-y-2 text-muted-foreground">
+                  {user.track === 'A' && (
+                    <>
+                      <li>Complete daily morning prayers (15 min)</li>
+                      <li>Evening reflection (10 min)</li>
+                      <li>1 Hour Holy Hour weekly</li>
+                    </>
+                  )}
+                  {user.track === 'B' && (
+                    <>
+                      <li>Complete daily prayers (30 min)</li>
+                      <li>Evening Examen</li>
+                      <li>Bi-weekly fasting</li>
+                    </>
+                  )}
+                  {user.track === 'C' && (
+                    <>
+                      <li>Strict schedule adherence</li>
+                      <li>Cold showers</li>
+                      <li>No unnecessary internet</li>
+                    </>
+                  )}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </Shell>
+  );
+}
+
+function MarkCompleteButton({ day, period, isCompleted }: { day: number, period: "morning" | "evening", isCompleted: boolean }) {
+  const markComplete = useMarkPrayerComplete();
+  const unmarkComplete = useUnmarkPrayerComplete();
+  
+  const handleClick = () => {
+    if (isCompleted) {
+      unmarkComplete.mutate({ dayNumber: day, period });
+    } else {
+      markComplete.mutate({ dayNumber: day, period });
+    }
+  };
+  
+  const isPending = markComplete.isPending || unmarkComplete.isPending;
+  
+  return (
+    <div className="flex justify-center pt-4">
+      <Button
+        data-testid={`button-complete-${period}`}
+        onClick={handleClick}
+        disabled={isPending}
+        variant={isCompleted ? "outline" : "default"}
+        size="lg"
+        className={cn(
+          "gap-2 transition-all",
+          isCompleted && "border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+        )}
+      >
+        {isPending ? (
+          "Saving..."
+        ) : isCompleted ? (
+          <>
+            <CheckCircle2 className="w-5 h-5" />
+            {period === "morning" ? "Morning Prayer Complete" : "Evening Prayer Complete"}
+          </>
+        ) : (
+          <>
+            <Check className="w-5 h-5" />
+            Mark {period === "morning" ? "Morning" : "Evening"} Prayer Complete
+          </>
+        )}
+      </Button>
+    </div>
   );
 }
 

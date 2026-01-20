@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut, 
   Sun,
-  Award
+  Award,
+  Library
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -68,6 +69,7 @@ export function Sidebar() {
         </div>
         
         <NavItem href="/messages" icon={MessageSquare} label="Messages" />
+        <NavItem href="/resources" icon={Library} label="Resources" />
       </div>
 
       <div className="pt-6 border-t border-border mt-auto">

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -64,6 +64,17 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Prayer completion tracking - records when users complete morning/evening prayers
+export const prayerCompletions = pgTable("prayer_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(), // FK to users
+  dayNumber: integer("day_number").notNull(), // 1-30
+  period: text("period", { enum: ["morning", "evening"] }).notNull(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("user_day_period_unique").on(table.userId, table.dayNumber, table.period),
+]);
+
 // === RELATIONS ===
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -98,6 +109,13 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
+export const prayerCompletionsRelations = relations(prayerCompletions, ({ one }) => ({
+  user: one(users, {
+    fields: [prayerCompletions.userId],
+    references: [users.id],
+  }),
+}));
+
 // === BASE SCHEMAS ===
 
 export const insertUserSchema = createInsertSchema(users, {
@@ -114,6 +132,7 @@ export const insertTrackRequirementsSchema = createInsertSchema(trackRequirement
   eveningPractices: z.array(z.string()),
   additionalRequirements: z.array(z.string()).optional().nullable(),
 }).omit({ id: true });
+export const insertPrayerCompletionSchema = createInsertSchema(prayerCompletions).omit({ id: true, completedAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -131,6 +150,9 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 export type TrackRequirement = typeof trackRequirements.$inferSelect;
 export type InsertTrackRequirement = z.infer<typeof insertTrackRequirementsSchema>;
+
+export type PrayerCompletion = typeof prayerCompletions.$inferSelect;
+export type InsertPrayerCompletion = z.infer<typeof insertPrayerCompletionSchema>;
 
 // Request/Response types
 

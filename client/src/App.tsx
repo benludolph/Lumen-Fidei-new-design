@@ -12,6 +12,7 @@ import MentorPortal from "@/pages/MentorPortal";
 import MenteeDetails from "@/pages/MenteeDetails";
 import Messages from "@/pages/Messages";
 import Admin from "@/pages/Admin";
+import Resources from "@/pages/Resources";
 
 // Protected Route Wrapper
 function ProtectedRoute({ 
@@ -77,6 +78,10 @@ function Router() {
 
       <Route path="/admin">
         <ProtectedRoute component={Admin} allowedRoles={['admin']} />
+      </Route>
+
+      <Route path="/resources">
+        <ProtectedRoute component={Resources} />
       </Route>
 
       <Route component={NotFound} />

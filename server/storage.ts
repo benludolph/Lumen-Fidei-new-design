@@ -1,11 +1,12 @@
 import { db } from "./db";
 import {
-  users, dailyContent, userAnswers, messages, trackRequirements,
+  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
   type Message, type InsertMessage,
-  type TrackRequirement, type InsertTrackRequirement
+  type TrackRequirement, type InsertTrackRequirement,
+  type PrayerCompletion, type InsertPrayerCompletion
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc } from "drizzle-orm";
 
@@ -38,6 +39,13 @@ export interface IStorage {
   getMessages(user1Id: number, user2Id: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(senderId: number, receiverId: number): Promise<void>;
+  
+  // Prayer Completions
+  getPrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<PrayerCompletion | undefined>;
+  getUserPrayerCompletions(userId: number): Promise<PrayerCompletion[]>;
+  getAllPrayerCompletions(): Promise<PrayerCompletion[]>;
+  createPrayerCompletion(completion: InsertPrayerCompletion): Promise<PrayerCompletion>;
+  deletePrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<void>;
   
   // session store
   sessionStore: any;
@@ -162,6 +170,41 @@ export class DatabaseStorage implements IStorage {
     await db.update(messages)
       .set({ isRead: true })
       .where(and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)));
+  }
+
+  // Prayer Completions
+  async getPrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<PrayerCompletion | undefined> {
+    const [completion] = await db.select().from(prayerCompletions)
+      .where(and(
+        eq(prayerCompletions.userId, userId),
+        eq(prayerCompletions.dayNumber, dayNumber),
+        eq(prayerCompletions.period, period)
+      ));
+    return completion;
+  }
+
+  async getUserPrayerCompletions(userId: number): Promise<PrayerCompletion[]> {
+    return await db.select().from(prayerCompletions)
+      .where(eq(prayerCompletions.userId, userId))
+      .orderBy(asc(prayerCompletions.dayNumber));
+  }
+
+  async getAllPrayerCompletions(): Promise<PrayerCompletion[]> {
+    return await db.select().from(prayerCompletions).orderBy(asc(prayerCompletions.userId), asc(prayerCompletions.dayNumber));
+  }
+
+  async createPrayerCompletion(completion: InsertPrayerCompletion): Promise<PrayerCompletion> {
+    const [newCompletion] = await db.insert(prayerCompletions).values(completion).returning();
+    return newCompletion;
+  }
+
+  async deletePrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<void> {
+    await db.delete(prayerCompletions)
+      .where(and(
+        eq(prayerCompletions.userId, userId),
+        eq(prayerCompletions.dayNumber, dayNumber),
+        eq(prayerCompletions.period, period)
+      ));
   }
 }
 

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, users, dailyContent, userAnswers, messages, trackRequirements } from './schema';
+import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -149,6 +149,41 @@ export const api = {
       },
     },
   },
+  prayerCompletions: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/prayer-completions',
+      input: z.object({ userId: z.coerce.number().optional() }).optional(),
+      responses: {
+        200: z.array(z.custom<typeof prayerCompletions.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/prayer-completions/:day/:period',
+      responses: {
+        200: z.custom<typeof prayerCompletions.$inferSelect>().nullable(),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/prayer-completions',
+      input: z.object({ dayNumber: z.number(), period: z.enum(["morning", "evening"]) }),
+      responses: {
+        201: z.custom<typeof prayerCompletions.$inferSelect>(),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/prayer-completions/:day/:period',
+      responses: {
+        200: z.object({ message: z.string() }),
+        404: errorSchemas.notFound,
+      },
+    },
+  },
   admin: {
     createContent: {
       method: 'POST' as const,
@@ -167,6 +202,26 @@ export const api = {
         200: z.object({ message: z.string() }),
         403: errorSchemas.forbidden,
         404: errorSchemas.notFound,
+      },
+    },
+    progress: {
+      method: 'GET' as const,
+      path: '/api/admin/progress',
+      responses: {
+        200: z.array(z.object({
+          userId: z.number(),
+          userName: z.string(),
+          userEmail: z.string(),
+          role: z.string(),
+          track: z.string().nullable(),
+          mentorName: z.string().nullable(),
+          startDate: z.string().nullable(),
+          currentDay: z.number(),
+          daysCompleted: z.number(),
+          morningToday: z.boolean(),
+          eveningToday: z.boolean(),
+        })),
+        403: errorSchemas.forbidden,
       },
     },
   },

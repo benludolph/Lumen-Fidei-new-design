@@ -238,6 +238,86 @@ export async function registerRoutes(
     res.json(req_);
   });
 
+  // === Prayer Completions ===
+  
+  app.get(api.prayerCompletions.list.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    let targetUserId = req.user!.id;
+    
+    // Mentors/Admins can view others' completions
+    if (req.query.userId && (req.user!.role === 'mentor' || req.user!.role === 'admin')) {
+      targetUserId = Number(req.query.userId);
+      // Mentor check: is this my mentee?
+      if (req.user!.role === 'mentor') {
+        const targetUser = await storage.getUser(targetUserId);
+        if (targetUser?.mentorId !== req.user!.id) {
+          return res.sendStatus(403);
+        }
+      }
+    }
+    
+    const completions = await storage.getUserPrayerCompletions(targetUserId);
+    res.json(completions);
+  });
+
+  app.get(api.prayerCompletions.get.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const day = Number(req.params.day);
+    const period = req.params.period as "morning" | "evening";
+    
+    const completion = await storage.getPrayerCompletion(req.user!.id, day, period);
+    res.json(completion || null);
+  });
+
+  app.post(api.prayerCompletions.create.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const input = api.prayerCompletions.create.input.parse(req.body);
+    
+    // Time-gating: Can only complete current day or earlier
+    if (req.user!.role === 'participant') {
+      const startDate = new Date(req.user!.startDate || Date.now());
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - startDate.getTime());
+      const currentDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+      
+      if (input.dayNumber > currentDay) {
+        return res.status(403).json({ message: "Cannot complete future days" });
+      }
+    }
+    
+    // Check if already completed
+    const existing = await storage.getPrayerCompletion(req.user!.id, input.dayNumber, input.period);
+    if (existing) {
+      return res.status(400).json({ message: "Already completed" });
+    }
+    
+    const completion = await storage.createPrayerCompletion({
+      userId: req.user!.id,
+      dayNumber: input.dayNumber,
+      period: input.period
+    });
+    
+    res.status(201).json(completion);
+  });
+
+  app.delete(api.prayerCompletions.delete.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const day = Number(req.params.day);
+    const period = req.params.period as "morning" | "evening";
+    
+    const existing = await storage.getPrayerCompletion(req.user!.id, day, period);
+    if (!existing) {
+      return res.status(404).json({ message: "Completion not found" });
+    }
+    
+    await storage.deletePrayerCompletion(req.user!.id, day, period);
+    res.json({ message: "Completion removed" });
+  });
+
   // === Admin Routes ===
 
   app.post(api.admin.createContent.path, async (req, res) => {
@@ -261,6 +341,67 @@ export async function registerRoutes(
     
     await storage.deleteUser(userId);
     res.json({ message: "User deleted" });
+  });
+
+  app.get(api.admin.progress.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const users = await storage.getAllUsers();
+    const completions = await storage.getAllPrayerCompletions();
+    
+    const today = new Date();
+    
+    const progressData = users
+      .filter(u => u.role === 'participant')
+      .map(u => {
+        // Calculate current day for this user
+        const startDate = u.startDate ? new Date(u.startDate) : today;
+        const diffTime = Math.abs(today.getTime() - startDate.getTime());
+        const currentDay = Math.max(1, Math.min(Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1, 30));
+        
+        // Get completions for this user
+        const userCompletions = completions.filter(c => c.userId === u.id);
+        
+        // Count unique days where BOTH morning and evening are complete
+        const dayCompletionMap = new Map<number, { morning: boolean, evening: boolean }>();
+        userCompletions.forEach(c => {
+          if (!dayCompletionMap.has(c.dayNumber)) {
+            dayCompletionMap.set(c.dayNumber, { morning: false, evening: false });
+          }
+          const day = dayCompletionMap.get(c.dayNumber)!;
+          if (c.period === 'morning') day.morning = true;
+          if (c.period === 'evening') day.evening = true;
+        });
+        
+        let daysCompleted = 0;
+        dayCompletionMap.forEach((status) => {
+          if (status.morning && status.evening) daysCompleted++;
+        });
+        
+        // Check today's completion
+        const todayStatus = dayCompletionMap.get(currentDay) || { morning: false, evening: false };
+        
+        // Find mentor name
+        const mentor = users.find(m => m.id === u.mentorId);
+        
+        return {
+          userId: u.id,
+          userName: u.name,
+          userEmail: u.email,
+          role: u.role,
+          track: u.track,
+          mentorName: mentor?.name || null,
+          startDate: u.startDate ? new Date(u.startDate).toISOString() : null,
+          currentDay,
+          daysCompleted,
+          morningToday: todayStatus.morning,
+          eveningToday: todayStatus.evening,
+        };
+      });
+    
+    res.json(progressData);
   });
   
   // Seed Data
