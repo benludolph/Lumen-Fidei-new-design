@@ -248,7 +248,7 @@ export async function registerRoutes(
 
   app.get(api.practiceResources.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const name = decodeURIComponent(req.params.name);
+    const name = decodeURIComponent(String(req.params.name));
     const resource = await storage.getPracticeResourceByName(name);
     if (!resource) return res.status(404).json({ message: "Practice resource not found" });
     res.json(resource);
@@ -514,6 +514,155 @@ async function seed() {
         });
     }
 
+    // Seed practice resources if needed
+    const existingResources = await storage.getAllPracticeResources();
+    if (existingResources.length === 0) {
+        console.log("Seeding practice resources...");
+        
+        // Prayer Against Retaliation
+        await storage.createPracticeResource({
+            name: "Prayer Against Retaliation",
+            type: "prayer",
+            content: `In the Name of Jesus Christ our Lord and Savior, by the intercession of the Immaculate Virgin Mary, Mother of Jesus, of Blessed Michael the Archangel, of the Blessed Apostles Peter and Paul, and all the Saints, and by the authority residing in my holy ministry, I invoke the blessing of God the Father Almighty, upon all my family members, relatives, friends, and acquaintances.
+
+Lord Jesus, Thou art Almighty and there is none greater. Thou art all powerful, all knowing, and with the authority vested in me, I invoke the sevenfold gifts of the Holy Spirit: wisdom, understanding, counsel, fortitude, knowledge, piety, and fear of the Lord, as a binding and protective Shield for us against all evil that may attempt to retaliate against us, whether physical, emotional, psychological, or spiritual.
+
+Lord, fill us with Your Holy Spirit and protect us from every evil force that may try to cause us harm because of this ministry of liberation. I ask this in Jesus' name. Amen.`,
+            order: 1
+        });
+        
+        // Miracle Prayer
+        await storage.createPracticeResource({
+            name: "Miracle Prayer",
+            type: "prayer",
+            content: `Lord Jesus, I come before You, just as I am, I am sorry for my sins, I repent of my sins, please forgive me. In Your Name, I forgive all others for what they have done against me. I renounce Satan, the evil spirits and all their works. I give You my entire self, Lord Jesus, I accept You as my Lord, God and Savior. Heal me, change me, strengthen me in body, soul and spirit.
+
+Come Lord Jesus, cover me with Your Precious Blood, and fill me with Your Holy Spirit, I love You Lord Jesus, I praise You Jesus, I thank You Jesus, I shall follow You every day of my life. Amen.
+
+Mary, my mother, Queen of Peace, all the Angels and Saints, please help me. Amen.`,
+            order: 2
+        });
+        
+        // Examen - St Ignatius
+        await storage.createPracticeResource({
+            name: "Examen – St Ignatius",
+            type: "practice",
+            content: `The Examen is a practice of prayerful reflection on the events of the day to detect God's presence and discern His direction. St. Ignatius recommended it as the most important prayer of the day.
+
+**How to Pray the Examen:**
+
+1. **Become Aware of God's Presence** (1-2 minutes)
+   Begin by placing yourself in God's presence. Thank Him for this day and ask for the grace to see it through His eyes.
+
+2. **Review the Day with Gratitude** (2-3 minutes)
+   Walk through your day from start to finish. Note the moments for which you are most grateful. Where did you feel most alive? What brought you joy?
+
+3. **Pay Attention to Your Emotions** (2-3 minutes)
+   As you review the day, notice your emotions. What feelings surface? Where did you feel peace? Where did you feel troubled? God often speaks through our emotions.
+
+4. **Choose One Feature and Pray** (2-3 minutes)
+   Select one moment that stands out—whether positive or negative. Pray about it. If it was a moment of consolation, thank God. If it was a moment of difficulty, ask for insight and healing.
+
+5. **Look Toward Tomorrow** (1-2 minutes)
+   Ask God for guidance for tomorrow. What do you anticipate? What do you need from God? Conclude with the Our Father.
+
+The Examen should take about 10-15 minutes. Practice it at the same time each day, ideally in the evening.`,
+            duration: "10-15 minutes",
+            order: 3
+        });
+        
+        // Lectio Divina
+        await storage.createPracticeResource({
+            name: "Lectio Divina – 10 Minutes",
+            type: "practice",
+            content: `Lectio Divina ("Divine Reading") is an ancient practice of praying with Scripture that allows God's Word to penetrate your heart. The method has four movements:
+
+**1. LECTIO (Reading) - 2 minutes**
+Read the Scripture passage slowly, attentively, perhaps out loud. Pay attention to any word or phrase that catches your attention. Read it again if needed.
+
+**2. MEDITATIO (Meditation) - 3 minutes**
+Reflect on the word or phrase that stood out. Why might the Holy Spirit be drawing you to this? What does it mean for your life right now? Let the word sink into your heart.
+
+**3. ORATIO (Prayer) - 3 minutes**
+Respond to God in prayer. This may be a prayer of thanksgiving, petition, intercession, or praise. Speak to God from your heart about what you have encountered in His Word.
+
+**4. CONTEMPLATIO (Contemplation) - 2 minutes**
+Rest in God's presence. Let go of words and thoughts. Simply be with God, allowing His love to fill you. If distractions come, gently return to the word or phrase from your reading.
+
+**Tips for Practice:**
+- Find a quiet place where you won't be interrupted
+- Have a Bible and journal nearby
+- Use today's Morning Scripture as your text
+- Don't rush—allow silence between movements
+- Trust that God is present and speaking to you`,
+            duration: "10 minutes",
+            order: 4
+        });
+        
+        // Silence practice
+        await storage.createPracticeResource({
+            name: "Silence – 5 Minutes",
+            type: "practice",
+            content: `The practice of silence is a simple but powerful way to become aware of God's presence and open yourself to His voice. In our noisy world, silence is a gift we offer God.
+
+**How to Practice:**
+
+1. **Prepare** - Sit comfortably in a quiet place. Close your eyes or fix your gaze on a candle, crucifix, or icon.
+
+2. **Breathe** - Take several slow, deep breaths. With each exhale, release any tension, worry, or distraction.
+
+3. **Be Present** - Simply be with God. You don't need to say anything. God knows what's in your heart.
+
+4. **Return Gently** - When thoughts arise (and they will), don't fight them. Acknowledge them and gently return your attention to God's presence.
+
+5. **Close with Gratitude** - When the time is complete, thank God for this time together.
+
+**Remember:** The goal is not to empty your mind, but to fill your heart with awareness of God. Silence creates space for God to work in ways words cannot.`,
+            duration: "5 minutes",
+            order: 5
+        });
+        
+        // Rosary practice
+        await storage.createPracticeResource({
+            name: "Rosary – OP + 1 Decade",
+            type: "practice",
+            content: `The Rosary is a powerful meditation on the life of Christ through the eyes of Mary. "OP + 1 Decade" means the Opening Prayers plus one Decade.
+
+**Opening Prayers (OP):**
+
+1. **Sign of the Cross**
+   In the name of the Father, and of the Son, and of the Holy Spirit. Amen.
+
+2. **Apostles' Creed** (on the Crucifix)
+   I believe in God, the Father almighty, Creator of heaven and earth...
+
+3. **Our Father** (first large bead)
+   Our Father, who art in heaven, hallowed be Thy name...
+
+4. **Three Hail Marys** (three small beads)
+   For faith, hope, and charity. Hail Mary, full of grace...
+
+5. **Glory Be**
+   Glory be to the Father, and to the Son, and to the Holy Spirit...
+
+**One Decade:**
+
+1. Announce the Mystery (Joyful, Luminous, Sorrowful, or Glorious depending on the day)
+2. Pray the Our Father
+3. Pray 10 Hail Marys while meditating on the Mystery
+4. Pray the Glory Be
+5. Optional: Fatima Prayer - "O my Jesus, forgive us our sins..."
+
+**The Mysteries by Day:**
+- Monday & Saturday: Joyful Mysteries
+- Tuesday & Friday: Sorrowful Mysteries
+- Wednesday & Sunday: Glorious Mysteries
+- Thursday: Luminous Mysteries`,
+            duration: "5-7 minutes",
+            order: 6
+        });
+    }
+
     // Seed daily content if needed
     const existing = await storage.getAllDailyContent();
     if (existing.length === 0) {
@@ -627,6 +776,256 @@ Misconceptions About God: People often believe that we must earn God's love. In 
                 "What can I do to make my heart and soul a more fit dwelling place for God?"
             ],
             isReflectionDay: false
+        });
+        
+        // Day 2 content
+        await storage.upsertDailyContent({
+            dayNumber: 2,
+            weekNumber: 1,
+            weekTitle: "God's Loving Plan for Humanity",
+            morningScriptureRef: "Revelations 12:7–17",
+            morningScriptureText: `Then war broke out in heaven; Michael and his angels battled against the dragon. The dragon and its angels fought back, but they did not prevail and there was no longer any place for them in heaven. The huge dragon, the ancient serpent, who is called the Devil and Satan, who deceived the whole world, was thrown down to earth, and its angels were thrown down with it.
+
+Then I heard a loud voice in heaven say: "Now have salvation and power come, and the Kingdom of our God and the authority of His Anointed. For the accuser of our brothers is cast out, who accuses them before our God day and night. They conquered him by the blood of the Lamb and by the word of their testimony; love for life did not deter them from death."`,
+            morningMeditation: `THE DEVIL AND THE WEAKNESSES OF HUMAN NATURE
+
+We must realize that demons are pure intellectual beings, not rational beings like us. They possess a superior knowledge of our weaknesses and dispositions, which they use to tempt us. St. Teresa is aware that, "The devil knows very well to take advantage of our nature and little understanding."
+
+In his Spiritual Canticle, St. John of the Cross also suggests that demons use the world and flesh to enhance the power of their work: "The temptation of the devils... is stronger than those of the world and the flesh, because the devils reinforce themselves with these other two enemies, the world and the flesh, in order to wage a rugged war."
+
+The devil knows how to exploit our instincts and passions, the weakness of our flesh and our pride. Misfortune, sickness, or mental anxiety are not sins, but they may induce us to rebellion and despair. And Satan may take advantage of all of them to tempt us to sin.
+
+St. Teresa of Avila warns: "But the devil comes with his artful wiles, and, under the color of doing good, sets about undermining it in trivial ways... little by little he darkens its understanding and weakens its will, and causes its self-love to increase."`,
+            morningPrayer: null,
+            eveningCatechismRef: "CCC #391-395",
+            eveningCatechism: `THE FALL OF THE ANGELS
+
+Behind the disobedient choice of our first parents lurks a seductive voice, opposed to God, which makes them fall into death out of envy. Scripture and the Church's Tradition see in this being a fallen angel, called "Satan" or "the devil." The Church teaches that Satan was at first a good angel, made by God: "The devil and the other demons were indeed created naturally good by God, but they became evil by their own doing."
+
+Scripture speaks of a sin of these angels. This "fall" consists in the free choice of these created spirits, who radically and irrevocably rejected God and His reign. We find a reflection of that rebellion in the tempter's words to our first parents: "You will be like God." The devil "has sinned from the beginning"; he is "a liar and the father of lies."
+
+The power of Satan is, nonetheless, not infinite. He is only a creature, powerful from the fact that he is pure spirit, but still a creature. He cannot prevent the building up of God's reign. Although Satan may act in the world out of hatred for God and His Kingdom in Christ Jesus, and although his action may cause grave injuries—of a spiritual nature and, indirectly, even of a physical nature—to each man and to society, the action is permitted by divine providence which with strength and gentleness guides human and cosmic history. It is a great mystery that providence should permit diabolical activity, but "we know that in everything God works for good with those who love Him."`,
+            eveningSummary: `Creation of Angels, Lucifer: "The devil and the other demons were indeed created naturally good by God, but they became evil by their own doing" (Lateran Council). Lucifer is another name for Satan and means "angel of light."
+
+The Fall of the Angels: Scripture tells us that "The huge dragon, the ancient serpent, who is called the devil and Satan, who deceived the whole world, was thrown down to earth." The devil refused to serve God because of his pride and desire to be equal to God.
+
+Nature of Angels & Demons: In the natural sphere they were pure spirits with a very keen mind and a strong free will. By their nature, angels are superior to all other creatures, including humans.`,
+            eveningQuestions: [
+                "Do you believe that the devil and his angels wage war on the children of God on earth through his hatred for God and His Kingdom?",
+                "Do you understand that although the devil has greater power than people, that he can only act by the permissive will of God?",
+                "Do you trust that God uses diabolical activity to work for good in people's lives?"
+            ],
+            isReflectionDay: false
+        });
+        
+        // Day 3 content
+        await storage.upsertDailyContent({
+            dayNumber: 3,
+            weekNumber: 1,
+            weekTitle: "God's Loving Plan for Humanity",
+            morningScriptureRef: "Genesis 3:1–24",
+            morningScriptureText: `EXPULSION FROM EDEN
+
+Now the snake was the most cunning of all the wild animals that the LORD God had made. He asked the woman, "Did God really say, 'You shall not eat from any of the trees in the garden'?" The woman answered the snake: "We may eat of the fruit of the trees in the garden; it is only about the fruit of the tree in the middle of the garden that God said, 'You shall not eat it or even touch it, or else you will die.'" But the snake said to the woman: "You certainly will not die! God knows well that when you eat of it your eyes will be opened and you will be like gods, who know good and evil."
+
+The woman saw that the tree was good for food and pleasing to the eyes, and the tree was desirable for gaining wisdom. So she took some of its fruit and ate it; and she also gave some to her husband, who was with her, and he ate it. Then the eyes of both of them were opened, and they knew that they were naked...
+
+The LORD God therefore banished him from the Garden of Eden, to till the ground from which he had been taken.`,
+            morningMeditation: `Original Sin is the sin inherited by all humankind from Adam in his disobedience of God's command not to eat from the fruit of the Tree of Knowledge. The Original Sin event is referred to as "The Fall of Man."
+
+Adam's choice to disobey God's command is considered a "fall" because his choice to sin represents a fall from grace. God created Adam in His image and likeness and saw that he was good. Adam was created with an original grace and holiness.
+
+Adam and Eve were given the free choice to love and serve God. God gave us the ability to love God freely (free will) because true love is one that is not forced. With this ability to choose, mankind has chosen not to love God, hence our inheritance of a fallen nature.
+
+Sin is rooted in man's preference for himself over God. Instead of choosing God, Adam chose himself by eating of the fruit of the tree so that he could be like God. Making a choice to sin leads to weakness of the soul and a propensity to continue to sin.
+
+Christ's Redemption and Original Sin: The sin of Adam is linked directly to Christ's redemption; through one man, Adam, sin entered the world, and through one man, Jesus, humanity is restored (Romans 5:12–21). Jesus is the perfect sacrifice that atones for all of our sins. Baptism removes Original Sin and any personal sin, and cleanses the soul making it new and fresh.`,
+            morningPrayer: null,
+            eveningCatechismRef: "CCC #1704–1705",
+            eveningCatechism: `The human person participates in the light and power of the divine Spirit. By his reason, he is capable of understanding the order of things established by the Creator. By free will, he is capable of directing himself toward his true good. He finds his perfection "in seeking and loving what is true and good."
+
+By virtue of his soul and his spiritual powers of intellect and will, man is endowed with freedom, an "outstanding manifestation of the divine image."
+
+What makes us in the image and likeness of God?
+
+Answer: We are made in the image and likeness of God because we can love, create, and truly choose good. We are capable of truly and freely choosing to do good and to love. Human persons are not mere reactionary creatures but a creation that, like God, can choose to do good and to love one another. Human persons are also able to know and understand goodness and love.`,
+            eveningSummary: `Original Sin: Original Sin is not one's own personal sin, it is a state of the soul, representing the fallen nature that was handed on to us by Adam who fell into death upon committing the Original Sin.
+
+Made in God's Image & Likeness: We are made in the image and likeness of God because we can love, create, and truly understand, know, and choose to do good.`,
+            eveningQuestions: [
+                "Do you understand how choices to disobey God's commandments cause people to fall from His grace and can open the door to demonic activity?",
+                "Through God's extraordinary love for us He sent His only Son to save us and invites us into a new covenant relationship. Do you understand how you need to choose each day to remain in this relationship by following Him?"
+            ],
+            isReflectionDay: false
+        });
+        
+        // Day 4 content
+        await storage.upsertDailyContent({
+            dayNumber: 4,
+            weekNumber: 1,
+            weekTitle: "God's Loving Plan for Humanity",
+            morningScriptureRef: "Matthew 25:31–46",
+            morningScriptureText: `When the Son of Man comes in His glory, and all the angels with Him, He will sit upon His glorious throne, and all the nations will be assembled before Him. And He will separate them one from another, as a shepherd separates the sheep from the goats. He will place the sheep on His right and the goats on His left.
+
+Then the King will say to those on His right, 'Come, you who are blessed by My Father. Inherit the Kingdom prepared for you from the foundation of the world. For I was hungry and you gave Me food, I was thirsty and you gave Me drink, a stranger and you welcomed Me, naked and you clothed Me, ill and you cared for Me, in prison and you visited Me.'
+
+Then He will say to those on His left, 'Depart from Me, you accursed, into the eternal fire prepared for the devil and his angels. For I was hungry and you gave Me no food, I was thirsty and you gave Me no drink...'
+
+And these will go off to eternal punishment, but the righteous to eternal life.`,
+            morningMeditation: `This powerful passage from Matthew reveals the reality of the Final Judgment. Christ will come in glory to judge the living and the dead. The criteria for judgment is simple yet profound: how did we treat the least of His brothers and sisters?
+
+The King identifies Himself with the hungry, the thirsty, the stranger, the naked, the sick, and the imprisoned. When we serve them, we serve Christ Himself. When we neglect them, we neglect Christ.
+
+This teaching challenges us to see Christ in every person we encounter, especially those who are suffering. Our eternal destiny is connected to how we respond to human need. The works of mercy are not optional extras in the Christian life—they are essential to following Christ.
+
+The passage also reminds us of the reality of hell—a place "prepared for the devil and his angels." Those who persistently reject God's love and refuse to love their neighbor ultimately choose eternal separation from God. But God's desire is for all to be saved, and He gives us the means of grace to live lives of love and service.`,
+            morningPrayer: null,
+            eveningCatechismRef: "Pope John Paul II on Heaven, Hell, and Purgatory",
+            eveningCatechism: `HEAVEN, HELL AND PURGATORY
+
+Heaven is fullness of Communion with God: Heaven "is neither an abstraction nor a physical place in the clouds, but a living, personal relationship with the Holy Trinity. It is our meeting with the Father which takes place in the risen Christ through the communion of the Holy Spirit."
+
+When the form of this world has passed away, those who have welcomed God into their lives and have sincerely opened themselves to His love, at least at the moment of death, will enjoy that fullness of communion with God which is the goal of human life.
+
+Hell is the state of those who reject God: "Hell is the ultimate consequence of sin itself... Rather than a place, hell indicates the state of those who freely and definitively separate themselves from God, the source of all life and joy."
+
+God is the infinitely good and merciful Father. But man, called to respond to Him freely, can unfortunately choose to reject His love and forgiveness once and for all, thus separating himself forever from joyful communion with Him.
+
+Purgatory is necessary purification: Before we enter into full communion with God, every trace of sin within us must be eliminated and every imperfection in our soul must be corrected. The term Purgatory does not indicate a place, but a condition of existence, where Christ "removes... the remnants of imperfection."`,
+            eveningSummary: `Particular Judgment: At death, each person is judged by Christ and enters into eternal life or awaits purification before entering heaven, or is condemned to eternal separation from God.
+
+General Judgment: At the end of time, Christ will come in glory to judge the living and the dead. All will be revealed.
+
+Heaven: The ultimate end and fulfillment of the deepest human longings—the state of supreme, definitive happiness in communion with God.
+
+Hell: The state of eternal separation from God, chosen freely by those who reject His love.
+
+Purgatory: A state of purification for those who die in God's grace but still need to be cleansed of venial sins or temporal punishment.`,
+            eveningQuestions: [
+                "When you imagine Heaven, what things or people are included? Why are these important to you?",
+                "Many today do not believe in the existence of Purgatory. How can you help them understand that it is a great blessing for those who just need more purification before they would feel comfortable in the presence of God?",
+                "Every trace of sin must be absent before one may enter Heaven. What are you willing to do now so as to make eternal life in Heaven possible?"
+            ],
+            isReflectionDay: false
+        });
+        
+        // Day 5 content
+        await storage.upsertDailyContent({
+            dayNumber: 5,
+            weekNumber: 1,
+            weekTitle: "God's Loving Plan for Humanity",
+            morningScriptureRef: "Revelations 21:1–8",
+            morningScriptureText: `THE NEW HEAVEN AND THE NEW EARTH
+
+Then I saw a new heaven and a new earth. The former heaven and the former earth had passed away, and the sea was no more. I also saw the holy city, a new Jerusalem, coming down out of heaven from God, prepared as a bride adorned for her husband.
+
+I heard a loud voice from the throne saying, "Behold, God's dwelling is with the human race. He will dwell with them and they will be His people and God Himself will always be with them [as their God]. He will wipe every tear from their eyes, and there shall be no more death or mourning, wailing or pain, [for] the old order has passed away."
+
+The one who sat on the throne said, "Behold, I make all things new." Then He said, "Write these words down, for they are trustworthy and true."
+
+He said to me, "They are accomplished. I [am] the Alpha and the Omega, the beginning and the end. To the thirsty I will give a gift from the spring of life-giving water. The victor will inherit these gifts, and I shall be his God, and he will be My son."`,
+            morningMeditation: `This glorious vision from Revelation reveals God's ultimate plan for creation. God will make all things new. The former things—death, mourning, crying, pain—will pass away. God Himself will dwell with His people.
+
+Notice the intimate language: "I shall be his God, and he will be My son." The relationship God desires with us is not distant or formal but familial and personal. We are called to be children of God, heirs with Christ to the Kingdom.
+
+The promise of "living water" echoes Jesus's words to the Samaritan woman. God offers us life in abundance, a spring welling up to eternal life. This living water is available now through faith and the sacraments, but it will be fully realized in the new creation.
+
+The passage also contains a sobering warning: "As for cowards, the unfaithful, the depraved, murderers, the unchaste, sorcerers, idol-worshipers, and deceivers of every sort, their lot is in the burning pool of fire and sulfur, which is the second death." Our choices in this life have eternal consequences.
+
+Let this vision of the new heaven and new earth fill you with hope. No matter what suffering you face now, God has prepared something infinitely better for those who love Him.`,
+            morningPrayer: null,
+            eveningCatechismRef: "CCC #1023–1027",
+            eveningCatechism: `HEAVEN
+
+Those who die in God's grace and friendship and are perfectly purified live forever with Christ. They are like God forever, for they "see Him as He is," face to face.
+
+This perfect life with the Most Holy Trinity—this communion of life and love with the Trinity, with the Virgin Mary, the angels and all the blessed—is called "heaven." Heaven is the ultimate end and fulfillment of the deepest human longings, the state of supreme, definitive happiness.
+
+To live in heaven is "to be with Christ." The elect live "in Christ," but they retain, or rather find, their true identity, their own name. For life is to be with Christ; where Christ is, there is life, there is the Kingdom.
+
+By His death and Resurrection, Jesus Christ has "opened" heaven to us. The life of the blessed consists in the full and perfect possession of the fruits of the redemption accomplished by Christ. He makes partners in His heavenly glorification those who have believed in Him and remained faithful to His will.
+
+This mystery of blessed communion with God and all who are in Christ is beyond all understanding and description. Scripture speaks of it in images: life, light, peace, wedding feast, wine of the Kingdom, the Father's house, the heavenly Jerusalem, paradise: "no eye has seen, nor ear heard, nor the heart of man conceived, what God has prepared for those who love Him."
+
+From the Diary of St. Faustina: "Today I was in heaven, in spirit, and I saw its unconceivable beauties and the happiness that awaits us after death. I saw how all creatures give ceaseless praise and glory to God. I saw how great is happiness in God, which spreads to all creatures, making them happy."`,
+            eveningSummary: `Beatific Vision: In heaven, the blessed see God face to face, as He truly is. This is the ultimate source of their happiness.
+
+What is Heaven Like? Heaven is beyond human description, but Scripture uses images of life, light, peace, and the wedding feast to hint at its glory.
+
+St. Faustina's Vision: "God has given me to understand that there is but one thing that is of infinite value in His eyes, and that is love of God; love, love and once again, love."`,
+            eveningQuestions: [
+                "What images of heaven resonate most with you—light, peace, the wedding feast, the Father's house?",
+                "Do you believe that heaven is real and that it's worth any sacrifice to get there?",
+                "St. Faustina says only love of God is of infinite value. How can you grow in love today?"
+            ],
+            isReflectionDay: false
+        });
+        
+        // Day 6 - Weekly Reflection Day
+        await storage.upsertDailyContent({
+            dayNumber: 6,
+            weekNumber: 1,
+            weekTitle: "God's Loving Plan for Humanity",
+            morningScriptureRef: "Romans 8:28-39",
+            morningScriptureText: `We know that all things work for good for those who love God, who are called according to His purpose. For those He foreknew He also predestined to be conformed to the image of His Son, so that He might be the firstborn among many brothers.
+
+What then shall we say to this? If God is for us, who can be against us? He who did not spare His own Son but handed Him over for us all, how will He not also give us everything else along with Him?
+
+Who will bring a charge against God's chosen ones? It is God who acquits us. Who will condemn? It is Christ Jesus who died, rather, was raised, who also is at the right hand of God, who indeed intercedes for us.
+
+What will separate us from the love of Christ? Will anguish, or distress, or persecution, or famine, or nakedness, or peril, or the sword? No, in all these things we conquer overwhelmingly through Him who loved us.
+
+For I am convinced that neither death, nor life, nor angels, nor principalities, nor present things, nor future things, nor powers, nor height, nor depth, nor any other creature will be able to separate us from the love of God in Christ Jesus our Lord.`,
+            morningMeditation: `WEEK 1 REFLECTION: THE SPIRITUAL REALITY
+
+This week we have journeyed through profound truths about the spiritual reality in which we live. We learned that God is Love and Truth, that He desires to dwell within us, and that our obedience opens the door for Him to transform our hearts.
+
+We encountered the reality of spiritual warfare—the fall of the angels, the nature of demons, and how they seek to exploit our weaknesses. Yet we also learned that God's power is infinitely greater, and Satan can only act by divine permission.
+
+We reflected on Original Sin and its effects on humanity, recognizing that through baptism and faith in Christ, we can be restored to communion with God. We confronted the reality of heaven, hell, and purgatory—understanding that our choices have eternal consequences.
+
+Through it all, one truth shines clearly: NOTHING CAN SEPARATE US FROM THE LOVE OF GOD IN CHRIST JESUS.
+
+As you complete this first week, consider:
+- What struck you most powerfully about the spiritual reality?
+- How has your understanding of spiritual warfare changed?
+- What practices will you carry forward to strengthen your spiritual life?
+
+Remember: You are loved with an everlasting love. God has a plan for your salvation. The battle is real, but the victory is assured in Christ.`,
+            morningPrayer: `Heavenly Father, as I complete this first week of spiritual formation, I thank You for opening my eyes to the reality of the spiritual world. I praise You for Your infinite love and mercy.
+
+I acknowledge the reality of spiritual warfare, but I trust in Your protection and the power of the Blood of Christ. Help me to grow in holiness, to resist temptation, and to choose You above all else.
+
+Mary, my mother, Queen of Peace, pray for me. St. Michael the Archangel, defend me in battle. All you holy angels and saints, intercede for me.
+
+Lord, fill me with Your Holy Spirit and guide me through the days ahead. I surrender my life to You. Jesus, I trust in You. Amen.`,
+            eveningCatechismRef: "Reflection Summary",
+            eveningCatechism: `WEEK 1 SUMMARY: GOD'S LOVING PLAN FOR HUMANITY
+
+Key Themes:
+• God is Love and Truth—He desires to dwell in our hearts
+• The reality of angels and demons—spiritual warfare is real
+• Original Sin and the Fall—humanity's need for redemption
+• Christ's victory—through His death and resurrection, He has conquered sin and death
+• Heaven, Hell, and Purgatory—our eternal destiny depends on our response to God's love
+• Nothing can separate us from God's love—we are more than conquerors in Christ
+
+Prayer Practices Introduced:
+• Prayer Against Retaliation—protection from spiritual attack
+• Miracle Prayer—surrender and commitment to Christ
+• Lectio Divina—praying with Scripture
+• Examen—reviewing the day with God
+
+As you move into Week 2, continue these daily practices. They are building a foundation for a deeper relationship with God and a stronger defense against the enemy.`,
+            eveningSummary: null,
+            eveningQuestions: [
+                "What was the most significant insight or grace you received this week?",
+                "How has your prayer life changed since beginning this program?",
+                "What areas of your life do you sense God inviting you to surrender more fully?",
+                "Are there any sins or attachments you need to confess or renounce?",
+                "What are you most looking forward to in the coming week?"
+            ],
+            isReflectionDay: true
         });
     }
     
