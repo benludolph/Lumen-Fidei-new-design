@@ -38,21 +38,26 @@ function ProtectedRoute({
   return <Component />;
 }
 
+function RootRedirect() {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+  
+  if (!user) return <Redirect to="/login" />;
+  if (user.role === 'admin') return <Redirect to="/admin" />;
+  if (user.role === 'mentor') return <Redirect to="/mentor" />;
+  return <Redirect to="/dashboard" />;
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
       
       {/* Root redirect */}
-      <Route path="/">
-        {() => {
-           const { user } = useAuth();
-           if (!user) return <Redirect to="/login" />;
-           if (user.role === 'admin') return <Redirect to="/admin" />;
-           if (user.role === 'mentor') return <Redirect to="/mentor" />;
-           return <Redirect to="/dashboard" />;
-        }}
-      </Route>
+      <Route path="/" component={RootRedirect} />
 
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} allowedRoles={['participant']} />

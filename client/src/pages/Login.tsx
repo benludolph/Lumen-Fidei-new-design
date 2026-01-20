@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,22 +21,28 @@ export default function Login() {
   const { login, user } = useAuth();
   const [_, setLocation] = useLocation();
   const [error, setError] = useState<string | null>(null);
-
-  // Redirect if already logged in
-  if (user) {
-    if (user.role === 'admin') setLocation('/admin');
-    else if (user.role === 'mentor') setLocation('/mentor');
-    else setLocation('/dashboard');
-  }
-
+  
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
   });
+
+  // Redirect if already logged in (after all hooks, using useEffect)
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') setLocation('/admin');
+      else if (user.role === 'mentor') setLocation('/mentor');
+      else setLocation('/dashboard');
+    }
+  }, [user, setLocation]);
 
   const onSubmit = async (data: LoginForm) => {
     try {
       setError(null);
-      await login({ email: data.username, password: data.password });
+      await login({ username: data.username, password: data.password });
     } catch (err: any) {
       setError(err.message || "Failed to login");
     }
