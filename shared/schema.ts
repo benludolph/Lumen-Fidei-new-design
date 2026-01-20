@@ -100,7 +100,10 @@ export const messagesRelations = relations(messages, ({ one }) => ({
 
 // === BASE SCHEMAS ===
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true });
+export const insertUserSchema = createInsertSchema(users, {
+  // Handle date strings from JSON payload
+  startDate: z.union([z.date(), z.string().transform((s) => new Date(s))]).optional().nullable(),
+}).omit({ id: true });
 export const insertDailyContentSchema = createInsertSchema(dailyContent, {
   eveningQuestions: z.array(z.string()).optional().nullable(),
 }).omit({ id: true });
