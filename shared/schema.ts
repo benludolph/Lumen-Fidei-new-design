@@ -37,6 +37,16 @@ export const dailyContent = pgTable("daily_content", {
   isReflectionDay: boolean("is_reflection_day").default(false).notNull(), // Day 6 of each week
 });
 
+// Practice resources - stores full text of prayers and practice instructions
+export const practiceResources = pgTable("practice_resources", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // e.g., "Prayer Against Retaliation", "Lectio Divina"
+  type: text("type", { enum: ["prayer", "practice"] }).notNull(), // prayer = full text to pray, practice = instructions
+  content: text("content").notNull(), // Full text or instructions
+  duration: text("duration"), // e.g., "10 minutes" for practices
+  order: integer("order").default(0), // Display order within category
+});
+
 // Track-specific requirements by week
 export const trackRequirements = pgTable("track_requirements", {
   id: serial("id").primaryKey(),
@@ -133,6 +143,7 @@ export const insertTrackRequirementsSchema = createInsertSchema(trackRequirement
   additionalRequirements: z.array(z.string()).optional().nullable(),
 }).omit({ id: true });
 export const insertPrayerCompletionSchema = createInsertSchema(prayerCompletions).omit({ id: true, completedAt: true });
+export const insertPracticeResourceSchema = createInsertSchema(practiceResources).omit({ id: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -153,6 +164,9 @@ export type InsertTrackRequirement = z.infer<typeof insertTrackRequirementsSchem
 
 export type PrayerCompletion = typeof prayerCompletions.$inferSelect;
 export type InsertPrayerCompletion = z.infer<typeof insertPrayerCompletionSchema>;
+
+export type PracticeResource = typeof practiceResources.$inferSelect;
+export type InsertPracticeResource = z.infer<typeof insertPracticeResourceSchema>;
 
 // Request/Response types
 

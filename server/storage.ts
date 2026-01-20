@@ -1,12 +1,13 @@
 import { db } from "./db";
 import {
-  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions,
+  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
   type Message, type InsertMessage,
   type TrackRequirement, type InsertTrackRequirement,
-  type PrayerCompletion, type InsertPrayerCompletion
+  type PrayerCompletion, type InsertPrayerCompletion,
+  type PracticeResource, type InsertPracticeResource
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc } from "drizzle-orm";
 
@@ -46,6 +47,12 @@ export interface IStorage {
   getAllPrayerCompletions(): Promise<PrayerCompletion[]>;
   createPrayerCompletion(completion: InsertPrayerCompletion): Promise<PrayerCompletion>;
   deletePrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<void>;
+  
+  // Practice Resources
+  getAllPracticeResources(): Promise<PracticeResource[]>;
+  getPracticeResourceByName(name: string): Promise<PracticeResource | undefined>;
+  createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
+  upsertPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   
   // session store
   sessionStore: any;
@@ -205,6 +212,33 @@ export class DatabaseStorage implements IStorage {
         eq(prayerCompletions.dayNumber, dayNumber),
         eq(prayerCompletions.period, period)
       ));
+  }
+
+  // Practice Resources
+  async getAllPracticeResources(): Promise<PracticeResource[]> {
+    return await db.select().from(practiceResources).orderBy(asc(practiceResources.order));
+  }
+
+  async getPracticeResourceByName(name: string): Promise<PracticeResource | undefined> {
+    const [resource] = await db.select().from(practiceResources).where(eq(practiceResources.name, name));
+    return resource;
+  }
+
+  async createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource> {
+    const [newResource] = await db.insert(practiceResources).values(resource).returning();
+    return newResource;
+  }
+
+  async upsertPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource> {
+    const existing = await this.getPracticeResourceByName(resource.name);
+    if (existing) {
+      const [updated] = await db.update(practiceResources)
+        .set(resource)
+        .where(eq(practiceResources.name, resource.name))
+        .returning();
+      return updated;
+    }
+    return this.createPracticeResource(resource);
   }
 }
 

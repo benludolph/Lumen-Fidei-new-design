@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions } from './schema';
+import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -146,6 +146,23 @@ export const api = {
       path: '/api/track-requirements/:track',
       responses: {
         200: z.array(z.custom<typeof trackRequirements.$inferSelect>()),
+      },
+    },
+  },
+  practiceResources: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/practice-resources',
+      responses: {
+        200: z.array(z.custom<typeof practiceResources.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/practice-resources/:name',
+      responses: {
+        200: z.custom<typeof practiceResources.$inferSelect>(),
+        404: errorSchemas.notFound,
       },
     },
   },
