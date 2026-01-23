@@ -66,6 +66,29 @@ Admins have a "Progress" tab showing all participants with:
 - Progress bar visualization
 - Today's morning/evening completion status
 - Assigned mentor name
+- Graduation status badge (Passed/At Risk/On Track) based on 80% threshold
+
+### Cohort Graduation Tracking (Added January 2026)
+The program tracks participant graduation status with an 80% completion threshold:
+- **Threshold**: 24/30 days completed (80%)
+- **Status Badges**:
+  - "Passed" (green): 80%+ completion
+  - "At Risk" (yellow): Below 80% and cohort still in progress
+  - "On Track" (blue): On pace to meet threshold
+- **Summary Statistics**: Shows total participants, passed count, at-risk count, and average completion rate
+
+### Admin Password Reset
+Admins can reset any user's password via a dialog in the Users tab:
+- Password input with 6-character minimum validation
+- Uses secure bcryptjs hashing before storage
+- Admin-only access enforced on API endpoint
+
+### Multiple Cohort Support (Added January 2026)
+Admins can start new cohorts via the Settings tab:
+- Set new cohort start date
+- Optionally clear all prayer completion records for a fresh start
+- Current cohort status displayed (start date, current day, status)
+- `clearAllPrayerCompletions` storage method removes all prayer records
 
 ### Mobile Responsive Design
 Dashboard is fully responsive with:
