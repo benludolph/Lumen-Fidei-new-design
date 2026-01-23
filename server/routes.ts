@@ -497,6 +497,62 @@ export async function registerRoutes(
     await storage.setCohortSetting("cohort_start_date", startDate);
     res.json({ startDate });
   });
+
+  // === Start New Cohort ===
+  
+  app.post(api.admin.startNewCohort.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    try {
+      const input = api.admin.startNewCohort.input.parse(req.body);
+      
+      let completionsCleared = 0;
+      if (input.clearCompletions) {
+        completionsCleared = await storage.clearAllPrayerCompletions();
+      }
+      
+      await storage.setCohortSetting("cohort_start_date", input.startDate);
+      
+      res.json({ 
+        message: "New cohort started successfully",
+        startDate: input.startDate,
+        completionsCleared
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  // === Admin Password Reset ===
+  
+  app.post(api.admin.resetPassword.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const userId = Number(req.params.id);
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    try {
+      const input = api.admin.resetPassword.input.parse(req.body);
+      const hashedPassword = await hashPassword(input.newPassword);
+      await storage.updateUser(userId, { password: hashedPassword });
+      res.json({ message: "Password reset successfully" });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
   
   // Seed Data
   await seed();

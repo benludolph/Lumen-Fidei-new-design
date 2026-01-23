@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -111,19 +111,39 @@ export default function Admin() {
 
 function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
   const { mutate: updateUser } = useUpdateUser();
+  const { toast } = useToast();
+  const [resetOpen, setResetOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const mentors = allUsers.filter(u => u.role === 'mentor');
 
-  // Simple quick-edit for assignment
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (password: string) => {
+      const res = await apiRequest("POST", `/api/admin/users/${user.id}/reset-password`, { newPassword: password });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Password reset successfully" });
+      setResetOpen(false);
+      setNewPassword("");
+    },
+    onError: () => {
+      toast({ title: "Failed to reset password", variant: "destructive" });
+    },
+  });
+
   const handleAssignMentor = (mentorId: string) => {
      updateUser({ id: user.id, mentorId: Number(mentorId) });
   };
   
   const handleAssignTrack = (track: string) => {
-    // Cast to correct enum type manually for simplicity
     updateUser({ id: user.id, track: track as "A" | "B" | "C" });
   };
 
-  const mentorName = allUsers.find(u => u.id === user.mentorId)?.name;
+  const handleResetPassword = () => {
+    if (newPassword.length >= 6) {
+      resetPasswordMutation.mutate(newPassword);
+    }
+  };
 
   return (
     <TableRow>
@@ -170,7 +190,38 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
         {user.startDate ? format(new Date(user.startDate), "MMM d, yyyy") : "-"}
       </TableCell>
       <TableCell className="text-right">
-        {/* Actions like delete/reset password could go here */}
+        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" title="Reset password" data-testid={`button-reset-password-${user.id}`}>
+              <Key className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reset Password for {user.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter a new password for this user. They will need to use this password to log in.
+              </p>
+              <Input 
+                type="password"
+                placeholder="New password (min 6 characters)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                data-testid="input-new-password"
+              />
+              <Button 
+                onClick={handleResetPassword} 
+                disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
+                className="w-full"
+                data-testid="button-confirm-reset"
+              >
+                {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </TableCell>
     </TableRow>
   );
@@ -280,6 +331,8 @@ type ProgressData = {
 };
 
 function ProgressView() {
+  const GRADUATION_THRESHOLD = 0.8; // 80% completion required to pass
+
   const { data: progressData, isLoading } = useQuery<ProgressData[]>({
     queryKey: [api.admin.progress.path],
     queryFn: async () => {
@@ -297,90 +350,184 @@ function ProgressView() {
     );
   }
 
+  const cohortCurrentDay = progressData?.[0]?.currentDay || 0;
+  const cohortComplete = cohortCurrentDay >= 30;
+  
+  const totalParticipants = progressData?.length || 0;
+  const graduatingCount = progressData?.filter(p => (p.daysCompleted / 30) >= GRADUATION_THRESHOLD).length || 0;
+  const atRiskCount = progressData?.filter(p => {
+    const completionRate = p.daysCompleted / Math.max(p.currentDay, 1);
+    return completionRate < GRADUATION_THRESHOLD && p.currentDay > 5;
+  }).length || 0;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Participant Progress</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Participant</TableHead>
-              <TableHead>Track</TableHead>
-              <TableHead>Mentor</TableHead>
-              <TableHead>Day</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Today</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {progressData?.length === 0 ? (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <Users className="w-8 h-8 text-muted-foreground" />
+              <div>
+                <p className="text-2xl font-bold">{totalParticipants}</p>
+                <p className="text-sm text-muted-foreground">Total Participants</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <Award className="w-8 h-8 text-green-600" />
+              <div>
+                <p className="text-2xl font-bold">{graduatingCount}</p>
+                <p className="text-sm text-muted-foreground">On Track to Graduate (80%+)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-8 h-8 text-amber-500" />
+              <div>
+                <p className="text-2xl font-bold">{atRiskCount}</p>
+                <p className="text-sm text-muted-foreground">At Risk (below 80%)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Participant Progress</CardTitle>
+            {cohortComplete && (
+              <Badge variant="default" className="bg-green-600">Cohort Complete - Day 30</Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No participants yet
-                </TableCell>
+                <TableHead>Participant</TableHead>
+                <TableHead>Track</TableHead>
+                <TableHead>Mentor</TableHead>
+                <TableHead>Day</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Today</TableHead>
               </TableRow>
-            ) : progressData?.map((p) => (
-              <TableRow key={p.userId} data-testid={`row-progress-${p.userId}`}>
-                <TableCell>
-                  <div className="font-medium">{p.userName}</div>
-                  <div className="text-xs text-muted-foreground">{p.userEmail}</div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{p.track || '-'}</Badge>
-                </TableCell>
-                <TableCell className="text-sm">
-                  {p.mentorName || <span className="text-muted-foreground">Unassigned</span>}
-                </TableCell>
-                <TableCell>
-                  <span className="font-bold">{p.currentDay}</span>
-                  <span className="text-muted-foreground">/30</span>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Progress value={(p.daysCompleted / 30) * 100} className="w-20 h-2" />
-                    <span className="text-xs text-muted-foreground">{p.daysCompleted}/30</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1" title="Morning Prayer">
-                      <Sun className="w-4 h-4 text-amber-500" />
-                      {p.morningToday ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </TableHeader>
+            <TableBody>
+              {progressData?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No participants yet
+                  </TableCell>
+                </TableRow>
+              ) : progressData?.map((p) => {
+                const completionPercent = Math.round((p.daysCompleted / 30) * 100);
+                const isGraduating = completionPercent >= 80;
+                const currentRate = p.daysCompleted / Math.max(p.currentDay, 1);
+                const isAtRisk = currentRate < GRADUATION_THRESHOLD && p.currentDay > 5;
+
+                return (
+                  <TableRow key={p.userId} data-testid={`row-progress-${p.userId}`}>
+                    <TableCell>
+                      <div className="font-medium">{p.userName}</div>
+                      <div className="text-xs text-muted-foreground">{p.userEmail}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{p.track || '-'}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {p.mentorName || <span className="text-muted-foreground">Unassigned</span>}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-bold">{p.currentDay}</span>
+                      <span className="text-muted-foreground">/30</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Progress value={completionPercent} className="w-20 h-2" />
+                        <span className="text-xs text-muted-foreground">{completionPercent}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {cohortComplete ? (
+                        isGraduating ? (
+                          <Badge variant="default" className="bg-green-600 gap-1">
+                            <Award className="w-3 h-3" /> Passed
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-muted-foreground">
+                            Incomplete
+                          </Badge>
+                        )
+                      ) : isAtRisk ? (
+                        <Badge variant="secondary" className="text-amber-600 gap-1">
+                          <AlertTriangle className="w-3 h-3" /> At Risk
+                        </Badge>
                       ) : (
-                        <Circle className="w-4 h-4 text-muted-foreground/30" />
+                        <Badge variant="secondary" className="text-green-600">
+                          On Track
+                        </Badge>
                       )}
-                    </div>
-                    <div className="flex items-center gap-1" title="Evening Prayer">
-                      <Moon className="w-4 h-4 text-indigo-400" />
-                      {p.eveningToday ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-muted-foreground/30" />
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1" title="Morning Prayer">
+                          <Sun className="w-4 h-4 text-amber-500" />
+                          {p.morningToday ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-muted-foreground/30" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1" title="Evening Prayer">
+                          <Moon className="w-4 h-4 text-indigo-400" />
+                          {p.eveningToday ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-muted-foreground/30" />
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
 function CohortSettingsView() {
   const { toast } = useToast();
   const [startDate, setStartDate] = useState("");
+  const [newCohortDate, setNewCohortDate] = useState("");
+  const [clearCompletions, setClearCompletions] = useState(true);
+  const [showNewCohortDialog, setShowNewCohortDialog] = useState(false);
   
   const { data: cohortData, isLoading } = useQuery<{ startDate: string | null }>({
     queryKey: [api.admin.cohortSettings.get.path],
     queryFn: async () => {
       const res = await fetch(api.admin.cohortSettings.get.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch cohort settings");
+      return res.json();
+    },
+  });
+
+  const { data: progressData } = useQuery<ProgressData[]>({
+    queryKey: [api.admin.progress.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.progress.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch progress");
       return res.json();
     },
   });
@@ -399,9 +546,36 @@ function CohortSettingsView() {
     },
   });
 
+  const startNewCohortMutation = useMutation({
+    mutationFn: async (data: { startDate: string; clearCompletions: boolean }) => {
+      const res = await apiRequest("POST", "/api/admin/cohort/start-new", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.cohortSettings.get.path] });
+      queryClient.invalidateQueries({ queryKey: [api.admin.progress.path] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prayer-completions"] });
+      toast({ 
+        title: "New cohort started", 
+        description: data.clearCompletions ? `Cleared ${data.completionsCleared} prayer completions` : undefined
+      });
+      setShowNewCohortDialog(false);
+      setNewCohortDate("");
+    },
+    onError: () => {
+      toast({ title: "Failed to start new cohort", variant: "destructive" });
+    },
+  });
+
   const handleSave = () => {
     if (startDate) {
       updateMutation.mutate(startDate);
+    }
+  };
+
+  const handleStartNewCohort = () => {
+    if (newCohortDate) {
+      startNewCohortMutation.mutate({ startDate: newCohortDate, clearCompletions });
     }
   };
 
@@ -409,57 +583,159 @@ function CohortSettingsView() {
     ? format(new Date(cohortData.startDate), "yyyy-MM-dd")
     : "";
 
+  const cohortCurrentDay = progressData?.[0]?.currentDay || 0;
+  const cohortComplete = cohortCurrentDay >= 30;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Cohort Settings
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-medium mb-2">Program Start Date</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Set the date when the 30-day program begins for all participants. Everyone's daily content 
-              will be calculated from this date.
-            </p>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Current Cohort
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            {isLoading ? (
+              <p className="text-muted-foreground">Loading...</p>
+            ) : (
+              <>
+                {currentStartDate ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-muted rounded-md">
+                      <p className="text-sm text-muted-foreground">Start Date</p>
+                      <p className="font-medium">{format(new Date(cohortData!.startDate!), "MMMM d, yyyy")}</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-md">
+                      <p className="text-sm text-muted-foreground">Current Day</p>
+                      <p className="font-medium">{cohortCurrentDay}/30</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-md">
+                      <p className="text-sm text-muted-foreground">Status</p>
+                      <p className="font-medium">
+                        {cohortComplete ? (
+                          <Badge variant="default" className="bg-green-600">Completed</Badge>
+                        ) : cohortCurrentDay === 0 ? (
+                          <Badge variant="secondary">Not Started</Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-blue-600">In Progress</Badge>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-muted rounded-md text-center">
+                    <p className="text-muted-foreground">No cohort start date set</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          
-          {isLoading ? (
-            <p className="text-muted-foreground">Loading...</p>
-          ) : (
-            <>
-              {currentStartDate && (
-                <div className="p-4 bg-muted rounded-md">
-                  <p className="text-sm text-muted-foreground">Current start date</p>
-                  <p className="font-medium">{format(new Date(cohortData!.startDate!), "MMMM d, yyyy")}</p>
-                </div>
-              )}
-              
-              <div className="flex items-end gap-4">
-                <div className="space-y-2 flex-1 max-w-xs">
-                  <label className="text-sm font-medium">Set New Start Date</label>
-                  <Input 
-                    type="date" 
-                    value={startDate || currentStartDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    data-testid="input-cohort-start-date"
-                  />
-                </div>
-                <Button 
-                  onClick={handleSave} 
-                  disabled={updateMutation.isPending || !startDate}
-                  data-testid="button-save-cohort-date"
-                >
-                  {updateMutation.isPending ? "Saving..." : "Save Start Date"}
-                </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Cohort Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2">Adjust Start Date</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Change the program start date. This will recalculate the current day for all participants.
+              </p>
+            </div>
+            
+            <div className="flex items-end gap-4">
+              <div className="space-y-2 flex-1 max-w-xs">
+                <Input 
+                  type="date" 
+                  value={startDate || currentStartDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  data-testid="input-cohort-start-date"
+                />
               </div>
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+              <Button 
+                onClick={handleSave} 
+                disabled={updateMutation.isPending || !startDate}
+                data-testid="button-save-cohort-date"
+              >
+                {updateMutation.isPending ? "Saving..." : "Update Start Date"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="border-t pt-6">
+            <div className="mb-4">
+              <h3 className="font-medium mb-2">Start New Cohort</h3>
+              <p className="text-sm text-muted-foreground">
+                End the current cohort and start a fresh one. This will set a new start date and optionally 
+                clear all prayer completion records.
+              </p>
+            </div>
+            
+            <Dialog open={showNewCohortDialog} onOpenChange={setShowNewCohortDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" data-testid="button-start-new-cohort">
+                  Start New Cohort
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Start New Cohort</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      This will start a new 30-day program for all participants. Current progress data 
+                      can optionally be cleared.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">New Cohort Start Date</label>
+                    <Input 
+                      type="date" 
+                      value={newCohortDate}
+                      onChange={(e) => setNewCohortDate(e.target.value)}
+                      data-testid="input-new-cohort-date"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="clearCompletions"
+                      checked={clearCompletions}
+                      onChange={(e) => setClearCompletions(e.target.checked)}
+                      className="rounded"
+                      data-testid="checkbox-clear-completions"
+                    />
+                    <label htmlFor="clearCompletions" className="text-sm">
+                      Clear all prayer completion records (recommended for fresh start)
+                    </label>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleStartNewCohort}
+                    disabled={!newCohortDate || startNewCohortMutation.isPending}
+                    className="w-full"
+                    data-testid="button-confirm-new-cohort"
+                  >
+                    {startNewCohortMutation.isPending ? "Starting..." : "Start New Cohort"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+

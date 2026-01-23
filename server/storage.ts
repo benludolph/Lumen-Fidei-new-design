@@ -48,6 +48,7 @@ export interface IStorage {
   getAllPrayerCompletions(): Promise<PrayerCompletion[]>;
   createPrayerCompletion(completion: InsertPrayerCompletion): Promise<PrayerCompletion>;
   deletePrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<void>;
+  clearAllPrayerCompletions(): Promise<number>;
   
   // Practice Resources
   getAllPracticeResources(): Promise<PracticeResource[]>;
@@ -217,6 +218,13 @@ export class DatabaseStorage implements IStorage {
         eq(prayerCompletions.dayNumber, dayNumber),
         eq(prayerCompletions.period, period)
       ));
+  }
+
+  async clearAllPrayerCompletions(): Promise<number> {
+    const allCompletions = await db.select().from(prayerCompletions);
+    const count = allCompletions.length;
+    await db.delete(prayerCompletions);
+    return count;
   }
 
   // Practice Resources

@@ -270,6 +270,34 @@ export const api = {
         403: errorSchemas.forbidden,
       },
     },
+    resetPassword: {
+      method: 'POST' as const,
+      path: '/api/admin/users/:id/reset-password',
+      input: z.object({ newPassword: z.string().min(6) }),
+      responses: {
+        200: z.object({ message: z.string() }),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
+    startNewCohort: {
+      method: 'POST' as const,
+      path: '/api/admin/cohort/start-new',
+      input: z.object({ 
+        startDate: z.string(),
+        clearCompletions: z.boolean().optional()
+      }),
+      responses: {
+        200: z.object({ 
+          message: z.string(), 
+          startDate: z.string(),
+          completionsCleared: z.number()
+        }),
+        400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
   },
 };
 
