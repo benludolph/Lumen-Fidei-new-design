@@ -101,6 +101,22 @@ Admins can reset any user's password via a dialog in the Users tab:
 - Uses secure bcryptjs hashing before storage
 - Admin-only access enforced on API endpoint
 
+### Admin User Deletion (Added January 2026)
+Admins can delete any user (except other admins) via the Users tab:
+- Confirmation dialog warns about permanent data deletion
+- Cascading deletion removes: user answers, prayer completions, chat messages
+- Removes mentor assignment from any participants assigned to the deleted user
+- User can re-register with the same email after deletion
+
+### Chat System (Updated January 2026)
+Role-based messaging with unique conversation threads:
+- **Participants**: Can only message their assigned mentor
+- **Mentors**: Can message their assigned mentees AND admins
+- **Admins**: Can message any user in the system
+- Mentors and admins appear in the mentor assignment dropdown
+- Messages are stored per sender/receiver pair for unique conversations
+- Auto-scroll to bottom when messages load or are sent
+
 ### Multiple Cohort Support (Added January 2026)
 Admins can start new cohorts via the Settings tab:
 - Set new cohort start date
