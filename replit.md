@@ -124,12 +124,24 @@ Admins can start new cohorts via the Settings tab:
 - Current cohort status displayed (start date, current day, status)
 - `clearAllPrayerCompletions` storage method removes all prayer records
 
-### Mobile Responsive Design
-Dashboard is fully responsive with:
+### Mobile Responsive Design (Updated January 2026)
+Fully mobile-optimized for phone use at 400px viewport width:
+
+**Dashboard:**
 - Collapsible day selector grid on mobile
-- Stacked layout (morning above evening) on small screens
-- Collapsible track requirements panel
-- Tested at 400px viewport width
+- Prayer modals use full-screen height (90vh) on mobile for easy reading
+- All cards have responsive padding (smaller on mobile)
+- Font sizes scale down appropriately for small screens
+- Morning/Evening tabs are compact on mobile
+- Assignment form buttons stack vertically on mobile
+- Reflection textarea adapts to smaller screens
+
+**Messages:**
+- Single-pane layout on mobile (contacts OR chat, not both)
+- Back button in chat header to return to contacts list
+- Full-width layout on mobile devices
+- Chat window properly scrolls within fixed container
+- New conversation dialog for admins/mentors to message any user
 
 ### Security
 - Passwords are hashed using bcryptjs before storage
