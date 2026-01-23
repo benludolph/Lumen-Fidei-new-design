@@ -780,23 +780,41 @@ function ContentManagementView() {
   const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
 
   const [formData, setFormData] = useState({
+    weekTheme: "",
     morningScriptureRef: "",
     morningScriptureText: "",
     morningMeditation: "",
+    morningPrayer: "",
     eveningCatechismRef: "",
     eveningCatechism: "",
+    eveningSummary: "",
     eveningQuestions: "",
   });
 
   const updateFormFromContent = (content: DailyContentType | undefined) => {
     if (content) {
       setFormData({
+        weekTheme: content.weekTheme || "",
         morningScriptureRef: content.morningScriptureRef || "",
         morningScriptureText: content.morningScriptureText || "",
         morningMeditation: content.morningMeditation || "",
+        morningPrayer: content.morningPrayer || "",
         eveningCatechismRef: content.eveningCatechismRef || "",
         eveningCatechism: content.eveningCatechism || "",
+        eveningSummary: content.eveningSummary || "",
         eveningQuestions: content.eveningQuestions?.join("\n") || "",
+      });
+    } else {
+      setFormData({
+        weekTheme: "",
+        morningScriptureRef: "",
+        morningScriptureText: "",
+        morningMeditation: "",
+        morningPrayer: "",
+        eveningCatechismRef: "",
+        eveningCatechism: "",
+        eveningSummary: "",
+        eveningQuestions: "",
       });
     }
   };
@@ -824,18 +842,21 @@ function ContentManagementView() {
   });
 
   const handleSave = () => {
-    const weekNumber = Math.ceil(selectedDay / 6);
-    const isReflectionDay = selectedDay % 6 === 0;
+    const weekNumber = currentContent?.weekNumber || Math.ceil(selectedDay / 6);
+    const isReflectionDay = currentContent?.isReflectionDay ?? (selectedDay % 6 === 0);
     
     saveMutation.mutate({
       dayNumber: selectedDay,
       weekNumber,
+      weekTheme: formData.weekTheme || null,
       isReflectionDay,
       morningScriptureRef: formData.morningScriptureRef || null,
       morningScriptureText: formData.morningScriptureText || null,
       morningMeditation: formData.morningMeditation || null,
+      morningPrayer: formData.morningPrayer || null,
       eveningCatechismRef: formData.eveningCatechismRef || null,
       eveningCatechism: formData.eveningCatechism || null,
+      eveningSummary: formData.eveningSummary || null,
       eveningQuestions: formData.eveningQuestions.trim() 
         ? formData.eveningQuestions.split("\n").filter(q => q.trim())
         : null,
@@ -926,11 +947,11 @@ function ContentManagementView() {
 
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-serif text-xl">Day {selectedDay} - Week {Math.ceil(selectedDay / 6)}</h3>
+              <h3 className="font-serif text-xl" data-testid="text-day-label">Day {selectedDay} - Week {Math.ceil(selectedDay / 6)}</h3>
               <p className="text-sm text-muted-foreground">
-                {weekThemes[Math.ceil(selectedDay / 6) - 1]}
+                <span data-testid="text-week-theme">{weekThemes[Math.ceil(selectedDay / 6) - 1]}</span>
                 {currentContent?.isReflectionDay && (
-                  <Badge variant="outline" className="ml-2">Reflection Day</Badge>
+                  <Badge variant="outline" className="ml-2" data-testid="badge-reflection-day">Reflection Day</Badge>
                 )}
               </p>
             </div>
@@ -954,83 +975,122 @@ function ContentManagementView() {
       </Card>
 
       {editMode ? (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Morning Content</CardTitle>
+              <CardTitle className="text-lg">Day Settings</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Scripture Reference</label>
+                <label className="text-sm font-medium">Week Theme (optional)</label>
                 <Input
-                  value={formData.morningScriptureRef}
-                  onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureRef: e.target.value }))}
-                  placeholder="e.g., John 3:16-17"
-                  data-testid="input-scripture-ref"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Scripture Text</label>
-                <Textarea
-                  value={formData.morningScriptureText}
-                  onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureText: e.target.value }))}
-                  placeholder="Enter the scripture passage..."
-                  rows={5}
-                  data-testid="input-scripture-text"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Meditation</label>
-                <Textarea
-                  value={formData.morningMeditation}
-                  onChange={(e) => setFormData(prev => ({ ...prev, morningMeditation: e.target.value }))}
-                  placeholder="Enter the meditation text for Lectio Divina..."
-                  rows={8}
-                  data-testid="input-meditation"
+                  value={formData.weekTheme}
+                  onChange={(e) => setFormData(prev => ({ ...prev, weekTheme: e.target.value }))}
+                  placeholder="e.g., God's Loving Plan for Humanity"
+                  data-testid="input-week-theme"
                 />
               </div>
             </CardContent>
           </Card>
+          
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Morning Content</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Scripture Reference</label>
+                  <Input
+                    value={formData.morningScriptureRef}
+                    onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureRef: e.target.value }))}
+                    placeholder="e.g., John 3:16-17"
+                    data-testid="input-scripture-ref"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Scripture Text</label>
+                  <Textarea
+                    value={formData.morningScriptureText}
+                    onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureText: e.target.value }))}
+                    placeholder="Enter the scripture passage..."
+                    rows={5}
+                    data-testid="input-scripture-text"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Meditation</label>
+                  <Textarea
+                    value={formData.morningMeditation}
+                    onChange={(e) => setFormData(prev => ({ ...prev, morningMeditation: e.target.value }))}
+                    placeholder="Enter the meditation text for Lectio Divina..."
+                    rows={6}
+                    data-testid="input-meditation"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Morning Prayer (optional)</label>
+                  <Textarea
+                    value={formData.morningPrayer}
+                    onChange={(e) => setFormData(prev => ({ ...prev, morningPrayer: e.target.value }))}
+                    placeholder="Enter optional morning prayer text..."
+                    rows={4}
+                    data-testid="input-morning-prayer"
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Evening Content</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Catechism Reference</label>
-                <Input
-                  value={formData.eveningCatechismRef}
-                  onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechismRef: e.target.value }))}
-                  placeholder="e.g., CCC 232-237"
-                  data-testid="input-catechism-ref"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Catechism / Activity Content</label>
-                <Textarea
-                  value={formData.eveningCatechism}
-                  onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechism: e.target.value }))}
-                  placeholder="Enter the evening reading or activity content... Use [VIDEO:youtubeId] to embed videos."
-                  rows={10}
-                  data-testid="input-catechism"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Tip: Use [VIDEO:youtubeId] format to embed YouTube videos
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Reflection Questions (one per line)</label>
-                <Textarea
-                  value={formData.eveningQuestions}
-                  onChange={(e) => setFormData(prev => ({ ...prev, eveningQuestions: e.target.value }))}
-                  placeholder="Enter reflection questions, one per line..."
-                  rows={4}
-                  data-testid="input-questions"
-                />
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Evening Content</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Catechism Reference</label>
+                  <Input
+                    value={formData.eveningCatechismRef}
+                    onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechismRef: e.target.value }))}
+                    placeholder="e.g., CCC 232-237"
+                    data-testid="input-catechism-ref"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Catechism / Activity Content</label>
+                  <Textarea
+                    value={formData.eveningCatechism}
+                    onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechism: e.target.value }))}
+                    placeholder="Enter the evening reading or activity content... Use [VIDEO:youtubeId] to embed videos."
+                    rows={8}
+                    data-testid="input-catechism"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tip: Use [VIDEO:youtubeId] format to embed YouTube videos
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Evening Summary (optional)</label>
+                  <Textarea
+                    value={formData.eveningSummary}
+                    onChange={(e) => setFormData(prev => ({ ...prev, eveningSummary: e.target.value }))}
+                    placeholder="Enter optional evening summary..."
+                    rows={3}
+                    data-testid="input-evening-summary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Reflection Questions (one per line)</label>
+                  <Textarea
+                    value={formData.eveningQuestions}
+                    onChange={(e) => setFormData(prev => ({ ...prev, eveningQuestions: e.target.value }))}
+                    placeholder="Enter reflection questions, one per line..."
+                    rows={4}
+                    data-testid="input-questions"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
@@ -1038,30 +1098,30 @@ function ContentManagementView() {
             <CardHeader>
               <CardTitle className="text-lg">Morning Content</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4" data-testid="content-morning">
               {currentContent?.morningScriptureRef ? (
                 <>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Scripture Reference</p>
-                    <p className="font-serif">{currentContent.morningScriptureRef}</p>
+                    <p className="font-serif" data-testid="text-scripture-ref">{currentContent.morningScriptureRef}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Scripture Text</p>
-                    <p className="italic text-muted-foreground whitespace-pre-wrap">
+                    <p className="italic text-muted-foreground whitespace-pre-wrap" data-testid="text-scripture-text">
                       "{currentContent.morningScriptureText}"
                     </p>
                   </div>
                   {currentContent.morningMeditation && (
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Meditation</p>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="text-meditation">
                         {currentContent.morningMeditation}
                       </p>
                     </div>
                   )}
                 </>
               ) : (
-                <p className="text-muted-foreground text-center py-8">No morning content for this day</p>
+                <p className="text-muted-foreground text-center py-8" data-testid="text-no-morning-content">No morning content for this day</p>
               )}
             </CardContent>
           </Card>
@@ -1070,19 +1130,19 @@ function ContentManagementView() {
             <CardHeader>
               <CardTitle className="text-lg">Evening Content</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4" data-testid="content-evening">
               {currentContent?.eveningCatechism || currentContent?.eveningQuestions?.length ? (
                 <>
                   {currentContent.eveningCatechismRef && (
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Reference</p>
-                      <p className="font-serif">{currentContent.eveningCatechismRef}</p>
+                      <p className="font-serif" data-testid="text-catechism-ref">{currentContent.eveningCatechismRef}</p>
                     </div>
                   )}
                   {currentContent.eveningCatechism && (
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Content</p>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed max-h-64 overflow-y-auto">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed max-h-64 overflow-y-auto" data-testid="text-catechism">
                         {currentContent.eveningCatechism}
                       </p>
                     </div>
@@ -1090,7 +1150,7 @@ function ContentManagementView() {
                   {currentContent.eveningQuestions && currentContent.eveningQuestions.length > 0 && (
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Reflection Questions</p>
-                      <ul className="list-disc list-inside space-y-1 text-sm">
+                      <ul className="list-disc list-inside space-y-1 text-sm" data-testid="text-questions">
                         {currentContent.eveningQuestions.map((q, i) => (
                           <li key={i}>{q}</li>
                         ))}
@@ -1099,7 +1159,7 @@ function ContentManagementView() {
                   )}
                 </>
               ) : (
-                <p className="text-muted-foreground text-center py-8">No evening content for this day</p>
+                <p className="text-muted-foreground text-center py-8" data-testid="text-no-evening-content">No evening content for this day</p>
               )}
             </CardContent>
           </Card>
