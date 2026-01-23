@@ -1,0 +1,55 @@
+1. Instructions for the AI/Replit
+Tell the AI to perform these four "Sanitization" tasks on your CSV data:
+• Remove PDF Artifacts: Strip out all instances of "Spiritual Healing Ministry | First 30 Days of Prayer Page X of 101" and stray line breaks.
+• Balance the Text: If an eveningCatechism section is over 500 words (like Day 4), tell the AI to extract the core three paragraphs so the user isn't overwhelmed on their phone or dashboard.
+• Standardize Column Mapping: Ensure every day maps to a "Morning" and "Evening" card.
+    ◦ Morning Card: morningScriptureRef + morningScriptureText + morningMeditation + morningPrayer.
+    ◦ Evening Card: eveningCatechismRef + eveningCatechism + eveningQuestions.
+• Identify Reflection Days: When isReflectionDay is TRUE, the dashboard should hide the standard modules and show a "Weekly Review" journal prompt instead.
+
+--------------------------------------------------------------------------------
+2. The Optimized 30-Day Program Structure
+This structure uses the main content from the sources, organized into the thematic weeks established in the manual.
+Week 1: God’s Loving Plan for Humanity
+• Focus: The Trinity and the afterlife.
+• Day 1: The Trinity dwelling in the soul (John 14:23).
+• Day 2: War in Heaven and the nature of the Devil.
+• Day 3: The Fall of Man and Original Sin (Genesis 3:1–24).
+• Day 4: Final Judgment and the reality of Heaven, Hell, and Purgatory.
+• Day 5: The New Creation (Rev 21:1–8) and St. Faustina’s visions of Heaven/Hell.
+• Day 6: Reflection Day: "The Lamp of the Body" (Luke 11:33–36) and personal growth.
+Week 2: Turning Away From Sin
+• Focus: Identifying personal wounds and "footholds."
+• Day 7: The call to Repentance and the "Four Wounds of the Fall".
+• Day 8: Perseverance through trials and the "Different Kinds of Sins".
+• Day 9: The Ten Commandments and the "Seven Deadly Sins".
+• Day 10: The Armor of God and the "8 Ways People Give the Devil a Foothold".
+• Day 11: Truth and Freedom vs. the Occult and New Age practices.
+• Day 12: Reflection Day: The "Five Effects of Grace" vs. "Five Obstacles".
+Week 3: Jesus Christ The Messiah
+• Focus: The person of Jesus as Savior and Physician.
+• Day 13: The Baptism and Transfiguration: Jesus as "True God and True Man".
+• Day 14: Jesus the Healer: Calming the storm and healing at Bethesda.
+• Day 15: The Good Shepherd: Identifying the voice of the True Shepherd.
+• Day 16: The Crucifixion: Why Catholics focus on the Cross and the Passion.
+• Day 17: The Resurrection: The road to Emmaus and the glorified body.
+• Day 18: Reflection Day: The Ascension and the "Gifts of the Holy Spirit".
+Week 4: Grace, Our Defense Against Evil
+• Focus: The Sacraments and Sacramentals.
+• Day 19: Justification by Grace and the power of Baptism.
+• Day 20: The Holy Eucharist and the "Holy Mass Explained".
+• Day 21: Proclaiming the Truth in the "Last Days".
+• Day 22: The Role of Mary and the Saints against demonic attack.
+• Day 23: The "7 Powerful Sacramentals" (Rosary, Holy Water, St. Benedict Medals, etc.).
+• Day 24: Reflection Day: The call to "Christian Holiness" and total surrender.
+Week 5: Scripture: The Truth of God’s Word
+• Focus: Shaping the heart through the Word.
+• Day 25: Trusting God’s guidance (Psalm 25) and the "Unpredictable Power of the Word".
+• Day 26: The Inspiration and Interpretation of Sacred Scripture.
+• Day 27: Entering the "Sabbath Rest" and the Bible at the core of belief.
+• Day 28: Living with compassion (Colossians 3:12–17) and the Justice vs. Mercy of God.
+• Day 29: Proclaiming the Good News (Romans 10) and an Introduction to the Gospels.
+• Day 30: Final Reflection: Psalm 119 and reviewing the impact of the 30 days.
+3. Dashboard UI Tips for Consistency
+To make this intuitive, the dashboard should not just display text; it should be interactive:
+• Progress Bar: Display a bar that fills 3.3% for every day completed.
