@@ -44,8 +44,26 @@ The server uses a modular structure with separate files for routes, authenticati
 
 ### Week Structure
 - 5 weeks with 6 days each (30 days total)
-- Day 6 of each week is a reflection day (isReflectionDay=true)
-- Week 1 Theme: "God's Loving Plan for Humanity" - covers spiritual reality, angels/demons, Original Sin, heaven/hell/purgatory
+- Reflection days: 6, 12, 18, 24, 30 (isReflectionDay=true)
+- Reflection days show weekly review prompt instead of standard morning/evening tabs
+
+### Week Themes
+- **Week 1**: God's Loving Plan for Humanity (Trinity, angels, Original Sin, afterlife)
+- **Week 2**: Turning Away From Sin (wounds, sins, commandments, spiritual warfare)
+- **Week 3**: Jesus Christ The Messiah (baptism, healing, Good Shepherd, Crucifixion, Resurrection)
+- **Week 4**: Grace, Our Defense Against Evil (sacraments, Eucharist, Mary, sacramentals)
+- **Week 5**: Scripture: The Truth of God's Word (Psalms, inspiration, Sabbath rest, Gospels)
+
+### Content Structure
+- **Morning**: Scripture reference, scripture text, meditation for Lectio Divina
+- **Evening**: Catechism or activity content (may include embedded videos), 1 reflection question
+- Videos are embedded using `[VIDEO:youtubeId]` format in eveningCatechism field
+- ContentWithMedia component parses and renders embedded YouTube videos
+
+### Content Import
+- CSV import script at `scripts/import-content.ts`
+- Sanitizes PDF artifacts, balances long text, detects YouTube links
+- Run with: `npx tsx scripts/import-content.ts "path/to/file.csv"`
 
 ### Practice Resources Content
 The practiceResources table contains full content for:
