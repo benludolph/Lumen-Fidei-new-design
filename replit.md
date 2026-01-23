@@ -127,6 +127,13 @@ Admins can start new cohorts via the Settings tab:
 ### Mobile Responsive Design (Updated January 2026)
 Fully mobile-optimized for phone use at 400px viewport width:
 
+**Navigation:**
+- Desktop: Fixed sidebar on the left with full navigation
+- Mobile: Hamburger menu in top header bar, opens drawer from right side
+- MobileHeader component shows branding and hamburger button
+- MobileDrawer component slides in with all navigation options
+- Drawer closes on navigation, close button click, or overlay tap
+
 **Dashboard:**
 - Collapsible day selector grid on mobile
 - Prayer modals use full-screen height (90vh) on mobile for easy reading
