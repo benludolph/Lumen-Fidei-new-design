@@ -39,6 +39,44 @@ With honesty and without harsh self-judgment, acknowledge where you fell short. 
 5. **Look Forward**
 Resolve to do better tomorrow. Ask God for the specific grace you need. End with the Our Father.`;
 
+function ContentWithMedia({ text }: { text: string }) {
+  if (!text) return null;
+  
+  const parts = text.split(/(\[VIDEO:[a-zA-Z0-9_-]+\])/g);
+  
+  return (
+    <div className="space-y-4">
+      {parts.map((part, idx) => {
+        const videoMatch = part.match(/\[VIDEO:([a-zA-Z0-9_-]+)\]/);
+        if (videoMatch) {
+          const videoId = videoMatch[1];
+          return (
+            <div key={idx} className="aspect-video rounded-lg overflow-hidden shadow-lg my-4">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${videoId}`}
+                title="Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          );
+        }
+        if (part.trim()) {
+          const paragraphs = part.split(/\n\n+/);
+          return paragraphs.map((para, pIdx) => (
+            <p key={`${idx}-${pIdx}`} className="whitespace-pre-wrap leading-relaxed">{para.trim()}</p>
+          ));
+        }
+        return null;
+      })}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -249,7 +287,7 @@ export default function Dashboard() {
               </div>
 
               {dayContent.isReflectionDay ? (
-                <ReflectionView content={dayContent} />
+                <ReflectionView content={dayContent} existingAnswer={answers?.find(a => a.dayNumber === selectedDay)} />
               ) : (
                 <Tabs defaultValue="morning" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-8">
@@ -335,8 +373,8 @@ export default function Dashboard() {
                           <p className="text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
                         )}
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                        {dayContent.eveningCatechism}
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
+                        <ContentWithMedia text={dayContent.eveningCatechism || ''} />
                       </CardContent>
                     </Card>
                     
@@ -497,22 +535,72 @@ function AssignmentSection({ day, prompt, existingAnswer }: { day: number, promp
   );
 }
 
-function ReflectionView({ content }: { content: any }) {
-  // Simpler view for reflection days, just reading + big text area
-  // Re-using AssignmentSection logic but wrapping it differently would be ideal
-  // For brevity, just rendering AssignmentSection with "Reflection" styling
+function ReflectionView({ content, existingAnswer }: { content: any; existingAnswer?: any }) {
+  const weekNumber = content.weekNumber || Math.ceil(content.dayNumber / 6);
+  
+  const reflectionPrompt = content.eveningQuestions?.[0] || 
+    "Reflect on this week's journey. Consider your struggles, consolations, and resolutions for next week.";
+  
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-primary/5 to-secondary/20 border-none">
-        <CardContent className="pt-6 text-center italic text-lg text-primary/80">
-          "Take time today to look back on the week. Where did you see God's hand?"
+      <Card className="bg-gradient-to-br from-primary/10 to-secondary/20 border-none">
+        <CardHeader className="pb-2">
+          <CardTitle className="font-serif text-center">Week {weekNumber} Review</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-muted-foreground italic">
+            "Take time today to look back on the week. Where did you see God's hand?"
+          </p>
+        </CardContent>
+      </Card>
+      
+      {content.morningScriptureRef && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif">Scripture</CardTitle>
+            <p className="text-sm text-muted-foreground">{content.morningScriptureRef}</p>
+          </CardHeader>
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic">
+            "{content.morningScriptureText}"
+          </CardContent>
+        </Card>
+      )}
+      
+      {content.morningMeditation && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif">Meditation</CardTitle>
+          </CardHeader>
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+            {content.morningMeditation}
+          </CardContent>
+        </Card>
+      )}
+      
+      {content.eveningCatechism && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-serif">Reading</CardTitle>
+          </CardHeader>
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
+            <ContentWithMedia text={content.eveningCatechism} />
+          </CardContent>
+        </Card>
+      )}
+      
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="font-serif">Weekly Reflection</CardTitle>
+        </CardHeader>
+        <CardContent className="text-lg text-primary/80 italic">
+          {reflectionPrompt}
         </CardContent>
       </Card>
       
       <AssignmentSection 
         day={content.dayNumber} 
-        prompt="Write your weekly reflection below. Consider your struggles, consolations, and resolutions for next week."
-        existingAnswer={undefined} // We'd need to fetch this from parent properly in a real app
+        prompt="Write your reflection below."
+        existingAnswer={existingAnswer}
       />
     </div>
   );
