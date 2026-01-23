@@ -100,6 +100,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: number): Promise<void> {
+    // Cascade delete all user-related data
+    await db.delete(userAnswers).where(eq(userAnswers.userId, id));
+    await db.delete(prayerCompletions).where(eq(prayerCompletions.userId, id));
+    await db.delete(messages).where(
+      or(eq(messages.senderId, id), eq(messages.receiverId, id))
+    );
+    // Remove mentor assignment from any participants assigned to this user
+    await db.update(users).set({ mentorId: null }).where(eq(users.mentorId, id));
+    // Finally delete the user
     await db.delete(users).where(eq(users.id, id));
   }
 

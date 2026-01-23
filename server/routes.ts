@@ -41,11 +41,14 @@ export async function registerRoutes(
       return res.json([]);
     }
     
-    // Mentors only see their own mentees
+    // Mentors see their own mentees plus admins (for communication)
     if (req.user!.role === 'mentor') {
       const allUsers = await storage.getAllUsers();
       const mentees = allUsers.filter(u => u.mentorId === req.user!.id);
-      return res.json(sanitizeUsers(mentees));
+      const admins = allUsers.filter(u => u.role === 'admin');
+      // Combine mentees and admins (admins first for easy access)
+      const contacts = [...admins, ...mentees];
+      return res.json(sanitizeUsers(contacts));
     }
     
     // Admin sees all
@@ -186,18 +189,26 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const otherUserId = Number(req.params.otherUserId);
+    const otherUser = await storage.getUser(otherUserId);
+    if (!otherUser) return res.status(404).json({ message: "User not found" });
     
-    // Access control: Participants only with their mentor. Mentors only with their mentees.
+    // Access control:
+    // - Participants can only view messages with their mentor
+    // - Mentors can view messages with their mentees OR admins
+    // - Admins can view messages with anyone
     if (req.user!.role === 'participant') {
-        if (otherUserId !== req.user!.mentorId) {
-            // Allow looking up if they HAVE a mentor? Or just return 403?
-            // If they don't have a mentor, they can't chat.
-            if (!req.user!.mentorId) return res.status(403).json({message: "No mentor assigned"});
-             if (otherUserId !== req.user!.mentorId) return res.sendStatus(403);
-        }
+      if (!req.user!.mentorId) {
+        return res.status(403).json({ message: "No mentor assigned" });
+      }
+      if (otherUserId !== req.user!.mentorId) {
+        return res.status(403).json({ message: "You can only view messages with your mentor" });
+      }
     } else if (req.user!.role === 'mentor') {
-        const otherUser = await storage.getUser(otherUserId);
-        if (otherUser?.mentorId !== req.user!.id) return res.sendStatus(403);
+      const isMentee = otherUser.mentorId === req.user!.id;
+      const isAdmin = otherUser.role === 'admin';
+      if (!isMentee && !isAdmin) {
+        return res.status(403).json({ message: "You can only view messages with your mentees or admin" });
+      }
     }
     
     const messages = await storage.getMessages(req.user!.id, otherUserId);
@@ -208,14 +219,26 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const input = api.chat.send.input.parse(req.body);
+    const receiver = await storage.getUser(input.receiverId);
+    if (!receiver) return res.status(404).json({ message: "Receiver not found" });
     
-    // Same access control as above
+    // Access control:
+    // - Participants can only message their assigned mentor
+    // - Mentors can message their mentees OR admins
+    // - Admins can message anyone
     if (req.user!.role === 'participant') {
-        if (input.receiverId !== req.user!.mentorId) return res.sendStatus(403);
+      if (input.receiverId !== req.user!.mentorId) {
+        return res.status(403).json({ message: "You can only message your assigned mentor" });
+      }
     } else if (req.user!.role === 'mentor') {
-         const receiver = await storage.getUser(input.receiverId);
-         if (receiver?.mentorId !== req.user!.id) return res.sendStatus(403);
+      // Mentors can message their mentees or admins
+      const isMentee = receiver.mentorId === req.user!.id;
+      const isAdmin = receiver.role === 'admin';
+      if (!isMentee && !isAdmin) {
+        return res.status(403).json({ message: "You can only message your mentees or admin" });
+      }
     }
+    // Admin can message anyone - no restrictions
 
     const message = await storage.createMessage({
       senderId: req.user!.id,

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -121,8 +121,10 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
   const { mutate: updateUser } = useUpdateUser();
   const { toast } = useToast();
   const [resetOpen, setResetOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
-  const mentors = allUsers.filter(u => u.role === 'mentor');
+  // Include both mentors and admins as possible mentors for participants
+  const mentors = allUsers.filter(u => u.role === 'mentor' || u.role === 'admin');
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -136,6 +138,21 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
     },
     onError: () => {
       toast({ title: "Failed to reset password", variant: "destructive" });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/users/${user.id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "User deleted successfully", description: "All related data has been removed." });
+      setDeleteOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete user", variant: "destructive" });
     },
   });
 
@@ -198,38 +215,87 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
         {user.startDate ? format(new Date(user.startDate), "MMM d, yyyy") : "-"}
       </TableCell>
       <TableCell className="text-right">
-        <Dialog open={resetOpen} onOpenChange={setResetOpen}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" title="Reset password" data-testid={`button-reset-password-${user.id}`}>
-              <Key className="w-4 h-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset Password for {user.name}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Enter a new password for this user. They will need to use this password to log in.
-              </p>
-              <Input 
-                type="password"
-                placeholder="New password (min 6 characters)"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                data-testid="input-new-password"
-              />
-              <Button 
-                onClick={handleResetPassword} 
-                disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
-                className="w-full"
-                data-testid="button-confirm-reset"
-              >
-                {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+        <div className="flex items-center justify-end gap-1">
+          <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" title="Reset password" data-testid={`button-reset-password-${user.id}`}>
+                <Key className="w-4 h-4" />
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset Password for {user.name}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Enter a new password for this user. They will need to use this password to log in.
+                </p>
+                <Input 
+                  type="password"
+                  placeholder="New password (min 6 characters)"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  data-testid="input-new-password"
+                />
+                <Button 
+                  onClick={handleResetPassword} 
+                  disabled={newPassword.length < 6 || resetPasswordMutation.isPending}
+                  className="w-full"
+                  data-testid="button-confirm-reset"
+                >
+                  {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {user.role !== 'admin' && (
+            <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" title="Delete user" data-testid={`button-delete-user-${user.id}`}>
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete {user.name}?</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    This will permanently delete this user and all their data including:
+                  </p>
+                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                    <li>All reflection answers</li>
+                    <li>All prayer completion records</li>
+                    <li>All chat messages</li>
+                  </ul>
+                  <p className="text-sm font-medium text-destructive">
+                    This action cannot be undone. The user will be able to re-register with the same email.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setDeleteOpen(false)}
+                      className="flex-1"
+                      data-testid="button-cancel-delete"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => deleteUserMutation.mutate()}
+                      disabled={deleteUserMutation.isPending}
+                      className="flex-1"
+                      data-testid="button-confirm-delete"
+                    >
+                      {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </TableCell>
     </TableRow>
   );

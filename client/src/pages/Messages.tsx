@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers } from "@/hooks/use-users";
 import { useMessages, useSendMessage } from "@/hooks/use-chat";
@@ -25,14 +25,16 @@ export default function Messages() {
   // API returns filtered list based on user's role - participants get their mentor, mentors get their mentees
   const { data: contacts } = useUsers();
 
-  const [selectedContactId, setSelectedContactId] = useState<number | null>(
-    initialUserId ? Number(initialUserId) : (contacts?.[0]?.id || null)
-  );
+  const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
 
-  // If initial contact isn't in list yet, wait for data
-  if (contacts && contacts.length > 0 && !selectedContactId) {
-     setSelectedContactId(contacts[0].id);
-  }
+  // Sync selected contact with URL parameter or default to first contact
+  useEffect(() => {
+    if (initialUserId) {
+      setSelectedContactId(Number(initialUserId));
+    } else if (contacts && contacts.length > 0 && !selectedContactId) {
+      setSelectedContactId(contacts[0].id);
+    }
+  }, [initialUserId, contacts, selectedContactId]);
 
   return (
     <Shell>
@@ -52,6 +54,7 @@ export default function Messages() {
                     "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
                     selectedContactId === contact.id ? "bg-white shadow-sm ring-1 ring-border" : "hover:bg-white/50"
                   )}
+                  data-testid={`contact-${contact.id}`}
                 >
                   <Avatar>
                     <AvatarFallback className="bg-primary/10 text-primary">
@@ -97,6 +100,15 @@ function ChatWindow({ currentUserId, otherUserId, otherUserName }: { currentUser
   const { data: messages, isLoading } = useMessages(otherUserId);
   const { mutate: sendMessage, isPending } = useSendMessage();
   const [content, setContent] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,16 +123,21 @@ function ChatWindow({ currentUserId, otherUserId, otherUserName }: { currentUser
   if (isLoading) return <div className="p-4">Loading messages...</div>;
 
   return (
-    <>
-      <div className="p-4 border-b border-border flex items-center gap-3">
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b border-border flex items-center gap-3 shrink-0">
         <Avatar className="h-8 w-8">
            <AvatarFallback>{otherUserName.charAt(0)}</AvatarFallback>
         </Avatar>
         <span className="font-medium">{otherUserName}</span>
       </div>
       
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-4 flex flex-col min-h-full">
+          {messages?.length === 0 && (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+              No messages yet. Start the conversation!
+            </div>
+          )}
           {messages?.map((msg) => {
             const isMe = msg.senderId === currentUserId;
             return (
@@ -132,28 +149,30 @@ function ChatWindow({ currentUserId, otherUserId, otherUserName }: { currentUser
                     ? "bg-primary text-primary-foreground self-end rounded-br-none" 
                     : "bg-secondary text-secondary-foreground self-start rounded-bl-none"
                 )}
+                data-testid={`message-${msg.id}`}
               >
                 {msg.content}
               </div>
             );
           })}
-          <div id="scroll-bottom" />
+          <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
+      </div>
 
-      <div className="p-4 border-t border-border bg-stone-50">
+      <div className="p-4 border-t border-border bg-stone-50 shrink-0">
         <form onSubmit={handleSend} className="flex gap-2">
           <Input 
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Type a message..."
             className="bg-white"
+            data-testid="input-message"
           />
-          <Button type="submit" size="icon" disabled={isPending || !content.trim()}>
+          <Button type="submit" size="icon" disabled={isPending || !content.trim()} data-testid="button-send-message">
             <Send className="w-4 h-4" />
           </Button>
         </form>
       </div>
-    </>
+    </div>
   );
 }
