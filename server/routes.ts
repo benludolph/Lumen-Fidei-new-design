@@ -29,6 +29,7 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     const role = req.query.role as "participant" | "mentor" | undefined;
+    const all = req.query.all === "true";
     
     // Participants can only see their own mentor
     if (req.user!.role === 'participant') {
@@ -41,8 +42,13 @@ export async function registerRoutes(
       return res.json([]);
     }
     
-    // Mentors see their own mentees plus admins (for communication)
+    // Mentors: if requesting all users, return everyone for new conversation dialog
     if (req.user!.role === 'mentor') {
+      if (all) {
+        const allUsers = await storage.getAllUsers();
+        return res.json(sanitizeUsers(allUsers.filter(u => u.id !== req.user!.id)));
+      }
+      // Default: see their own mentees plus admins (for communication)
       const allUsers = await storage.getAllUsers();
       const mentees = allUsers.filter(u => u.mentorId === req.user!.id);
       const admins = allUsers.filter(u => u.role === 'admin');
@@ -51,13 +57,18 @@ export async function registerRoutes(
       return res.json(sanitizeUsers(contacts));
     }
     
-    // Admin sees all
+    // Admin sees all (exclude self from listing for new conversations)
     if (role) {
       const users = await storage.getUsersByRole(role);
       res.json(sanitizeUsers(users));
     } else {
       const users = await storage.getAllUsers();
-      res.json(sanitizeUsers(users));
+      // If requesting for new conversations, exclude self
+      if (all) {
+        res.json(sanitizeUsers(users.filter(u => u.id !== req.user!.id)));
+      } else {
+        res.json(sanitizeUsers(users));
+      }
     }
   });
 

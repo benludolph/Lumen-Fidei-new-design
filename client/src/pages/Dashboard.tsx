@@ -141,13 +141,13 @@ export default function Dashboard() {
 
   return (
     <Shell>
-      {/* Prayer Modals */}
+      {/* Prayer Modals - Full screen on mobile */}
       <Dialog open={prayerModalOpen !== null} onOpenChange={() => setPrayerModalOpen(null)}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-lg h-[90vh] sm:h-auto sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">{prayerModalOpen}</DialogTitle>
+            <DialogTitle className="font-serif text-lg sm:text-xl">{prayerModalOpen}</DialogTitle>
           </DialogHeader>
-          <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+          <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
             {prayerModalOpen && PRAYER_TEXTS[prayerModalOpen as keyof typeof PRAYER_TEXTS]}
           </div>
         </DialogContent>
@@ -270,18 +270,18 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Main Content Area - Expanded to full width */}
+        {/* Main Content Area - Expanded to full width, mobile-optimized */}
         <div className={cn(
-          "overflow-y-auto custom-scrollbar px-2",
+          "overflow-y-auto custom-scrollbar px-1 sm:px-2",
           !isMobile && "col-span-9"
         )}>
           {isLoading ? (
              <ContentSkeleton />
           ) : dayContent ? (
-            <div className="space-y-8 pb-10">
-              <div className="text-center space-y-2 mb-8">
+            <div className="space-y-4 sm:space-y-8 pb-10">
+              <div className="text-center space-y-2 mb-4 sm:mb-8">
                 <Badge variant="outline" className="mb-2">Day {selectedDay}</Badge>
-                <h1 className="font-serif text-4xl font-bold text-primary">
+                <h1 className="font-serif text-2xl sm:text-4xl font-bold text-primary">
                   {dayContent.isReflectionDay ? "Weekly Reflection" : "Daily Devotion"}
                 </h1>
               </div>
@@ -290,69 +290,69 @@ export default function Dashboard() {
                 <ReflectionView content={dayContent} existingAnswer={answers?.find(a => a.dayNumber === selectedDay)} />
               ) : (
                 <Tabs defaultValue="morning" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-8">
-                    <TabsTrigger value="morning" className="gap-2">
-                      <Sun className="w-4 h-4" /> Morning Prayer
+                  <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-8">
+                    <TabsTrigger value="morning" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                      <Sun className="w-3 h-3 sm:w-4 sm:h-4" /> Morning
                     </TabsTrigger>
-                    <TabsTrigger value="evening" className="gap-2">
-                      <Moon className="w-4 h-4" /> Evening Review
+                    <TabsTrigger value="evening" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                      <Moon className="w-3 h-3 sm:w-4 sm:h-4" /> Evening
                     </TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="morning" className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <TabsContent value="morning" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                     {/* Morning Prayers - click to open modal */}
                     <Card className="bg-primary/5 border-primary/20">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="font-serif text-lg">Morning Prayers</CardTitle>
-                        <p className="text-sm text-muted-foreground">Click each prayer to open and pray</p>
+                      <CardHeader className="pb-2 p-3 sm:p-6">
+                        <CardTitle className="font-serif text-base sm:text-lg">Morning Prayers</CardTitle>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Tap to open and pray</p>
                       </CardHeader>
-                      <CardContent className="space-y-2">
+                      <CardContent className="space-y-2 p-3 sm:p-6 pt-0">
                         <Button
                           variant="outline"
-                          className="w-full justify-start gap-3 h-auto py-3"
+                          className="w-full justify-start gap-2 sm:gap-3 h-auto py-3 text-sm sm:text-base"
                           onClick={() => setPrayerModalOpen("Prayer Against Retaliation")}
                           data-testid="button-prayer-retaliation"
                         >
-                          <BookOpen className="w-4 h-4 text-primary" />
-                          <span>Prayer Against Retaliation</span>
+                          <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                          <span className="text-left">Prayer Against Retaliation</span>
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full justify-start gap-3 h-auto py-3"
+                          className="w-full justify-start gap-2 sm:gap-3 h-auto py-3 text-sm sm:text-base"
                           onClick={() => setPrayerModalOpen("Miracle Prayer")}
                           data-testid="button-prayer-miracle"
                         >
-                          <BookOpen className="w-4 h-4 text-primary" />
-                          <span>Miracle Prayer</span>
+                          <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                          <span className="text-left">Miracle Prayer</span>
                         </Button>
                       </CardContent>
                     </Card>
                     
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="font-serif">Scripture</CardTitle>
-                        <p className="text-sm text-muted-foreground">{dayContent.morningScriptureRef}</p>
+                      <CardHeader className="p-3 sm:p-6">
+                        <CardTitle className="font-serif text-base sm:text-lg">Scripture</CardTitle>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.morningScriptureRef}</p>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic">
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic text-sm sm:text-base p-3 sm:p-6 pt-0">
                         "{dayContent.morningScriptureText}"
                       </CardContent>
                     </Card>
                     
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="font-serif">Meditation</CardTitle>
+                      <CardHeader className="p-3 sm:p-6">
+                        <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
                         {dayContent.morningMeditation}
                       </CardContent>
                     </Card>
                     
                     {dayContent.morningPrayer && (
                       <Card className="bg-secondary/30">
-                        <CardHeader>
-                          <CardTitle className="font-serif">Closing Prayer</CardTitle>
+                        <CardHeader className="p-3 sm:p-6">
+                          <CardTitle className="font-serif text-base sm:text-lg">Closing Prayer</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic whitespace-pre-wrap">
+                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
                           {dayContent.morningPrayer}
                         </CardContent>
                       </Card>
@@ -365,25 +365,25 @@ export default function Dashboard() {
                     />
                   </TabsContent>
                   
-                  <TabsContent value="evening" className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <TabsContent value="evening" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="font-serif">Catechism</CardTitle>
+                      <CardHeader className="p-3 sm:p-6">
+                        <CardTitle className="font-serif text-base sm:text-lg">Catechism</CardTitle>
                         {dayContent.eveningCatechismRef && (
-                          <p className="text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
                         )}
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed text-sm sm:text-base p-3 sm:p-6 pt-0">
                         <ContentWithMedia text={dayContent.eveningCatechism || ''} />
                       </CardContent>
                     </Card>
                     
                     {dayContent.eveningSummary && (
                       <Card className="bg-secondary/50">
-                        <CardHeader>
-                          <CardTitle className="font-serif text-lg">Summary of Key Concepts</CardTitle>
+                        <CardHeader className="p-3 sm:p-6">
+                          <CardTitle className="font-serif text-base sm:text-lg">Summary of Key Concepts</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
                           {dayContent.eveningSummary}
                         </CardContent>
                       </Card>
@@ -391,11 +391,11 @@ export default function Dashboard() {
                     
                     {dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
                       <Card className="border-primary/20">
-                        <CardHeader>
-                          <CardTitle className="font-serif">Questions to Consider</CardTitle>
+                        <CardHeader className="p-3 sm:p-6">
+                          <CardTitle className="font-serif text-base sm:text-lg">Questions to Consider</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <ol className="list-decimal pl-4 space-y-3 text-muted-foreground">
+                        <CardContent className="p-3 sm:p-6 pt-0">
+                          <ol className="list-decimal pl-4 space-y-2 sm:space-y-3 text-muted-foreground text-sm sm:text-base">
                             {(dayContent.eveningQuestions as string[]).map((q, idx) => (
                               <li key={idx} className="leading-relaxed">{q}</li>
                             ))}
@@ -406,11 +406,11 @@ export default function Dashboard() {
                     
                     {/* Examination of Conscience */}
                     <Card className="bg-primary/5 border-primary/20">
-                      <CardHeader>
-                        <CardTitle className="font-serif">Examination of Conscience</CardTitle>
-                        <p className="text-sm text-muted-foreground">Daily Examen (10-15 minutes)</p>
+                      <CardHeader className="p-3 sm:p-6">
+                        <CardTitle className="font-serif text-base sm:text-lg">Examination of Conscience</CardTitle>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Daily Examen (10-15 minutes)</p>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
                         {EXAMINATION_OF_CONSCIENCE}
                       </CardContent>
                     </Card>
@@ -499,35 +499,36 @@ function AssignmentSection({ day, prompt, existingAnswer }: { day: number, promp
 
   return (
     <Card className="border-primary/20 bg-primary/5">
-      <CardHeader>
-        <CardTitle className="font-serif">Daily Response</CardTitle>
+      <CardHeader className="p-3 sm:p-6">
+        <CardTitle className="font-serif text-base sm:text-lg">Daily Response</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="italic text-muted-foreground">{prompt}</p>
+      <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6 pt-0">
+        <p className="italic text-muted-foreground text-sm sm:text-base">{prompt}</p>
         
         {isEditing ? (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <Textarea 
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="Write your reflection here..."
-              className="min-h-[150px] bg-white"
+              className="min-h-[120px] sm:min-h-[150px] bg-white text-sm sm:text-base"
+              data-testid="input-reflection"
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               {existingAnswer && (
-                <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                <Button variant="ghost" onClick={() => setIsEditing(false)} className="w-full sm:w-auto">Cancel</Button>
               )}
-              <Button onClick={handleSubmit} disabled={isPending || !content.trim()}>
+              <Button onClick={handleSubmit} disabled={isPending || !content.trim()} className="w-full sm:w-auto" data-testid="button-save-reflection">
                 {isPending ? "Saving..." : "Save Reflection"}
               </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
-             <div className="bg-white p-4 rounded-md border border-border text-sm whitespace-pre-wrap">
+          <div className="space-y-3 sm:space-y-4">
+             <div className="bg-white p-3 sm:p-4 rounded-md border border-border text-sm whitespace-pre-wrap">
                {content}
              </div>
-             <Button variant="outline" onClick={() => setIsEditing(true)}>Edit Response</Button>
+             <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full sm:w-auto" data-testid="button-edit-reflection">Edit Response</Button>
           </div>
         )}
       </CardContent>
@@ -542,13 +543,13 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
     "Reflect on this week's journey. Consider your struggles, consolations, and resolutions for next week.";
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="bg-gradient-to-br from-primary/10 to-secondary/20 border-none">
-        <CardHeader className="pb-2">
-          <CardTitle className="font-serif text-center">Week {weekNumber} Review</CardTitle>
+        <CardHeader className="pb-2 p-3 sm:p-6">
+          <CardTitle className="font-serif text-center text-base sm:text-lg">Week {weekNumber} Review</CardTitle>
         </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-muted-foreground italic">
+        <CardContent className="text-center space-y-4 p-3 sm:p-6 pt-0">
+          <p className="text-muted-foreground italic text-sm sm:text-base">
             "Take time today to look back on the week. Where did you see God's hand?"
           </p>
         </CardContent>
@@ -556,11 +557,11 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
       
       {content.morningScriptureRef && (
         <Card>
-          <CardHeader>
-            <CardTitle className="font-serif">Scripture</CardTitle>
-            <p className="text-sm text-muted-foreground">{content.morningScriptureRef}</p>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="font-serif text-base sm:text-lg">Scripture</CardTitle>
+            <p className="text-xs sm:text-sm text-muted-foreground">{content.morningScriptureRef}</p>
           </CardHeader>
-          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic">
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic text-sm sm:text-base p-3 sm:p-6 pt-0">
             "{content.morningScriptureText}"
           </CardContent>
         </Card>
@@ -568,10 +569,10 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
       
       {content.morningMeditation && (
         <Card>
-          <CardHeader>
-            <CardTitle className="font-serif">Meditation</CardTitle>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
           </CardHeader>
-          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
             {content.morningMeditation}
           </CardContent>
         </Card>
@@ -579,20 +580,20 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
       
       {content.eveningCatechism && (
         <Card>
-          <CardHeader>
-            <CardTitle className="font-serif">Reading</CardTitle>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="font-serif text-base sm:text-lg">Reading</CardTitle>
           </CardHeader>
-          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed">
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed text-sm sm:text-base p-3 sm:p-6 pt-0">
             <ContentWithMedia text={content.eveningCatechism} />
           </CardContent>
         </Card>
       )}
       
       <Card className="border-primary/30 bg-primary/5">
-        <CardHeader>
-          <CardTitle className="font-serif">Weekly Reflection</CardTitle>
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="font-serif text-base sm:text-lg">Weekly Reflection</CardTitle>
         </CardHeader>
-        <CardContent className="text-lg text-primary/80 italic">
+        <CardContent className="text-base sm:text-lg text-primary/80 italic p-3 sm:p-6 pt-0">
           {reflectionPrompt}
         </CardContent>
       </Card>

@@ -13,6 +13,18 @@ export function useUsers(role?: "participant" | "mentor") {
   });
 }
 
+// Get all users (for admin/mentor to start new conversations)
+export function useAllUsers() {
+  return useQuery({
+    queryKey: [api.users.list.path, "all"],
+    queryFn: async () => {
+      const res = await fetch(`${api.users.list.path}?all=true`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch users");
+      return api.users.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
