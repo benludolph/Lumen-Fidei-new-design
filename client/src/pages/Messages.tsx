@@ -43,10 +43,9 @@ export default function Messages() {
   const showChat = isMobile ? selectedContactId !== null : true;
   const showContacts = isMobile ? selectedContactId === null : true;
 
-  // Filter users for new chat dialog (exclude current contacts and self)
+  // Filter users for new chat dialog (exclude only self, allow searching all users)
   const availableUsers = allUsers?.filter(u => 
     u.id !== user?.id && 
-    !contacts?.some(c => c.id === u.id) &&
     (u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
      u.email.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
