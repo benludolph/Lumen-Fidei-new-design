@@ -147,6 +147,15 @@ The Evening tab includes an "Examination of Conscience" section with the 5-step 
 4. Face Your Shortcomings
 5. Look Forward
 
+### Admin Content Management (Added January 2026)
+Admins can view and edit all 30 days of content via the Content tab:
+- **Day Selector Grid**: 30-day grid organized by week (5 weeks × 6 days)
+- **View Mode**: Displays morning content (scripture ref, text, meditation) and evening content (catechism ref, content with embedded videos, reflection questions)
+- **Edit Mode**: Full form with all content fields including weekTheme, morningPrayer, eveningSummary
+- **Reflection Days**: Days 6, 12, 18, 24, 30 marked with badge
+- **Time-gate Independent**: Admins can view/edit any day regardless of cohort time-gating
+- Form properly resets when switching between days to prevent stale data
+
 ## External Dependencies
 
 ### Database
