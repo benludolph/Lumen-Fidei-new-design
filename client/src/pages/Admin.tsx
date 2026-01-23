@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -54,6 +55,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
             <Settings className="w-4 h-4" /> Settings
+          </TabsTrigger>
+          <TabsTrigger value="content" className="gap-2" data-testid="tab-content">
+            <BookOpen className="w-4 h-4" /> Content
           </TabsTrigger>
         </TabsList>
 
@@ -103,6 +107,10 @@ export default function Admin() {
 
         <TabsContent value="settings">
           <CohortSettingsView />
+        </TabsContent>
+
+        <TabsContent value="content">
+          <ContentManagementView />
         </TabsContent>
       </Tabs>
     </Shell>
@@ -735,6 +743,368 @@ function CohortSettingsView() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+type DailyContentType = {
+  id: number;
+  dayNumber: number;
+  weekNumber: number;
+  weekTheme: string | null;
+  isReflectionDay: boolean | null;
+  morningScriptureRef: string | null;
+  morningScriptureText: string | null;
+  morningMeditation: string | null;
+  morningPrayer: string | null;
+  eveningCatechismRef: string | null;
+  eveningCatechism: string | null;
+  eveningSummary: string | null;
+  eveningQuestions: string[] | null;
+};
+
+function ContentManagementView() {
+  const { toast } = useToast();
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [editMode, setEditMode] = useState(false);
+  
+  const { data: allContent, isLoading } = useQuery<DailyContentType[]>({
+    queryKey: [api.content.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.content.list.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch content");
+      return res.json();
+    },
+  });
+
+  const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
+
+  const [formData, setFormData] = useState({
+    morningScriptureRef: "",
+    morningScriptureText: "",
+    morningMeditation: "",
+    eveningCatechismRef: "",
+    eveningCatechism: "",
+    eveningQuestions: "",
+  });
+
+  const updateFormFromContent = (content: DailyContentType | undefined) => {
+    if (content) {
+      setFormData({
+        morningScriptureRef: content.morningScriptureRef || "",
+        morningScriptureText: content.morningScriptureText || "",
+        morningMeditation: content.morningMeditation || "",
+        eveningCatechismRef: content.eveningCatechismRef || "",
+        eveningCatechism: content.eveningCatechism || "",
+        eveningQuestions: content.eveningQuestions?.join("\n") || "",
+      });
+    }
+  };
+
+  const handleDayChange = (day: number) => {
+    setSelectedDay(day);
+    setEditMode(false);
+    const content = allContent?.find(c => c.dayNumber === day);
+    updateFormFromContent(content);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", api.admin.createContent.path, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.content.list.path] });
+      toast({ title: "Content saved successfully" });
+      setEditMode(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to save content", variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    const weekNumber = Math.ceil(selectedDay / 6);
+    const isReflectionDay = selectedDay % 6 === 0;
+    
+    saveMutation.mutate({
+      dayNumber: selectedDay,
+      weekNumber,
+      isReflectionDay,
+      morningScriptureRef: formData.morningScriptureRef || null,
+      morningScriptureText: formData.morningScriptureText || null,
+      morningMeditation: formData.morningMeditation || null,
+      eveningCatechismRef: formData.eveningCatechismRef || null,
+      eveningCatechism: formData.eveningCatechism || null,
+      eveningQuestions: formData.eveningQuestions.trim() 
+        ? formData.eveningQuestions.split("\n").filter(q => q.trim())
+        : null,
+    });
+  };
+
+  const startEdit = () => {
+    updateFormFromContent(currentContent);
+    setEditMode(true);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center">Loading content...</CardContent>
+      </Card>
+    );
+  }
+
+  const weeks = [1, 2, 3, 4, 5];
+  const weekThemes = [
+    "God's Loving Plan for Humanity",
+    "Turning Away From Sin",
+    "Jesus Christ The Messiah",
+    "Grace, Our Defense Against Evil",
+    "Scripture: The Truth of God's Word"
+  ];
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              Daily Content Management
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleDayChange(Math.max(1, selectedDay - 1))}
+                disabled={selectedDay <= 1}
+                data-testid="button-prev-day"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="font-medium min-w-[80px] text-center">Day {selectedDay}</span>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleDayChange(Math.min(30, selectedDay + 1))}
+                disabled={selectedDay >= 30}
+                data-testid="button-next-day"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-2 mb-6">
+            {weeks.map(week => (
+              <div key={week} className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground text-center">Week {week}</p>
+                <div className="grid grid-cols-6 gap-1">
+                  {[1, 2, 3, 4, 5, 6].map(dayInWeek => {
+                    const day = (week - 1) * 6 + dayInWeek;
+                    const hasContent = allContent?.some(c => c.dayNumber === day);
+                    const isReflection = dayInWeek === 6;
+                    return (
+                      <Button
+                        key={day}
+                        variant={selectedDay === day ? "default" : hasContent ? "secondary" : "outline"}
+                        size="sm"
+                        className={`h-8 w-8 p-0 text-xs ${isReflection ? "ring-1 ring-primary/30" : ""}`}
+                        onClick={() => handleDayChange(day)}
+                        data-testid={`button-day-${day}`}
+                      >
+                        {day}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-serif text-xl">Day {selectedDay} - Week {Math.ceil(selectedDay / 6)}</h3>
+              <p className="text-sm text-muted-foreground">
+                {weekThemes[Math.ceil(selectedDay / 6) - 1]}
+                {currentContent?.isReflectionDay && (
+                  <Badge variant="outline" className="ml-2">Reflection Day</Badge>
+                )}
+              </p>
+            </div>
+            {!editMode ? (
+              <Button onClick={startEdit} data-testid="button-edit-content">
+                Edit Content
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEditMode(false)} data-testid="button-cancel-edit">
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-content">
+                  <Save className="w-4 h-4 mr-2" />
+                  {saveMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {editMode ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Morning Content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Scripture Reference</label>
+                <Input
+                  value={formData.morningScriptureRef}
+                  onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureRef: e.target.value }))}
+                  placeholder="e.g., John 3:16-17"
+                  data-testid="input-scripture-ref"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Scripture Text</label>
+                <Textarea
+                  value={formData.morningScriptureText}
+                  onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureText: e.target.value }))}
+                  placeholder="Enter the scripture passage..."
+                  rows={5}
+                  data-testid="input-scripture-text"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Meditation</label>
+                <Textarea
+                  value={formData.morningMeditation}
+                  onChange={(e) => setFormData(prev => ({ ...prev, morningMeditation: e.target.value }))}
+                  placeholder="Enter the meditation text for Lectio Divina..."
+                  rows={8}
+                  data-testid="input-meditation"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Evening Content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Catechism Reference</label>
+                <Input
+                  value={formData.eveningCatechismRef}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechismRef: e.target.value }))}
+                  placeholder="e.g., CCC 232-237"
+                  data-testid="input-catechism-ref"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Catechism / Activity Content</label>
+                <Textarea
+                  value={formData.eveningCatechism}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechism: e.target.value }))}
+                  placeholder="Enter the evening reading or activity content... Use [VIDEO:youtubeId] to embed videos."
+                  rows={10}
+                  data-testid="input-catechism"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Tip: Use [VIDEO:youtubeId] format to embed YouTube videos
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Reflection Questions (one per line)</label>
+                <Textarea
+                  value={formData.eveningQuestions}
+                  onChange={(e) => setFormData(prev => ({ ...prev, eveningQuestions: e.target.value }))}
+                  placeholder="Enter reflection questions, one per line..."
+                  rows={4}
+                  data-testid="input-questions"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Morning Content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {currentContent?.morningScriptureRef ? (
+                <>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Scripture Reference</p>
+                    <p className="font-serif">{currentContent.morningScriptureRef}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Scripture Text</p>
+                    <p className="italic text-muted-foreground whitespace-pre-wrap">
+                      "{currentContent.morningScriptureText}"
+                    </p>
+                  </div>
+                  {currentContent.morningMeditation && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Meditation</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {currentContent.morningMeditation}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No morning content for this day</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Evening Content</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {currentContent?.eveningCatechism || currentContent?.eveningQuestions?.length ? (
+                <>
+                  {currentContent.eveningCatechismRef && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Reference</p>
+                      <p className="font-serif">{currentContent.eveningCatechismRef}</p>
+                    </div>
+                  )}
+                  {currentContent.eveningCatechism && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Content</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed max-h-64 overflow-y-auto">
+                        {currentContent.eveningCatechism}
+                      </p>
+                    </div>
+                  )}
+                  {currentContent.eveningQuestions && currentContent.eveningQuestions.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Reflection Questions</p>
+                      <ul className="list-disc list-inside space-y-1 text-sm">
+                        {currentContent.eveningQuestions.map((q, i) => (
+                          <li key={i}>{q}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">No evening content for this day</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
