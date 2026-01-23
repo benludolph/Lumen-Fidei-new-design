@@ -74,6 +74,14 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Cohort settings - stores program-wide configuration like start date
+export const cohortSettings = pgTable("cohort_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Prayer completion tracking - records when users complete morning/evening prayers
 export const prayerCompletions = pgTable("prayer_completions", {
   id: serial("id").primaryKey(),
@@ -144,6 +152,7 @@ export const insertTrackRequirementsSchema = createInsertSchema(trackRequirement
 }).omit({ id: true });
 export const insertPrayerCompletionSchema = createInsertSchema(prayerCompletions).omit({ id: true, completedAt: true });
 export const insertPracticeResourceSchema = createInsertSchema(practiceResources).omit({ id: true });
+export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omit({ id: true, updatedAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -167,6 +176,9 @@ export type InsertPrayerCompletion = z.infer<typeof insertPrayerCompletionSchema
 
 export type PracticeResource = typeof practiceResources.$inferSelect;
 export type InsertPracticeResource = z.infer<typeof insertPracticeResourceSchema>;
+
+export type CohortSetting = typeof cohortSettings.$inferSelect;
+export type InsertCohortSetting = z.infer<typeof insertCohortSettingsSchema>;
 
 // Request/Response types
 

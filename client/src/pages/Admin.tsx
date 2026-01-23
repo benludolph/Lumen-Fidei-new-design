@@ -11,14 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Admin() {
   const { user } = useAuth();
@@ -49,6 +51,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="progress" className="gap-2" data-testid="tab-progress">
             <BarChart3 className="w-4 h-4" /> Progress
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
+            <Settings className="w-4 h-4" /> Settings
           </TabsTrigger>
         </TabsList>
 
@@ -94,6 +99,10 @@ export default function Admin() {
 
         <TabsContent value="progress">
           <ProgressView />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <CohortSettingsView />
         </TabsContent>
       </Tabs>
     </Shell>
@@ -358,6 +367,98 @@ function ProgressView() {
             ))}
           </TableBody>
         </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function CohortSettingsView() {
+  const { toast } = useToast();
+  const [startDate, setStartDate] = useState("");
+  
+  const { data: cohortData, isLoading } = useQuery<{ startDate: string | null }>({
+    queryKey: [api.admin.cohortSettings.get.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.cohortSettings.get.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch cohort settings");
+      return res.json();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (newStartDate: string) => {
+      const res = await apiRequest("POST", api.admin.cohortSettings.update.path, { startDate: newStartDate });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.admin.cohortSettings.get.path] });
+      toast({ title: "Cohort start date updated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update start date", variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    if (startDate) {
+      updateMutation.mutate(startDate);
+    }
+  };
+
+  const currentStartDate = cohortData?.startDate 
+    ? format(new Date(cohortData.startDate), "yyyy-MM-dd")
+    : "";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Calendar className="w-5 h-5" />
+          Cohort Settings
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium mb-2">Program Start Date</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Set the date when the 30-day program begins for all participants. Everyone's daily content 
+              will be calculated from this date.
+            </p>
+          </div>
+          
+          {isLoading ? (
+            <p className="text-muted-foreground">Loading...</p>
+          ) : (
+            <>
+              {currentStartDate && (
+                <div className="p-4 bg-muted rounded-md">
+                  <p className="text-sm text-muted-foreground">Current start date</p>
+                  <p className="font-medium">{format(new Date(cohortData!.startDate!), "MMMM d, yyyy")}</p>
+                </div>
+              )}
+              
+              <div className="flex items-end gap-4">
+                <div className="space-y-2 flex-1 max-w-xs">
+                  <label className="text-sm font-medium">Set New Start Date</label>
+                  <Input 
+                    type="date" 
+                    value={startDate || currentStartDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    data-testid="input-cohort-start-date"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={updateMutation.isPending || !startDate}
+                  data-testid="button-save-cohort-date"
+                >
+                  {updateMutation.isPending ? "Saving..." : "Save Start Date"}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

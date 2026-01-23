@@ -1,13 +1,14 @@
 import { db } from "./db";
 import {
-  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources,
+  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
   type Message, type InsertMessage,
   type TrackRequirement, type InsertTrackRequirement,
   type PrayerCompletion, type InsertPrayerCompletion,
-  type PracticeResource, type InsertPracticeResource
+  type PracticeResource, type InsertPracticeResource,
+  type CohortSetting
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc } from "drizzle-orm";
 
@@ -53,6 +54,10 @@ export interface IStorage {
   getPracticeResourceByName(name: string): Promise<PracticeResource | undefined>;
   createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   upsertPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
+  
+  // Cohort Settings
+  getCohortSetting(key: string): Promise<string | null>;
+  setCohortSetting(key: string, value: string): Promise<CohortSetting>;
   
   // session store
   sessionStore: any;
@@ -239,6 +244,25 @@ export class DatabaseStorage implements IStorage {
       return updated;
     }
     return this.createPracticeResource(resource);
+  }
+
+  // Cohort Settings
+  async getCohortSetting(key: string): Promise<string | null> {
+    const [setting] = await db.select().from(cohortSettings).where(eq(cohortSettings.key, key));
+    return setting?.value ?? null;
+  }
+
+  async setCohortSetting(key: string, value: string): Promise<CohortSetting> {
+    const existing = await this.getCohortSetting(key);
+    if (existing !== null) {
+      const [updated] = await db.update(cohortSettings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(cohortSettings.key, key))
+        .returning();
+      return updated;
+    }
+    const [newSetting] = await db.insert(cohortSettings).values({ key, value }).returning();
+    return newSetting;
   }
 }
 

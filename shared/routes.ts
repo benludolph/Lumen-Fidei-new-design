@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources } from './schema';
+import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings } from './schema';
 
 export const errorSchemas = {
   validation: z.object({
@@ -166,6 +166,15 @@ export const api = {
       },
     },
   },
+  cohort: {
+    getStartDate: {
+      method: 'GET' as const,
+      path: '/api/cohort/start-date',
+      responses: {
+        200: z.object({ startDate: z.string().nullable(), currentDay: z.number() }),
+      },
+    },
+  },
   prayerCompletions: {
     list: {
       method: 'GET' as const,
@@ -219,6 +228,26 @@ export const api = {
         200: z.object({ message: z.string() }),
         403: errorSchemas.forbidden,
         404: errorSchemas.notFound,
+      },
+    },
+    cohortSettings: {
+      get: {
+        method: 'GET' as const,
+        path: '/api/admin/cohort-settings',
+        responses: {
+          200: z.object({ startDate: z.string().nullable() }),
+          403: errorSchemas.forbidden,
+        },
+      },
+      update: {
+        method: 'POST' as const,
+        path: '/api/admin/cohort-settings',
+        input: z.object({ startDate: z.string() }),
+        responses: {
+          200: z.object({ startDate: z.string() }),
+          400: errorSchemas.validation,
+          403: errorSchemas.forbidden,
+        },
       },
     },
     progress: {

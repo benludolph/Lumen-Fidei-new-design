@@ -117,15 +117,23 @@ export async function registerRoutes(
     
     const day = Number(req.params.day);
     
-    // Time-gating logic
+    // Time-gating logic using cohort-based start date
     if (req.user!.role === 'participant') {
-      const startDate = new Date(req.user!.startDate || Date.now());
-      const now = new Date();
-      // Difference in days
-      const diffTime = Math.abs(now.getTime() - startDate.getTime());
-      const currentDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1; // Minimum day 1
+      const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
       
-      if (day > currentDay) {
+      let currentDay = 0;
+      if (cohortStartDateStr) {
+        const startParts = cohortStartDateStr.split('-').map(Number);
+        const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffTime = today.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
+      }
+      
+      // Only allow access to current day (not past, not future)
+      if (day !== currentDay || currentDay === 0) {
         return res.status(403).json({ message: "This day is locked." });
       }
     }
@@ -292,15 +300,24 @@ export async function registerRoutes(
     
     const input = api.prayerCompletions.create.input.parse(req.body);
     
-    // Time-gating: Can only complete current day or earlier
+    // Time-gating: Can only complete current cohort day
     if (req.user!.role === 'participant') {
-      const startDate = new Date(req.user!.startDate || Date.now());
-      const now = new Date();
-      const diffTime = Math.abs(now.getTime() - startDate.getTime());
-      const currentDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+      const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
       
-      if (input.dayNumber > currentDay) {
-        return res.status(403).json({ message: "Cannot complete future days" });
+      let currentDay = 0;
+      if (cohortStartDateStr) {
+        const startParts = cohortStartDateStr.split('-').map(Number);
+        const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffTime = today.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
+      }
+      
+      // Only allow completing current day
+      if (input.dayNumber !== currentDay || currentDay === 0) {
+        return res.status(403).json({ message: "Cannot complete prayers for this day" });
       }
     }
     
@@ -367,15 +384,26 @@ export async function registerRoutes(
     const users = await storage.getAllUsers();
     const completions = await storage.getAllPrayerCompletions();
     
-    const today = new Date();
+    // Get cohort start date for calculating current day
+    const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+    const now = new Date();
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Calculate cohort-based current day
+    let cohortCurrentDay = 0;
+    if (cohortStartDateStr) {
+      const startParts = cohortStartDateStr.split('-').map(Number);
+      const cohortStartDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+      const diffTime = todayLocal.getTime() - cohortStartDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      cohortCurrentDay = Math.min(Math.max(diffDays + 1, 0), 30);
+    }
     
     const progressData = users
       .filter(u => u.role === 'participant')
       .map(u => {
-        // Calculate current day for this user
-        const startDate = u.startDate ? new Date(u.startDate) : today;
-        const diffTime = Math.abs(today.getTime() - startDate.getTime());
-        const currentDay = Math.max(1, Math.min(Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1, 30));
+        // Use cohort-based current day for all users
+        const currentDay = cohortCurrentDay;
         
         // Get completions for this user
         const userCompletions = completions.filter(c => c.userId === u.id);
@@ -418,6 +446,56 @@ export async function registerRoutes(
       });
     
     res.json(progressData);
+  });
+
+  // === Cohort (Public) ===
+  
+  app.get(api.cohort.getStartDate.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const startDateStr = await storage.getCohortSetting("cohort_start_date");
+    
+    // Calculate current day based on cohort start date
+    let currentDay = 0;
+    if (startDateStr) {
+      // Parse dates as local dates (without time) to avoid timezone issues
+      const startParts = startDateStr.split('-').map(Number);
+      const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      const diffTime = today.getTime() - startDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      // Day 1 starts on the start date itself
+      currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
+    }
+    
+    res.json({ startDate: startDateStr, currentDay });
+  });
+
+  // === Cohort Settings (Admin) ===
+  
+  app.get(api.admin.cohortSettings.get.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const startDate = await storage.getCohortSetting("cohort_start_date");
+    res.json({ startDate });
+  });
+
+  app.post(api.admin.cohortSettings.update.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const { startDate } = req.body;
+    if (!startDate || typeof startDate !== 'string') {
+      return res.status(400).json({ message: "Start date is required" });
+    }
+    
+    await storage.setCohortSetting("cohort_start_date", startDate);
+    res.json({ startDate });
   });
   
   // Seed Data
