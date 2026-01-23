@@ -79,13 +79,32 @@ Dashboard is fully responsive with:
 - API responses are sanitized to never expose password hashes
 - Session-based authentication with secure cookies
 
-### Time-Gating Logic
-User progress is calculated from their `startDate` field. Current day = difference between now and start date + 1, clamped between 1 and 30. Users can only access content for their current day and previous days.
+### Cohort-Based Time-Gating (Updated January 2026)
+The program now uses a **cohort-based** approach where all users start together on an admin-configurable date:
+- **cohortSettings table**: Stores key-value settings including `cohort_start_date`
+- **Admin Settings tab**: Allows admins to set/update the cohort start date
+- **Current day calculation**: `currentDay = floor((today - cohortStartDate) / 1 day) + 1`, clamped between 0 and 30
+- **Access control**: Users can ONLY access the current day's content - previous days are locked with "missed" indicators, future days are locked
+- All time-gating uses cohort start date (not per-user startDate) for content, prayer completions, and progress tracking
 
-### Track-Based Requirements
-Track A: Abstinence Fridays only
-Track B: Fasting Fridays and Sunday Rosary  
-Track C: Full requirements (implied by the tier structure)
+### Dashboard Layout (Updated January 2026)
+- **Left column (col-span-3)**: Day timeline with weeks 1-5 and days 1-6 per week
+- **Main content (col-span-9)**: Full-width content area with Morning/Evening tabs
+- **No right sidebar**: Track requirements panel removed for cleaner layout
+
+### Morning Prayers Feature
+The Morning tab includes a "Morning Prayers" card with clickable buttons that open modals:
+- **Prayer Against Retaliation**: Protection prayer for spiritual warfare
+- **Miracle Prayer**: Surrender and commitment to Christ
+Prayer texts are stored as constants in Dashboard.tsx (PRAYER_TEXTS object)
+
+### Examination of Conscience
+The Evening tab includes an "Examination of Conscience" section with the 5-step Daily Examen:
+1. Give Thanks
+2. Ask for Light
+3. Review the Day
+4. Face Your Shortcomings
+5. Look Forward
 
 ## External Dependencies
 
