@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -1153,7 +1153,34 @@ function ContentManagementView() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-5 gap-2 mb-6">
+          {/* Mobile: Dropdown selector */}
+          <div className="md:hidden mb-6">
+            <Select value={String(selectedDay)} onValueChange={(val) => handleDayChange(Number(val))}>
+              <SelectTrigger className="w-full" data-testid="select-day-mobile">
+                <SelectValue placeholder="Select a day" />
+              </SelectTrigger>
+              <SelectContent>
+                {weeks.map(week => (
+                  <SelectGroup key={week}>
+                    <SelectLabel>Week {week}</SelectLabel>
+                    {[1, 2, 3, 4, 5, 6].map(dayInWeek => {
+                      const day = (week - 1) * 6 + dayInWeek;
+                      const hasContent = allContent?.some(c => c.dayNumber === day);
+                      const isReflection = dayInWeek === 6;
+                      return (
+                        <SelectItem key={day} value={String(day)} data-testid={`select-day-${day}`}>
+                          Day {day} {isReflection ? "(Reflection)" : ""} {hasContent ? "" : "(No content)"}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Desktop: Grid selector */}
+          <div className="hidden md:grid grid-cols-5 gap-2 mb-6">
             {weeks.map(week => (
               <div key={week} className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground text-center">Week {week}</p>
