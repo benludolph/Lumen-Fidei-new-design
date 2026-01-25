@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import loginBackground from "@assets/Background_1769307417257.png";
+import loginBackground from "@/assets/images/login-bg.png";
+import lumenIcon from "@/assets/images/lumen-icon.png";
 
 const loginSchema = z.object({
   username: z.string().email({ message: "Please enter a valid email" }),
@@ -60,7 +61,13 @@ export default function Login() {
       <div className="w-full max-w-md space-y-6 animate-in zoom-in-95 duration-500">
         <Card className="border border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm">
           <CardHeader className="space-y-4 text-center pb-2">
-            <div className="space-y-1">
+            <div className="space-y-2">
+              <img 
+                src={lumenIcon} 
+                alt="Lumen Fidei" 
+                className="w-20 h-20 mx-auto rounded-xl"
+                data-testid="img-lumen-icon"
+              />
               <h1 className="font-serif text-3xl font-bold text-black">Lumen Fidei</h1>
               <p className="text-muted-foreground text-sm">30-Day Spiritual Journey</p>
             </div>
