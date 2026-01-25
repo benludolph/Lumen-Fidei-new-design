@@ -6,6 +6,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import type { User } from "@shared/schema";
 import rateLimit from "express-rate-limit";
+import { dailyContentData } from "./content-data";
 
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
@@ -1103,39 +1104,28 @@ Rest in God's presence. Let go of words and thoughts. Simply be with God, allowi
         });
     }
 
-    // Seed daily content if needed
+    // Always upsert daily content from imported data to ensure production has the content
+    console.log("Upserting daily content from imported data...");
+    for (const content of dailyContentData) {
+        await storage.upsertDailyContent({
+            dayNumber: content.dayNumber,
+            weekNumber: content.weekNumber,
+            weekTitle: content.weekTitle,
+            morningScriptureRef: content.morningScriptureRef,
+            morningScriptureText: content.morningScriptureText,
+            morningMeditation: content.morningMeditation,
+            morningPrayer: null,
+            eveningCatechismRef: content.eveningCatechismRef,
+            eveningCatechism: content.eveningCatechism,
+            eveningSummary: null,
+            eveningQuestions: content.eveningQuestions,
+            isReflectionDay: content.isReflectionDay
+        });
+    }
+    
+    // Legacy seeding code - no longer needed but keeping structure
     const existing = await storage.getAllDailyContent();
-    if (existing.length === 0) {
-        console.log("Seeding daily content...");
-        
-        const weekTitles = [
-            "God's Loving Plan for Humanity",
-            "Understanding God's Love",
-            "Walking in Faith",
-            "Prayer and Devotion",
-            "Living Your Calling"
-        ];
-        
-        // First, seed placeholder content for all 30 days
-        for (let i = 1; i <= 30; i++) {
-            const weekNumber = Math.ceil(i / 6);
-            const isReflection = i % 6 === 0;
-            
-            await storage.createDailyContent({
-                dayNumber: i,
-                weekNumber: weekNumber,
-                weekTitle: weekTitles[weekNumber - 1],
-                morningScriptureRef: `Scripture Reference - Day ${i}`,
-                morningScriptureText: `Scripture text for Day ${i} will be added.`,
-                morningMeditation: `Morning meditation for Day ${i} will be added.`,
-                morningPrayer: null,
-                eveningCatechismRef: `CCC Reference - Day ${i}`,
-                eveningCatechism: `Catechism content for Day ${i} will be added.`,
-                eveningSummary: null,
-                eveningQuestions: null,
-                isReflectionDay: isReflection
-            });
-        }
+    if (false) { // Disabled - content is now seeded from imported data above
         
         // Now update Day 1 with the actual content from the document
         await storage.upsertDailyContent({
