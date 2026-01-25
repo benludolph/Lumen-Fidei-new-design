@@ -13,6 +13,7 @@ import { Send, User as UserIcon, ArrowLeft, Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Messages() {
   const { user } = useAuth();
@@ -38,6 +39,17 @@ export default function Messages() {
       setSelectedContactId(contacts[0].id);
     }
   }, [initialUserId, contacts, selectedContactId]);
+
+  // Mark messages as read when visiting the Messages page
+  useEffect(() => {
+    if (user) {
+      apiRequest("POST", "/api/messages/mark-read").then(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/messages/unread/count"] });
+      }).catch(() => {
+        // Silently fail - not critical
+      });
+    }
+  }, [user]);
 
   // For mobile: show either contacts list or chat, not both
   const showChat = isMobile ? selectedContactId !== null : true;

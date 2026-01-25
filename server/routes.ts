@@ -204,6 +204,14 @@ export async function registerRoutes(
     res.json({ count });
   });
 
+  // Mark all messages as read for the current user
+  app.post("/api/messages/mark-read", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    await storage.markAllMessagesAsRead(req.user!.id);
+    res.json({ success: true });
+  });
+
   app.get(api.chat.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
