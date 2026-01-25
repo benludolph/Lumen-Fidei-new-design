@@ -1,20 +1,21 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { 
   BookOpen, 
   Users, 
   MessageSquare, 
   Settings, 
   LogOut, 
-  Sun,
   Library,
   Menu,
   X
 } from "lucide-react";
 import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
-function NavItem({ href, icon: Icon, label, onClick }: { href: string; icon: any; label: string; onClick?: () => void }) {
+function NavItem({ href, icon: Icon, label, badge, onClick }: { href: string; icon: any; label: string; badge?: number; onClick?: () => void }) {
   const [location] = useLocation();
   const isActive = (path: string) => location === path || location.startsWith(path + "/");
   
@@ -27,7 +28,12 @@ function NavItem({ href, icon: Icon, label, onClick }: { href: string; icon: any
           : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
       )}>
         <Icon className={cn("w-5 h-5", isActive(href) ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-        <span>{label}</span>
+        <span className="flex-1">{label}</span>
+        {badge !== undefined && badge > 0 && (
+          <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs" data-testid="badge-unread-messages">
+            {badge > 99 ? "99+" : badge}
+          </Badge>
+        )}
       </div>
     </Link>
   );
@@ -36,6 +42,12 @@ function NavItem({ href, icon: Icon, label, onClick }: { href: string; icon: any
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const { user, logout } = useAuth();
   
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread/count"],
+    refetchInterval: 30000,
+    enabled: !!user,
+  });
+  
   if (!user) return null;
 
   const handleLogout = () => {
@@ -43,15 +55,14 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
     logout();
   };
 
+  const unreadCount = unreadData?.count ?? 0;
+
   return (
     <>
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-          <Sun className="w-6 h-6" />
-        </div>
         <div>
-          <h1 className="font-serif font-bold text-lg leading-tight text-primary">Lumen Fidei</h1>
-          <p className="text-xs text-muted-foreground">30-Day Journey</p>
+          <h1 className="font-serif font-bold text-lg leading-tight text-black">Lumen Fidei</h1>
+          <p className="text-xs text-muted-foreground">30-Day Spiritual Journey</p>
         </div>
       </div>
 
@@ -76,7 +87,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           Support
         </div>
         
-        <NavItem href="/messages" icon={MessageSquare} label="Messages" onClick={onNavClick} />
+        <NavItem href="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={onNavClick} />
         <NavItem href="/resources" icon={Library} label="Resources" onClick={onNavClick} />
       </div>
 
@@ -119,24 +130,36 @@ export function Sidebar() {
 export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { user } = useAuth();
   
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread/count"],
+    refetchInterval: 30000,
+    enabled: !!user,
+  });
+  
   if (!user) return null;
+
+  const unreadCount = unreadData?.count ?? 0;
 
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border flex items-center justify-between px-4 z-30">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-          <Sun className="w-5 h-5" />
-        </div>
-        <h1 className="font-serif font-bold text-base text-primary">Lumen Fidei</h1>
+        <h1 className="font-serif font-bold text-base text-black">Lumen Fidei</h1>
       </div>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={onMenuClick}
-        data-testid="button-hamburger-menu"
-      >
-        <Menu className="w-6 h-6" />
-      </Button>
+      <div className="flex items-center gap-2">
+        {unreadCount > 0 && (
+          <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </Badge>
+        )}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onMenuClick}
+          data-testid="button-hamburger-menu"
+        >
+          <Menu className="w-6 h-6" />
+        </Button>
+      </div>
     </div>
   );
 }

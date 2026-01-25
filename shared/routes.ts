@@ -131,6 +131,13 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    unreadCount: {
+      method: 'GET' as const,
+      path: '/api/messages/unread/count',
+      responses: {
+        200: z.object({ count: z.number() }),
+      },
+    },
   },
   trackRequirements: {
     get: {
@@ -296,6 +303,53 @@ export const api = {
         }),
         400: errorSchemas.validation,
         403: errorSchemas.forbidden,
+      },
+    },
+    day0Settings: {
+      get: {
+        method: 'GET' as const,
+        path: '/api/admin/day0-settings',
+        responses: {
+          200: z.object({ 
+            introVideoUrl: z.string().nullable(), 
+            agreementText: z.string().nullable() 
+          }),
+          403: errorSchemas.forbidden,
+        },
+      },
+      update: {
+        method: 'POST' as const,
+        path: '/api/admin/day0-settings',
+        input: z.object({ 
+          introVideoUrl: z.string().optional(),
+          agreementText: z.string().optional()
+        }),
+        responses: {
+          200: z.object({ message: z.string() }),
+          400: errorSchemas.validation,
+          403: errorSchemas.forbidden,
+        },
+      },
+    },
+  },
+  day0: {
+    get: {
+      method: 'GET' as const,
+      path: '/api/day0',
+      responses: {
+        200: z.object({ 
+          introVideoUrl: z.string().nullable(), 
+          agreementText: z.string().nullable(),
+          agreementSigned: z.boolean()
+        }),
+      },
+    },
+    signAgreement: {
+      method: 'POST' as const,
+      path: '/api/day0/sign-agreement',
+      responses: {
+        200: z.object({ message: z.string() }),
+        400: errorSchemas.validation,
       },
     },
   },

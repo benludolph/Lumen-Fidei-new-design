@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   track: text("track", { enum: ["A", "B", "C"] }), // Nullable for non-participants
   mentorId: integer("mentor_id"), // Self-referencing FK
   startDate: timestamp("start_date"),
+  agreementSignedAt: timestamp("agreement_signed_at"), // When user signed the Day 0 agreement
 });
 
 export const dailyContent = pgTable("daily_content", {
@@ -139,6 +140,7 @@ export const prayerCompletionsRelations = relations(prayerCompletions, ({ one })
 export const insertUserSchema = createInsertSchema(users, {
   // Handle date strings from JSON payload
   startDate: z.union([z.date(), z.string().transform((s) => new Date(s))]).optional().nullable(),
+  agreementSignedAt: z.union([z.date(), z.string().transform((s) => new Date(s))]).optional().nullable(),
 }).omit({ id: true });
 export const insertDailyContentSchema = createInsertSchema(dailyContent, {
   eveningQuestions: z.array(z.string()).optional().nullable(),

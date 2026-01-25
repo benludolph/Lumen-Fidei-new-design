@@ -41,6 +41,7 @@ export interface IStorage {
   getMessages(user1Id: number, user2Id: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(senderId: number, receiverId: number): Promise<void>;
+  getUnreadMessageCount(userId: number): Promise<number>;
   
   // Prayer Completions
   getPrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<PrayerCompletion | undefined>;
@@ -192,6 +193,13 @@ export class DatabaseStorage implements IStorage {
     await db.update(messages)
       .set({ isRead: true })
       .where(and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)));
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    const unreadMessages = await db.select()
+      .from(messages)
+      .where(and(eq(messages.receiverId, userId), eq(messages.isRead, false)));
+    return unreadMessages.length;
   }
 
   // Prayer Completions

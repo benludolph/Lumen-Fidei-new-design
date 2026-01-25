@@ -196,6 +196,14 @@ export async function registerRoutes(
 
   // === Chat ===
 
+  // Unread message count - must be BEFORE the :otherUserId route
+  app.get(api.chat.unreadCount.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const count = await storage.getUnreadMessageCount(req.user!.id);
+    res.json({ count });
+  });
+
   app.get(api.chat.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
@@ -586,6 +594,58 @@ export async function registerRoutes(
       }
       throw err;
     }
+  });
+
+  // === Day 0 Settings (Admin) ===
+  
+  app.get(api.admin.day0Settings.get.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
+    const agreementText = await storage.getCohortSetting("day0_agreement_text");
+    res.json({ introVideoUrl, agreementText });
+  });
+
+  app.post(api.admin.day0Settings.update.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const { introVideoUrl, agreementText } = req.body;
+    
+    if (introVideoUrl !== undefined) {
+      await storage.setCohortSetting("day0_intro_video_url", introVideoUrl);
+    }
+    if (agreementText !== undefined) {
+      await storage.setCohortSetting("day0_agreement_text", agreementText);
+    }
+    
+    res.json({ message: "Day 0 settings updated" });
+  });
+
+  // === Day 0 (User) ===
+  
+  app.get(api.day0.get.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
+    const agreementText = await storage.getCohortSetting("day0_agreement_text");
+    const agreementSigned = !!req.user!.agreementSignedAt;
+    
+    res.json({ introVideoUrl, agreementText, agreementSigned });
+  });
+
+  app.post(api.day0.signAgreement.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    if (req.user!.agreementSignedAt) {
+      return res.status(400).json({ message: "Agreement already signed" });
+    }
+    
+    await storage.updateUser(req.user!.id, { agreementSignedAt: new Date() });
+    res.json({ message: "Agreement signed successfully" });
   });
   
   // Seed Data

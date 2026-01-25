@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Sun } from "lucide-react";
+import loginBackground from "@assets/Background_1769307417257.png";
 
 const loginSchema = z.object({
   username: z.string().email({ message: "Please enter a valid email" }),
@@ -30,7 +30,6 @@ export default function Login() {
     },
   });
 
-  // Redirect if already logged in (after all hooks, using useEffect)
   useEffect(() => {
     if (user) {
       if (user.role === 'admin') setLocation('/admin');
@@ -49,33 +48,40 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 p-4">
-      <div className="w-full max-w-md space-y-8 animate-in zoom-in-95 duration-500">
-        <div className="text-center space-y-2">
-          <div className="inline-flex p-4 rounded-full bg-primary/10 text-primary mb-4">
-            <Sun className="w-10 h-10" />
-          </div>
-          <h1 className="font-serif text-4xl font-bold text-primary">Lumen Fidei</h1>
-          <p className="text-muted-foreground font-light">30-Day Spiritual Journey</p>
-        </div>
-
-        <Card className="border-none shadow-xl shadow-stone-200/50">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to continue your journey
-            </CardDescription>
+    <div 
+      className="min-h-screen w-full flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${loginBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="w-full max-w-md space-y-6 animate-in zoom-in-95 duration-500">
+        <Card className="border border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm">
+          <CardHeader className="space-y-4 text-center pb-2">
+            <div className="space-y-1">
+              <h1 className="font-serif text-3xl font-bold text-black">Lumen Fidei</h1>
+              <p className="text-muted-foreground text-sm">30-Day Spiritual Journey</p>
+            </div>
+            <div className="pt-4 border-t border-border">
+              <CardTitle className="text-xl text-black">Welcome Back</CardTitle>
+              <CardDescription className="mt-1">
+                Enter your credentials to continue your journey
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-black">Email</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   placeholder="you@example.com" 
                   {...form.register("username")}
-                  className="bg-stone-50"
+                  className="bg-white"
+                  data-testid="input-email"
                 />
                 {form.formState.errors.username && (
                   <p className="text-sm text-destructive">{form.formState.errors.username.message}</p>
@@ -83,12 +89,13 @@ export default function Login() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-black">Password</Label>
                 <Input 
                   id="password" 
                   type="password" 
                   {...form.register("password")}
-                  className="bg-stone-50"
+                  className="bg-white"
+                  data-testid="input-password"
                 />
                 {form.formState.errors.password && (
                   <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
@@ -106,6 +113,7 @@ export default function Login() {
                 className="w-full" 
                 size="lg"
                 disabled={form.formState.isSubmitting}
+                data-testid="button-login"
               >
                 {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
               </Button>

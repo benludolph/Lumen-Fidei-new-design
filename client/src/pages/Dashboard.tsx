@@ -12,10 +12,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, AlertCircle, BookOpen } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
 const PRAYER_TEXTS = {
   "Prayer Against Retaliation": `Lord Jesus Christ, in Your love and mercy, pour Thy Precious Blood over me so that no demon or disembodied spirit may retaliate against me. Mary, surround me with thy mantle, blocking any retaliating spirits from having any authority over me. St. Michael, surround me with thy shield, so that no evil spirit may take revenge on me. Queen of Heaven and St. Michael, send down the legions of angels under your command to fight off any spirits that would seek to harm me. All you saints of heaven, impede any retaliating spirit from influencing me. Lord, Thou art the Just Judge, the Avenger of the Wicked, the Advocate of the Just, we beg in Thy mercy, that all we ask of Mary, the angels and the saints of heaven be also granted to all our loved ones, those who pray for us and their loved ones, that for Thy Glory's sake, we may enjoy Thy perfect protection. Amen.`,
@@ -80,8 +82,23 @@ function ContentWithMedia({ text }: { text: string }) {
 export default function Dashboard() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [_, setLocation] = useLocation();
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [prayerModalOpen, setPrayerModalOpen] = useState<string | null>(null);
+  
+  // Check Day 0 agreement status
+  const { data: day0Data, isLoading: day0Loading, isError: day0Error } = useQuery<{ agreementSigned: boolean }>({
+    queryKey: ["/api/day0"],
+    enabled: !!user && user.role === 'participant',
+    retry: 2,
+  });
+  
+  // Redirect to Day 0 if agreement not signed
+  useEffect(() => {
+    if (!day0Loading && day0Data && !day0Data.agreementSigned) {
+      setLocation("/day0");
+    }
+  }, [day0Data, day0Loading, setLocation]);
   
   // Get cohort-based current day
   const { data: cohortData, isLoading: cohortLoading } = useCohortStartDate();
@@ -99,6 +116,36 @@ export default function Dashboard() {
   const { data: dayContent, isLoading } = useDailyContent(selectedDay);
   
   if (!user || user.role !== 'participant') return null;
+  
+  // Show loading while checking agreement
+  if (day0Loading) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </Shell>
+    );
+  }
+  
+  // Show error state if Day 0 check fails
+  if (day0Error) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+          <h2 className="text-xl font-medium mb-2">Unable to Load</h2>
+          <p className="text-muted-foreground">Please refresh the page or try again later.</p>
+        </div>
+      </Shell>
+    );
+  }
+  
+  // Don't render dashboard if agreement not signed (redirect will happen)
+  if (!day0Data?.agreementSigned) {
+    return null;
+  }
 
   // Function to check if day is completed (both morning and evening prayers done)
   const isDayCompleted = (day: number) => {
