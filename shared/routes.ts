@@ -331,6 +331,30 @@ export const api = {
         },
       },
     },
+    exportUsers: {
+      method: 'GET' as const,
+      path: '/api/admin/export/users',
+      responses: {
+        200: z.string(), // CSV content
+        403: errorSchemas.forbidden,
+      },
+    },
+    exportAnswers: {
+      method: 'GET' as const,
+      path: '/api/admin/export/answers',
+      responses: {
+        200: z.string(), // CSV content
+        403: errorSchemas.forbidden,
+      },
+    },
+    exportProgress: {
+      method: 'GET' as const,
+      path: '/api/admin/export/progress',
+      responses: {
+        200: z.string(), // CSV content
+        403: errorSchemas.forbidden,
+      },
+    },
   },
   day0: {
     get: {

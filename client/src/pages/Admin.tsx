@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -811,7 +811,76 @@ function CohortSettingsView() {
       </Card>
 
       <Day0SettingsCard />
+
+      <DataExportCard />
     </div>
+  );
+}
+
+function DataExportCard() {
+  const { toast } = useToast();
+
+  const handleExport = async (type: 'users' | 'answers' | 'progress') => {
+    try {
+      const response = await fetch(`/api/admin/export/${type}`, { credentials: "include" });
+      if (!response.ok) throw new Error("Export failed");
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({ title: "Export downloaded successfully" });
+    } catch (error) {
+      toast({ title: "Export failed", variant: "destructive" });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Download className="w-5 h-5" />
+          Data Backup & Export
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Download CSV exports of your data for backup purposes. We recommend exporting weekly.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport('users')}
+            data-testid="button-export-users"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Users
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport('answers')}
+            data-testid="button-export-answers"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Answers
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => handleExport('progress')}
+            data-testid="button-export-progress"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Progress
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

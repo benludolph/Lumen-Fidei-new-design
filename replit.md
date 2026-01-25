@@ -175,10 +175,24 @@ Fully mobile-optimized for phone use at 400px viewport width:
 - Chat window properly scrolls within fixed container
 - New conversation dialog for admins/mentors to message any user
 
-### Security
+### Security (Updated January 2026)
 - Passwords are hashed using bcryptjs before storage
 - API responses are sanitized to never expose password hashes
 - Session-based authentication with secure cookies
+- **Rate Limiting**: express-rate-limit middleware protects against abuse
+  - General API: 200 requests per 15 minutes
+  - Auth endpoints (login/register): 10 attempts per 15 minutes
+- **Role Enforcement**: requireRole and requireAuth middleware for consistent server-side role checks
+- **Data Isolation**: Mentors can only access their assigned participants' data
+  - Answers, prayer completions, and messages are filtered by mentor relationship
+  - Participants can only see their own data and their assigned mentor
+
+### Admin Data Export (Added January 2026)
+Admins can download CSV exports for backup purposes via the Settings tab:
+- **Export Users**: All user data (ID, name, email, role, track, mentor, dates)
+- **Export Answers**: All participant reflection submissions
+- **Export Progress**: Progress data with completion rates and graduation status
+- CSV exports include formula injection protection (prevents Excel macro execution)
 
 ### Cohort-Based Time-Gating (Updated January 2026)
 The program now uses a **cohort-based** approach where all users start together on an admin-configurable date:

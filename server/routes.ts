@@ -1,10 +1,50 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import type { User } from "@shared/schema";
+import rateLimit from "express-rate-limit";
+
+// Rate limiters for abuse protection
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // 200 requests per 15 minutes
+  message: { message: "Too many requests, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 login/register attempts per 15 minutes
+  message: { message: "Too many authentication attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
+// Middleware to require specific roles
+function requireRole(...roles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    if (!roles.includes(req.user!.role)) {
+      return res.status(403).json({ message: "Insufficient permissions" });
+    }
+    next();
+  };
+}
+
+// Middleware to require authentication only
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  next();
+}
 
 // Helper to strip sensitive fields from user objects
 function sanitizeUser(user: User): Omit<User, 'password'> {
@@ -22,6 +62,13 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Setup Authentication
   setupAuth(app);
+
+  // Apply rate limiting to all API routes
+  app.use("/api", generalLimiter);
+  
+  // Apply stricter rate limiting to auth endpoints
+  app.use("/api/register", authLimiter);
+  app.use("/api/login", authLimiter);
 
   // === Users ===
   
@@ -120,8 +167,11 @@ export async function registerRoutes(
 
   // === Content ===
   
-  app.get(api.content.list.path, async (req, res) => {
-      // Only admin/mentor might want full list?
+  app.get(api.content.list.path, requireAuth, async (req, res) => {
+      // Only admin can get full content list (for content management)
+      if (req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
       const content = await storage.getAllDailyContent();
       res.json(content);
   });
@@ -654,6 +704,157 @@ export async function registerRoutes(
     
     await storage.updateUser(req.user!.id, { agreementSignedAt: new Date() });
     res.json({ message: "Agreement signed successfully" });
+  });
+
+  // === Admin CSV Export Routes ===
+  
+  // Helper to escape CSV values (with formula injection protection)
+  function escapeCSV(value: string | number | boolean | null | undefined): string {
+    if (value === null || value === undefined) return '';
+    let str = String(value);
+    
+    // Prevent CSV formula injection by prefixing with single quote
+    // Values starting with =, +, -, @, tab, or carriage return can execute formulas in Excel
+    if (/^[=+\-@\t\r]/.test(str)) {
+      str = "'" + str;
+    }
+    
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  app.get(api.admin.exportUsers.path, requireRole('admin'), async (req, res) => {
+    const users = await storage.getAllUsers();
+    
+    const headers = ['ID', 'Name', 'Email', 'Role', 'Track', 'Mentor ID', 'Start Date', 'Agreement Signed'];
+    const rows = users.map(u => [
+      escapeCSV(u.id),
+      escapeCSV(u.name),
+      escapeCSV(u.email),
+      escapeCSV(u.role),
+      escapeCSV(u.track),
+      escapeCSV(u.mentorId),
+      escapeCSV(u.startDate ? new Date(u.startDate).toISOString() : null),
+      escapeCSV(u.agreementSignedAt ? new Date(u.agreementSignedAt).toISOString() : null),
+    ].join(','));
+    
+    const csv = [headers.join(','), ...rows].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="users_export.csv"');
+    res.send(csv);
+  });
+
+  app.get(api.admin.exportAnswers.path, requireRole('admin'), async (req, res) => {
+    const users = await storage.getAllUsers();
+    const allAnswers: Array<{userId: number, userName: string, dayNumber: number, content: string, createdAt: Date}> = [];
+    
+    for (const u of users.filter(u => u.role === 'participant')) {
+      const answers = await storage.getUserAnswers(u.id);
+      answers.forEach(a => {
+        allAnswers.push({
+          userId: u.id,
+          userName: u.name,
+          dayNumber: a.dayNumber,
+          content: a.content,
+          createdAt: a.createdAt,
+        });
+      });
+    }
+    
+    const headers = ['User ID', 'User Name', 'Day Number', 'Response', 'Submitted At'];
+    const rows = allAnswers.map(a => [
+      escapeCSV(a.userId),
+      escapeCSV(a.userName),
+      escapeCSV(a.dayNumber),
+      escapeCSV(a.content),
+      escapeCSV(new Date(a.createdAt).toISOString()),
+    ].join(','));
+    
+    const csv = [headers.join(','), ...rows].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="answers_export.csv"');
+    res.send(csv);
+  });
+
+  app.get(api.admin.exportProgress.path, requireRole('admin'), async (req, res) => {
+    const users = await storage.getAllUsers();
+    const completions = await storage.getAllPrayerCompletions();
+    
+    // Get cohort start date for calculating current day
+    const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+    const now = new Date();
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    let cohortCurrentDay = 0;
+    if (cohortStartDateStr) {
+      const startParts = cohortStartDateStr.split('-').map(Number);
+      const cohortStartDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+      const diffTime = todayLocal.getTime() - cohortStartDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      cohortCurrentDay = Math.min(Math.max(diffDays + 1, 0), 30);
+    }
+    
+    const progressData = users
+      .filter(u => u.role === 'participant')
+      .map(u => {
+        const currentDay = cohortCurrentDay;
+        const userCompletions = completions.filter(c => c.userId === u.id);
+        
+        const dayCompletionMap = new Map<number, { morning: boolean, evening: boolean }>();
+        userCompletions.forEach(c => {
+          if (!dayCompletionMap.has(c.dayNumber)) {
+            dayCompletionMap.set(c.dayNumber, { morning: false, evening: false });
+          }
+          const day = dayCompletionMap.get(c.dayNumber)!;
+          if (c.period === 'morning') day.morning = true;
+          if (c.period === 'evening') day.evening = true;
+        });
+        
+        let daysCompleted = 0;
+        dayCompletionMap.forEach((status) => {
+          if (status.morning && status.evening) daysCompleted++;
+        });
+        
+        const mentor = users.find(m => m.id === u.mentorId);
+        const completionRate = currentDay > 0 ? ((daysCompleted / currentDay) * 100).toFixed(1) : '0.0';
+        const graduationStatus = daysCompleted >= 24 ? 'Passed' : 
+          (currentDay >= 30 ? 'At Risk' : 'In Progress');
+        
+        return {
+          userId: u.id,
+          userName: u.name,
+          userEmail: u.email,
+          track: u.track,
+          mentorName: mentor?.name || '',
+          currentDay,
+          daysCompleted,
+          completionRate,
+          graduationStatus,
+        };
+      });
+    
+    const headers = ['User ID', 'Name', 'Email', 'Track', 'Mentor', 'Current Day', 'Days Completed', 'Completion Rate %', 'Status'];
+    const rows = progressData.map(p => [
+      escapeCSV(p.userId),
+      escapeCSV(p.userName),
+      escapeCSV(p.userEmail),
+      escapeCSV(p.track),
+      escapeCSV(p.mentorName),
+      escapeCSV(p.currentDay),
+      escapeCSV(p.daysCompleted),
+      escapeCSV(p.completionRate),
+      escapeCSV(p.graduationStatus),
+    ].join(','));
+    
+    const csv = [headers.join(','), ...rows].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="progress_export.csv"');
+    res.send(csv);
   });
   
   // Seed Data
