@@ -116,6 +116,31 @@ Role-based messaging with unique conversation threads:
 - Mentors and admins appear in the mentor assignment dropdown
 - Messages are stored per sender/receiver pair for unique conversations
 - Auto-scroll to bottom when messages load or are sent
+- **Unread Message Notifications**: Badge showing unread count in sidebar and mobile header
+- Polls every 30 seconds for new message counts
+
+### Day 0 Onboarding (Added January 2026)
+Participants must complete Day 0 before accessing the program:
+- **Introduction Video**: Admin-configurable YouTube video URL
+- **Participant Agreement**: Commitment text that users must acknowledge
+- User checks agreement checkbox and clicks to sign
+- `agreementSignedAt` timestamp stored in users table
+- Dashboard redirects to /day0 if agreement not signed
+- Admin Settings tab includes Day 0 configuration card
+
+### Typography & Button Styling (Added January 2026)
+Custom fonts and styling applied throughout:
+- **Body font**: Afacad (loaded from /fonts/ directory)
+- **Title font**: Cormorant Garamond with -2% letter-spacing
+- **Button styling**: Black background, white text, Afacad semi-bold, 10% letter-spacing
+- All buttons consistently styled using updated buttonVariants
+
+### Login Page Design (Updated January 2026)
+Redesigned login with spiritual imagery:
+- Full-page background image (St. Peter's Basilica)
+- Glassmorphism card overlay for login form
+- Black text for readability
+- "Lumen Fidei 30 day spiritual journey" branding
 
 ### Multiple Cohort Support (Added January 2026)
 Admins can start new cohorts via the Settings tab:
