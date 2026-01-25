@@ -24,8 +24,10 @@ export default function Messages() {
 
   // API returns filtered list based on user's role
   const { data: contacts } = useUsers();
-  // For admins/mentors: get all users for adding new conversations
-  const { data: allUsers } = useAllUsers();
+  // For admins/mentors ONLY: get all users for adding new conversations
+  // Participants should NEVER fetch all users
+  const canAddContacts = user?.role === 'admin' || user?.role === 'mentor';
+  const { data: allUsers } = useAllUsers(canAddContacts);
 
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
@@ -71,8 +73,6 @@ export default function Messages() {
   const handleBackToContacts = () => {
     setSelectedContactId(null);
   };
-
-  const canAddContacts = user?.role === 'admin' || user?.role === 'mentor';
 
   return (
     <Shell>

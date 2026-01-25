@@ -14,7 +14,8 @@ export function useUsers(role?: "participant" | "mentor") {
 }
 
 // Get all users (for admin/mentor to start new conversations)
-export function useAllUsers() {
+// Pass enabled=false to prevent fetching (e.g., for participants who shouldn't see all users)
+export function useAllUsers(enabled: boolean = true) {
   return useQuery({
     queryKey: [api.users.list.path, "all"],
     queryFn: async () => {
@@ -22,6 +23,7 @@ export function useAllUsers() {
       if (!res.ok) throw new Error("Failed to fetch users");
       return api.users.list.responses[200].parse(await res.json());
     },
+    enabled,
   });
 }
 
