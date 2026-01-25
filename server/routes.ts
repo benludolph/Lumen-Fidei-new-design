@@ -135,7 +135,9 @@ export async function registerRoutes(
 
     try {
       const input = api.users.create.input.parse(req.body);
-      const existing = await storage.getUserByUsername(input.email);
+      // Normalize email to lowercase for case-insensitive matching
+      const normalizedEmail = input.email.toLowerCase().trim();
+      const existing = await storage.getUserByUsername(normalizedEmail);
       if (existing) {
         return res.status(400).json({ message: "Email already taken" });
       }
@@ -144,6 +146,7 @@ export async function registerRoutes(
       const hashedPassword = await hashPassword(input.password);
       const user = await storage.createUser({
         ...input,
+        email: normalizedEmail,
         password: hashedPassword
       });
       res.status(201).json(sanitizeUser(user));

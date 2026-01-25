@@ -61,7 +61,9 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await storage.getUserByUsername(username);
+        // Normalize email to lowercase for case-insensitive login
+        const normalizedEmail = username.toLowerCase().trim();
+        const user = await storage.getUserByUsername(normalizedEmail);
         if (!user) {
           return done(null, false, { message: "Incorrect email." });
         }
