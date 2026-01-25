@@ -83,9 +83,12 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        serif: ["'Playfair Display'", "serif"],
+        sans: ["'Afacad'", "system-ui", "sans-serif"],
+        serif: ["'Cormorant Garamond'", "serif"],
         mono: ["var(--font-mono)"],
+      },
+      letterSpacing: {
+        'title': '-0.02em',
       },
       keyframes: {
         "accordion-down": {

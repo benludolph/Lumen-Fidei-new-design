@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Fonts */
+@font-face {
+  font-family: 'Afacad';
+  src: url('/fonts/Afacad-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: url('/fonts/CormorantGaramond-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* LIGHT MODE - Calm spiritual theme */
 :root {
   --button-outline: rgba(0,0,0, .10);
@@ -169,6 +186,10 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  .font-serif {
+    letter-spacing: -0.02em;
   }
 }
 
