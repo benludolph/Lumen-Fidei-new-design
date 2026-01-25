@@ -66,13 +66,16 @@ export default function Day0() {
 
   const videoId = data?.introVideoUrl ? extractYouTubeId(data.introVideoUrl) : null;
 
-  const defaultAgreementText = `I commit to participating fully in this 30-day spiritual journey. I will:
+  const defaultAgreementText = `I commit to participating fully in this 30-day spiritual journey.
+
+I will:
 
 • Complete the daily morning and evening prayers and reflections
 • Be honest and open in my submissions
 • Reach out to my mentor if I have questions or struggles
-• Respect the privacy and journey of others in the program
-• Give my best effort each day, trusting in God's grace`;
+• Give my best effort each day, trusting in God's grace
+
+God's blessings and grace.`;
 
   const agreementText = data?.agreementText || defaultAgreementText;
 
@@ -148,7 +151,7 @@ export default function Day0() {
               </Label>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="pt-6 pb-8">
             <Button
               className="w-full"
               size="lg"
