@@ -613,16 +613,23 @@ export async function registerRoutes(
       const input = api.admin.startNewCohort.input.parse(req.body);
       
       let completionsCleared = 0;
+      let agreementsCleared = 0;
+      
       if (input.clearCompletions) {
         completionsCleared = await storage.clearAllPrayerCompletions();
       }
+      
+      // Always clear agreement signatures when starting a new cohort
+      // This forces all users back to Day 0
+      agreementsCleared = await storage.clearAllAgreementSignatures();
       
       await storage.setCohortSetting("cohort_start_date", input.startDate);
       
       res.json({ 
         message: "New cohort started successfully",
         startDate: input.startDate,
-        completionsCleared
+        completionsCleared,
+        agreementsCleared
       });
     } catch (err) {
       if (err instanceof z.ZodError) {

@@ -10,7 +10,7 @@ import {
   type PracticeResource, type InsertPracticeResource,
   type CohortSetting
 } from "@shared/schema";
-import { eq, and, or, lt, desc, asc } from "drizzle-orm";
+import { eq, and, or, lt, desc, asc, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -51,6 +51,7 @@ export interface IStorage {
   createPrayerCompletion(completion: InsertPrayerCompletion): Promise<PrayerCompletion>;
   deletePrayerCompletion(userId: number, dayNumber: number, period: "morning" | "evening"): Promise<void>;
   clearAllPrayerCompletions(): Promise<number>;
+  clearAllAgreementSignatures(): Promise<number>;
   
   // Practice Resources
   getAllPracticeResources(): Promise<PracticeResource[]>;
@@ -248,6 +249,13 @@ export class DatabaseStorage implements IStorage {
     const allCompletions = await db.select().from(prayerCompletions);
     const count = allCompletions.length;
     await db.delete(prayerCompletions);
+    return count;
+  }
+
+  async clearAllAgreementSignatures(): Promise<number> {
+    const usersWithAgreements = await db.select().from(users).where(isNotNull(users.agreementSignedAt));
+    const count = usersWithAgreements.length;
+    await db.update(users).set({ agreementSignedAt: null });
     return count;
   }
 
