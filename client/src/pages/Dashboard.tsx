@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, AlertCircle, BookOpen } from "lucide-react";
+import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, AlertCircle, BookOpen, Minus, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -79,12 +79,49 @@ function ContentWithMedia({ text }: { text: string }) {
   );
 }
 
+// Font size options
+const FONT_SIZES = {
+  small: { label: "A", class: "text-sm", size: 14 },
+  medium: { label: "A", class: "text-base", size: 16 },
+  large: { label: "A", class: "text-lg", size: 18 },
+  xlarge: { label: "A", class: "text-xl", size: 20 },
+};
+
+type FontSizeKey = keyof typeof FONT_SIZES;
+
 export default function Dashboard() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [_, setLocation] = useLocation();
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [prayerModalOpen, setPrayerModalOpen] = useState<string | null>(null);
+  
+  // Font size state with localStorage persistence
+  const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
+    const saved = localStorage.getItem('lumenFidei_fontSize');
+    return (saved as FontSizeKey) || 'medium';
+  });
+  
+  // Save font size to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('lumenFidei_fontSize', fontSize);
+  }, [fontSize]);
+  
+  const decreaseFontSize = () => {
+    const sizes: FontSizeKey[] = ['small', 'medium', 'large', 'xlarge'];
+    const currentIndex = sizes.indexOf(fontSize);
+    if (currentIndex > 0) {
+      setFontSize(sizes[currentIndex - 1]);
+    }
+  };
+  
+  const increaseFontSize = () => {
+    const sizes: FontSizeKey[] = ['small', 'medium', 'large', 'xlarge'];
+    const currentIndex = sizes.indexOf(fontSize);
+    if (currentIndex < sizes.length - 1) {
+      setFontSize(sizes[currentIndex + 1]);
+    }
+  };
   
   // Check Day 0 agreement status
   const { data: day0Data, isLoading: day0Loading, isError: day0Error } = useQuery<{ agreementSigned: boolean }>({
@@ -241,17 +278,25 @@ export default function Dashboard() {
                         )}
                       >
                         <span>{day}</span>
-                        {isToday && isCompleted && (
-                          <CheckCircle2 className="w-3 h-3 mt-0.5 text-white" />
-                        )}
-                        {isPast && isCompleted && (
-                          <CheckCircle2 className="w-3 h-3 mt-0.5 text-green-600" />
-                        )}
-                        {isMissed && (
-                          <AlertCircle className="w-3 h-3 mt-0.5 text-destructive" />
-                        )}
-                        {isFuture && (
+                        {isFuture ? (
                           <Lock className="w-3 h-3 mt-0.5 opacity-50" />
+                        ) : (
+                          <div className="flex gap-0.5 mt-0.5">
+                            {/* Morning dot */}
+                            <div className={cn(
+                              "w-2 h-2 rounded-full",
+                              isPeriodCompleted(day, "morning") 
+                                ? isToday ? "bg-white" : "bg-green-600"
+                                : isToday ? "bg-white/30" : "bg-muted-foreground/30"
+                            )} title="Morning" />
+                            {/* Evening dot */}
+                            <div className={cn(
+                              "w-2 h-2 rounded-full",
+                              isPeriodCompleted(day, "evening") 
+                                ? isToday ? "bg-white" : "bg-green-600"
+                                : isToday ? "bg-white/30" : "bg-muted-foreground/30"
+                            )} title="Evening" />
+                          </div>
                         )}
                       </div>
                     );
@@ -296,19 +341,37 @@ export default function Dashboard() {
                     </div>
                     {isFuture ? (
                       <Lock className="w-4 h-4 opacity-50" />
-                    ) : isPast ? (
-                      isCompleted ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <div className="flex items-center gap-1 text-destructive">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-xs">Missed</span>
-                        </div>
-                      )
-                    ) : isCompleted ? (
-                      <CheckCircle2 className="w-4 h-4 text-white" />
                     ) : (
-                      <Circle className="w-4 h-4 opacity-30" />
+                      <div className="flex items-center gap-2">
+                        {/* Morning/Evening status dots */}
+                        <div className="flex gap-1">
+                          <div 
+                            className={cn(
+                              "w-3 h-3 rounded-full flex items-center justify-center",
+                              isPeriodCompleted(day, "morning")
+                                ? isToday ? "bg-white" : "bg-green-600"
+                                : isToday ? "bg-white/30" : "bg-muted"
+                            )}
+                            title="Morning"
+                          >
+                            <Sun className={cn("w-2 h-2", isPeriodCompleted(day, "morning") ? (isToday ? "text-primary" : "text-white") : "text-muted-foreground")} />
+                          </div>
+                          <div 
+                            className={cn(
+                              "w-3 h-3 rounded-full flex items-center justify-center",
+                              isPeriodCompleted(day, "evening")
+                                ? isToday ? "bg-white" : "bg-green-600"
+                                : isToday ? "bg-white/30" : "bg-muted"
+                            )}
+                            title="Evening"
+                          >
+                            <Moon className={cn("w-2 h-2", isPeriodCompleted(day, "evening") ? (isToday ? "text-primary" : "text-white") : "text-muted-foreground")} />
+                          </div>
+                        </div>
+                        {isMissed && (
+                          <span className="text-xs text-destructive">Missed</span>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -337,14 +400,41 @@ export default function Dashboard() {
                 <ReflectionView content={dayContent} existingAnswer={answers?.find(a => a.dayNumber === selectedDay)} />
               ) : (
                 <Tabs defaultValue="morning" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-8">
-                    <TabsTrigger value="morning" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-                      <Sun className="w-3 h-3 sm:w-4 sm:h-4" /> Morning
-                    </TabsTrigger>
-                    <TabsTrigger value="evening" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-                      <Moon className="w-3 h-3 sm:w-4 sm:h-4" /> Evening
-                    </TabsTrigger>
-                  </TabsList>
+                  <div className="flex items-center justify-between gap-2 mb-4 sm:mb-8">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="morning" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <Sun className="w-3 h-3 sm:w-4 sm:h-4" /> Morning
+                      </TabsTrigger>
+                      <TabsTrigger value="evening" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+                        <Moon className="w-3 h-3 sm:w-4 sm:h-4" /> Evening
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {/* Font Size Control */}
+                    <div className="flex items-center gap-1 border rounded-lg p-1 bg-muted/30 shrink-0">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={decreaseFontSize}
+                        disabled={fontSize === 'small'}
+                        data-testid="button-font-decrease"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="text-xs font-medium w-6 text-center">A</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={increaseFontSize}
+                        disabled={fontSize === 'xlarge'}
+                        data-testid="button-font-increase"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
                   
                   <TabsContent value="morning" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                     {/* Morning Prayers - click to open modal */}
@@ -380,7 +470,7 @@ export default function Dashboard() {
                         <CardTitle className="font-serif text-base sm:text-lg">Scripture</CardTitle>
                         <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.morningScriptureRef}</p>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic text-sm sm:text-base p-3 sm:p-6 pt-0">
+                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                         "{dayContent.morningScriptureText}"
                       </CardContent>
                     </Card>
@@ -389,7 +479,7 @@ export default function Dashboard() {
                       <CardHeader className="p-3 sm:p-6">
                         <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
+                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                         {dayContent.morningMeditation}
                       </CardContent>
                     </Card>
@@ -399,7 +489,7 @@ export default function Dashboard() {
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Closing Prayer</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                           {dayContent.morningPrayer}
                         </CardContent>
                       </Card>
@@ -420,7 +510,7 @@ export default function Dashboard() {
                           <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
                         )}
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed text-sm sm:text-base p-3 sm:p-6 pt-0">
+                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                         <ContentWithMedia text={dayContent.eveningCatechism || ''} />
                       </CardContent>
                     </Card>
@@ -430,7 +520,7 @@ export default function Dashboard() {
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Summary of Key Concepts</CardTitle>
                         </CardHeader>
-                        <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                           {dayContent.eveningSummary}
                         </CardContent>
                       </Card>
@@ -442,7 +532,7 @@ export default function Dashboard() {
                           <CardTitle className="font-serif text-base sm:text-lg">Questions to Consider</CardTitle>
                         </CardHeader>
                         <CardContent className="p-3 sm:p-6 pt-0">
-                          <ol className="list-decimal pl-4 space-y-2 sm:space-y-3 text-muted-foreground text-sm sm:text-base">
+                          <ol className={cn("list-decimal pl-4 space-y-2 sm:space-y-3 text-muted-foreground", FONT_SIZES[fontSize].class)}>
                             {(dayContent.eveningQuestions as string[]).map((q, idx) => (
                               <li key={idx} className="leading-relaxed">{q}</li>
                             ))}
@@ -457,7 +547,7 @@ export default function Dashboard() {
                         <CardTitle className="font-serif text-base sm:text-lg">Examination of Conscience</CardTitle>
                         <p className="text-xs sm:text-sm text-muted-foreground">Daily Examen (10-15 minutes)</p>
                       </CardHeader>
-                      <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
+                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                         {EXAMINATION_OF_CONSCIENCE}
                       </CardContent>
                     </Card>
