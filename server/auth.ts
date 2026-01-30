@@ -26,6 +26,7 @@ declare global {
       track: "A" | "B" | "C" | null;
       mentorId: number | null;
       startDate: Date | null;
+      agreementSignedAt: Date | null;
     }
   }
 }
@@ -102,7 +103,7 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: User | false, info: any) => {
+    passport.authenticate("local", (err: any, user: SchemaUser | false, info: any) => {
       if (err) {
         return next(err);
       }

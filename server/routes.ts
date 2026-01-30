@@ -665,6 +665,89 @@ export async function registerRoutes(
     }
   });
 
+  // === Admin User Details ===
+  
+  app.get(api.admin.userDetails.path, async (req, res) => {
+    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
+    const userId = Number(req.params.id);
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Get mentor name
+    let mentorName: string | null = null;
+    if (user.mentorId) {
+      const mentor = await storage.getUser(user.mentorId);
+      mentorName = mentor?.name || null;
+    }
+    
+    // Get cohort start date for calculating current day
+    const cohortStartDate = await storage.getCohortSetting("cohort_start_date");
+    let currentDay = 0;
+    if (cohortStartDate) {
+      const start = new Date(cohortStartDate);
+      const today = new Date();
+      const diffTime = today.getTime() - start.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      currentDay = Math.max(0, Math.min(diffDays + 1, 30));
+    }
+    
+    // Get prayer completions
+    const prayerCompletions = await storage.getUserPrayerCompletions(userId);
+    
+    // Calculate days completed (unique days with at least one completion)
+    const daysCompleted = new Set(prayerCompletions.map(c => c.dayNumber)).size;
+    
+    // Graduation: 80% of 30 days = 24 days
+    const graduationEligible = daysCompleted >= 24;
+    
+    // Get answers
+    const answers = await storage.getUserAnswers(userId);
+    
+    // Get all daily content to get questions
+    const allContent = await storage.getAllDailyContent();
+    
+    // Enrich answers with question texts
+    const enrichedAnswers = answers.map(a => {
+      const dayContent = allContent.find(c => c.dayNumber === a.dayNumber);
+      return {
+        id: a.id,
+        dayNumber: a.dayNumber,
+        content: a.content,
+        createdAt: a.createdAt.toISOString(),
+        questions: dayContent?.eveningQuestions || null,
+      };
+    });
+    
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        track: user.track,
+        mentorId: user.mentorId,
+        mentorName,
+        startDate: user.startDate?.toISOString() || null,
+        agreementSignedAt: user.agreementSignedAt?.toISOString() || null,
+        currentDay,
+        daysCompleted,
+        totalPossibleDays: currentDay,
+        graduationEligible,
+      },
+      answers: enrichedAnswers,
+      prayerCompletions: prayerCompletions.map(c => ({
+        dayNumber: c.dayNumber,
+        period: c.period,
+        completedAt: c.completedAt.toISOString(),
+      })),
+    });
+  });
+
   // === Day 0 Settings (Admin) ===
   
   app.get(api.admin.day0Settings.get.path, async (req, res) => {

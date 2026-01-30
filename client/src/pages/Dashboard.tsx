@@ -475,14 +475,16 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                     
-                    <Card>
-                      <CardHeader className="p-3 sm:p-6">
-                        <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
-                      </CardHeader>
-                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                        {dayContent.morningMeditation}
-                      </CardContent>
-                    </Card>
+                    {dayContent.morningMeditation && dayContent.morningMeditation.trim() && (
+                      <Card>
+                        <CardHeader className="p-3 sm:p-6">
+                          <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
+                        </CardHeader>
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+                          {dayContent.morningMeditation}
+                        </CardContent>
+                      </Card>
+                    )}
                     
                     {dayContent.morningPrayer && (
                       <Card className="bg-secondary/30">
@@ -704,7 +706,7 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
         </Card>
       )}
       
-      {content.morningMeditation && (
+      {content.morningMeditation && content.morningMeditation.trim() && (
         <Card>
           <CardHeader className="p-3 sm:p-6">
             <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
@@ -715,7 +717,7 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
         </Card>
       )}
       
-      {content.eveningCatechism && (
+      {content.eveningCatechism && content.eveningCatechism.trim() && (
         <Card>
           <CardHeader className="p-3 sm:p-6">
             <CardTitle className="font-serif text-base sm:text-lg">Reading</CardTitle>

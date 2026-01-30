@@ -288,6 +288,43 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    userDetails: {
+      method: 'GET' as const,
+      path: '/api/admin/users/:id/details',
+      responses: {
+        200: z.object({
+          user: z.object({
+            id: z.number(),
+            name: z.string(),
+            email: z.string(),
+            role: z.string(),
+            track: z.string().nullable(),
+            mentorId: z.number().nullable(),
+            mentorName: z.string().nullable(),
+            startDate: z.string().nullable(),
+            agreementSignedAt: z.string().nullable(),
+            currentDay: z.number(),
+            daysCompleted: z.number(),
+            totalPossibleDays: z.number(),
+            graduationEligible: z.boolean(),
+          }),
+          answers: z.array(z.object({
+            id: z.number(),
+            dayNumber: z.number(),
+            content: z.string(),
+            createdAt: z.string(),
+            questions: z.array(z.string()).nullable(),
+          })),
+          prayerCompletions: z.array(z.object({
+            dayNumber: z.number(),
+            period: z.string(),
+            completedAt: z.string(),
+          })),
+        }),
+        403: errorSchemas.forbidden,
+        404: errorSchemas.notFound,
+      },
+    },
     startNewCohort: {
       method: 'POST' as const,
       path: '/api/admin/cohort/start-new',
