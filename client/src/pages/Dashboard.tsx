@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, AlertCircle, BookOpen, Minus, Plus } from "lucide-react";
+import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, AlertCircle, BookOpen, Minus, Plus, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -528,7 +528,39 @@ export default function Dashboard() {
                       </Card>
                     )}
                     
-                    {dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
+                    {/* Mentor Day - Message Mentor prompt */}
+                    {dayContent.isMentorDay && dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
+                      <Card className="border-primary bg-primary/5">
+                        <CardHeader className="p-3 sm:p-6">
+                          <CardTitle className="font-serif text-base sm:text-lg flex items-center gap-2">
+                            <MessageSquare className="w-5 h-5" />
+                            Message Your Mentor
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 sm:p-6 pt-0 space-y-4">
+                          <p className={cn("text-muted-foreground leading-relaxed", FONT_SIZES[fontSize].class)}>
+                            {(dayContent.eveningQuestions as string[])[0]}
+                          </p>
+                          {user?.mentorId ? (
+                            <Button 
+                              onClick={() => setLocation(`/messages?mentorId=${user.mentorId}`)}
+                              className="w-full sm:w-auto gap-2"
+                              data-testid="button-message-mentor"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              Message Mentor
+                            </Button>
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">
+                              No mentor assigned yet. Contact your program administrator.
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Regular Questions to Consider (non-mentor days) */}
+                    {!dayContent.isMentorDay && dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
                       <Card className="border-primary/20">
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Questions to Consider</CardTitle>
@@ -554,11 +586,15 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                     
-                    <AssignmentSection 
-                      day={selectedDay} 
-                      prompt="Reflect on today's readings and answer the questions above in your own words."
-                      existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
-                    />
+                    {/* Assignment Section - only show for non-mentor days with questions */}
+                    {!dayContent.isMentorDay && dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
+                      <AssignmentSection 
+                        day={selectedDay} 
+                        prompt="Reflect on today's readings and answer the questions above in your own words."
+                        existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
+                        isShortReflection={[4, 10, 16, 22, 28].includes(selectedDay)}
+                      />
+                    )}
                     
                     <MarkCompleteButton 
                       day={selectedDay}
@@ -625,7 +661,7 @@ function MarkCompleteButton({ day, period, isCompleted }: { day: number, period:
   );
 }
 
-function AssignmentSection({ day, prompt, existingAnswer }: { day: number, prompt: string, existingAnswer?: any }) {
+function AssignmentSection({ day, prompt, existingAnswer, isShortReflection = false }: { day: number, prompt: string, existingAnswer?: any, isShortReflection?: boolean }) {
   const { mutate, isPending } = useCreateAnswer();
   const [content, setContent] = useState(existingAnswer?.content || "");
   const [isEditing, setIsEditing] = useState(!existingAnswer);
@@ -639,7 +675,12 @@ function AssignmentSection({ day, prompt, existingAnswer }: { day: number, promp
   return (
     <Card className="border-primary/20 bg-primary/5">
       <CardHeader className="p-3 sm:p-6">
-        <CardTitle className="font-serif text-base sm:text-lg">Daily Response</CardTitle>
+        <CardTitle className="font-serif text-base sm:text-lg">
+          {isShortReflection ? "Short Reflection" : "Daily Response"}
+        </CardTitle>
+        {isShortReflection && (
+          <p className="text-xs sm:text-sm text-muted-foreground">1-3 sentences</p>
+        )}
       </CardHeader>
       <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6 pt-0">
         <p className="italic text-muted-foreground text-sm sm:text-base">{prompt}</p>
@@ -730,16 +771,21 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
       
       <Card className="border-primary/30 bg-primary/5">
         <CardHeader className="p-3 sm:p-6">
-          <CardTitle className="font-serif text-base sm:text-lg">Weekly Reflection</CardTitle>
+          <CardTitle className="font-serif text-base sm:text-lg">Weekly Synthesis Reflection</CardTitle>
+          <p className="text-xs sm:text-sm text-muted-foreground">Take your time with these prompts</p>
         </CardHeader>
-        <CardContent className="text-base sm:text-lg text-primary/80 italic p-3 sm:p-6 pt-0">
-          {reflectionPrompt}
+        <CardContent className="p-3 sm:p-6 pt-0">
+          <ol className="list-decimal pl-4 space-y-3 text-primary/80 italic">
+            {(content.eveningQuestions as string[] || [reflectionPrompt]).map((q: string, idx: number) => (
+              <li key={idx} className="leading-relaxed text-sm sm:text-base">{q}</li>
+            ))}
+          </ol>
         </CardContent>
       </Card>
       
       <AssignmentSection 
         day={content.dayNumber} 
-        prompt="Write your reflection below."
+        prompt="Address the prompts above in your reflection."
         existingAnswer={existingAnswer}
       />
     </div>

@@ -1209,7 +1209,8 @@ Rest in God's presence. Let go of words and thoughts. Simply be with God, allowi
             eveningCatechism: content.eveningCatechism,
             eveningSummary: null,
             eveningQuestions: content.eveningQuestions,
-            isReflectionDay: content.isReflectionDay
+            isReflectionDay: content.isReflectionDay,
+            isMentorDay: content.isMentorDay
         });
     }
     

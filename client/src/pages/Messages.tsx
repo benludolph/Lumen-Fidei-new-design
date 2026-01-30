@@ -20,7 +20,8 @@ export default function Messages() {
   const isMobile = useIsMobile();
   const [location] = useLocation();
   const searchParams = new URLSearchParams(location.split('?')[1]);
-  const initialUserId = searchParams.get('user');
+  // Support both 'user' (general) and 'mentorId' (from Dashboard mentor prompts) query params
+  const initialUserId = searchParams.get('user') || searchParams.get('mentorId');
 
   // API returns filtered list based on user's role
   const { data: contacts } = useUsers();

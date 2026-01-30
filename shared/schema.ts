@@ -35,7 +35,8 @@ export const dailyContent = pgTable("daily_content", {
   eveningSummary: text("evening_summary"), // Summary of key concepts
   eveningQuestions: json("evening_questions").$type<string[]>(), // Reflection questions as JSON array
   
-  isReflectionDay: boolean("is_reflection_day").default(false).notNull(), // Day 6 of each week
+  isReflectionDay: boolean("is_reflection_day").default(false).notNull(), // Day 6 of each week (synthesis days)
+  isMentorDay: boolean("is_mentor_day").default(false).notNull(), // Days requiring mentor message (3, 9, 15, 27)
 });
 
 // Practice resources - stores full text of prayers and practice instructions
