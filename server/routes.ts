@@ -6,7 +6,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import type { User } from "@shared/schema";
 import rateLimit from "express-rate-limit";
-import { dailyContentData } from "./content-data";
+import { dailyContentData, practiceResourcesData } from "./content-data";
 
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
@@ -1127,6 +1127,18 @@ Rest in God's presence. Let go of words and thoughts. Simply be with God, allowi
             eveningSummary: null,
             eveningQuestions: content.eveningQuestions,
             isReflectionDay: content.isReflectionDay
+        });
+    }
+    
+    // Upsert practice resources (prayers and guides) from imported data
+    console.log("Upserting practice resources from imported data...");
+    for (const resource of practiceResourcesData) {
+        await storage.upsertPracticeResource({
+            name: resource.name,
+            type: resource.type,
+            content: resource.content,
+            duration: resource.duration,
+            order: resource.order
         });
     }
     
