@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a full-stack web application for a 30-day spiritual program called "Lumen Fidei" (Light of Faith). The platform supports three user roles: Participants who follow daily prayers and submit reflections, Mentors who guide assigned participants, and Admins who manage users and assignments. The application features time-gated daily content, track-based requirements (A, B, C), real-time messaging between mentors and participants, and a calm, professional spiritual theme.
+Lumen Fidei is a full-stack web application designed for a 30-day spiritual program. It supports three user roles: Participants, Mentors, and Admins. The platform delivers time-gated daily spiritual content, tracks user progress through specific requirements (A, B, C), facilitates real-time messaging between mentors and participants, and provides a comprehensive system for spiritual growth and community building. The project aims to offer a serene and professional spiritual experience.
 
 ## User Preferences
 
@@ -10,245 +10,55 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Frontend Architecture
+### Frontend
 - **Framework**: React 18 with TypeScript
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack React Query for server state caching and synchronization
-- **Styling**: Tailwind CSS with shadcn/ui component library (New York style)
+- **Routing**: Wouter
+- **State Management**: TanStack React Query
+- **Styling**: Tailwind CSS with shadcn/ui (New York style)
 - **Forms**: React Hook Form with Zod validation
-- **Build Tool**: Vite with custom plugins for Replit integration
+- **Build Tool**: Vite
 
-The frontend follows a feature-based organization with pages, hooks, and components separated. Custom hooks abstract API calls for authentication, users, content, answers, and chat functionality.
-
-### Backend Architecture
-- **Framework**: Express 5 running on Node.js
-- **Language**: TypeScript with ES modules
+### Backend
+- **Framework**: Express 5 on Node.js
+- **Language**: TypeScript (ES modules)
 - **Authentication**: Passport.js with local strategy and express-session
-- **Session Storage**: MemoryStore (development) with connect-pg-simple available for production
-
-The server uses a modular structure with separate files for routes, authentication, database access, and storage abstraction. API routes are defined using a shared route specification pattern.
+- **Security**: bcryptjs for password hashing, rate limiting, role-based access control, and data isolation.
 
 ### Data Storage
 - **Database**: PostgreSQL with Drizzle ORM
-- **Schema Location**: `shared/schema.ts` contains all table definitions
-- **Migrations**: Drizzle Kit with `db:push` command for schema synchronization
+- **Key Tables**: `users`, `dailyContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
+- **Content**: 30 days of structured morning and evening spiritual content, with embedded video support. Practice resources include various prayers and spiritual exercises.
 
-**Core Tables**:
-- `users`: Stores all user data with role (participant/mentor/admin), track assignment (A/B/C), mentor relationships, and start dates for time-gating. Passwords are hashed with bcrypt.
-- `dailyContent`: 30 days of structured content including morningScriptureRef, morningScriptureText, morningMeditation, morningPrayer, eveningCatechismRef, eveningCatechism, eveningSummary, and eveningQuestions (JSON array)
-- `userAnswers`: Participant daily reflection submissions linked to user and day
-- `messages`: Chat messages between mentors and participants
-- `trackRequirements`: Week-by-week morning/evening prayer requirements for each track (A, B, C). References practice names that match entries in practiceResources.
-- `prayerCompletions`: Tracks when users mark morning/evening prayers as complete. Has unique constraint on (userId, dayNumber, period) to prevent duplicates.
-- `practiceResources`: Full text content for prayers and practice instructions (Prayer Against Retaliation, Miracle Prayer, Examen, Lectio Divina, Silence, Rosary). Includes type (prayer/practice), duration, and order fields.
-
-### Week Structure
-- 5 weeks with 6 days each (30 days total)
-- Reflection days: 6, 12, 18, 24, 30 (isReflectionDay=true)
-- Reflection days show weekly review prompt instead of standard morning/evening tabs
-
-### Week Themes
-- **Week 1**: God's Loving Plan for Humanity (Trinity, angels, Original Sin, afterlife)
-- **Week 2**: Turning Away From Sin (wounds, sins, commandments, spiritual warfare)
-- **Week 3**: Jesus Christ The Messiah (baptism, healing, Good Shepherd, Crucifixion, Resurrection)
-- **Week 4**: Grace, Our Defense Against Evil (sacraments, Eucharist, Mary, sacramentals)
-- **Week 5**: Scripture: The Truth of God's Word (Psalms, inspiration, Sabbath rest, Gospels)
-
-### Content Structure
-- **Morning**: Scripture reference, scripture text, meditation for Lectio Divina
-- **Evening**: Catechism or activity content (may include embedded videos), 1 reflection question
-- Videos are embedded using `[VIDEO:youtubeId]` format in eveningCatechism field
-- ContentWithMedia component parses and renders embedded YouTube videos
-
-### Content Import
-- CSV import script at `scripts/import-content.ts`
-- Sanitizes PDF artifacts, balances long text, detects YouTube links
-- Run with: `npx tsx scripts/import-content.ts "path/to/file.csv"`
-
-### Practice Resources Content
-The practiceResources table contains full content for:
-- **Prayer Against Retaliation**: Protection prayer for spiritual warfare
-- **Miracle Prayer**: Surrender and commitment to Christ
-- **Examen – St Ignatius**: 5-step daily reflection practice (10-15 min)
-- **Lectio Divina – 10 Minutes**: 4-movement Scripture prayer
-- **Silence – 5 Minutes**: Contemplative awareness practice
-- **Rosary – OP + 1 Decade**: Opening prayers plus one decade meditation
-
-### Prayer Completion Tracking
-Users can mark morning and evening prayers as complete via buttons on the Dashboard. A day is considered "complete" when BOTH morning and evening prayers are marked. Progress is calculated based on days with both prayers completed.
-
-### Admin Progress Dashboard
-Admins have a "Progress" tab showing all participants with:
-- Current day in program (1-30)
-- Days completed (both prayers marked)
-- Progress bar visualization
-- Today's morning/evening completion status
-- Assigned mentor name
-- Graduation status badge (Passed/At Risk/On Track) based on 80% threshold
-
-### Cohort Graduation Tracking (Added January 2026)
-The program tracks participant graduation status with an 80% completion threshold:
-- **Threshold**: 24/30 days completed (80%)
-- **Status Badges**:
-  - "Passed" (green): 80%+ completion
-  - "At Risk" (yellow): Below 80% and cohort still in progress
-  - "On Track" (blue): On pace to meet threshold
-- **Summary Statistics**: Shows total participants, passed count, at-risk count, and average completion rate
-
-### Admin Password Reset
-Admins can reset any user's password via a dialog in the Users tab:
-- Password input with 6-character minimum validation
-- Uses secure bcryptjs hashing before storage
-- Admin-only access enforced on API endpoint
-
-### Admin User Deletion (Added January 2026)
-Admins can delete any user (except other admins) via the Users tab:
-- Confirmation dialog warns about permanent data deletion
-- Cascading deletion removes: user answers, prayer completions, chat messages
-- Removes mentor assignment from any participants assigned to the deleted user
-- User can re-register with the same email after deletion
-
-### Chat System (Updated January 2026)
-Role-based messaging with unique conversation threads:
-- **Participants**: Can only message their assigned mentor
-- **Mentors**: Can message their assigned mentees AND admins
-- **Admins**: Can message any user in the system
-- Mentors and admins appear in the mentor assignment dropdown
-- Messages are stored per sender/receiver pair for unique conversations
-- Auto-scroll to bottom when messages load or are sent
-- **Unread Message Notifications**: Badge showing unread count in sidebar and mobile header
-- Polls every 30 seconds for new message counts
-
-### Day 0 Onboarding (Added January 2026)
-Participants must complete Day 0 before accessing the program:
-- **Introduction Video**: Admin-configurable YouTube video URL
-- **Participant Agreement**: Commitment text that users must acknowledge
-- User checks agreement checkbox and clicks to sign
-- `agreementSignedAt` timestamp stored in users table
-- Dashboard redirects to /day0 if agreement not signed
-- Admin Settings tab includes Day 0 configuration card
-
-### Typography & Button Styling (Added January 2026)
-Custom fonts and styling applied throughout:
-- **Body font**: Afacad (loaded from /fonts/ directory)
-- **Title font**: Cormorant Garamond with -2% letter-spacing
-- **Button styling**: Black background, white text, Afacad semi-bold, 10% letter-spacing
-- All buttons consistently styled using updated buttonVariants
-
-### Login Page Design (Updated January 2026)
-Redesigned login with spiritual imagery:
-- Full-page background image (St. Peter's Basilica)
-- Glassmorphism card overlay for login form
-- Black text for readability
-- "Lumen Fidei 30 day spiritual journey" branding
-
-### Multiple Cohort Support (Added January 2026)
-Admins can start new cohorts via the Settings tab:
-- Set new cohort start date
-- Optionally clear all prayer completion records for a fresh start
-- Current cohort status displayed (start date, current day, status)
-- `clearAllPrayerCompletions` storage method removes all prayer records
-
-### Mobile Responsive Design (Updated January 2026)
-Fully mobile-optimized for phone use at 400px viewport width:
-
-**Navigation:**
-- Desktop: Fixed sidebar on the left with full navigation
-- Mobile: Hamburger menu in top header bar, opens drawer from right side
-- MobileHeader component shows branding and hamburger button
-- MobileDrawer component slides in with all navigation options
-- Drawer closes on navigation, close button click, or overlay tap
-
-**Dashboard:**
-- Collapsible day selector grid on mobile
-- Prayer modals use full-screen height (90vh) on mobile for easy reading
-- All cards have responsive padding (smaller on mobile)
-- Font sizes scale down appropriately for small screens
-- Morning/Evening tabs are compact on mobile
-- Assignment form buttons stack vertically on mobile
-- Reflection textarea adapts to smaller screens
-
-**Messages:**
-- Single-pane layout on mobile (contacts OR chat, not both)
-- Back button in chat header to return to contacts list
-- Full-width layout on mobile devices
-- Chat window properly scrolls within fixed container
-- New conversation dialog for admins/mentors to message any user
-
-### Security (Updated January 2026)
-- Passwords are hashed using bcryptjs before storage
-- API responses are sanitized to never expose password hashes
-- Session-based authentication with secure cookies
-- **Rate Limiting**: express-rate-limit middleware protects against abuse
-  - General API: 200 requests per 15 minutes
-  - Auth endpoints (login/register): 10 attempts per 15 minutes
-- **Role Enforcement**: requireRole and requireAuth middleware for consistent server-side role checks
-- **Data Isolation**: Mentors can only access their assigned participants' data
-  - Answers, prayer completions, and messages are filtered by mentor relationship
-  - Participants can only see their own data and their assigned mentor
-
-### Admin Data Export (Added January 2026)
-Admins can download CSV exports for backup purposes via the Settings tab:
-- **Export Users**: All user data (ID, name, email, role, track, mentor, dates)
-- **Export Answers**: All participant reflection submissions
-- **Export Progress**: Progress data with completion rates and graduation status
-- CSV exports include formula injection protection (prevents Excel macro execution)
-
-### Cohort-Based Time-Gating (Updated January 2026)
-The program now uses a **cohort-based** approach where all users start together on an admin-configurable date:
-- **cohortSettings table**: Stores key-value settings including `cohort_start_date`
-- **Admin Settings tab**: Allows admins to set/update the cohort start date
-- **Current day calculation**: `currentDay = floor((today - cohortStartDate) / 1 day) + 1`, clamped between 0 and 30
-- **Access control**: Users can ONLY access the current day's content - previous days are locked with "missed" indicators, future days are locked
-- All time-gating uses cohort start date (not per-user startDate) for content, prayer completions, and progress tracking
-
-### Dashboard Layout (Updated January 2026)
-- **Left column (col-span-3)**: Day timeline with weeks 1-5 and days 1-6 per week
-- **Main content (col-span-9)**: Full-width content area with Morning/Evening tabs
-- **No right sidebar**: Track requirements panel removed for cleaner layout
-
-### Morning Prayers Feature
-The Morning tab includes a "Morning Prayers" card with clickable buttons that open modals:
-- **Prayer Against Retaliation**: Protection prayer for spiritual warfare
-- **Miracle Prayer**: Surrender and commitment to Christ
-Prayer texts are stored as constants in Dashboard.tsx (PRAYER_TEXTS object)
-
-### Examination of Conscience
-The Evening tab includes an "Examination of Conscience" section with the 5-step Daily Examen:
-1. Give Thanks
-2. Ask for Light
-3. Review the Day
-4. Face Your Shortcomings
-5. Look Forward
-
-### Admin Content Management (Added January 2026)
-Admins can view and edit all 30 days of content via the Content tab:
-- **Day Selector Grid**: 30-day grid organized by week (5 weeks × 6 days)
-- **View Mode**: Displays morning content (scripture ref, text, meditation) and evening content (catechism ref, content with embedded videos, reflection questions)
-- **Edit Mode**: Full form with all content fields including weekTheme, morningPrayer, eveningSummary
-- **Reflection Days**: Days 6, 12, 18, 24, 30 marked with badge
-- **Time-gate Independent**: Admins can view/edit any day regardless of cohort time-gating
-- Form properly resets when switching between days to prevent stale data
+### Core Features
+- **User Roles**: Participant, Mentor, Admin.
+- **Time-Gating**: Cohort-based content release, where all users progress together from an admin-defined start date.
+- **Progress Tracking**: Users mark prayers complete, and an admin dashboard visualizes participant progress, completion rates, and graduation status (80% threshold).
+- **Messaging**: Real-time, role-based chat system with unread message notifications.
+- **Onboarding**: Day 0 onboarding with an introduction video and participant agreement.
+- **Admin Capabilities**: User management (reset passwords, delete users), content management (view/edit all daily content), cohort management (set start dates, clear completions), and data export (CSV for users, answers, progress).
+- **Mobile Responsiveness**: Full optimization for mobile devices, including adaptive navigation, layouts, and content display.
+- **Theming**: Custom typography with Afacad and Cormorant Garamond fonts, and spiritual imagery for login.
 
 ## External Dependencies
 
 ### Database
-- PostgreSQL database (required, configured via `DATABASE_URL` environment variable)
-- Drizzle ORM for type-safe database queries
-- drizzle-zod for schema validation integration
+- PostgreSQL
+- Drizzle ORM
+- drizzle-zod
 
-### UI Component Libraries
-- shadcn/ui (Radix UI primitives with Tailwind styling)
-- Lucide React for icons
-- Embla Carousel for carousel components
-- date-fns for date manipulation
+### UI Components
+- shadcn/ui (based on Radix UI)
+- Lucide React (icons)
+- Embla Carousel
+- date-fns
 
-### Authentication & Sessions
-- Passport.js with passport-local strategy
-- express-session with memorystore
+### Authentication
+- Passport.js
+- passport-local
+- express-session
+- memorystore (development)
 
-### Build & Development
-- Vite for frontend bundling with React plugin
-- esbuild for server bundling
-- TypeScript for type checking
-- Replit-specific Vite plugins for development experience
+### Build Tools
+- Vite
+- esbuild
+- TypeScript
