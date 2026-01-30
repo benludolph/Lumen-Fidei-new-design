@@ -35,7 +35,7 @@ Preferred communication style: Simple, everyday language.
 - **Progress Tracking**: Users mark prayers complete, and an admin dashboard visualizes participant progress, completion rates, and graduation status (80% threshold).
 - **Messaging**: Real-time, role-based chat system with unread message notifications.
 - **Onboarding**: Day 0 onboarding with an introduction video and participant agreement.
-- **Admin Capabilities**: User management (reset passwords, delete users), content management (view/edit all daily content), cohort management (set start dates, clear completions), and data export (CSV for users, answers, progress).
+- **Admin Capabilities**: User management (reset passwords, delete users), content management (view/edit all daily content), cohort management (set start dates, clear completions), user details view (profile, progress, prayer completions, full answer history with filtering and CSV export), and data export (CSV for users, answers, progress).
 - **Mobile Responsiveness**: Full optimization for mobile devices, including adaptive navigation, layouts, and content display.
 - **Theming**: Custom typography with Afacad and Cormorant Garamond fonts, and spiritual imagery for login.
 
