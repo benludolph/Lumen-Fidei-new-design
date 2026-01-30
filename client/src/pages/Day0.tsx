@@ -69,13 +69,10 @@ export default function Day0() {
   const defaultAgreementText = `I commit to participating fully in this 30-day spiritual journey.
 
 I will:
-
 • Complete the daily morning and evening prayers and reflections
 • Be honest and open in my submissions
 • Reach out to my mentor if I have questions or struggles
-• Give my best effort each day, trusting in God's grace
-
-God's blessings and grace.`;
+• Give my best effort each day, trusting in God's blessings and grace`;
 
   const agreementText = data?.agreementText || defaultAgreementText;
 
