@@ -1194,36 +1194,30 @@ Rest in God's presence. Let go of words and thoughts. Simply be with God, allowi
         });
     }
 
-    // Always upsert daily content from imported data to ensure production has the content
-    console.log("Upserting daily content from imported data...");
-    for (const content of dailyContentData) {
-        await storage.upsertDailyContent({
-            dayNumber: content.dayNumber,
-            weekNumber: content.weekNumber,
-            weekTitle: content.weekTitle,
-            morningScriptureRef: content.morningScriptureRef,
-            morningScriptureText: content.morningScriptureText,
-            morningMeditation: content.morningMeditation,
-            morningPrayer: null,
-            eveningCatechismRef: content.eveningCatechismRef,
-            eveningCatechism: content.eveningCatechism,
-            eveningSummary: null,
-            eveningQuestions: content.eveningQuestions,
-            isReflectionDay: content.isReflectionDay,
-            isMentorDay: content.isMentorDay
-        });
-    }
-    
-    // Upsert practice resources (prayers and guides) from imported data
-    console.log("Upserting practice resources from imported data...");
-    for (const resource of practiceResourcesData) {
-        await storage.upsertPracticeResource({
-            name: resource.name,
-            type: resource.type,
-            content: resource.content,
-            duration: resource.duration,
-            order: resource.order
-        });
+    // Only seed daily content if none exists (preserves admin edits)
+    const existingContent = await storage.getAllDailyContent();
+    if (existingContent.length === 0) {
+        console.log("No daily content found - seeding from imported data...");
+        for (const content of dailyContentData) {
+            await storage.upsertDailyContent({
+                dayNumber: content.dayNumber,
+                weekNumber: content.weekNumber,
+                weekTitle: content.weekTitle,
+                morningScriptureRef: content.morningScriptureRef,
+                morningScriptureText: content.morningScriptureText,
+                morningMeditation: content.morningMeditation,
+                morningPrayer: null,
+                eveningCatechismRef: content.eveningCatechismRef,
+                eveningCatechism: content.eveningCatechism,
+                eveningSummary: null,
+                eveningQuestions: content.eveningQuestions,
+                isReflectionDay: content.isReflectionDay,
+                isMentorDay: content.isMentorDay
+            });
+        }
+        console.log("Daily content seeded successfully.");
+    } else {
+        console.log(`Daily content already exists (${existingContent.length} days) - preserving admin edits.`);
     }
     
     // Legacy seeding code - no longer needed but keeping structure
