@@ -18,10 +18,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function Messages() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const searchParams = new URLSearchParams(location.split('?')[1]);
   // Support both 'user' (general) and 'mentorId' (from Dashboard mentor prompts) query params
   const initialUserId = searchParams.get('user') || searchParams.get('mentorId');
+  
+  // Track if user has explicitly navigated back from a conversation (to prevent URL param re-applying)
+  const hasNavigatedBackRef = useRef(false);
 
   // API returns filtered list based on user's role
   const { data: contacts } = useUsers();
@@ -36,6 +39,10 @@ export default function Messages() {
 
   // Sync selected contact with URL parameter or default to first contact
   useEffect(() => {
+    // Don't re-apply URL param if user explicitly clicked back
+    if (hasNavigatedBackRef.current) {
+      return;
+    }
     if (initialUserId) {
       setSelectedContactId(Number(initialUserId));
     } else if (contacts && contacts.length > 0 && !selectedContactId) {
@@ -66,13 +73,20 @@ export default function Messages() {
   ) || [];
 
   const handleSelectNewContact = (userId: number) => {
+    hasNavigatedBackRef.current = false; // Reset so future URL navigations work
     setSelectedContactId(userId);
     setShowNewChatDialog(false);
     setSearchQuery("");
   };
 
   const handleBackToContacts = () => {
+    // Mark that user has explicitly navigated back (prevents useEffect from re-applying URL param)
+    hasNavigatedBackRef.current = true;
     setSelectedContactId(null);
+    // Clear URL parameters
+    if (location.includes('?')) {
+      setLocation('/messages');
+    }
   };
 
   return (
@@ -149,7 +163,10 @@ export default function Messages() {
                 {contacts?.map((contact) => (
                   <button
                     key={contact.id}
-                    onClick={() => setSelectedContactId(contact.id)}
+                    onClick={() => {
+                      hasNavigatedBackRef.current = false; // Reset so future URL navigations work
+                      setSelectedContactId(contact.id);
+                    }}
                     className={cn(
                       "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
                       selectedContactId === contact.id ? "bg-white dark:bg-background shadow-sm ring-1 ring-border" : "hover:bg-white/50 dark:hover:bg-background/50"
