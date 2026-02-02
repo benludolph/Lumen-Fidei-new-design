@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { HtmlContent } from "@/components/ui/html-content";
+import DOMPurify from "dompurify";
 import { Lock, CheckCircle2, Circle, Sun, Moon, Check, ChevronDown, ChevronUp, AlertCircle, BookOpen, Minus, Plus, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -44,6 +46,7 @@ Resolve to do better tomorrow. Ask God for the specific grace you need. End with
 function ContentWithMedia({ text }: { text: string }) {
   if (!text) return null;
   
+  const isHtml = text.includes('<') && text.includes('>');
   const parts = text.split(/(\[VIDEO:[a-zA-Z0-9_-]+\])/g);
   
   return (
@@ -68,6 +71,19 @@ function ContentWithMedia({ text }: { text: string }) {
           );
         }
         if (part.trim()) {
+          if (isHtml) {
+            const sanitizedHtml = DOMPurify.sanitize(part, {
+              ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span'],
+              ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+            });
+            return (
+              <div 
+                key={idx} 
+                className="prose-content leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+              />
+            );
+          }
           const paragraphs = part.split(/\n\n+/);
           return paragraphs.map((para, pIdx) => (
             <p key={`${idx}-${pIdx}`} className="whitespace-pre-wrap leading-relaxed">{para.trim()}</p>
@@ -471,7 +487,7 @@ export default function Dashboard() {
                         <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.morningScriptureRef}</p>
                       </CardHeader>
                       <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                        "{dayContent.morningScriptureText}"
+                        <HtmlContent content={`"${dayContent.morningScriptureText}"`} />
                       </CardContent>
                     </Card>
                     
@@ -480,8 +496,8 @@ export default function Dashboard() {
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
                         </CardHeader>
-                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                          {dayContent.morningMeditation}
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+                          <HtmlContent content={dayContent.morningMeditation} className="whitespace-pre-wrap" />
                         </CardContent>
                       </Card>
                     )}
@@ -491,8 +507,8 @@ export default function Dashboard() {
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Closing Prayer</CardTitle>
                         </CardHeader>
-                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                          {dayContent.morningPrayer}
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+                          <HtmlContent content={dayContent.morningPrayer} className="whitespace-pre-wrap" />
                         </CardContent>
                       </Card>
                     )}
@@ -522,8 +538,8 @@ export default function Dashboard() {
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Summary of Key Concepts</CardTitle>
                         </CardHeader>
-                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                          {dayContent.eveningSummary}
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+                          <HtmlContent content={dayContent.eveningSummary} className="whitespace-pre-wrap" />
                         </CardContent>
                       </Card>
                     )}
@@ -742,7 +758,7 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
             <p className="text-xs sm:text-sm text-muted-foreground">{content.morningScriptureRef}</p>
           </CardHeader>
           <CardContent className="prose max-w-none text-muted-foreground leading-relaxed italic text-sm sm:text-base p-3 sm:p-6 pt-0">
-            "{content.morningScriptureText}"
+            <HtmlContent content={`"${content.morningScriptureText}"`} />
           </CardContent>
         </Card>
       )}
@@ -752,8 +768,8 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
           <CardHeader className="p-3 sm:p-6">
             <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
           </CardHeader>
-          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base p-3 sm:p-6 pt-0">
-            {content.morningMeditation}
+          <CardContent className="prose max-w-none text-muted-foreground leading-relaxed text-sm sm:text-base p-3 sm:p-6 pt-0">
+            <HtmlContent content={content.morningMeditation} className="whitespace-pre-wrap" />
           </CardContent>
         </Card>
       )}

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -1535,32 +1536,26 @@ function ContentManagementView() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Scripture Text</label>
-                  <Textarea
+                  <RichTextEditor
                     value={formData.morningScriptureText}
-                    onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureText: e.target.value }))}
-                    placeholder="Enter the scripture passage..."
-                    rows={5}
-                    data-testid="input-scripture-text"
+                    onChange={(value) => setFormData(prev => ({ ...prev, morningScriptureText: value }))}
+                    className="min-h-[150px]"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Meditation</label>
-                  <Textarea
+                  <RichTextEditor
                     value={formData.morningMeditation}
-                    onChange={(e) => setFormData(prev => ({ ...prev, morningMeditation: e.target.value }))}
-                    placeholder="Enter the meditation text for Lectio Divina..."
-                    rows={6}
-                    data-testid="input-meditation"
+                    onChange={(value) => setFormData(prev => ({ ...prev, morningMeditation: value }))}
+                    className="min-h-[180px]"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Morning Prayer (optional)</label>
-                  <Textarea
+                  <RichTextEditor
                     value={formData.morningPrayer}
-                    onChange={(e) => setFormData(prev => ({ ...prev, morningPrayer: e.target.value }))}
-                    placeholder="Enter optional morning prayer text..."
-                    rows={4}
-                    data-testid="input-morning-prayer"
+                    onChange={(value) => setFormData(prev => ({ ...prev, morningPrayer: value }))}
+                    className="min-h-[120px]"
                   />
                 </div>
               </CardContent>
@@ -1582,12 +1577,10 @@ function ContentManagementView() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Catechism / Activity Content</label>
-                  <Textarea
+                  <RichTextEditor
                     value={formData.eveningCatechism}
-                    onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechism: e.target.value }))}
-                    placeholder="Enter the evening reading or activity content... Use [VIDEO:youtubeId] to embed videos."
-                    rows={8}
-                    data-testid="input-catechism"
+                    onChange={(value) => setFormData(prev => ({ ...prev, eveningCatechism: value }))}
+                    className="min-h-[200px]"
                   />
                   <p className="text-xs text-muted-foreground">
                     Tip: Use [VIDEO:youtubeId] format to embed YouTube videos
@@ -1595,12 +1588,10 @@ function ContentManagementView() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Evening Summary (optional)</label>
-                  <Textarea
+                  <RichTextEditor
                     value={formData.eveningSummary}
-                    onChange={(e) => setFormData(prev => ({ ...prev, eveningSummary: e.target.value }))}
-                    placeholder="Enter optional evening summary..."
-                    rows={3}
-                    data-testid="input-evening-summary"
+                    onChange={(value) => setFormData(prev => ({ ...prev, eveningSummary: value }))}
+                    className="min-h-[100px]"
                   />
                 </div>
                 <div className="space-y-2">
