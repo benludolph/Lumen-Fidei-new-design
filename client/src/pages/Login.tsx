@@ -117,17 +117,20 @@ export default function Login() {
 
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full text-white border border-black/[0.08]" 
                 size="lg"
                 disabled={form.formState.isSubmitting}
                 data-testid="button-login"
+                style={{ 
+                  background: 'linear-gradient(135deg, #FFC54C 0%, #FF7117 100%)',
+                }}
               >
                 {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="justify-center text-sm text-muted-foreground">
-            Having trouble? Contact your mentor.
+          <CardFooter className="justify-center text-sm text-muted-foreground text-center">
+            Having trouble logging in? Contact bludolph@archchicago.org to reset your password
           </CardFooter>
         </Card>
       </div>
