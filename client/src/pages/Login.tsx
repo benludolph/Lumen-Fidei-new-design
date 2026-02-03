@@ -115,10 +115,9 @@ export default function Login() {
                 </div>
               )}
 
-              <Button 
+              <button 
                 type="submit" 
-                className="w-full text-white border border-black/[0.08]" 
-                size="lg"
+                className="w-full h-11 px-8 rounded-md text-white font-medium border border-black/[0.08] transition-all duration-200 hover:brightness-110 hover:shadow-md active:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed" 
                 disabled={form.formState.isSubmitting}
                 data-testid="button-login"
                 style={{ 
@@ -126,7 +125,7 @@ export default function Login() {
                 }}
               >
                 {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
-              </Button>
+              </button>
             </form>
           </CardContent>
           <CardFooter className="justify-center text-sm text-muted-foreground text-center">
