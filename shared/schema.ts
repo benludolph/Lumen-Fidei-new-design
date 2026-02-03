@@ -31,9 +31,10 @@ export const dailyContent = pgTable("daily_content", {
   
   // Evening content  
   eveningCatechismRef: text("evening_catechism_ref"), // e.g., "CCC #214-227"
-  eveningCatechism: text("evening_catechism").notNull(), // Catechism content
+  eveningCatechism: text("evening_catechism"), // Catechism content - now optional
   eveningSummary: text("evening_summary"), // Summary of key concepts
-  eveningQuestions: json("evening_questions").$type<string[]>(), // Reflection questions as JSON array
+  eveningQuestions: json("evening_questions").$type<string[]>(), // Legacy - kept for migration compatibility
+  assignment: text("assignment"), // Optional assignment text - if blank, no assignment shown
   
   isReflectionDay: boolean("is_reflection_day").default(false).notNull(), // Day 6 of each week (synthesis days)
   isMentorDay: boolean("is_mentor_day").default(false).notNull(), // Days requiring mentor message (3, 9, 15, 27)
@@ -145,6 +146,7 @@ export const insertUserSchema = createInsertSchema(users, {
 }).omit({ id: true });
 export const insertDailyContentSchema = createInsertSchema(dailyContent, {
   eveningQuestions: z.array(z.string()).optional().nullable(),
+  assignment: z.string().optional().nullable(),
 }).omit({ id: true });
 export const insertUserAnswerSchema = createInsertSchema(userAnswers).omit({ id: true, createdAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, isRead: true, createdAt: true });

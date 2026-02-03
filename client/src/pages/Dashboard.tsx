@@ -111,6 +111,7 @@ export default function Dashboard() {
   const [_, setLocation] = useLocation();
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [prayerModalOpen, setPrayerModalOpen] = useState<string | null>(null);
+  const [examenModalOpen, setExamenModalOpen] = useState(false);
   
   // Font size state with localStorage persistence
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
@@ -521,17 +522,19 @@ export default function Dashboard() {
                   </TabsContent>
                   
                   <TabsContent value="evening" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <Card>
-                      <CardHeader className="p-3 sm:p-6">
-                        <CardTitle className="font-serif text-base sm:text-lg">Catechism</CardTitle>
-                        {dayContent.eveningCatechismRef && (
-                          <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
-                        )}
-                      </CardHeader>
-                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                        <ContentWithMedia text={dayContent.eveningCatechism || ''} />
-                      </CardContent>
-                    </Card>
+                    {dayContent.eveningCatechism && dayContent.eveningCatechism.trim() && (
+                      <Card>
+                        <CardHeader className="p-3 sm:p-6">
+                          <CardTitle className="font-serif text-base sm:text-lg">Catechism</CardTitle>
+                          {dayContent.eveningCatechismRef && (
+                            <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
+                          )}
+                        </CardHeader>
+                        <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+                          <ContentWithMedia text={dayContent.eveningCatechism || ''} />
+                        </CardContent>
+                      </Card>
+                    )}
                     
                     {dayContent.eveningSummary && (
                       <Card className="bg-secondary/50">
@@ -591,24 +594,41 @@ export default function Dashboard() {
                       </Card>
                     )}
                     
-                    {/* Examination of Conscience */}
+                    {/* Daily Examen Modal Button */}
                     <Card className="bg-primary/5 border-primary/20">
-                      <CardHeader className="p-3 sm:p-6">
-                        <CardTitle className="font-serif text-base sm:text-lg">Examination of Conscience</CardTitle>
-                        <p className="text-xs sm:text-sm text-muted-foreground">Daily Examen (10-15 minutes)</p>
-                      </CardHeader>
-                      <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
-                        {EXAMINATION_OF_CONSCIENCE}
+                      <CardContent className="p-3 sm:p-4">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between gap-2"
+                          onClick={() => setExamenModalOpen(true)}
+                          data-testid="button-examen"
+                        >
+                          <span className="font-serif">Daily Examen (10-15 minutes)</span>
+                          <BookOpen className="w-4 h-4" />
+                        </Button>
                       </CardContent>
                     </Card>
+
+                    {/* Daily Examen Modal */}
+                    <Dialog open={examenModalOpen} onOpenChange={setExamenModalOpen}>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle className="font-serif text-xl">Examination of Conscience</DialogTitle>
+                          <p className="text-sm text-muted-foreground">Daily Examen (10-15 minutes)</p>
+                        </DialogHeader>
+                        <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                          {EXAMINATION_OF_CONSCIENCE}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     
-                    {/* Assignment Section - only show for non-mentor days with questions */}
-                    {!dayContent.isMentorDay && dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
+                    {/* Assignment Section - show when assignment is set */}
+                    {dayContent.assignment && dayContent.assignment.trim() && (
                       <AssignmentSection 
                         day={selectedDay} 
-                        prompt="Reflect on today's readings and answer the questions above in your own words."
+                        prompt={dayContent.assignment}
                         existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
-                        isShortReflection={[4, 10, 16, 22, 28].includes(selectedDay)}
+                        isShortReflection={false}
                       />
                     )}
                     

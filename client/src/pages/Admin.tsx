@@ -1260,6 +1260,7 @@ type DailyContentType = {
   eveningCatechism: string;
   eveningSummary: string | null;
   eveningQuestions: string[] | null;
+  assignment: string | null;
 };
 
 function ContentManagementView() {
@@ -1288,6 +1289,7 @@ function ContentManagementView() {
     eveningCatechism: "",
     eveningSummary: "",
     eveningQuestions: "",
+    assignment: "",
   });
 
   const updateFormFromContent = (content: DailyContentType | undefined) => {
@@ -1302,6 +1304,7 @@ function ContentManagementView() {
         eveningCatechism: content.eveningCatechism || "",
         eveningSummary: content.eveningSummary || "",
         eveningQuestions: content.eveningQuestions?.join("\n") || "",
+        assignment: content.assignment || "",
       });
     } else {
       setFormData({
@@ -1314,6 +1317,7 @@ function ContentManagementView() {
         eveningCatechism: "",
         eveningSummary: "",
         eveningQuestions: "",
+        assignment: "",
       });
     }
   };
@@ -1359,6 +1363,7 @@ function ContentManagementView() {
       eveningQuestions: formData.eveningQuestions.trim() 
         ? formData.eveningQuestions.split("\n").filter(q => q.trim())
         : null,
+      assignment: formData.assignment.trim() || null,
     });
   };
 
@@ -1595,11 +1600,22 @@ function ContentManagementView() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Reflection Questions (one per line)</label>
+                  <label className="text-sm font-medium">Assignment (optional - leave blank for no assignment)</label>
+                  <Textarea
+                    value={formData.assignment}
+                    onChange={(e) => setFormData(prev => ({ ...prev, assignment: e.target.value }))}
+                    placeholder="Enter assignment text (e.g., 'Message your mentor about...' or 'Reflect on today's readings...'). Leave blank for no assignment."
+                    rows={3}
+                    data-testid="input-assignment"
+                  />
+                  <p className="text-xs text-muted-foreground">If blank, no assignment section will be shown to participants for this day.</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Reflection Questions (optional - one per line, for reflection days)</label>
                   <Textarea
                     value={formData.eveningQuestions}
                     onChange={(e) => setFormData(prev => ({ ...prev, eveningQuestions: e.target.value }))}
-                    placeholder="Enter reflection questions, one per line..."
+                    placeholder="Enter reflection questions, one per line (only used on reflection days)..."
                     rows={4}
                     data-testid="input-questions"
                   />
@@ -1647,7 +1663,7 @@ function ContentManagementView() {
               <CardTitle className="text-lg">Evening Content</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4" data-testid="content-evening">
-              {currentContent?.eveningCatechism || currentContent?.eveningQuestions?.length ? (
+              {currentContent?.eveningCatechism || currentContent?.eveningQuestions?.length || currentContent?.assignment ? (
                 <>
                   {currentContent.eveningCatechismRef && (
                     <div>
@@ -1660,6 +1676,14 @@ function ContentManagementView() {
                       <p className="text-sm font-medium text-muted-foreground">Content</p>
                       <p className="whitespace-pre-wrap text-sm leading-relaxed max-h-64 overflow-y-auto" data-testid="text-catechism">
                         {currentContent.eveningCatechism}
+                      </p>
+                    </div>
+                  )}
+                  {currentContent.assignment && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Assignment</p>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="text-assignment">
+                        {currentContent.assignment}
                       </p>
                     </div>
                   )}
