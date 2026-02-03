@@ -117,14 +117,15 @@ export default function Login() {
 
               <button 
                 type="submit" 
-                className="w-full h-11 px-8 rounded-md text-white font-medium border border-black/[0.08] transition-all duration-200 hover:brightness-110 hover:shadow-md active:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed" 
+                className="w-full h-11 px-8 rounded-md text-white font-semibold uppercase tracking-[0.1em] font-sans transition-all duration-200 hover:brightness-110 hover:shadow-md active:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed" 
                 disabled={form.formState.isSubmitting}
                 data-testid="button-login"
                 style={{ 
                   background: 'linear-gradient(135deg, #FFC54C 0%, #FF7117 100%)',
+                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
                 }}
               >
-                {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
+                {form.formState.isSubmitting ? "SIGNING IN..." : "SIGN IN"}
               </button>
             </form>
           </CardContent>
