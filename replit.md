@@ -28,6 +28,8 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with Drizzle ORM
 - **Key Tables**: `users`, `dailyContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
 - **Content**: 30 days of structured morning and evening spiritual content, with embedded video support. Practice resources include various prayers and spiritual exercises.
+- **Assignment Field**: Optional text field per day for custom assignments (e.g., "Message your mentor about..."). If blank, no assignment section shown to participants.
+- **Daily Examen**: Displayed as a modal button in evening section to save screen space.
 
 ### Core Features
 - **User Roles**: Participant, Mentor, Admin.
