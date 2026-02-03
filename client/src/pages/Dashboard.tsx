@@ -522,13 +522,11 @@ export default function Dashboard() {
                   </TabsContent>
                   
                   <TabsContent value="evening" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    {dayContent.eveningCatechism && dayContent.eveningCatechism.trim() && (
+                    {dayContent.eveningCatechismRef && dayContent.eveningCatechism && dayContent.eveningCatechism.trim() && (
                       <Card>
                         <CardHeader className="p-3 sm:p-6">
                           <CardTitle className="font-serif text-base sm:text-lg">Catechism</CardTitle>
-                          {dayContent.eveningCatechismRef && (
-                            <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
-                          )}
+                          <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.eveningCatechismRef}</p>
                         </CardHeader>
                         <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
                           <ContentWithMedia text={dayContent.eveningCatechism || ''} />
@@ -794,10 +792,11 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
         </Card>
       )}
       
-      {content.eveningCatechism && content.eveningCatechism.trim() && (
+      {content.eveningCatechismRef && content.eveningCatechism && content.eveningCatechism.trim() && (
         <Card>
           <CardHeader className="p-3 sm:p-6">
             <CardTitle className="font-serif text-base sm:text-lg">Reading</CardTitle>
+            <p className="text-xs sm:text-sm text-muted-foreground">{content.eveningCatechismRef}</p>
           </CardHeader>
           <CardContent className="prose max-w-none text-muted-foreground leading-relaxed text-sm sm:text-base p-3 sm:p-6 pt-0">
             <ContentWithMedia text={content.eveningCatechism} />
