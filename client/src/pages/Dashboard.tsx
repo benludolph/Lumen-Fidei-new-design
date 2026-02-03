@@ -456,7 +456,7 @@ export default function Dashboard() {
                   <TabsContent value="morning" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                     {/* Morning Prayers - click to open modal */}
                     <Card className="bg-primary/5 border-primary/20">
-                      <CardHeader className="pb-2 p-3 sm:p-6">
+                      <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                         <CardTitle className="font-serif text-base sm:text-lg">Morning Prayers</CardTitle>
                         <p className="text-xs sm:text-sm text-muted-foreground">Tap to open and pray</p>
                       </CardHeader>
@@ -483,7 +483,7 @@ export default function Dashboard() {
                     </Card>
                     
                     <Card>
-                      <CardHeader className="p-3 sm:p-6">
+                      <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                         <CardTitle className="font-serif text-base sm:text-lg">Scripture</CardTitle>
                         <p className="text-xs sm:text-sm text-muted-foreground">{dayContent.morningScriptureRef}</p>
                       </CardHeader>
@@ -494,7 +494,7 @@ export default function Dashboard() {
                     
                     {dayContent.morningMeditation && dayContent.morningMeditation.trim() && (
                       <Card>
-                        <CardHeader className="p-3 sm:p-6">
+                        <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                           <CardTitle className="font-serif text-base sm:text-lg">Meditation</CardTitle>
                         </CardHeader>
                         <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
@@ -505,7 +505,7 @@ export default function Dashboard() {
                     
                     {dayContent.morningPrayer && (
                       <Card className="bg-secondary/30">
-                        <CardHeader className="p-3 sm:p-6">
+                        <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                           <CardTitle className="font-serif text-base sm:text-lg">Closing Prayer</CardTitle>
                         </CardHeader>
                         <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
@@ -524,7 +524,7 @@ export default function Dashboard() {
                   <TabsContent value="evening" className="space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-4 duration-500">
                     {dayContent.eveningCatechism && dayContent.eveningCatechism.trim() && (
                       <Card>
-                        <CardHeader className="p-3 sm:p-6">
+                        <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                           <CardTitle className="font-serif text-base sm:text-lg">
                             {dayContent.eveningCatechismRef ? 'Catechism' : 'Evening Reading'}
                           </CardTitle>
@@ -540,7 +540,7 @@ export default function Dashboard() {
                     
                     {dayContent.eveningSummary && (
                       <Card className="bg-secondary/50">
-                        <CardHeader className="p-3 sm:p-6">
+                        <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                           <CardTitle className="font-serif text-base sm:text-lg">Summary of Key Concepts</CardTitle>
                         </CardHeader>
                         <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
@@ -552,7 +552,7 @@ export default function Dashboard() {
                     {/* Mentor Day - Message Mentor prompt */}
                     {dayContent.isMentorDay && dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
                       <Card className="border-primary bg-primary/5">
-                        <CardHeader className="p-3 sm:p-6">
+                        <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                           <CardTitle className="font-serif text-base sm:text-lg flex items-center gap-2">
                             <MessageSquare className="w-5 h-5" />
                             Message Your Mentor
@@ -583,7 +583,7 @@ export default function Dashboard() {
                     {/* Regular Questions to Consider (non-mentor days) */}
                     {!dayContent.isMentorDay && dayContent.eveningQuestions && dayContent.eveningQuestions.length > 0 && (
                       <Card className="border-primary/20">
-                        <CardHeader className="p-3 sm:p-6">
+                        <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                           <CardTitle className="font-serif text-base sm:text-lg">Questions to Consider</CardTitle>
                         </CardHeader>
                         <CardContent className="p-3 sm:p-6 pt-0">
