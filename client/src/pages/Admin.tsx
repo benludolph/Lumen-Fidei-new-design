@@ -112,6 +112,9 @@ export default function Admin() {
 
         <TabsContent value="content">
           <ContentManagementView />
+          <div className="mt-8">
+            <TrackAContentManagementView />
+          </div>
         </TabsContent>
       </Tabs>
     </Shell>
@@ -815,24 +818,35 @@ function ProgressView() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1" title="Morning Prayer">
-                          <Sun className="w-4 h-4 text-amber-500" />
+                      {p.track === 'A' ? (
+                        <div className="flex items-center gap-1" title="Daily Activity">
                           {p.morningToday ? (
                             <CheckCircle2 className="w-4 h-4 text-green-600" />
                           ) : (
                             <Circle className="w-4 h-4 text-muted-foreground/30" />
                           )}
+                          <span className="text-xs text-muted-foreground">Done</span>
                         </div>
-                        <div className="flex items-center gap-1" title="Evening Prayer">
-                          <Moon className="w-4 h-4 text-indigo-400" />
-                          {p.eveningToday ? (
-                            <CheckCircle2 className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Circle className="w-4 h-4 text-muted-foreground/30" />
-                          )}
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1" title="Morning Prayer">
+                            <Sun className="w-4 h-4 text-amber-500" />
+                            {p.morningToday ? (
+                              <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Circle className="w-4 h-4 text-muted-foreground/30" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1" title="Evening Prayer">
+                            <Moon className="w-4 h-4 text-indigo-400" />
+                            {p.eveningToday ? (
+                              <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Circle className="w-4 h-4 text-muted-foreground/30" />
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -1704,6 +1718,375 @@ function ContentManagementView() {
             </CardContent>
           </Card>
         </div>
+      )}
+    </div>
+  );
+}
+
+type TrackAContentType = {
+  id: number;
+  dayNumber: number;
+  weekNumber: number;
+  centralTheme: string;
+  mainConcepts: string | null;
+  dailyScripture: string | null;
+  catechism: string | null;
+  reflectionCommentary: string | null;
+  prayers: string | null;
+  journalAssignment: string | null;
+  videoResource: string | null;
+  songTitle: string | null;
+};
+
+function TrackAContentManagementView() {
+  const { toast } = useToast();
+  const [selectedDay, setSelectedDay] = useState(1);
+  const [editMode, setEditMode] = useState(false);
+
+  const { data: allContent, isLoading } = useQuery<TrackAContentType[]>({
+    queryKey: ['/api/track-a-content'],
+    queryFn: async () => {
+      const res = await fetch('/api/track-a-content', { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch Track A content");
+      return res.json();
+    },
+  });
+
+  const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
+
+  const [formData, setFormData] = useState({
+    centralTheme: "",
+    mainConcepts: "",
+    dailyScripture: "",
+    catechism: "",
+    reflectionCommentary: "",
+    prayers: "",
+    journalAssignment: "",
+    videoResource: "",
+    songTitle: "",
+  });
+
+  const updateFormFromContent = (content: TrackAContentType | undefined) => {
+    if (content) {
+      setFormData({
+        centralTheme: content.centralTheme || "",
+        mainConcepts: content.mainConcepts || "",
+        dailyScripture: content.dailyScripture || "",
+        catechism: content.catechism || "",
+        reflectionCommentary: content.reflectionCommentary || "",
+        prayers: content.prayers || "",
+        journalAssignment: content.journalAssignment || "",
+        videoResource: content.videoResource || "",
+        songTitle: content.songTitle || "",
+      });
+    } else {
+      setFormData({
+        centralTheme: "",
+        mainConcepts: "",
+        dailyScripture: "",
+        catechism: "",
+        reflectionCommentary: "",
+        prayers: "",
+        journalAssignment: "",
+        videoResource: "",
+        songTitle: "",
+      });
+    }
+  };
+
+  const handleDayChange = (day: number) => {
+    setSelectedDay(day);
+    setEditMode(false);
+    const content = allContent?.find(c => c.dayNumber === day);
+    updateFormFromContent(content);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", '/api/admin/track-a-content', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      toast({ title: "Track A content saved successfully" });
+      setEditMode(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to save Track A content", variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate({
+      dayNumber: selectedDay,
+      weekNumber: Math.ceil(selectedDay / 7),
+      centralTheme: formData.centralTheme || "Untitled",
+      mainConcepts: formData.mainConcepts.trim() || null,
+      dailyScripture: formData.dailyScripture.trim() || null,
+      catechism: formData.catechism.trim() || null,
+      reflectionCommentary: formData.reflectionCommentary.trim() || null,
+      prayers: formData.prayers.trim() || null,
+      journalAssignment: formData.journalAssignment.trim() || null,
+      videoResource: formData.videoResource.trim() || null,
+      songTitle: formData.songTitle.trim() || null,
+    });
+  };
+
+  const startEdit = () => {
+    updateFormFromContent(currentContent);
+    setEditMode(true);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center">Loading Track A content...</CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              Track A Content Management
+              <Badge variant="secondary">Single Activity</Badge>
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleDayChange(Math.max(1, selectedDay - 1))}
+                disabled={selectedDay <= 1}
+                data-testid="button-prev-day-a"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="font-medium min-w-[80px] text-center">Day {selectedDay}</span>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => handleDayChange(Math.min(30, selectedDay + 1))}
+                disabled={selectedDay >= 30}
+                data-testid="button-next-day-a"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="hidden md:flex flex-wrap gap-1 mb-6">
+            {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
+              const hasContent = allContent?.some(c => c.dayNumber === day);
+              return (
+                <Button
+                  key={day}
+                  variant={selectedDay === day ? "default" : hasContent ? "secondary" : "outline"}
+                  size="sm"
+                  className="h-8 w-8 p-0 text-xs"
+                  onClick={() => handleDayChange(day)}
+                  data-testid={`button-day-a-${day}`}
+                >
+                  {day}
+                </Button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-serif text-xl" data-testid="text-day-label-a">
+                Day {selectedDay} - {currentContent?.centralTheme || "No content"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Week {currentContent?.weekNumber || Math.ceil(selectedDay / 7)}
+              </p>
+            </div>
+            {!editMode ? (
+              <Button onClick={startEdit} data-testid="button-edit-track-a">
+                Edit Content
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEditMode(false)} data-testid="button-cancel-edit-a">
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-track-a">
+                  <Save className="w-4 h-4 mr-2" />
+                  {saveMutation.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {editMode ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Track A Day Content</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Central Theme</label>
+                <Input
+                  value={formData.centralTheme}
+                  onChange={(e) => setFormData(prev => ({ ...prev, centralTheme: e.target.value }))}
+                  placeholder="e.g., What is Prayer? How to Pray"
+                  data-testid="input-central-theme"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Main Concepts (optional)</label>
+                <Input
+                  value={formData.mainConcepts}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mainConcepts: e.target.value }))}
+                  placeholder="e.g., Common Lies of the Enemy"
+                  data-testid="input-main-concepts"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Daily Scripture (optional)</label>
+              <Textarea
+                value={formData.dailyScripture}
+                onChange={(e) => setFormData(prev => ({ ...prev, dailyScripture: e.target.value }))}
+                placeholder="Scripture text or reference..."
+                rows={3}
+                data-testid="input-daily-scripture"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Catechism (optional - text or YouTube URL)</label>
+              <Textarea
+                value={formData.catechism}
+                onChange={(e) => setFormData(prev => ({ ...prev, catechism: e.target.value }))}
+                placeholder="Catechism content or YouTube URL..."
+                rows={2}
+                data-testid="input-catechism-a"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Reflection/Commentary (optional - text or YouTube URL)</label>
+              <Textarea
+                value={formData.reflectionCommentary}
+                onChange={(e) => setFormData(prev => ({ ...prev, reflectionCommentary: e.target.value }))}
+                placeholder="Reflection text or YouTube URL..."
+                rows={2}
+                data-testid="input-reflection-a"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Prayers (optional - text or YouTube URL)</label>
+              <Textarea
+                value={formData.prayers}
+                onChange={(e) => setFormData(prev => ({ ...prev, prayers: e.target.value }))}
+                placeholder="Prayer text or YouTube URL..."
+                rows={2}
+                data-testid="input-prayers-a"
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Journal Assignment (optional)</label>
+                <Textarea
+                  value={formData.journalAssignment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, journalAssignment: e.target.value }))}
+                  placeholder="Journal prompt or assignment..."
+                  rows={2}
+                  data-testid="input-journal-a"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Video Resource (optional)</label>
+                <Input
+                  value={formData.videoResource}
+                  onChange={(e) => setFormData(prev => ({ ...prev, videoResource: e.target.value }))}
+                  placeholder="Video URL or description..."
+                  data-testid="input-video-a"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Song Title (optional)</label>
+              <Input
+                value={formData.songTitle}
+                onChange={(e) => setFormData(prev => ({ ...prev, songTitle: e.target.value }))}
+                placeholder="Song title or YouTube URL..."
+                data-testid="input-song-a"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="space-y-4 pt-6" data-testid="content-track-a-view">
+            {currentContent ? (
+              <>
+                {currentContent.mainConcepts && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Main Concepts</p>
+                    <p>{currentContent.mainConcepts}</p>
+                  </div>
+                )}
+                {currentContent.dailyScripture && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Daily Scripture</p>
+                    <p className="italic text-muted-foreground whitespace-pre-wrap">{currentContent.dailyScripture}</p>
+                  </div>
+                )}
+                {currentContent.catechism && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Catechism</p>
+                    <p className="whitespace-pre-wrap text-sm">{currentContent.catechism}</p>
+                  </div>
+                )}
+                {currentContent.reflectionCommentary && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Reflection/Commentary</p>
+                    <p className="whitespace-pre-wrap text-sm">{currentContent.reflectionCommentary}</p>
+                  </div>
+                )}
+                {currentContent.prayers && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Prayers</p>
+                    <p className="whitespace-pre-wrap text-sm">{currentContent.prayers}</p>
+                  </div>
+                )}
+                {currentContent.journalAssignment && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Journal Assignment</p>
+                    <p className="whitespace-pre-wrap text-sm">{currentContent.journalAssignment}</p>
+                  </div>
+                )}
+                {currentContent.videoResource && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Video Resource</p>
+                    <p className="text-sm">{currentContent.videoResource}</p>
+                  </div>
+                )}
+                {currentContent.songTitle && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Song</p>
+                    <p className="text-sm">{currentContent.songTitle}</p>
+                  </div>
+                )}
+                {!currentContent.mainConcepts && !currentContent.dailyScripture && !currentContent.catechism && 
+                 !currentContent.reflectionCommentary && !currentContent.prayers && !currentContent.journalAssignment && 
+                 !currentContent.videoResource && !currentContent.songTitle && (
+                  <p className="text-muted-foreground text-center py-4">Only theme set for this day: "{currentContent.centralTheme}"</p>
+                )}
+              </>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No Track A content for this day</p>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

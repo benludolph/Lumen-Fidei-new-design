@@ -60,6 +60,21 @@ export const trackRequirements = pgTable("track_requirements", {
   additionalRequirements: json("additional_requirements").$type<string[]>(), // e.g., ["Abstinence Fridays Only", "Monthly Confession"]
 });
 
+export const trackAContent = pgTable("track_a_content", {
+  id: serial("id").primaryKey(),
+  dayNumber: integer("day_number").notNull().unique(),
+  weekNumber: integer("week_number").notNull(),
+  centralTheme: text("central_theme").notNull(),
+  mainConcepts: text("main_concepts"),
+  dailyScripture: text("daily_scripture"),
+  catechism: text("catechism"),
+  reflectionCommentary: text("reflection_commentary"),
+  prayers: text("prayers"),
+  journalAssignment: text("journal_assignment"),
+  videoResource: text("video_resource"),
+  songTitle: text("song_title"),
+});
+
 export const userAnswers = pgTable("user_answers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(), // FK to users
@@ -157,6 +172,7 @@ export const insertTrackRequirementsSchema = createInsertSchema(trackRequirement
 }).omit({ id: true });
 export const insertPrayerCompletionSchema = createInsertSchema(prayerCompletions).omit({ id: true, completedAt: true });
 export const insertPracticeResourceSchema = createInsertSchema(practiceResources).omit({ id: true });
+export const insertTrackAContentSchema = createInsertSchema(trackAContent).omit({ id: true });
 export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omit({ id: true, updatedAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
@@ -181,6 +197,9 @@ export type InsertPrayerCompletion = z.infer<typeof insertPrayerCompletionSchema
 
 export type PracticeResource = typeof practiceResources.$inferSelect;
 export type InsertPracticeResource = z.infer<typeof insertPracticeResourceSchema>;
+
+export type TrackAContent = typeof trackAContent.$inferSelect;
+export type InsertTrackAContent = z.infer<typeof insertTrackAContentSchema>;
 
 export type CohortSetting = typeof cohortSettings.$inferSelect;
 export type InsertCohortSetting = z.infer<typeof insertCohortSettingsSchema>;

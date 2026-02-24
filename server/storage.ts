@@ -1,6 +1,6 @@
 import { db } from "./db";
 import {
-  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings,
+  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -8,7 +8,8 @@ import {
   type TrackRequirement, type InsertTrackRequirement,
   type PrayerCompletion, type InsertPrayerCompletion,
   type PracticeResource, type InsertPracticeResource,
-  type CohortSetting
+  type CohortSetting,
+  type TrackAContent, type InsertTrackAContent
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc, isNotNull } from "drizzle-orm";
 
@@ -59,6 +60,11 @@ export interface IStorage {
   createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   upsertPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   
+  // Track A Content
+  getTrackAContent(dayNumber: number): Promise<TrackAContent | undefined>;
+  getAllTrackAContent(): Promise<TrackAContent[]>;
+  upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent>;
+
   // Cohort Settings
   getCohortSetting(key: string): Promise<string | null>;
   setCohortSetting(key: string, value: string): Promise<CohortSetting>;
@@ -284,6 +290,29 @@ export class DatabaseStorage implements IStorage {
       return updated;
     }
     return this.createPracticeResource(resource);
+  }
+
+  // Track A Content
+  async getTrackAContent(dayNumber: number): Promise<TrackAContent | undefined> {
+    const [content] = await db.select().from(trackAContent).where(eq(trackAContent.dayNumber, dayNumber));
+    return content;
+  }
+
+  async getAllTrackAContent(): Promise<TrackAContent[]> {
+    return await db.select().from(trackAContent).orderBy(asc(trackAContent.dayNumber));
+  }
+
+  async upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent> {
+    const existing = await this.getTrackAContent(content.dayNumber);
+    if (existing) {
+      const [updated] = await db.update(trackAContent)
+        .set(content)
+        .where(eq(trackAContent.dayNumber, content.dayNumber))
+        .returning();
+      return updated;
+    }
+    const [newContent] = await db.insert(trackAContent).values(content).returning();
+    return newContent;
   }
 
   // Cohort Settings

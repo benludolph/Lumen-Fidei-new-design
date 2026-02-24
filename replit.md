@@ -26,10 +26,14 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL with Drizzle ORM
-- **Key Tables**: `users`, `dailyContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
-- **Content**: 30 days of structured morning and evening spiritual content, with embedded video support. Practice resources include various prayers and spiritual exercises.
+- **Key Tables**: `users`, `dailyContent`, `trackAContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
+- **Track System**: Two distinct program tracks:
+  - **Track A**: Single daily activity per day. Content stored in `trackAContent` table with fields: centralTheme, mainConcepts, dailyScripture, catechism, reflectionCommentary, prayers, journalAssignment, videoResource, songTitle. Participants mark one completion per day (uses "morning" period). Seed data in `server/track-a-content-data.ts`.
+  - **Track B**: Morning and evening meditations (the original program). Content stored in `dailyContent` table. Participants mark both morning and evening completions. Seed data in `server/content-data.ts`.
+- **Track Assignment**: Admin assigns participants to Track A or B via the Users tab. Dashboard renders different content based on the user's track.
+- **Content**: 30 days of structured spiritual content per track, with embedded video support. Practice resources include various prayers and spiritual exercises.
 - **Assignment Field**: Optional text field per day for custom assignments (e.g., "Message your mentor about..."). If blank, no assignment section shown to participants.
-- **Daily Examen**: Displayed as a modal button in evening section to save screen space.
+- **Daily Examen**: Displayed as a modal button in evening section to save screen space (Track B only).
 
 ### Core Features
 - **User Roles**: Participant, Mentor, Admin.

@@ -1,8 +1,10 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useDailyContent, useAllContent } from "@/hooks/use-content";
+import { useTrackADailyContent } from "@/hooks/use-track-a-content";
 import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
 import { useUserPrayerCompletions, useMarkPrayerComplete, useUnmarkPrayerComplete } from "@/hooks/use-prayer-completions";
 import { useCohortStartDate } from "@/hooks/use-cohort";
+import type { TrackAContent } from "@shared/schema";
 import { Shell } from "@/components/layout/Shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,13 +163,19 @@ export default function Dashboard() {
   // Selected day is always the current day (users can only access current day)
   const selectedDay = currentDay;
   
+  const isTrackA = user?.track === 'A';
+  
   // Fetch lists
   const { data: contentList } = useAllContent();
   const { data: answers } = useUserAnswers(user?.id);
   const { data: prayerCompletions } = useUserPrayerCompletions();
   
-  // Get content for selected day
-  const { data: dayContent, isLoading } = useDailyContent(selectedDay);
+  // Get content for selected day (Track B)
+  const { data: dayContent, isLoading: isLoadingB } = useDailyContent(isTrackA ? 0 : selectedDay);
+  // Get Track A content for selected day
+  const { data: trackADayContent, isLoading: isLoadingA } = useTrackADailyContent(isTrackA ? selectedDay : 0);
+  
+  const isLoading = isTrackA ? isLoadingA : isLoadingB;
   
   if (!user || user.role !== 'participant') return null;
   
@@ -201,8 +209,11 @@ export default function Dashboard() {
     return null;
   }
 
-  // Function to check if day is completed (both morning and evening prayers done)
+  // Function to check if day is completed
   const isDayCompleted = (day: number) => {
+    if (isTrackA) {
+      return prayerCompletions?.some(c => c.dayNumber === day && c.period === "morning") ?? false;
+    }
     const morningDone = prayerCompletions?.some(c => c.dayNumber === day && c.period === "morning");
     const eveningDone = prayerCompletions?.some(c => c.dayNumber === day && c.period === "evening");
     return morningDone && eveningDone;
@@ -297,16 +308,21 @@ export default function Dashboard() {
                         <span>{day}</span>
                         {isFuture ? (
                           <Lock className="w-3 h-3 mt-0.5 opacity-50" />
+                        ) : isTrackA ? (
+                          <div className={cn(
+                            "w-2.5 h-2.5 rounded-full mt-0.5",
+                            isDayCompleted(day)
+                              ? isToday ? "bg-white" : "bg-green-600"
+                              : isToday ? "bg-white/30" : "bg-muted-foreground/30"
+                          )} title="Daily Activity" />
                         ) : (
                           <div className="flex gap-0.5 mt-0.5">
-                            {/* Morning dot */}
                             <div className={cn(
                               "w-2 h-2 rounded-full",
                               isPeriodCompleted(day, "morning") 
                                 ? isToday ? "bg-white" : "bg-green-600"
                                 : isToday ? "bg-white/30" : "bg-muted-foreground/30"
                             )} title="Morning" />
-                            {/* Evening dot */}
                             <div className={cn(
                               "w-2 h-2 rounded-full",
                               isPeriodCompleted(day, "evening") 
@@ -358,9 +374,25 @@ export default function Dashboard() {
                     </div>
                     {isFuture ? (
                       <Lock className="w-4 h-4 opacity-50" />
+                    ) : isTrackA ? (
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className={cn(
+                            "w-3.5 h-3.5 rounded-full flex items-center justify-center",
+                            isDayCompleted(day)
+                              ? isToday ? "bg-white" : "bg-green-600"
+                              : isToday ? "bg-white/30" : "bg-muted"
+                          )}
+                          title="Daily Activity"
+                        >
+                          {isDayCompleted(day) && <Check className={cn("w-2.5 h-2.5", isToday ? "text-primary" : "text-white")} />}
+                        </div>
+                        {isMissed && (
+                          <span className="text-xs text-destructive">Missed</span>
+                        )}
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        {/* Morning/Evening status dots */}
                         <div className="flex gap-1">
                           <div 
                             className={cn(
@@ -404,6 +436,16 @@ export default function Dashboard() {
         )}>
           {isLoading ? (
              <ContentSkeleton />
+          ) : isTrackA && trackADayContent ? (
+            <TrackADayView 
+              content={trackADayContent} 
+              day={selectedDay}
+              isCompleted={isPeriodCompleted(selectedDay, "morning")}
+              existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
+              fontSize={fontSize}
+              decreaseFontSize={decreaseFontSize}
+              increaseFontSize={increaseFontSize}
+            />
           ) : dayContent ? (
             <div className="space-y-4 sm:space-y-8 pb-10">
               <div className="text-center space-y-2 mb-4 sm:mb-8">
@@ -654,7 +696,7 @@ export default function Dashboard() {
   );
 }
 
-function MarkCompleteButton({ day, period, isCompleted }: { day: number, period: "morning" | "evening", isCompleted: boolean }) {
+function MarkCompleteButton({ day, period, isCompleted, label, completedLabel }: { day: number, period: "morning" | "evening", isCompleted: boolean, label?: string, completedLabel?: string }) {
   const markComplete = useMarkPrayerComplete();
   const unmarkComplete = useUnmarkPrayerComplete();
   
@@ -686,12 +728,12 @@ function MarkCompleteButton({ day, period, isCompleted }: { day: number, period:
         ) : isCompleted ? (
           <>
             <CheckCircle2 className="w-5 h-5" />
-            {period === "morning" ? "Morning Prayer Complete" : "Evening Prayer Complete"}
+            {completedLabel || (period === "morning" ? "Morning Prayer Complete" : "Evening Prayer Complete")}
           </>
         ) : (
           <>
             <Check className="w-5 h-5" />
-            Mark {period === "morning" ? "Morning" : "Evening"} Prayer Complete
+            {label || `Mark ${period === "morning" ? "Morning" : "Evening"} Prayer Complete`}
           </>
         )}
       </Button>
@@ -830,6 +872,188 @@ function ReflectionView({ content, existingAnswer }: { content: any; existingAns
         day={content.dayNumber} 
         prompt="Address the prompts above in your reflection."
         existingAnswer={existingAnswer}
+      />
+    </div>
+  );
+}
+
+function extractYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+function TrackAMediaContent({ text }: { text: string }) {
+  if (!text) return null;
+  
+  const youtubeId = extractYouTubeId(text);
+  if (youtubeId) {
+    return (
+      <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+        <iframe
+          width="100%"
+          height="100%"
+          src={`https://www.youtube.com/embed/${youtubeId}`}
+          title="Video"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="w-full h-full"
+        />
+      </div>
+    );
+  }
+  
+  if (text.startsWith("http")) {
+    return (
+      <a href={text} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">
+        {text}
+      </a>
+    );
+  }
+  
+  return <p className="whitespace-pre-wrap leading-relaxed">{text}</p>;
+}
+
+function TrackADayView({ 
+  content, 
+  day, 
+  isCompleted,
+  existingAnswer,
+  fontSize,
+  decreaseFontSize,
+  increaseFontSize,
+}: { 
+  content: TrackAContent;
+  day: number;
+  isCompleted: boolean;
+  existingAnswer?: any;
+  fontSize: FontSizeKey;
+  decreaseFontSize: () => void;
+  increaseFontSize: () => void;
+}) {
+  return (
+    <div className="space-y-4 sm:space-y-8 pb-10">
+      <div className="text-center space-y-2 mb-4 sm:mb-8">
+        <div className="flex items-center justify-center gap-2">
+          <Badge variant="outline" className="mb-2">Day {day}</Badge>
+          <Badge variant="secondary" className="mb-2">Track A</Badge>
+        </div>
+        <h1 className="font-serif text-2xl sm:text-4xl font-bold text-primary" data-testid="text-central-theme">
+          {content.centralTheme}
+        </h1>
+        {content.mainConcepts && (
+          <p className="text-muted-foreground text-sm sm:text-base" data-testid="text-main-concepts">
+            {content.mainConcepts}
+          </p>
+        )}
+      </div>
+
+      <div className="flex justify-end">
+        <div className="flex items-center gap-1 border rounded-lg p-1 bg-muted/30 shrink-0">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7"
+            onClick={decreaseFontSize}
+            disabled={fontSize === 'small'}
+            data-testid="button-font-decrease-a"
+          >
+            <Minus className="w-3 h-3" />
+          </Button>
+          <span className="text-xs font-medium w-6 text-center">A</span>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7"
+            onClick={increaseFontSize}
+            disabled={fontSize === 'xlarge'}
+            data-testid="button-font-increase-a"
+          >
+            <Plus className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+
+      {content.dailyScripture && (
+        <Card data-testid="card-scripture">
+          <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
+            <CardTitle className="font-serif text-base sm:text-lg">Scripture</CardTitle>
+          </CardHeader>
+          <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed italic p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+            <p className="whitespace-pre-wrap">{content.dailyScripture}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {content.catechism && (
+        <Card data-testid="card-catechism">
+          <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
+            <CardTitle className="font-serif text-base sm:text-lg">Catechism</CardTitle>
+          </CardHeader>
+          <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+            <TrackAMediaContent text={content.catechism} />
+          </CardContent>
+        </Card>
+      )}
+
+      {content.reflectionCommentary && (
+        <Card data-testid="card-reflection">
+          <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
+            <CardTitle className="font-serif text-base sm:text-lg">Reflection</CardTitle>
+          </CardHeader>
+          <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+            <TrackAMediaContent text={content.reflectionCommentary} />
+          </CardContent>
+        </Card>
+      )}
+
+      {content.prayers && (
+        <Card className="bg-primary/5 border-primary/20" data-testid="card-prayers">
+          <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
+            <CardTitle className="font-serif text-base sm:text-lg">Prayer</CardTitle>
+          </CardHeader>
+          <CardContent className={cn("prose max-w-none text-muted-foreground leading-relaxed p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+            <TrackAMediaContent text={content.prayers} />
+          </CardContent>
+        </Card>
+      )}
+
+      {content.videoResource && (
+        <Card data-testid="card-video">
+          <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
+            <CardTitle className="font-serif text-base sm:text-lg">Resource</CardTitle>
+          </CardHeader>
+          <CardContent className={cn("p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+            <TrackAMediaContent text={content.videoResource} />
+          </CardContent>
+        </Card>
+      )}
+
+      {content.songTitle && (
+        <Card className="bg-secondary/30" data-testid="card-song">
+          <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
+            <CardTitle className="font-serif text-base sm:text-lg">Song</CardTitle>
+          </CardHeader>
+          <CardContent className={cn("prose max-w-none text-muted-foreground p-3 sm:p-6 pt-0", FONT_SIZES[fontSize].class)}>
+            <TrackAMediaContent text={content.songTitle} />
+          </CardContent>
+        </Card>
+      )}
+
+      {content.journalAssignment && (
+        <AssignmentSection 
+          day={day} 
+          prompt={content.journalAssignment}
+          existingAnswer={existingAnswer}
+        />
+      )}
+
+      <MarkCompleteButton 
+        day={day}
+        period="morning"
+        isCompleted={isCompleted}
+        label="Mark Today Complete"
+        completedLabel="Today Complete"
       />
     </div>
   );

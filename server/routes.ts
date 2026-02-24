@@ -4,9 +4,10 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import type { User } from "@shared/schema";
+import { insertTrackAContentSchema, type User } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 import { dailyContentData, practiceResourcesData } from "./content-data";
+import { trackAContentData } from "./track-a-content-data";
 
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
@@ -210,6 +211,54 @@ export async function registerRoutes(
     if (!content) return res.sendStatus(404);
     
     res.json(content);
+  });
+
+  // === Track A Content ===
+
+  app.get('/api/track-a-content', requireAuth, async (req, res) => {
+    if (req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    const content = await storage.getAllTrackAContent();
+    res.json(content);
+  });
+
+  app.get('/api/track-a-content/:day', requireAuth, async (req, res) => {
+    const day = Number(req.params.day);
+
+    if (req.user!.role === 'participant') {
+      const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+      let currentDay = 0;
+      if (cohortStartDateStr) {
+        const startParts = cohortStartDateStr.split('-').map(Number);
+        const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffTime = today.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
+      }
+      if (day !== currentDay || currentDay === 0) {
+        return res.status(403).json({ message: "This day is locked." });
+      }
+    }
+
+    const content = await storage.getTrackAContent(day);
+    if (!content) return res.sendStatus(404);
+    res.json(content);
+  });
+
+  app.post('/api/admin/track-a-content', requireRole('admin'), async (req, res) => {
+    try {
+      const validated = insertTrackAContentSchema.parse(req.body);
+      const content = await storage.upsertTrackAContent(validated);
+      res.status(201).json(content);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      throw error;
+    }
   });
 
   // === Answers ===
@@ -525,7 +574,11 @@ export async function registerRoutes(
         
         let daysCompleted = 0;
         dayCompletionMap.forEach((status) => {
-          if (status.morning && status.evening) daysCompleted++;
+          if (u.track === 'A') {
+            if (status.morning) daysCompleted++;
+          } else {
+            if (status.morning && status.evening) daysCompleted++;
+          }
         });
         
         // Check today's completion
@@ -699,8 +752,21 @@ export async function registerRoutes(
     // Get prayer completions
     const prayerCompletions = await storage.getUserPrayerCompletions(userId);
     
-    // Calculate days completed (unique days with at least one completion)
-    const daysCompleted = new Set(prayerCompletions.map(c => c.dayNumber)).size;
+    // Calculate days completed based on track
+    let daysCompleted: number;
+    if (user.track === 'A') {
+      daysCompleted = new Set(prayerCompletions.filter(c => c.period === 'morning').map(c => c.dayNumber)).size;
+    } else {
+      const dayMap = new Map<number, { morning: boolean, evening: boolean }>();
+      prayerCompletions.forEach(c => {
+        if (!dayMap.has(c.dayNumber)) dayMap.set(c.dayNumber, { morning: false, evening: false });
+        const d = dayMap.get(c.dayNumber)!;
+        if (c.period === 'morning') d.morning = true;
+        if (c.period === 'evening') d.evening = true;
+      });
+      daysCompleted = 0;
+      dayMap.forEach(s => { if (s.morning && s.evening) daysCompleted++; });
+    }
     
     // Graduation: 80% of 30 days = 24 days
     const graduationEligible = daysCompleted >= 24;
@@ -910,7 +976,11 @@ export async function registerRoutes(
         
         let daysCompleted = 0;
         dayCompletionMap.forEach((status) => {
-          if (status.morning && status.evening) daysCompleted++;
+          if (u.track === 'A') {
+            if (status.morning) daysCompleted++;
+          } else {
+            if (status.morning && status.evening) daysCompleted++;
+          }
         });
         
         const mentor = users.find(m => m.id === u.mentorId);
@@ -1556,5 +1626,17 @@ As you move into Week 2, continue these daily practices. They are building a fou
         });
     }
     
+    // Seed Track A content if needed
+    const existingTrackAContent = await storage.getAllTrackAContent();
+    if (existingTrackAContent.length === 0) {
+        console.log("No Track A content found - seeding...");
+        for (const content of trackAContentData) {
+            await storage.upsertTrackAContent(content);
+        }
+        console.log(`Track A content seeded successfully (${trackAContentData.length} days).`);
+    } else {
+        console.log(`Track A content already exists (${existingTrackAContent.length} days) - preserving admin edits.`);
+    }
+
     console.log("Seeding complete.");
 }
