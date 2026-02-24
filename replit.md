@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 - **Onboarding**: Day 0 onboarding with an introduction video and participant agreement.
 - **Admin Capabilities**: User management (reset passwords, delete users), content management (view/edit all daily content), cohort management (set start dates, clear completions), user details view (profile, progress, prayer completions, full answer history with filtering and CSV export), and data export (CSV for users, answers, progress).
 - **Mobile Responsiveness**: Full optimization for mobile devices, including adaptive navigation, layouts, and content display.
-- **Theming**: Custom typography with Afacad and Cormorant Garamond fonts, and spiritual imagery for login.
+- **Theming**: Custom typography with Afacad font (Semibold for headings/titles), and spiritual imagery for login.
 
 ## External Dependencies
 

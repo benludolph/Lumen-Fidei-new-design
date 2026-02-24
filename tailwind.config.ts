@@ -84,7 +84,7 @@ export default {
       },
       fontFamily: {
         sans: ["'Afacad'", "system-ui", "sans-serif"],
-        serif: ["'Cormorant Garamond'", "serif"],
+        serif: ["'Afacad'", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)"],
       },
       letterSpacing: {
