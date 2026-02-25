@@ -35,9 +35,18 @@ Preferred communication style: Simple, everyday language.
 - **Assignment Field**: Optional text field per day for custom assignments (e.g., "Message your mentor about..."). If blank, no assignment section shown to participants.
 - **Daily Examen**: Displayed as a modal button in evening section to save screen space (Track B only).
 
+### Dashboard Architecture
+- **Grid + Detail Pattern**: Dashboard uses a two-mode view:
+  - **Grid mode** (default): 2-column card grid showing all 30 days grouped by week, with a sticky dark header showing current week theme. Days show as active (green), completed (green + check), or locked (dimmed + lock icon). Responsive: 1-column on mobile.
+  - **Detail mode**: Clicking a day card opens the full content view. "Back to Overview" button returns to grid.
+- **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog` (all in `client/src/components/`)
+- **Track B Period Selection**: When a Track B user clicks a day card, a dialog offers "Morning Meditation" or "Evening Meditation" before entering detail view.
+- **Content Access**: Participants can view current day and all past days (not future). Backend time-gates using `day > currentDay`.
+- **Content Summaries**: `GET /api/content-summaries` provides lightweight day data for the grid (Track B). Track A grid data comes from `GET /api/track-a-content` (returns summaries for non-admins).
+
 ### Core Features
 - **User Roles**: Participant, Mentor, Admin.
-- **Time-Gating**: Cohort-based content release, where all users progress together from an admin-defined start date.
+- **Time-Gating**: Cohort-based content release, where all users progress together from an admin-defined start date. Participants can review past days but not access future ones.
 - **Progress Tracking**: Users mark prayers complete, and an admin dashboard visualizes participant progress, completion rates, and graduation status (80% threshold).
 - **Messaging**: Real-time, role-based chat system with unread message notifications.
 - **Onboarding**: Day 0 onboarding with an introduction video and participant agreement.

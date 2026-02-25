@@ -181,6 +181,19 @@ export async function registerRoutes(
       res.json(content);
   });
 
+  app.get('/api/content-summaries', requireAuth, async (req, res) => {
+    const content = await storage.getAllDailyContent();
+    const summaries = content.map(c => ({
+      dayNumber: c.dayNumber,
+      weekNumber: c.weekNumber,
+      weekTitle: c.weekTitle,
+      title: c.isReflectionDay ? "Weekly Reflection" : (c.morningScriptureRef || `Day ${c.dayNumber}`),
+      isReflectionDay: c.isReflectionDay,
+      isMentorDay: c.isMentorDay,
+    }));
+    res.json(summaries);
+  });
+
   app.get(api.content.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
@@ -201,8 +214,7 @@ export async function registerRoutes(
         currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
       }
       
-      // Only allow access to current day (not past, not future)
-      if (day !== currentDay || currentDay === 0) {
+      if (day > currentDay || currentDay === 0) {
         return res.status(403).json({ message: "This day is locked." });
       }
     }
@@ -216,10 +228,17 @@ export async function registerRoutes(
   // === Track A Content ===
 
   app.get('/api/track-a-content', requireAuth, async (req, res) => {
-    if (req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
     const content = await storage.getAllTrackAContent();
+    if (req.user!.role !== 'admin') {
+      const summaries = content.map(c => ({
+        id: c.id,
+        dayNumber: c.dayNumber,
+        weekNumber: c.weekNumber,
+        centralTheme: c.centralTheme,
+        mainConcepts: c.mainConcepts,
+      }));
+      return res.json(summaries);
+    }
     res.json(content);
   });
 
@@ -238,7 +257,7 @@ export async function registerRoutes(
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
       }
-      if (day !== currentDay || currentDay === 0) {
+      if (day > currentDay || currentDay === 0) {
         return res.status(403).json({ message: "This day is locked." });
       }
     }
