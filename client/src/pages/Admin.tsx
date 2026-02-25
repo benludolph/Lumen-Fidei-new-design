@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
@@ -1723,27 +1723,69 @@ function ContentManagementView() {
   );
 }
 
-type TrackAContentType = {
+type TrackASlide = { type: string; content: string };
+
+type TrackAContentData = {
   id: number;
   dayNumber: number;
   weekNumber: number;
   centralTheme: string;
-  mainConcepts: string | null;
-  dailyScripture: string | null;
-  catechism: string | null;
-  reflectionCommentary: string | null;
-  prayers: string | null;
-  journalAssignment: string | null;
-  videoResource: string | null;
-  songTitle: string | null;
+  slides: TrackASlide[] | null;
 };
+
+const SLIDE_TYPES = ["hook", "teach", "scripture", "catechism", "activity", "video", "practice", "close", "song", "prayer", "reflection", "journal", "concepts"] as const;
+
+const SLIDE_TYPE_LABELS: Record<string, string> = {
+  hook: "Hook",
+  teach: "Teaching",
+  scripture: "Scripture",
+  activity: "Activity",
+  video: "Video",
+  practice: "Practice",
+  close: "Closing",
+  song: "Song",
+  prayer: "Prayer",
+  reflection: "Reflection",
+  journal: "Journal",
+  catechism: "Catechism",
+  concepts: "Key Concepts",
+};
+
+const SLIDE_TYPE_COLORS: Record<string, string> = {
+  hook: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  teach: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  scripture: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+  activity: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+  video: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  practice: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  close: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+  song: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+  prayer: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+  reflection: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+  journal: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  catechism: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
+  concepts: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+};
+
+function SlideTypeBadge({ type }: { type: string }) {
+  const colorClass = SLIDE_TYPE_COLORS[type] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}`} data-testid={`badge-slide-type-${type}`}>
+      {SLIDE_TYPE_LABELS[type] || type}
+    </span>
+  );
+}
 
 function TrackAContentManagementView() {
   const { toast } = useToast();
   const [selectedDay, setSelectedDay] = useState(1);
   const [editMode, setEditMode] = useState(false);
+  const [centralTheme, setCentralTheme] = useState("");
+  const [slides, setSlides] = useState<TrackASlide[]>([]);
+  const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
+  const [addSlideType, setAddSlideType] = useState<string>("teach");
 
-  const { data: allContent, isLoading } = useQuery<TrackAContentType[]>({
+  const { data: allContent, isLoading } = useQuery<TrackAContentData[]>({
     queryKey: ['/api/track-a-content'],
     queryFn: async () => {
       const res = await fetch('/api/track-a-content', { credentials: "include" });
@@ -1754,51 +1796,22 @@ function TrackAContentManagementView() {
 
   const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
 
-  const [formData, setFormData] = useState({
-    centralTheme: "",
-    mainConcepts: "",
-    dailyScripture: "",
-    catechism: "",
-    reflectionCommentary: "",
-    prayers: "",
-    journalAssignment: "",
-    videoResource: "",
-    songTitle: "",
-  });
-
-  const updateFormFromContent = (content: TrackAContentType | undefined) => {
+  const loadContentIntoState = (content: TrackAContentData | undefined) => {
     if (content) {
-      setFormData({
-        centralTheme: content.centralTheme || "",
-        mainConcepts: content.mainConcepts || "",
-        dailyScripture: content.dailyScripture || "",
-        catechism: content.catechism || "",
-        reflectionCommentary: content.reflectionCommentary || "",
-        prayers: content.prayers || "",
-        journalAssignment: content.journalAssignment || "",
-        videoResource: content.videoResource || "",
-        songTitle: content.songTitle || "",
-      });
+      setCentralTheme(content.centralTheme || "");
+      setSlides(content.slides ? [...content.slides] : []);
     } else {
-      setFormData({
-        centralTheme: "",
-        mainConcepts: "",
-        dailyScripture: "",
-        catechism: "",
-        reflectionCommentary: "",
-        prayers: "",
-        journalAssignment: "",
-        videoResource: "",
-        songTitle: "",
-      });
+      setCentralTheme("");
+      setSlides([]);
     }
+    setExpandedSlide(null);
   };
 
   const handleDayChange = (day: number) => {
     setSelectedDay(day);
     setEditMode(false);
     const content = allContent?.find(c => c.dayNumber === day);
-    updateFormFromContent(content);
+    loadContentIntoState(content);
   };
 
   const saveMutation = useMutation({
@@ -1820,21 +1833,46 @@ function TrackAContentManagementView() {
     saveMutation.mutate({
       dayNumber: selectedDay,
       weekNumber: Math.ceil(selectedDay / 7),
-      centralTheme: formData.centralTheme || "Untitled",
-      mainConcepts: formData.mainConcepts.trim() || null,
-      dailyScripture: formData.dailyScripture.trim() || null,
-      catechism: formData.catechism.trim() || null,
-      reflectionCommentary: formData.reflectionCommentary.trim() || null,
-      prayers: formData.prayers.trim() || null,
-      journalAssignment: formData.journalAssignment.trim() || null,
-      videoResource: formData.videoResource.trim() || null,
-      songTitle: formData.songTitle.trim() || null,
+      centralTheme: centralTheme || "Untitled",
+      slides,
     });
   };
 
   const startEdit = () => {
-    updateFormFromContent(currentContent);
+    loadContentIntoState(currentContent);
     setEditMode(true);
+  };
+
+  const handleCancel = () => {
+    setEditMode(false);
+    setExpandedSlide(null);
+  };
+
+  const addSlide = () => {
+    setSlides(prev => [...prev, { type: addSlideType, content: "" }]);
+    setExpandedSlide(slides.length);
+  };
+
+  const removeSlide = (index: number) => {
+    setSlides(prev => prev.filter((_, i) => i !== index));
+    if (expandedSlide === index) setExpandedSlide(null);
+    else if (expandedSlide !== null && expandedSlide > index) setExpandedSlide(expandedSlide - 1);
+  };
+
+  const moveSlide = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= slides.length) return;
+    setSlides(prev => {
+      const next = [...prev];
+      [next[index], next[newIndex]] = [next[newIndex], next[index]];
+      return next;
+    });
+    if (expandedSlide === index) setExpandedSlide(newIndex);
+    else if (expandedSlide === newIndex) setExpandedSlide(index);
+  };
+
+  const updateSlide = (index: number, field: "type" | "content", value: string) => {
+    setSlides(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
   };
 
   if (isLoading) {
@@ -1849,11 +1887,11 @@ function TrackAContentManagementView() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
               <BookOpen className="w-5 h-5" />
               Track A Content Management
-              <Badge variant="secondary">Single Activity</Badge>
+              <Badge variant="secondary" className="no-default-active-elevate">Slide-Based</Badge>
             </CardTitle>
             <div className="flex items-center gap-2">
               <Button 
@@ -1865,7 +1903,7 @@ function TrackAContentManagementView() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="font-medium min-w-[80px] text-center">Day {selectedDay}</span>
+              <span className="font-medium min-w-[80px] text-center" data-testid="text-current-day-a">Day {selectedDay}</span>
               <Button 
                 variant="outline" 
                 size="icon"
@@ -1897,22 +1935,26 @@ function TrackAContentManagementView() {
             })}
           </div>
 
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
             <div>
               <h3 className="font-serif text-xl" data-testid="text-day-label-a">
                 Day {selectedDay} - {currentContent?.centralTheme || "No content"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground" data-testid="text-week-label-a">
                 Week {currentContent?.weekNumber || Math.ceil(selectedDay / 7)}
+                {currentContent?.slides && currentContent.slides.length > 0 && (
+                  <span className="ml-2">({currentContent.slides.length} slide{currentContent.slides.length !== 1 ? "s" : ""})</span>
+                )}
               </p>
             </div>
             {!editMode ? (
               <Button onClick={startEdit} data-testid="button-edit-track-a">
+                <Edit2 className="w-4 h-4 mr-2" />
                 Edit Content
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setEditMode(false)} data-testid="button-cancel-edit-a">
+                <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-edit-a">
                   Cancel
                 </Button>
                 <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-track-a">
@@ -1926,164 +1968,158 @@ function TrackAContentManagementView() {
       </Card>
 
       {editMode ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Track A Day Content</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Central Theme</label>
                 <Input
-                  value={formData.centralTheme}
-                  onChange={(e) => setFormData(prev => ({ ...prev, centralTheme: e.target.value }))}
+                  value={centralTheme}
+                  onChange={(e) => setCentralTheme(e.target.value)}
                   placeholder="e.g., What is Prayer? How to Pray"
                   data-testid="input-central-theme"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Main Concepts (optional)</label>
-                <Input
-                  value={formData.mainConcepts}
-                  onChange={(e) => setFormData(prev => ({ ...prev, mainConcepts: e.target.value }))}
-                  placeholder="e.g., Common Lies of the Enemy"
-                  data-testid="input-main-concepts"
-                />
+            </CardContent>
+          </Card>
+
+          <div className="space-y-3">
+            {slides.map((slide, index) => {
+              const isExpanded = expandedSlide === index;
+              return (
+                <Card key={index} data-testid={`card-slide-${index}`}>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col items-center gap-1 pt-1">
+                        <GripVertical className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground" data-testid={`text-slide-number-${index}`}>{index + 1}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <SlideTypeBadge type={slide.type} />
+                          {!isExpanded && (
+                            <span className="text-sm text-muted-foreground truncate" data-testid={`text-slide-preview-${index}`}>
+                              {slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
+                            </span>
+                          )}
+                        </div>
+                        {isExpanded && (
+                          <div className="space-y-3 mt-3">
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
+                              <Select value={slide.type} onValueChange={(val) => updateSlide(index, "type", val)}>
+                                <SelectTrigger data-testid={`select-slide-type-${index}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {SLIDE_TYPES.map(t => (
+                                    <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Content</label>
+                              <Textarea
+                                value={slide.content}
+                                onChange={(e) => updateSlide(index, "content", e.target.value)}
+                                placeholder="Enter slide content..."
+                                rows={4}
+                                data-testid={`textarea-slide-content-${index}`}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => moveSlide(index, "up")}
+                          disabled={index === 0}
+                          data-testid={`button-slide-up-${index}`}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => moveSlide(index, "down")}
+                          disabled={index === slides.length - 1}
+                          data-testid={`button-slide-down-${index}`}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setExpandedSlide(isExpanded ? null : index)}
+                          data-testid={`button-slide-toggle-${index}`}
+                        >
+                          {isExpanded ? <Eye className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeSlide(index)}
+                          data-testid={`button-slide-delete-${index}`}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Select value={addSlideType} onValueChange={setAddSlideType}>
+                  <SelectTrigger className="w-[180px]" data-testid="select-add-slide-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SLIDE_TYPES.map(t => (
+                      <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={addSlide} data-testid="button-add-slide">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Slide
+                </Button>
               </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Daily Scripture (optional)</label>
-              <Textarea
-                value={formData.dailyScripture}
-                onChange={(e) => setFormData(prev => ({ ...prev, dailyScripture: e.target.value }))}
-                placeholder="Scripture text or reference..."
-                rows={3}
-                data-testid="input-daily-scripture"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Catechism (optional - text or YouTube URL)</label>
-              <Textarea
-                value={formData.catechism}
-                onChange={(e) => setFormData(prev => ({ ...prev, catechism: e.target.value }))}
-                placeholder="Catechism content or YouTube URL..."
-                rows={2}
-                data-testid="input-catechism-a"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Reflection/Commentary (optional - text or YouTube URL)</label>
-              <Textarea
-                value={formData.reflectionCommentary}
-                onChange={(e) => setFormData(prev => ({ ...prev, reflectionCommentary: e.target.value }))}
-                placeholder="Reflection text or YouTube URL..."
-                rows={2}
-                data-testid="input-reflection-a"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Prayers (optional - text or YouTube URL)</label>
-              <Textarea
-                value={formData.prayers}
-                onChange={(e) => setFormData(prev => ({ ...prev, prayers: e.target.value }))}
-                placeholder="Prayer text or YouTube URL..."
-                rows={2}
-                data-testid="input-prayers-a"
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Journal Assignment (optional)</label>
-                <Textarea
-                  value={formData.journalAssignment}
-                  onChange={(e) => setFormData(prev => ({ ...prev, journalAssignment: e.target.value }))}
-                  placeholder="Journal prompt or assignment..."
-                  rows={2}
-                  data-testid="input-journal-a"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Video Resource (optional)</label>
-                <Input
-                  value={formData.videoResource}
-                  onChange={(e) => setFormData(prev => ({ ...prev, videoResource: e.target.value }))}
-                  placeholder="Video URL or description..."
-                  data-testid="input-video-a"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Song Title (optional)</label>
-              <Input
-                value={formData.songTitle}
-                onChange={(e) => setFormData(prev => ({ ...prev, songTitle: e.target.value }))}
-                placeholder="Song title or YouTube URL..."
-                data-testid="input-song-a"
-              />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       ) : (
         <Card>
           <CardContent className="space-y-4 pt-6" data-testid="content-track-a-view">
-            {currentContent ? (
-              <>
-                {currentContent.mainConcepts && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Main Concepts</p>
-                    <p>{currentContent.mainConcepts}</p>
+            {currentContent && currentContent.slides && currentContent.slides.length > 0 ? (
+              <div className="space-y-3">
+                {currentContent.slides.map((slide, index) => (
+                  <div key={index} className="flex items-start gap-3 py-3 border-b last:border-b-0" data-testid={`view-slide-${index}`}>
+                    <span className="text-xs font-medium text-muted-foreground mt-1 min-w-[20px] text-right">{index + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1">
+                        <SlideTypeBadge type={slide.type} />
+                      </div>
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid={`text-slide-content-view-${index}`}>
+                        {slide.content || "(empty)"}
+                      </p>
+                    </div>
                   </div>
-                )}
-                {currentContent.dailyScripture && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Daily Scripture</p>
-                    <p className="italic text-muted-foreground whitespace-pre-wrap">{currentContent.dailyScripture}</p>
-                  </div>
-                )}
-                {currentContent.catechism && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Catechism</p>
-                    <p className="whitespace-pre-wrap text-sm">{currentContent.catechism}</p>
-                  </div>
-                )}
-                {currentContent.reflectionCommentary && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Reflection/Commentary</p>
-                    <p className="whitespace-pre-wrap text-sm">{currentContent.reflectionCommentary}</p>
-                  </div>
-                )}
-                {currentContent.prayers && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Prayers</p>
-                    <p className="whitespace-pre-wrap text-sm">{currentContent.prayers}</p>
-                  </div>
-                )}
-                {currentContent.journalAssignment && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Journal Assignment</p>
-                    <p className="whitespace-pre-wrap text-sm">{currentContent.journalAssignment}</p>
-                  </div>
-                )}
-                {currentContent.videoResource && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Video Resource</p>
-                    <p className="text-sm">{currentContent.videoResource}</p>
-                  </div>
-                )}
-                {currentContent.songTitle && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Song</p>
-                    <p className="text-sm">{currentContent.songTitle}</p>
-                  </div>
-                )}
-                {!currentContent.mainConcepts && !currentContent.dailyScripture && !currentContent.catechism && 
-                 !currentContent.reflectionCommentary && !currentContent.prayers && !currentContent.journalAssignment && 
-                 !currentContent.videoResource && !currentContent.songTitle && (
-                  <p className="text-muted-foreground text-center py-4">Only theme set for this day: "{currentContent.centralTheme}"</p>
-                )}
-              </>
+                ))}
+              </div>
+            ) : currentContent ? (
+              <p className="text-muted-foreground text-center py-4" data-testid="text-no-slides">
+                Theme set: "{currentContent.centralTheme}" - No slides yet
+              </p>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No Track A content for this day</p>
+              <p className="text-muted-foreground text-center py-8" data-testid="text-no-track-a-content">No Track A content for this day</p>
             )}
           </CardContent>
         </Card>

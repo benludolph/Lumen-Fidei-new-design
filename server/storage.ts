@@ -304,14 +304,18 @@ export class DatabaseStorage implements IStorage {
 
   async upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent> {
     const existing = await this.getTrackAContent(content.dayNumber);
+    const data = {
+      ...content,
+      slides: content.slides ? [...content.slides] : null,
+    };
     if (existing) {
       const [updated] = await db.update(trackAContent)
-        .set(content)
+        .set(data)
         .where(eq(trackAContent.dayNumber, content.dayNumber))
         .returning();
       return updated;
     }
-    const [newContent] = await db.insert(trackAContent).values(content).returning();
+    const [newContent] = await db.insert(trackAContent).values(data).returning();
     return newContent;
   }
 

@@ -65,19 +65,7 @@ export const trackAContent = pgTable("track_a_content", {
   dayNumber: integer("day_number").notNull().unique(),
   weekNumber: integer("week_number").notNull(),
   centralTheme: text("central_theme").notNull(),
-  mainConcepts: text("main_concepts"),
-  dailyScripture: text("daily_scripture"),
-  catechism: text("catechism"),
-  reflectionCommentary: text("reflection_commentary"),
-  prayers: text("prayers"),
-  journalAssignment: text("journal_assignment"),
-  videoResource: text("video_resource"),
-  songTitle: text("song_title"),
-  hook: text("hook"),
-  teach: text("teach"),
-  activity: text("activity"),
-  practice: text("practice"),
-  closingMessage: text("closing_message"),
+  slides: json("slides").$type<{ type: string; content: string }[]>(),
 });
 
 export const userAnswers = pgTable("user_answers", {

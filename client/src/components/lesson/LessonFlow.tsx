@@ -13,52 +13,6 @@ interface SlideData {
   content: string;
 }
 
-function buildSlides(content: TrackAContent): SlideData[] {
-  const slides: SlideData[] = [];
-
-  if (content.hook) {
-    slides.push({ type: "hook", content: content.hook });
-  }
-  if (content.teach) {
-    slides.push({ type: "teach", content: content.teach });
-  }
-  if (content.mainConcepts) {
-    slides.push({ type: "concepts", content: content.mainConcepts });
-  }
-  if (content.videoResource) {
-    slides.push({ type: "video", content: content.videoResource });
-  }
-  if (content.activity) {
-    slides.push({ type: "activity", content: content.activity });
-  }
-  if (content.dailyScripture) {
-    slides.push({ type: "scripture", content: content.dailyScripture });
-  }
-  if (content.catechism) {
-    slides.push({ type: "catechism", content: content.catechism });
-  }
-  if (content.reflectionCommentary) {
-    slides.push({ type: "reflection", content: content.reflectionCommentary });
-  }
-  if (content.prayers) {
-    slides.push({ type: "prayer", content: content.prayers });
-  }
-  if (content.songTitle) {
-    slides.push({ type: "song", content: content.songTitle });
-  }
-  if (content.practice) {
-    slides.push({ type: "practice", content: content.practice });
-  }
-  if (content.journalAssignment) {
-    slides.push({ type: "journal", content: content.journalAssignment });
-  }
-  if (content.closingMessage) {
-    slides.push({ type: "close", content: content.closingMessage });
-  }
-
-  return slides;
-}
-
 const FONT_SIZES_KEYS = ["small", "medium", "large", "xlarge"] as const;
 type FontSizeKey = (typeof FONT_SIZES_KEYS)[number];
 
@@ -105,7 +59,10 @@ export function LessonFlow({
     if (idx < FONT_SIZES_KEYS.length - 1) setFontSize(FONT_SIZES_KEYS[idx + 1]);
   }, [fontSize]);
 
-  const slides = useMemo(() => buildSlides(content), [content]);
+  const slides = useMemo<SlideData[]>(() => {
+    if (!content.slides || content.slides.length === 0) return [];
+    return content.slides.map((s) => ({ type: s.type as SlideType, content: s.content }));
+  }, [content]);
 
   const handleLoadingComplete = useCallback(() => {
     setFlowState("slides");

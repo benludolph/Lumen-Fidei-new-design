@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with Drizzle ORM
 - **Key Tables**: `users`, `dailyContent`, `trackAContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
 - **Track System**: Two distinct program tracks:
-  - **Track A**: Single daily activity per day. Content stored in `trackAContent` table with fields: centralTheme, mainConcepts, dailyScripture, catechism, reflectionCommentary, prayers, journalAssignment, videoResource, songTitle, hook, teach, activity, practice, closingMessage. Participants mark one completion per day (uses "morning" period). Seed data in `server/track-a-content-data.ts`.
+  - **Track A**: Single daily activity per day. Content stored in `trackAContent` table with columns: `id`, `dayNumber`, `weekNumber`, `centralTheme`, `slides` (JSON array of `{type, content}` objects). The `slides` column is a jsonb array where each element has a `type` (one of: hook, teach, scripture, catechism, activity, video, practice, close, song, prayer, reflection, journal, concepts) and `content` (string). Participants mark one completion per day (uses "morning" period). Seed data in `server/track-a-content-data.ts`.
   - **Track B**: Morning and evening meditations (the original program). Content stored in `dailyContent` table. Participants mark both morning and evening completions. Seed data in `server/content-data.ts`.
 - **Track Assignment**: Admin assigns participants to Track A or B via the Users tab. Dashboard renders different content based on the user's track.
 - **Content**: 30 days of structured spiritual content per track, with embedded video support. Practice resources include various prayers and spiritual exercises.
@@ -53,12 +53,12 @@ Preferred communication style: Simple, everyday language.
 ### Track A Lesson Flow (Multi-Screen)
 - **Pattern**: Duolingo-style stepped lesson with loading → slides → completion screens. Fully mobile responsive.
 - **Components** (all in `client/src/components/lesson/`):
-  - `LessonFlow.tsx` — Orchestrator with state machine: loading → slides → complete. Builds slides dynamically from populated content fields only.
+  - `LessonFlow.tsx` — Orchestrator with state machine: loading → slides → complete. Reads slides directly from `content.slides` JSON array.
   - `LessonLoadingScreen.tsx` — Full-screen dark overlay with day number, theme title, glowing cross, auto-advances after ~2s.
   - `LessonSlide.tsx` — Individual content slide. Supports types: hook, teach, activity, practice, close, scripture, catechism, reflection, prayer, video, song, journal, concepts. Hook/activity slides have interactive checkboxes parsed from ☐ lines.
   - `LessonProgressBar.tsx` — Thin top bar showing step progress with X (exit) button.
   - `LessonCompletionScreen.tsx` — Calm completion screen with checkmark animation, glow effect, sparkles, encouraging message.
-- **Slide Order**: Hook → Teach → Main Concepts → Video → Activity → Scripture → Catechism → Reflection → Prayer → Song → Practice → Journal → Close. Only populated fields become slides.
+- **Slide Order**: Determined by the order of slides in the `slides` JSON array. Admin can reorder freely via the visual slide editor.
 - **Navigation**: Back/Continue buttons at bottom (full-width on mobile). Back on first slide exits. Continue on last slide goes to completion. Journal draft state is lifted to LessonFlow so it persists across slide navigation.
 - **Completion**: Hitting "Continue" on completion screen auto-marks the day as complete and returns to grid.
 - **CSS Animations**: Defined in `client/src/index.css` with `lesson-` prefix. Includes slide transitions, glow effects, sparkle particles, cross glow. Responsive sizing for mobile.
@@ -70,6 +70,7 @@ Preferred communication style: Simple, everyday language.
 - **Messaging**: Real-time, role-based chat system with unread message notifications.
 - **Onboarding**: Day 0 onboarding with an introduction video and participant agreement.
 - **Admin Capabilities**: User management (reset passwords, delete users), content management (view/edit all daily content), cohort management (set start dates, clear completions), user details view (profile, progress, prayer completions, full answer history with filtering and CSV export), and data export (CSV for users, answers, progress).
+- **Track A Admin Editor**: Visual slideshow builder in Admin.tsx → TrackAContentManagementView. Day selector with 30-day grid, central theme input, and ordered slide list. Each slide card shows type badge (color-coded), content preview, and action buttons (move up/down, delete, expand/collapse). Add Slide button with type dropdown. Slides saved as JSON array to `/api/admin/track-a-content`.
 - **Mobile Responsiveness**: Full optimization for mobile devices, including adaptive navigation, layouts, and content display.
 - **Theming**: Custom typography with Afacad font (Semibold for headings/titles), and spiritual imagery for login.
 

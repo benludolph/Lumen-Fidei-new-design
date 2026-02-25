@@ -235,7 +235,6 @@ export async function registerRoutes(
         dayNumber: c.dayNumber,
         weekNumber: c.weekNumber,
         centralTheme: c.centralTheme,
-        mainConcepts: c.mainConcepts,
       }));
       return res.json(summaries);
     }
