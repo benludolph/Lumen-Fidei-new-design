@@ -38,11 +38,25 @@ Preferred communication style: Simple, everyday language.
 ### Dashboard Architecture
 - **Grid + Detail Pattern**: Dashboard uses a two-mode view:
   - **Grid mode** (default): 2-column card grid showing all 30 days grouped by week, with a sticky dark header showing current week theme. Days show as active (green), completed (green + check), or locked (dimmed + lock icon). Responsive: 1-column on mobile.
-  - **Detail mode**: Clicking a day card opens the full content view. "Back to Overview" button returns to grid.
+  - **Detail mode (Track B)**: Clicking a day card opens the full content view with morning/evening tabs. "Back to Overview" button returns to grid.
+  - **Lesson flow (Track A)**: Clicking a day card launches a Duolingo-style multi-screen lesson flow (see below).
 - **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog` (all in `client/src/components/`)
 - **Track B Period Selection**: When a Track B user clicks a day card, a dialog offers "Morning Meditation" or "Evening Meditation" before entering detail view.
 - **Content Access**: Participants can view current day and all past days (not future). Backend time-gates using `day > currentDay`.
 - **Content Summaries**: `GET /api/content-summaries` provides lightweight day data for the grid (Track B). Track A grid data comes from `GET /api/track-a-content` (returns summaries for non-admins).
+
+### Track A Lesson Flow (Multi-Screen)
+- **Pattern**: Duolingo-style stepped lesson with loading → slides → completion screens
+- **Components** (all in `client/src/components/lesson/`):
+  - `LessonFlow.tsx` — Orchestrator with state machine: loading → slides → complete. Builds slides dynamically from populated content fields only.
+  - `LessonLoadingScreen.tsx` — Full-screen dark overlay with day number, theme title, glowing cross, auto-advances after ~2s.
+  - `LessonSlide.tsx` — Individual content slide. Supports types: scripture, catechism, reflection, prayer, video, song, journal, concepts. Each has proper styling and media embed support.
+  - `LessonProgressBar.tsx` — Thin top bar showing step progress with X (exit) button.
+  - `LessonCompletionScreen.tsx` — Calm completion screen with checkmark animation, glow effect, sparkles, encouraging message.
+- **Slide Order**: Main Concepts → Scripture → Catechism → Reflection → Prayer → Video → Song → Journal Assignment. Only populated fields become slides.
+- **Navigation**: Back/Continue buttons at bottom. Back on first slide exits. Continue on last slide goes to completion. Journal draft state is lifted to LessonFlow so it persists across slide navigation.
+- **Completion**: Hitting "Continue" on completion screen auto-marks the day as complete and returns to grid.
+- **CSS Animations**: Defined in `client/src/index.css` with `lesson-` prefix. Includes slide transitions, glow effects, sparkle particles, cross glow.
 
 ### Core Features
 - **User Roles**: Participant, Mentor, Admin.

@@ -319,3 +319,108 @@
 .ProseMirror u {
   text-decoration: underline;
 }
+
+@keyframes lessonFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes lessonSlideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lessonSlideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lessonGlowPulse {
+  0%, 100% { opacity: 0.15; transform: scale(0.95); }
+  50% { opacity: 0.3; transform: scale(1.05); }
+}
+
+@keyframes lessonCheckScale {
+  0% { opacity: 0; transform: scale(0.3); }
+  60% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lessonSparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lessonDotPulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes lessonContentFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lessonCrossGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.2)); }
+  50% { filter: drop-shadow(0 0 20px rgba(255,255,255,0.5)); }
+}
+
+.lesson-loading-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,55,37,0.4) 0%, transparent 70%);
+  animation: lessonGlowPulse 3s ease-in-out infinite;
+}
+
+.lesson-loading-content {
+  animation: lessonContentFadeUp 0.8s ease-out 0.2s both;
+}
+
+.lesson-loading-cross {
+  animation: lessonCrossGlow 3s ease-in-out infinite;
+}
+
+.lesson-loading-dot {
+  animation: lessonDotPulse 1.4s ease-in-out infinite;
+}
+
+.lesson-slide-in-right {
+  animation: lessonSlideInRight 0.35s ease-out;
+}
+
+.lesson-slide-in-left {
+  animation: lessonSlideInLeft 0.35s ease-out;
+}
+
+.lesson-completion-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,197,94,0.2) 0%, rgba(0,55,37,0.1) 40%, transparent 70%);
+  animation: lessonGlowPulse 4s ease-in-out infinite;
+}
+
+.lesson-completion-check {
+  opacity: 0;
+  transform: scale(0.3);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.lesson-completion-check-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.lesson-sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  animation: lessonSparkle 3s ease-in-out infinite;
+}
+

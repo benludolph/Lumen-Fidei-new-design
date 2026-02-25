@@ -22,6 +22,20 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { DayGridView } from "@/components/DayGridView";
+import { LessonFlow } from "@/components/lesson/LessonFlow";
+
+import trackAImg1 from "@assets/image_1771985019617.png";
+import trackAImg2 from "@assets/image_1771985039759.png";
+import trackAImg3 from "@assets/image_1771985088299.png";
+import trackAImg4 from "@assets/image_1771985210712.png";
+import trackAImg5 from "@assets/image_1771985228368.png";
+import trackAImg6 from "@assets/image_1771985236426.png";
+
+const TRACK_A_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
+
+function getTrackAImage(dayNumber: number): string {
+  return TRACK_A_IMAGES[(dayNumber - 1) % TRACK_A_IMAGES.length];
+}
 
 const PRAYER_TEXTS = {
   "Prayer Against Retaliation": `Lord Jesus Christ, in Your love and mercy, pour Thy Precious Blood over me so that no demon or disembodied spirit may retaliate against me. Mary, surround me with thy mantle, blocking any retaliating spirits from having any authority over me. St. Michael, surround me with thy shield, so that no evil spirit may take revenge on me. Queen of Heaven and St. Michael, send down the legions of angels under your command to fight off any spirits that would seek to harm me. All you saints of heaven, impede any retaliating spirit from influencing me. Lord, Thou art the Just Judge, the Avenger of the Wicked, the Advocate of the Just, we beg in Thy mercy, that all we ask of Mary, the angels and the saints of heaven be also granted to all our loved ones, those who pray for us and their loved ones, that for Thy Glory's sake, we may enjoy Thy perfect protection. Amen.`,
@@ -160,6 +174,7 @@ export default function Dashboard() {
   
   const { data: answers } = useUserAnswers(user?.id);
   const { data: prayerCompletions } = useUserPrayerCompletions();
+  const markComplete = useMarkPrayerComplete();
   
   const { data: dayContent, isLoading: isLoadingB } = useDailyContent(
     !isTrackA && viewMode === "detail" && selectedDay > 0 ? selectedDay : 0
@@ -276,6 +291,33 @@ export default function Dashboard() {
             onDaySelect={handleDaySelect}
           />
         </div>
+      ) : isTrackA && viewMode === "detail" ? (
+        isLoadingA ? (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading lesson...</p>
+          </div>
+        ) : trackADayContent ? (
+          <LessonFlow
+            content={trackADayContent}
+            dayNumber={selectedDay}
+            backgroundImage={getTrackAImage(selectedDay)}
+            existingAnswer={answers?.find(a => a.dayNumber === selectedDay)?.content}
+            onExit={handleBackToGrid}
+            onComplete={() => {
+              if (!isPeriodCompleted(selectedDay, "morning")) {
+                markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
+              }
+              handleBackToGrid();
+            }}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">
+            <AlertCircle className="w-12 h-12 text-muted-foreground" />
+            <p className="text-muted-foreground">No content available for this day.</p>
+            <Button variant="outline" onClick={handleBackToGrid}>Back to Overview</Button>
+          </div>
+        )
       ) : (
         <div className="flex flex-col h-auto lg:h-[calc(100vh-6rem)]">
           <div className="mb-4">
@@ -294,16 +336,6 @@ export default function Dashboard() {
           <div className="overflow-y-auto custom-scrollbar px-1 sm:px-2 flex-1">
             {isLoading ? (
               <ContentSkeleton />
-            ) : isTrackA && trackADayContent ? (
-              <TrackADayView 
-                content={trackADayContent} 
-                day={selectedDay}
-                isCompleted={isPeriodCompleted(selectedDay, "morning")}
-                existingAnswer={answers?.find(a => a.dayNumber === selectedDay)}
-                fontSize={fontSize}
-                decreaseFontSize={decreaseFontSize}
-                increaseFontSize={increaseFontSize}
-              />
             ) : dayContent ? (
               <div className="space-y-4 sm:space-y-8 pb-10 max-w-3xl mx-auto">
                 <div className="text-center space-y-2 mb-4 sm:mb-8">
