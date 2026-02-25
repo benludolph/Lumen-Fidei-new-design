@@ -1,7 +1,6 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
 import { LessonProgressBar } from "./LessonProgressBar";
@@ -12,9 +11,6 @@ interface SlideData {
   type: SlideType;
   content: string;
 }
-
-const FONT_SIZES_KEYS = ["small", "medium", "large", "xlarge"] as const;
-type FontSizeKey = (typeof FONT_SIZES_KEYS)[number];
 
 interface LessonFlowProps {
   content: TrackAContent;
@@ -39,25 +35,6 @@ export function LessonFlow({
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [animKey, setAnimKey] = useState(0);
   const [journalDraft, setJournalDraft] = useState(existingAnswer || "");
-
-  const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
-    const saved = localStorage.getItem("lumenFidei_fontSize");
-    return (saved as FontSizeKey) || "medium";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("lumenFidei_fontSize", fontSize);
-  }, [fontSize]);
-
-  const decreaseFontSize = useCallback(() => {
-    const idx = FONT_SIZES_KEYS.indexOf(fontSize);
-    if (idx > 0) setFontSize(FONT_SIZES_KEYS[idx - 1]);
-  }, [fontSize]);
-
-  const increaseFontSize = useCallback(() => {
-    const idx = FONT_SIZES_KEYS.indexOf(fontSize);
-    if (idx < FONT_SIZES_KEYS.length - 1) setFontSize(FONT_SIZES_KEYS[idx + 1]);
-  }, [fontSize]);
 
   const slides = useMemo<SlideData[]>(() => {
     if (!content.slides || content.slides.length === 0) return [];
@@ -129,21 +106,12 @@ export function LessonFlow({
   const isFirstSlide = currentSlide === 0;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-background overflow-x-hidden" data-testid="lesson-flow">
+    <div className="fixed inset-0 z-40 flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
       <LessonProgressBar
         currentStep={currentSlide}
         totalSteps={slides.length}
         onExit={onExit}
       />
-
-      <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-center">
-        <p className="text-[10px] sm:text-xs text-muted-foreground tracking-widest uppercase">
-          Day {dayNumber}
-        </p>
-        <h1 className="font-['Afacad',sans-serif] font-semibold text-sm sm:text-base md:text-lg text-foreground truncate">
-          {content.centralTheme}
-        </h1>
-      </div>
 
       <LessonSlide
         key={`slide-${animKey}`}
@@ -152,36 +120,29 @@ export function LessonFlow({
         dayNumber={dayNumber}
         existingAnswer={currentSlideData.type === "journal" ? journalDraft : undefined}
         onJournalChange={currentSlideData.type === "journal" ? setJournalDraft : undefined}
-        fontSize={fontSize}
-        increaseFontSize={increaseFontSize}
-        decreaseFontSize={decreaseFontSize}
         direction={direction}
       />
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t px-3 sm:px-4 py-3 sm:py-4 z-50">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-50">
+        <div className="max-w-[540px] mx-auto flex items-center justify-between">
           <Button
-            variant="ghost"
-            size="lg"
+            variant="secondary"
             onClick={handlePrev}
-            className="gap-1 sm:gap-2 flex-1 sm:flex-none"
+            className="gap-2"
             data-testid="button-lesson-prev"
           >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ArrowLeft className="w-6 h-6" />
             {isFirstSlide ? "Exit" : "Back"}
           </Button>
 
           <Button
-            size="lg"
+            variant="default"
             onClick={handleNext}
-            className={cn(
-              "gap-1 sm:gap-2 flex-1 sm:flex-none sm:px-8",
-              isLastSlide && "bg-green-600"
-            )}
+            className="gap-2"
             data-testid="button-lesson-next"
           >
             {isLastSlide ? "Finish" : "Continue"}
-            {!isLastSlide && <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />}
+            <ArrowRight className="w-6 h-6" />
           </Button>
         </div>
       </div>
