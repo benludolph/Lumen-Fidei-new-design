@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL with Drizzle ORM
 - **Key Tables**: `users`, `dailyContent`, `trackAContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
 - **Track System**: Two distinct program tracks:
-  - **Track A**: Single daily activity per day. Content stored in `trackAContent` table with fields: centralTheme, mainConcepts, dailyScripture, catechism, reflectionCommentary, prayers, journalAssignment, videoResource, songTitle. Participants mark one completion per day (uses "morning" period). Seed data in `server/track-a-content-data.ts`.
+  - **Track A**: Single daily activity per day. Content stored in `trackAContent` table with fields: centralTheme, mainConcepts, dailyScripture, catechism, reflectionCommentary, prayers, journalAssignment, videoResource, songTitle, hook, teach, activity, practice, closingMessage. Participants mark one completion per day (uses "morning" period). Seed data in `server/track-a-content-data.ts`.
   - **Track B**: Morning and evening meditations (the original program). Content stored in `dailyContent` table. Participants mark both morning and evening completions. Seed data in `server/content-data.ts`.
 - **Track Assignment**: Admin assigns participants to Track A or B via the Users tab. Dashboard renders different content based on the user's track.
 - **Content**: 30 days of structured spiritual content per track, with embedded video support. Practice resources include various prayers and spiritual exercises.
@@ -40,23 +40,28 @@ Preferred communication style: Simple, everyday language.
   - **Grid mode** (default): 2-column card grid showing all 30 days grouped by week, with a sticky dark header showing current week theme. Days show as active (green), completed (green + check), or locked (dimmed + lock icon). Responsive: 1-column on mobile.
   - **Detail mode (Track B)**: Clicking a day card opens the full content view with morning/evening tabs. "Back to Overview" button returns to grid.
   - **Lesson flow (Track A)**: Clicking a day card launches a Duolingo-style multi-screen lesson flow (see below).
-- **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog` (all in `client/src/components/`)
+- **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog`, `OverviewGuideModal` (all in `client/src/components/`)
+- **Sunday Cards**: Days 8, 15, 22, 29 are "Go to Mass" Sundays — non-clickable, col-span-2 cards with Church icon. Day 1 is also a Sunday but has intro content so it stays clickable. Detection: `day > 1 && (day - 1) % 7 === 0`.
+- **Week Themes**: Track A uses static `TRACK_A_WEEK_THEMES` map (5 weeks) in DayGridView instead of pulling from content data.
+- **Locked Day Tooltip**: Hovering locked cards shows "This lesson unlocks on [date]" calculated from cohort start date.
+- **Overview & Guide Modal**: Clicking "Overview & Guide" in sticky header opens a modal with week description and lesson flow instructions.
+- **Past Day Completion**: Users can complete missed past days (server allows dayNumber ≤ currentDay, not just ===). Future days still blocked.
 - **Track B Period Selection**: When a Track B user clicks a day card, a dialog offers "Morning Meditation" or "Evening Meditation" before entering detail view.
 - **Content Access**: Participants can view current day and all past days (not future). Backend time-gates using `day > currentDay`.
 - **Content Summaries**: `GET /api/content-summaries` provides lightweight day data for the grid (Track B). Track A grid data comes from `GET /api/track-a-content` (returns summaries for non-admins).
 
 ### Track A Lesson Flow (Multi-Screen)
-- **Pattern**: Duolingo-style stepped lesson with loading → slides → completion screens
+- **Pattern**: Duolingo-style stepped lesson with loading → slides → completion screens. Fully mobile responsive.
 - **Components** (all in `client/src/components/lesson/`):
   - `LessonFlow.tsx` — Orchestrator with state machine: loading → slides → complete. Builds slides dynamically from populated content fields only.
   - `LessonLoadingScreen.tsx` — Full-screen dark overlay with day number, theme title, glowing cross, auto-advances after ~2s.
-  - `LessonSlide.tsx` — Individual content slide. Supports types: scripture, catechism, reflection, prayer, video, song, journal, concepts. Each has proper styling and media embed support.
+  - `LessonSlide.tsx` — Individual content slide. Supports types: hook, teach, activity, practice, close, scripture, catechism, reflection, prayer, video, song, journal, concepts. Hook/activity slides have interactive checkboxes parsed from ☐ lines.
   - `LessonProgressBar.tsx` — Thin top bar showing step progress with X (exit) button.
   - `LessonCompletionScreen.tsx` — Calm completion screen with checkmark animation, glow effect, sparkles, encouraging message.
-- **Slide Order**: Main Concepts → Scripture → Catechism → Reflection → Prayer → Video → Song → Journal Assignment. Only populated fields become slides.
-- **Navigation**: Back/Continue buttons at bottom. Back on first slide exits. Continue on last slide goes to completion. Journal draft state is lifted to LessonFlow so it persists across slide navigation.
+- **Slide Order**: Hook → Teach → Main Concepts → Video → Activity → Scripture → Catechism → Reflection → Prayer → Song → Practice → Journal → Close. Only populated fields become slides.
+- **Navigation**: Back/Continue buttons at bottom (full-width on mobile). Back on first slide exits. Continue on last slide goes to completion. Journal draft state is lifted to LessonFlow so it persists across slide navigation.
 - **Completion**: Hitting "Continue" on completion screen auto-marks the day as complete and returns to grid.
-- **CSS Animations**: Defined in `client/src/index.css` with `lesson-` prefix. Includes slide transitions, glow effects, sparkle particles, cross glow.
+- **CSS Animations**: Defined in `client/src/index.css` with `lesson-` prefix. Includes slide transitions, glow effects, sparkle particles, cross glow. Responsive sizing for mobile.
 
 ### Core Features
 - **User Roles**: Participant, Mentor, Admin.

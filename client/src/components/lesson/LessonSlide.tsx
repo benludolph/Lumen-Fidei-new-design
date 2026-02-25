@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Square, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 
@@ -14,7 +14,12 @@ export type SlideType =
   | "video"
   | "song"
   | "journal"
-  | "concepts";
+  | "concepts"
+  | "hook"
+  | "teach"
+  | "activity"
+  | "practice"
+  | "close";
 
 const SLIDE_TITLES: Record<SlideType, string> = {
   scripture: "Scripture",
@@ -25,6 +30,11 @@ const SLIDE_TITLES: Record<SlideType, string> = {
   song: "Song",
   journal: "Daily Response",
   concepts: "Key Concepts",
+  hook: "Opening Question",
+  teach: "Teaching",
+  activity: "Activity",
+  practice: "Practice",
+  close: "Closing",
 };
 
 const FONT_SIZES = {
@@ -85,6 +95,73 @@ function MediaContent({ text }: { text: string }) {
   return <p className="whitespace-pre-wrap leading-relaxed">{text}</p>;
 }
 
+function parseCheckboxContent(content: string): { heading: string; options: string[] } {
+  const lines = content.split("\n");
+  const headingLines: string[] = [];
+  const options: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("\u2610")) {
+      options.push(trimmed.replace(/^\u2610\s*/, ""));
+    } else if (trimmed.length > 0) {
+      headingLines.push(trimmed);
+    }
+  }
+
+  return { heading: headingLines.join("\n"), options };
+}
+
+function CheckboxList({ content, fontSize }: { content: string; fontSize: FontSizeKey }) {
+  const { heading, options } = parseCheckboxContent(content);
+  const [checked, setChecked] = useState<Record<number, boolean>>({});
+
+  const toggle = (idx: number) => {
+    setChecked((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  if (options.length === 0) {
+    return (
+      <p className={cn("whitespace-pre-wrap leading-relaxed", FONT_SIZES[fontSize].class)}>
+        {content}
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {heading && (
+        <p className={cn("font-semibold leading-relaxed", FONT_SIZES[fontSize].class)}>
+          {heading}
+        </p>
+      )}
+      <div className="space-y-2">
+        {options.map((option, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => toggle(idx)}
+            className={cn(
+              "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors",
+              checked[idx]
+                ? "bg-primary/10 text-foreground"
+                : "bg-muted/30 text-muted-foreground hover-elevate"
+            )}
+            data-testid={`checkbox-option-${idx}`}
+          >
+            {checked[idx] ? (
+              <CheckSquare className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            ) : (
+              <Square className="w-5 h-5 shrink-0 mt-0.5" />
+            )}
+            <span className={cn("leading-relaxed", FONT_SIZES[fontSize].class)}>{option}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface LessonSlideProps {
   type: SlideType;
   content: string;
@@ -115,19 +192,18 @@ export function LessonSlide({
 
   return (
     <div
-      className={cn("flex-1 overflow-y-auto px-4 sm:px-6 pb-24", animationClass)}
+      className={cn("flex-1 overflow-y-auto px-3 sm:px-4 md:px-6 pb-28 sm:pb-24", animationClass)}
       data-testid={`lesson-slide-${type}`}
     >
-      <div className="max-w-2xl mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-['Afacad',sans-serif] font-semibold text-lg sm:text-xl text-foreground">
+      <div className="max-w-2xl mx-auto py-4 sm:py-6">
+        <div className="flex items-center justify-between gap-2 mb-4 sm:mb-6">
+          <h2 className="font-['Afacad',sans-serif] font-semibold text-base sm:text-lg md:text-xl text-foreground min-w-0 truncate">
             {SLIDE_TITLES[type]}
           </h2>
           <div className="flex items-center gap-1 border rounded-lg p-1 bg-muted/30 shrink-0">
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
               onClick={decreaseFontSize}
               disabled={fontSize === "small"}
               data-testid="button-font-decrease-slide"
@@ -138,7 +214,6 @@ export function LessonSlide({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
               onClick={increaseFontSize}
               disabled={fontSize === "xlarge"}
               data-testid="button-font-increase-slide"
@@ -156,11 +231,83 @@ export function LessonSlide({
             onJournalChange={onJournalChange}
             fontSize={fontSize}
           />
+        ) : type === "hook" ? (
+          <Card
+            className="bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/30"
+            data-testid="card-slide-hook"
+          >
+            <CardContent
+              className={cn(
+                "prose max-w-none leading-relaxed p-4 sm:p-5 md:p-8",
+                FONT_SIZES[fontSize].class
+              )}
+            >
+              <CheckboxList content={content} fontSize={fontSize} />
+            </CardContent>
+          </Card>
+        ) : type === "teach" ? (
+          <Card data-testid="card-slide-teach">
+            <CardContent
+              className={cn(
+                "prose max-w-none text-foreground leading-loose p-4 sm:p-5 md:p-8",
+                FONT_SIZES[fontSize === "small" ? "medium" : fontSize === "medium" ? "large" : fontSize === "large" ? "xlarge" : "xlarge"].class
+              )}
+            >
+              {content.split("\n").filter(Boolean).map((paragraph, idx) => (
+                <p key={idx} className="mb-4 last:mb-0">{paragraph}</p>
+              ))}
+            </CardContent>
+          </Card>
+        ) : type === "activity" ? (
+          <Card
+            className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-200/50 dark:border-blue-800/30"
+            data-testid="card-slide-activity"
+          >
+            <CardContent
+              className={cn(
+                "prose max-w-none leading-relaxed p-4 sm:p-5 md:p-8",
+                FONT_SIZES[fontSize].class
+              )}
+            >
+              <CheckboxList content={content} fontSize={fontSize} />
+            </CardContent>
+          </Card>
+        ) : type === "practice" ? (
+          <Card data-testid="card-slide-practice">
+            <CardContent className="p-4 sm:p-5 md:p-8">
+              <div
+                className={cn(
+                  "border-l-4 border-primary bg-primary/5 rounded-r-lg p-4 sm:p-5",
+                  FONT_SIZES[fontSize].class
+                )}
+              >
+                <p className="font-semibold text-foreground leading-relaxed whitespace-pre-wrap">
+                  {content}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : type === "close" ? (
+          <div
+            className="flex items-center justify-center min-h-[200px] py-8"
+            data-testid="card-slide-close"
+          >
+            <div className="text-center max-w-lg px-6">
+              <p
+                className={cn(
+                  "italic text-muted-foreground leading-relaxed whitespace-pre-wrap",
+                  fontSize === "small" ? "text-lg" : fontSize === "medium" ? "text-xl" : fontSize === "large" ? "text-2xl" : "text-3xl"
+                )}
+              >
+                {content}
+              </p>
+            </div>
+          </div>
         ) : type === "scripture" ? (
           <Card data-testid="card-slide-scripture">
             <CardContent
               className={cn(
-                "prose max-w-none text-muted-foreground leading-relaxed italic p-5 sm:p-8",
+                "prose max-w-none text-muted-foreground leading-relaxed italic p-4 sm:p-5 md:p-8",
                 FONT_SIZES[fontSize].class
               )}
             >
@@ -171,7 +318,7 @@ export function LessonSlide({
           <Card data-testid="card-slide-concepts">
             <CardContent
               className={cn(
-                "prose max-w-none text-muted-foreground leading-relaxed p-5 sm:p-8",
+                "prose max-w-none text-muted-foreground leading-relaxed p-4 sm:p-5 md:p-8",
                 FONT_SIZES[fontSize].class
               )}
             >
@@ -185,7 +332,7 @@ export function LessonSlide({
           >
             <CardContent
               className={cn(
-                "prose max-w-none text-muted-foreground leading-relaxed p-5 sm:p-8",
+                "prose max-w-none text-muted-foreground leading-relaxed p-4 sm:p-5 md:p-8",
                 FONT_SIZES[fontSize].class
               )}
             >
@@ -199,7 +346,7 @@ export function LessonSlide({
           >
             <CardContent
               className={cn(
-                "prose max-w-none text-muted-foreground p-5 sm:p-8",
+                "prose max-w-none text-muted-foreground p-4 sm:p-5 md:p-8",
                 FONT_SIZES[fontSize].class
               )}
             >
@@ -210,7 +357,7 @@ export function LessonSlide({
           <Card data-testid={`card-slide-${type}`}>
             <CardContent
               className={cn(
-                "prose max-w-none text-muted-foreground leading-relaxed p-5 sm:p-8",
+                "prose max-w-none text-muted-foreground leading-relaxed p-4 sm:p-5 md:p-8",
                 FONT_SIZES[fontSize].class
               )}
             >
@@ -260,12 +407,12 @@ function JournalSlide({
 
   return (
     <Card className="border-primary/20 bg-primary/5" data-testid="card-slide-journal">
-      <CardHeader className="p-5 sm:p-8 pb-2">
+      <CardHeader className="p-4 sm:p-5 md:p-8 pb-2">
         <CardTitle className="font-['Afacad',sans-serif] text-base sm:text-lg">
           Journal Prompt
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 p-5 sm:p-8 pt-2">
+      <CardContent className="space-y-4 p-4 sm:p-5 md:p-8 pt-2">
         <p
           className={cn(
             "italic text-muted-foreground",
@@ -278,7 +425,7 @@ function JournalSlide({
           value={journalContent}
           onChange={(e) => handleChange(e.target.value)}
           placeholder="Write your reflection here..."
-          className="min-h-[150px] bg-white dark:bg-zinc-900 text-sm sm:text-base"
+          className="min-h-[120px] sm:min-h-[150px] w-full bg-white dark:bg-zinc-900 text-sm sm:text-base"
           data-testid="input-journal-slide"
         />
         <div className="flex justify-end">

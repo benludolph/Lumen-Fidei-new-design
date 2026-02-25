@@ -44,25 +44,25 @@ export function LessonLoadingScreen({
 
       <div className="lesson-loading-glow" />
 
-      <div className="relative z-10 flex flex-col items-center gap-6 px-6 text-center lesson-loading-content">
+      <div className="relative z-10 flex flex-col items-center gap-4 sm:gap-6 px-4 sm:px-6 text-center lesson-loading-content max-w-[90vw]">
         <div className="lesson-loading-cross">
           <svg
-            width="48"
-            height="48"
+            width="40"
+            height="40"
             viewBox="0 0 48 48"
             fill="none"
-            className="text-white/80"
+            className="text-white/80 sm:w-12 sm:h-12"
           >
             <rect x="21" y="4" width="6" height="40" rx="3" fill="currentColor" />
             <rect x="8" y="17" width="32" height="6" rx="3" fill="currentColor" />
           </svg>
         </div>
 
-        <div className="space-y-3">
-          <p className="text-white/60 text-sm font-medium tracking-widest uppercase">
+        <div className="space-y-2 sm:space-y-3">
+          <p className="text-white/60 text-xs sm:text-sm font-medium tracking-widest uppercase">
             Day {dayNumber}
           </p>
-          <h1 className="font-['Afacad',sans-serif] font-semibold text-white text-2xl sm:text-3xl max-w-md leading-tight">
+          <h1 className="font-['Afacad',sans-serif] font-semibold text-white text-xl sm:text-2xl md:text-3xl max-w-[280px] sm:max-w-md leading-tight">
             {theme}
           </h1>
         </div>

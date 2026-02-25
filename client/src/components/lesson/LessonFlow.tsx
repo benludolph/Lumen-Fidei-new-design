@@ -16,8 +16,20 @@ interface SlideData {
 function buildSlides(content: TrackAContent): SlideData[] {
   const slides: SlideData[] = [];
 
+  if (content.hook) {
+    slides.push({ type: "hook", content: content.hook });
+  }
+  if (content.teach) {
+    slides.push({ type: "teach", content: content.teach });
+  }
   if (content.mainConcepts) {
     slides.push({ type: "concepts", content: content.mainConcepts });
+  }
+  if (content.videoResource) {
+    slides.push({ type: "video", content: content.videoResource });
+  }
+  if (content.activity) {
+    slides.push({ type: "activity", content: content.activity });
   }
   if (content.dailyScripture) {
     slides.push({ type: "scripture", content: content.dailyScripture });
@@ -31,14 +43,17 @@ function buildSlides(content: TrackAContent): SlideData[] {
   if (content.prayers) {
     slides.push({ type: "prayer", content: content.prayers });
   }
-  if (content.videoResource) {
-    slides.push({ type: "video", content: content.videoResource });
-  }
   if (content.songTitle) {
     slides.push({ type: "song", content: content.songTitle });
   }
+  if (content.practice) {
+    slides.push({ type: "practice", content: content.practice });
+  }
   if (content.journalAssignment) {
     slides.push({ type: "journal", content: content.journalAssignment });
+  }
+  if (content.closingMessage) {
+    slides.push({ type: "close", content: content.closingMessage });
   }
 
   return slides;
@@ -157,18 +172,18 @@ export function LessonFlow({
   const isFirstSlide = currentSlide === 0;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-background" data-testid="lesson-flow">
+    <div className="fixed inset-0 z-40 flex flex-col bg-background overflow-x-hidden" data-testid="lesson-flow">
       <LessonProgressBar
         currentStep={currentSlide}
         totalSteps={slides.length}
         onExit={onExit}
       />
 
-      <div className="px-4 py-2 text-center">
-        <p className="text-xs text-muted-foreground tracking-widest uppercase">
+      <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-center">
+        <p className="text-[10px] sm:text-xs text-muted-foreground tracking-widest uppercase">
           Day {dayNumber}
         </p>
-        <h1 className="font-['Afacad',sans-serif] font-semibold text-base sm:text-lg text-foreground truncate">
+        <h1 className="font-['Afacad',sans-serif] font-semibold text-sm sm:text-base md:text-lg text-foreground truncate">
           {content.centralTheme}
         </h1>
       </div>
@@ -186,16 +201,16 @@ export function LessonFlow({
         direction={direction}
       />
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t px-4 py-4 z-50">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t px-3 sm:px-4 py-3 sm:py-4 z-50">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Button
             variant="ghost"
             size="lg"
             onClick={handlePrev}
-            className="gap-2"
+            className="gap-1 sm:gap-2 flex-1 sm:flex-none"
             data-testid="button-lesson-prev"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             {isFirstSlide ? "Exit" : "Back"}
           </Button>
 
@@ -203,13 +218,13 @@ export function LessonFlow({
             size="lg"
             onClick={handleNext}
             className={cn(
-              "gap-2 px-8",
-              isLastSlide && "bg-green-600 hover:bg-green-700"
+              "gap-1 sm:gap-2 flex-1 sm:flex-none sm:px-8",
+              isLastSlide && "bg-green-600"
             )}
             data-testid="button-lesson-next"
           >
             {isLastSlide ? "Finish" : "Continue"}
-            {!isLastSlide && <ChevronRight className="w-5 h-5" />}
+            {!isLastSlide && <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />}
           </Button>
         </div>
       </div>

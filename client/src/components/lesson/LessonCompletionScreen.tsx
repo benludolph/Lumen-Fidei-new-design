@@ -69,43 +69,43 @@ export function LessonCompletionScreen({
         />
       ))}
 
-      <div className="relative z-10 flex flex-col items-center gap-6 px-6 text-center">
+      <div className="relative z-10 flex flex-col items-center gap-4 sm:gap-6 px-4 sm:px-6 text-center max-w-[90vw]">
         <div
           className={cn(
             "lesson-completion-check",
             showContent && "lesson-completion-check-visible"
           )}
         >
-          <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
-            <Check className="w-10 h-10 text-white" strokeWidth={3} />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+            <Check className="w-8 h-8 sm:w-10 sm:h-10 text-white" strokeWidth={3} />
           </div>
         </div>
 
         <div
           className={cn(
-            "space-y-3 transition-all duration-700",
+            "space-y-2 sm:space-y-3 transition-all duration-700",
             showContent
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-4"
           )}
         >
-          <h1 className="font-['Afacad',sans-serif] font-semibold text-white text-3xl sm:text-4xl">
+          <h1 className="font-['Afacad',sans-serif] font-semibold text-white text-2xl sm:text-3xl md:text-4xl">
             Lesson Complete
           </h1>
-          <p className="text-white/60 text-sm tracking-widest uppercase">
+          <p className="text-white/60 text-xs sm:text-sm tracking-widest uppercase">
             Day {dayNumber}
           </p>
-          <p className="text-white/80 text-base sm:text-lg max-w-sm font-light italic">
+          <p className="text-white/80 text-sm sm:text-base md:text-lg max-w-[260px] sm:max-w-sm font-light italic">
             {theme}
           </p>
-          <p className="text-green-400/80 text-sm mt-2 font-medium">
+          <p className="text-green-400/80 text-xs sm:text-sm mt-2 font-medium">
             {message}
           </p>
         </div>
 
         <div
           className={cn(
-            "mt-6 transition-all duration-500",
+            "mt-4 sm:mt-6 w-full sm:w-auto transition-all duration-500",
             showButton
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-4"
@@ -114,7 +114,7 @@ export function LessonCompletionScreen({
           <Button
             onClick={onContinue}
             size="lg"
-            className="bg-green-600 hover:bg-green-700 text-white gap-2 px-8 py-6 text-base rounded-xl shadow-lg shadow-green-600/20"
+            className="bg-green-600 text-white gap-2 w-full sm:w-auto sm:px-8 text-base rounded-xl shadow-lg shadow-green-600/20"
             data-testid="button-continue-after-completion"
           >
             Continue

@@ -3,9 +3,9 @@ import { DayCard } from "./DayCard";
 import { WeekSection } from "./WeekSection";
 import { StickyWeekHeader } from "./StickyWeekHeader";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
+import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent } from "@shared/schema";
-import { useLocation } from "wouter";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -20,11 +20,20 @@ function getTrackAImage(dayNumber: number): string {
   return TRACK_A_IMAGES[(dayNumber - 1) % TRACK_A_IMAGES.length];
 }
 
+const TRACK_A_WEEK_THEMES: Record<number, string> = {
+  1: 'Foundations — Who God Is & How We Relate to Him',
+  2: 'The Human Condition — Why We Struggle',
+  3: 'Encountering Jesus — Healer, Deliverer, Friend, King',
+  4: 'Conversion & Change — Choosing a New Direction',
+  5: 'Living the Faith — Scripture, Sacraments, and the Church',
+};
+
 interface DayGridViewProps {
   currentDay: number;
   isTrackA: boolean;
   trackASummaries?: TrackAContent[];
   trackBSummaries?: ContentSummary[];
+  cohortStartDate?: string | null;
   isDayCompleted: (day: number) => boolean;
   isPeriodCompleted: (day: number, period: "morning" | "evening") => boolean;
   onDaySelect: (day: number, period?: "morning" | "evening") => void;
@@ -36,9 +45,8 @@ function getWeekTheme(
   trackASummaries?: TrackAContent[],
   trackBSummaries?: ContentSummary[],
 ): string {
-  if (isTrackA && trackASummaries) {
-    const firstDay = trackASummaries.find(c => c.weekNumber === weekNumber);
-    return firstDay?.centralTheme || `Week ${weekNumber}`;
+  if (isTrackA) {
+    return TRACK_A_WEEK_THEMES[weekNumber] || `Week ${weekNumber}`;
   }
   if (trackBSummaries) {
     const firstDay = trackBSummaries.find(c => c.weekNumber === weekNumber);
@@ -83,11 +91,11 @@ export function DayGridView({
   isTrackA,
   trackASummaries,
   trackBSummaries,
+  cohortStartDate,
   isDayCompleted,
   isPeriodCompleted,
   onDaySelect,
 }: DayGridViewProps) {
-  const [_, setLocation] = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -95,6 +103,7 @@ export function DayGridView({
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDayForDialog, setSelectedDayForDialog] = useState<number>(0);
+  const [guideModalOpen, setGuideModalOpen] = useState(false);
 
   const allDays = Array.from({ length: 30 }, (_, i) => i + 1);
   const weekGroups = groupDaysByWeek(allDays);
@@ -147,7 +156,7 @@ export function DayGridView({
       <StickyWeekHeader
         weekNumber={activeWeek}
         weekTheme={activeWeekTheme}
-        onGuideClick={() => setLocation("/resources")}
+        onGuideClick={() => setGuideModalOpen(true)}
       />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 pb-8 custom-scrollbar">
@@ -169,7 +178,7 @@ export function DayGridView({
                   const isLocked = day > currentDay;
                   const isToday = day === currentDay;
                   const completed = isDayCompleted(day);
-                  const isSunday = day % 7 === 0;
+                  const isSunday = day > 1 && (day - 1) % 7 === 0;
                   const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
 
                   const prevDayTitle = day > 1
@@ -191,6 +200,7 @@ export function DayGridView({
                       morningCompleted={isPeriodCompleted(day, "morning")}
                       eveningCompleted={isPeriodCompleted(day, "evening")}
                       backgroundImage={isTrackA ? getTrackAImage(day) : undefined}
+                      cohortStartDate={cohortStartDate}
                       onClick={() => handleCardClick(day)}
                     />
                   );
@@ -200,6 +210,13 @@ export function DayGridView({
           ))}
         </div>
       </div>
+
+      <OverviewGuideModal
+        open={guideModalOpen}
+        onOpenChange={setGuideModalOpen}
+        weekNumber={activeWeek}
+        weekTheme={activeWeekTheme}
+      />
 
       {!isTrackA && (
         <PeriodSelectionDialog

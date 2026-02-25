@@ -286,6 +286,7 @@ export default function Dashboard() {
             isTrackA={isTrackA}
             trackASummaries={trackASummaries}
             trackBSummaries={trackBSummaries}
+            cohortStartDate={cohortData?.startDate}
             isDayCompleted={isDayCompleted}
             isPeriodCompleted={isPeriodCompleted}
             onDaySelect={handleDaySelect}

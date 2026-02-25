@@ -487,8 +487,7 @@ export async function registerRoutes(
         currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
       }
       
-      // Only allow completing current day
-      if (input.dayNumber !== currentDay || currentDay === 0) {
+      if (input.dayNumber > currentDay || currentDay === 0) {
         return res.status(403).json({ message: "Cannot complete prayers for this day" });
       }
     }

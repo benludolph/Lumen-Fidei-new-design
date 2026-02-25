@@ -73,6 +73,11 @@ export const trackAContent = pgTable("track_a_content", {
   journalAssignment: text("journal_assignment"),
   videoResource: text("video_resource"),
   songTitle: text("song_title"),
+  hook: text("hook"),
+  teach: text("teach"),
+  activity: text("activity"),
+  practice: text("practice"),
+  closingMessage: text("closing_message"),
 });
 
 export const userAnswers = pgTable("user_answers", {
