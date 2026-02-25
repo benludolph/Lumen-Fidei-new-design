@@ -7,6 +7,19 @@ import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent } from "@shared/schema";
 import { useLocation } from "wouter";
 
+import trackAImg1 from "@assets/image_1771985019617.png";
+import trackAImg2 from "@assets/image_1771985039759.png";
+import trackAImg3 from "@assets/image_1771985088299.png";
+import trackAImg4 from "@assets/image_1771985210712.png";
+import trackAImg5 from "@assets/image_1771985228368.png";
+import trackAImg6 from "@assets/image_1771985236426.png";
+
+const TRACK_A_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
+
+function getTrackAImage(dayNumber: number): string {
+  return TRACK_A_IMAGES[(dayNumber - 1) % TRACK_A_IMAGES.length];
+}
+
 interface DayGridViewProps {
   currentDay: number;
   isTrackA: boolean;
@@ -60,12 +73,6 @@ function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
     });
     if (weekDays.length > 0) {
       weeks.push({ week: w, days: weekDays });
-    }
-  }
-  if (weeks.length > 0) {
-    const lastWeek = weeks[weeks.length - 1];
-    if (lastWeek.days.length === 2 && lastWeek.week === 5) {
-      // keep it
     }
   }
   return weeks;
@@ -183,6 +190,7 @@ export function DayGridView({
                       isTrackB={!isTrackA}
                       morningCompleted={isPeriodCompleted(day, "morning")}
                       eveningCompleted={isPeriodCompleted(day, "evening")}
+                      backgroundImage={isTrackA ? getTrackAImage(day) : undefined}
                       onClick={() => handleCardClick(day)}
                     />
                   );

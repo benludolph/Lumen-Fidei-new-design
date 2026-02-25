@@ -13,6 +13,7 @@ interface DayCardProps {
   morningCompleted?: boolean;
   eveningCompleted?: boolean;
   isTrackB?: boolean;
+  backgroundImage?: string;
   onClick: () => void;
 }
 
@@ -27,9 +28,11 @@ export function DayCard({
   morningCompleted,
   eveningCompleted,
   isTrackB,
+  backgroundImage,
   onClick,
 }: DayCardProps) {
   const isPast = !isToday && !isLocked;
+  const showGrayscale = !isToday && !isCompleted;
 
   return (
     <button
@@ -37,29 +40,44 @@ export function DayCard({
       disabled={isLocked}
       data-testid={`card-day-${dayNumber}`}
       className={cn(
-        "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full",
+        "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[120px]",
         isSunday && "col-span-2",
         isLocked && "opacity-40 cursor-not-allowed",
         !isLocked && !isCompleted && "hover:shadow-md hover:scale-[1.01] cursor-pointer",
         isCompleted && "cursor-pointer hover:shadow-md",
       )}
     >
+      {backgroundImage && (
+        <img
+          src={backgroundImage}
+          alt=""
+          className={cn(
+            "absolute inset-0 w-full h-full object-cover rounded-lg transition-all duration-300",
+            showGrayscale && "grayscale",
+          )}
+        />
+      )}
+
       <div
         className={cn(
           "absolute inset-0 rounded-lg",
-          isToday && "bg-gradient-to-r from-[#003725] to-[#003725]/60",
-          isCompleted && !isToday && "bg-gradient-to-r from-[#003725]/90 to-[#003725]/40",
-          isPast && !isCompleted && "bg-gradient-to-r from-zinc-800 to-zinc-800/60",
-          isLocked && "bg-gradient-to-r from-zinc-900 to-zinc-900/60",
+          backgroundImage && isToday && "bg-gradient-to-r from-[#003725]/80 to-[#003725]/30",
+          backgroundImage && isCompleted && !isToday && "bg-gradient-to-r from-[#003725]/85 to-[#003725]/40",
+          backgroundImage && isPast && !isCompleted && "bg-gradient-to-r from-zinc-800/90 to-zinc-800/50",
+          backgroundImage && isLocked && "bg-gradient-to-r from-zinc-900/90 to-zinc-900/50",
+          !backgroundImage && isToday && "bg-gradient-to-r from-[#003725] to-[#003725]/60",
+          !backgroundImage && isCompleted && !isToday && "bg-gradient-to-r from-[#003725]/90 to-[#003725]/40",
+          !backgroundImage && isPast && !isCompleted && "bg-gradient-to-r from-zinc-800 to-zinc-800/60",
+          !backgroundImage && isLocked && "bg-gradient-to-r from-zinc-900 to-zinc-900/60",
         )}
       />
 
       <div className="relative z-10 flex flex-col gap-1 flex-1 min-w-0">
-        <p className="font-['Afacad',sans-serif] font-semibold text-white text-[16px] leading-7 line-clamp-2">
+        <p className="font-['Afacad',sans-serif] font-semibold text-white text-[16px] leading-7 line-clamp-2 drop-shadow-sm">
           Day {dayNumber}. {title}
         </p>
         {subtitle && (
-          <p className="font-['Afacad',sans-serif] text-white/70 text-[13px] leading-5 truncate">
+          <p className="font-['Afacad',sans-serif] text-white/70 text-[13px] leading-5 truncate drop-shadow-sm">
             {subtitle}
           </p>
         )}
