@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Square, CheckSquare, Circle, CheckCircle2 } from "lucide-react";
@@ -228,27 +229,63 @@ export function LessonSlide({
   );
 }
 
+const staggerContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const staggerLine = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] },
+  },
+};
+
 function TextSlide({ content }: { content: string }) {
   const lines = content.split("\n").filter(Boolean);
 
   if (lines.length === 1) {
     return (
-      <div data-testid="slide-text">
-        <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">
+      <motion.div
+        data-testid="slide-text"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.p
+          variants={staggerLine}
+          className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif] text-black"
+        >
           {content}
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-5" data-testid="slide-text">
+    <motion.div
+      className="space-y-5"
+      data-testid="slide-text"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
       {lines.map((paragraph, idx) => (
-        <p key={idx} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">
+        <motion.p
+          key={idx}
+          variants={staggerLine}
+          className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black"
+        >
           {paragraph}
-        </p>
+        </motion.p>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
