@@ -234,38 +234,32 @@ function TextSlide({ content }: { content: string }) {
 
   let wordIndex = 0;
   const paragraphs = lines.map((line) => {
-    const words = line.split(/(\s+)/);
-    const tokens = words.map((token) => {
-      const isSpace = /^\s+$/.test(token);
-      const idx = isSpace ? -1 : wordIndex++;
-      return { token, isSpace, idx };
-    });
+    const tokens = line.split(" ").map((word) => ({
+      word,
+      idx: wordIndex++,
+    }));
     return tokens;
   });
 
   return (
     <div className={lines.length > 1 ? "space-y-5" : undefined} data-testid="slide-text">
       {paragraphs.map((tokens, pIdx) => (
-        <p key={pIdx} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">
-          {tokens.map((t, tIdx) =>
-            t.isSpace ? (
-              <span key={tIdx}>{t.token}</span>
-            ) : (
-              <motion.span
-                key={tIdx}
-                className="inline-block"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0.3 + t.idx * 0.12,
-                  duration: 0.5,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              >
-                {t.token}
-              </motion.span>
-            )
-          )}
+        <p key={pIdx} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black flex flex-wrap">
+          {tokens.map((t) => (
+            <motion.span
+              key={t.idx}
+              className="inline-block mr-[0.3em]"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: t.idx * 0.06,
+                duration: 0.8,
+                ease: [0.25, 0.4, 0.25, 1],
+              }}
+            >
+              {t.word}
+            </motion.span>
+          ))}
         </p>
       ))}
     </div>
