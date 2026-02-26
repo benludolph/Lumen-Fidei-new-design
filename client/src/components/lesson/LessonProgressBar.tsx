@@ -20,7 +20,7 @@ export function LessonProgressBar({
     >
       <button
         onClick={onExit}
-        className="shrink-0 w-12 h-12 min-w-[48px] flex items-center justify-center rounded-md border-2 border-transparent text-foreground hover:bg-muted/50 transition-colors"
+        className="shrink-0 w-12 h-12 min-w-[48px] flex items-center justify-center rounded-md text-black hover:bg-black/5 transition-colors"
         data-testid="button-exit-lesson"
         aria-label="Exit lesson"
       >

@@ -118,8 +118,8 @@ export function LessonFlow({
         type={currentSlideData.type}
         content={currentSlideData.content}
         dayNumber={dayNumber}
-        existingAnswer={currentSlideData.type === "journal" ? journalDraft : undefined}
-        onJournalChange={currentSlideData.type === "journal" ? setJournalDraft : undefined}
+        existingAnswer={currentSlideData.type === "text_input" ? journalDraft : undefined}
+        onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
         direction={direction}
       />
 
@@ -128,21 +128,21 @@ export function LessonFlow({
           <Button
             variant="secondary"
             onClick={handlePrev}
-            className="gap-2"
+            className="gap-2 bg-[#f0f0f0] text-black hover:bg-[#e4e4e4]"
             data-testid="button-lesson-prev"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-5 h-5" />
             {isFirstSlide ? "Exit" : "Back"}
           </Button>
 
           <Button
             variant="default"
             onClick={handleNext}
-            className="gap-2"
+            className="gap-2 bg-black text-white hover:bg-black/90"
             data-testid="button-lesson-next"
           >
             {isLastSlide ? "Finish" : "Continue"}
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight className="w-5 h-5" />
           </Button>
         </div>
       </div>

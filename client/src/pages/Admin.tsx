@@ -1733,38 +1733,24 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
 };
 
-const SLIDE_TYPES = ["hook", "teach", "scripture", "catechism", "activity", "video", "practice", "close", "song", "prayer", "reflection", "journal", "concepts"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
-  hook: "Hook",
-  teach: "Teaching",
-  scripture: "Scripture",
-  activity: "Activity",
-  video: "Video",
-  practice: "Practice",
-  close: "Closing",
-  song: "Song",
-  prayer: "Prayer",
-  reflection: "Reflection",
-  journal: "Journal",
-  catechism: "Catechism",
-  concepts: "Key Concepts",
+  text: "Text",
+  multi_select: "Multi Select",
+  single_select: "Single Select",
+  media: "Media",
+  text_input: "Text Input",
+  action: "Action",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
-  hook: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
-  teach: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-  scripture: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
-  activity: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
-  video: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  practice: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-  close: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
-  song: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
-  prayer: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
-  reflection: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
-  journal: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-  catechism: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
-  concepts: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
+  text: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  multi_select: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+  single_select: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
+  media: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  text_input: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  action: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
 function SlideTypeBadge({ type }: { type: string }) {
@@ -1783,7 +1769,7 @@ function TrackAContentManagementView() {
   const [centralTheme, setCentralTheme] = useState("");
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
-  const [addSlideType, setAddSlideType] = useState<string>("teach");
+  const [addSlideType, setAddSlideType] = useState<string>("text");
 
   const { data: allContent, isLoading } = useQuery<TrackAContentData[]>({
     queryKey: ['/api/track-a-content'],

@@ -6,7 +6,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "Introduction - Goal of 30 Days",
     slides: [
-      { type: "scripture", content: "Knowing the Truth / Dispelling Distortions & Lies" },
+      { type: "text", content: "Knowing the Truth / Dispelling Distortions & Lies" },
     ],
   },
   {
@@ -14,14 +14,14 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "What is Prayer? How to Pray",
     slides: [
-      { type: "hook", content: "When you pray, what usually happens?\n\n\u2610 I don't know what to say\n\u2610 I get distracted\n\u2610 I feel awkward\n\u2610 I only pray when I'm stressed\n\u2610 I avoid prayer altogether" },
-      { type: "teach", content: "Prayer is not a technique to get outcomes.\nIt's learning how to be present to God honestly.\nMost people think they're bad at prayer when really they were never taught a simple way to show up.\nPrayer grows through consistency, not emotional intensity." },
-      { type: "activity", content: "Pick one prayer posture you'll try this week:\n\n\u2610 60 seconds of silence\n\u2610 One honest sentence to God\n\u2610 Reading one Psalm\n\u2610 The Our Father slowly" },
-      { type: "scripture", content: "Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. \u2014 Philippians 4:6\n\nPrayer is about bringing your real life to God, not hiding it." },
-      { type: "catechism", content: "https://www.youtube.com/watch?v=qaO4cubck6g" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=aR6J1pPiRQo" },
-      { type: "practice", content: "One honest sentence prayer right now." },
-      { type: "close", content: "Prayer is relationship, not performance." },
+      { type: "multi_select", content: "When you pray, what usually happens?\n\n☐ I don't know what to say\n☐ I get distracted\n☐ I feel awkward\n☐ I only pray when I'm stressed\n☐ I avoid prayer altogether" },
+      { type: "text", content: "Prayer is not a technique to get outcomes.\nIt's learning how to be present to God honestly.\nMost people think they're bad at prayer when really they were never taught a simple way to show up.\nPrayer grows through consistency, not emotional intensity." },
+      { type: "single_select", content: "Pick one prayer posture you'll try this week:\n\n☐ 60 seconds of silence\n☐ One honest sentence to God\n☐ Reading one Psalm\n☐ The Our Father slowly" },
+      { type: "text", content: "Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. — Philippians 4:6\n\nPrayer is about bringing your real life to God, not hiding it." },
+      { type: "media", content: "https://www.youtube.com/watch?v=qaO4cubck6g" },
+      { type: "media", content: "https://www.youtube.com/watch?v=aR6J1pPiRQo" },
+      { type: "action", content: "One honest sentence prayer right now." },
+      { type: "text", content: "Prayer is relationship, not performance." },
     ],
   },
   {
@@ -29,16 +29,16 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "Is God Real?",
     slides: [
-      { type: "hook", content: "Does God feel real in your daily life?\n(0 = not at all, 10 = very real)" },
-      { type: "teach", content: "Doubt doesn't mean you're broken.\nIt often means your lived experience doesn't match what you've been told about God.\nChristian faith doesn't begin with emotional certainty \u2014 it begins with honest seeking.\nGod is not a force to prove Himself on demand. He is a Person who invites relationship over time." },
-      { type: "concepts", content: "Maybe You're Skeptical... That's Okay" },
-      { type: "activity", content: "Interactive: Control-based vs relationship-based faith checklist" },
-      { type: "scripture", content: "\"I believe; help my unbelief.\" \u2014 Mark 9:24\n\nHonest doubt is part of real faith." },
-      { type: "catechism", content: "Magical vs Christian Thinking Chart" },
-      { type: "reflection", content: "Can the Chart be Made an Interactive Checklist?" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=68FQV0iLFeA" },
-      { type: "practice", content: "One-minute experiment:\n\"God, if you're real, I'm open to taking one honest step today.\"" },
-      { type: "close", content: "Faith starts with seeking, not certainty." },
+      { type: "text", content: "Does God feel real in your daily life?\n(0 = not at all, 10 = very real)" },
+      { type: "text", content: "Doubt doesn't mean you're broken.\nIt often means your lived experience doesn't match what you've been told about God.\nChristian faith doesn't begin with emotional certainty — it begins with honest seeking.\nGod is not a force to prove Himself on demand. He is a Person who invites relationship over time." },
+      { type: "text", content: "Maybe You're Skeptical... That's Okay" },
+      { type: "action", content: "Interactive: Control-based vs relationship-based faith checklist" },
+      { type: "text", content: "\"I believe; help my unbelief.\" — Mark 9:24\n\nHonest doubt is part of real faith." },
+      { type: "text", content: "Magical vs Christian Thinking Chart" },
+      { type: "text", content: "Can the Chart be Made an Interactive Checklist?" },
+      { type: "media", content: "https://www.youtube.com/watch?v=68FQV0iLFeA" },
+      { type: "action", content: "One-minute experiment:\n\"God, if you're real, I'm open to taking one honest step today.\"" },
+      { type: "text", content: "Faith starts with seeking, not certainty." },
     ],
   },
   {
@@ -46,14 +46,14 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "What is your Image of God? Tackling Lies",
     slides: [
-      { type: "hook", content: "When you think about God, which word comes first?\n\n\u2610 Loving\n\u2610 Distant\n\u2610 Judgmental\n\u2610 Disappointed\n\u2610 Unknown" },
-      { type: "teach", content: "Most people don't struggle with God Himself \u2014 they struggle with their image of God.\nYour image of God is shaped by parents, authority figures, wounds, and past experiences.\nIf your image of God is distorted, your prayer life will feel unsafe or forced." },
-      { type: "activity", content: "Spiritual inventory: \"Which image of God did I grow up with?\"" },
-      { type: "scripture", content: "God is love \u2014 1 John 4:8\n\nLove means presence and faithfulness, not permissiveness." },
-      { type: "catechism", content: "Actual Images of God" },
-      { type: "reflection", content: "Spiritual Inventory Quiz" },
-      { type: "practice", content: "Ask God: \"Show me where my image of You may be distorted.\"" },
-      { type: "close", content: "You can't relate to God rightly if you're relating to a false image of Him." },
+      { type: "single_select", content: "When you think about God, which word comes first?\n\n☐ Loving\n☐ Distant\n☐ Judgmental\n☐ Disappointed\n☐ Unknown" },
+      { type: "text", content: "Most people don't struggle with God Himself — they struggle with their image of God.\nYour image of God is shaped by parents, authority figures, wounds, and past experiences.\nIf your image of God is distorted, your prayer life will feel unsafe or forced." },
+      { type: "action", content: "Spiritual inventory: \"Which image of God did I grow up with?\"" },
+      { type: "text", content: "God is love — 1 John 4:8\n\nLove means presence and faithfulness, not permissiveness." },
+      { type: "text", content: "Actual Images of God" },
+      { type: "text", content: "Spiritual Inventory Quiz" },
+      { type: "action", content: "Ask God: \"Show me where my image of You may be distorted.\"" },
+      { type: "text", content: "You can't relate to God rightly if you're relating to a false image of Him." },
     ],
   },
   {
@@ -61,14 +61,14 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "Spiritual Warfare Basics",
     slides: [
-      { type: "hook", content: "Which inner voice shows up most when you're stressed?\n\n\u2610 \"I'm failing.\"\n\u2610 \"God left me.\"\n\u2610 \"This will never change.\"\n\u2610 \"I'm unsafe.\"\n\u2610 \"I'm alone.\"" },
-      { type: "teach", content: "Not every thought you have is true.\nFear, shame, and accusation distort how you see God and yourself.\nSpiritual maturity includes learning how to pause, name lies, and return to truth." },
-      { type: "concepts", content: "Common Lies of the Enemy" },
-      { type: "activity", content: "Name one lie you believe \u2192 choose a truth to counter it." },
-      { type: "scripture", content: "The thief comes only to steal and kill and destroy; I have come that they may have life, and have it to the full. \u2014 John 10:10\n\nGod's voice leads toward life, not fear." },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=j66KVi4vy0c" },
-      { type: "practice", content: "When a negative thought arises today, pause and ask: \"Is this drawing me toward truth or fear?\"" },
-      { type: "close", content: "Discernment is about clarity, not paranoia." },
+      { type: "single_select", content: "Which inner voice shows up most when you're stressed?\n\n☐ \"I'm failing.\"\n☐ \"God left me.\"\n☐ \"This will never change.\"\n☐ \"I'm unsafe.\"\n☐ \"I'm alone.\"" },
+      { type: "text", content: "Not every thought you have is true.\nFear, shame, and accusation distort how you see God and yourself.\nSpiritual maturity includes learning how to pause, name lies, and return to truth." },
+      { type: "text", content: "Common Lies of the Enemy" },
+      { type: "action", content: "Name one lie you believe → choose a truth to counter it." },
+      { type: "text", content: "The thief comes only to steal and kill and destroy; I have come that they may have life, and have it to the full. — John 10:10\n\nGod's voice leads toward life, not fear." },
+      { type: "media", content: "https://www.youtube.com/watch?v=j66KVi4vy0c" },
+      { type: "action", content: "When a negative thought arises today, pause and ask: \"Is this drawing me toward truth or fear?\"" },
+      { type: "text", content: "Discernment is about clarity, not paranoia." },
     ],
   },
   {
@@ -76,14 +76,14 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "God Loves You / Made for Relationship",
     slides: [
-      { type: "hook", content: "Do you believe God loves you personally, or only \"in general\"?" },
-      { type: "teach", content: "Christianity is not primarily about rules.\nIt's about relationship.\nGod does not love an abstract version of you.\nHe loves you personally, in your real life, with your real struggles." },
-      { type: "activity", content: "Reflection: What makes it hard to believe God loves you personally?" },
-      { type: "scripture", content: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life. \u2014 John 3:16\n\nGod's love is directed at persons, not crowds." },
-      { type: "reflection", content: "Song: Good Good Father" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=ZiAWLJkxBpk" },
-      { type: "practice", content: "Sit quietly for 60 seconds and let this sentence be true:\n\"God loves me.\"" },
-      { type: "close", content: "God's love is not theoretical \u2014 it's personal." },
+      { type: "text", content: "Do you believe God loves you personally, or only \"in general\"?" },
+      { type: "text", content: "Christianity is not primarily about rules.\nIt's about relationship.\nGod does not love an abstract version of you.\nHe loves you personally, in your real life, with your real struggles." },
+      { type: "action", content: "Reflection: What makes it hard to believe God loves you personally?" },
+      { type: "text", content: "For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life. — John 3:16\n\nGod's love is directed at persons, not crowds." },
+      { type: "text", content: "Song: Good Good Father" },
+      { type: "media", content: "https://www.youtube.com/watch?v=ZiAWLJkxBpk" },
+      { type: "action", content: "Sit quietly for 60 seconds and let this sentence be true:\n\"God loves me.\"" },
+      { type: "text", content: "God's love is not theoretical — it's personal." },
     ],
   },
   {
@@ -91,16 +91,16 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 1,
     centralTheme: "We Are His Children / Receiving a New Identity",
     slides: [
-      { type: "hook", content: "Which identity do you live from most often?\n\n\u2610 I'm unworthy\n\u2610 I'm on my own\n\u2610 I'm a problem\n\u2610 I'm loved\n\u2610 I'm unsure" },
-      { type: "teach", content: "Christian faith doesn't just change what you believe.\nIt changes who you understand yourself to be.\nYou are not defined by fear, shame, or your past.\nYou are invited into the identity of being God's child." },
-      { type: "concepts", content: "We are His Children" },
-      { type: "video", content: "Complete Check-In Survey" },
-      { type: "activity", content: "Choose one false identity you want to let go of this week." },
-      { type: "scripture", content: "See what great love the Father has lavished on us, that we should be called children of God! And that is what we are! \u2014 1 John 3:1\n\nGod's love gives you a new identity." },
-      { type: "reflection", content: "Song: No Longer Slaves" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=XqafKxFiktQ" },
-      { type: "practice", content: "One-minute prayer:\n\"God, help me learn to live as Your child, not from fear.\"" },
-      { type: "close", content: "This week wasn't about mastering ideas.\nIt was about reorienting your relationship with God." },
+      { type: "single_select", content: "Which identity do you live from most often?\n\n☐ I'm unworthy\n☐ I'm on my own\n☐ I'm a problem\n☐ I'm loved\n☐ I'm unsure" },
+      { type: "text", content: "Christian faith doesn't just change what you believe.\nIt changes who you understand yourself to be.\nYou are not defined by fear, shame, or your past.\nYou are invited into the identity of being God's child." },
+      { type: "text", content: "We are His Children" },
+      { type: "action", content: "Complete Check-In Survey" },
+      { type: "action", content: "Choose one false identity you want to let go of this week." },
+      { type: "text", content: "See what great love the Father has lavished on us, that we should be called children of God! And that is what we are! — 1 John 3:1\n\nGod's love gives you a new identity." },
+      { type: "text", content: "Song: No Longer Slaves" },
+      { type: "media", content: "https://www.youtube.com/watch?v=XqafKxFiktQ" },
+      { type: "action", content: "One-minute prayer:\n\"God, help me learn to live as Your child, not from fear.\"" },
+      { type: "text", content: "This week wasn't about mastering ideas.\nIt was about reorienting your relationship with God." },
     ],
   },
   {
@@ -114,9 +114,9 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 2,
     centralTheme: "Wounds of Sin & Original Sin",
     slides: [
-      { type: "scripture", content: "Now the works of the flesh are evident: sexual immorality, impurity, sensuality, idolatry, sorcery, enmity, strife, jealousy, fits of anger, rivalries, dissensions, divisions, envy, drunkenness, orgies, and things like these. I warn you, as I warned you before, that those who do such things will not inherit the kingdom of God. - Gal 5:19-21" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=omyk2K3oG4I" },
-      { type: "journal", content: "Mentor Schedule Check-In" },
+      { type: "text", content: "Now the works of the flesh are evident: sexual immorality, impurity, sensuality, idolatry, sorcery, enmity, strife, jealousy, fits of anger, rivalries, dissensions, divisions, envy, drunkenness, orgies, and things like these. I warn you, as I warned you before, that those who do such things will not inherit the kingdom of God. - Gal 5:19-21" },
+      { type: "media", content: "https://www.youtube.com/watch?v=omyk2K3oG4I" },
+      { type: "action", content: "Mentor Schedule Check-In" },
     ],
   },
   {
@@ -124,8 +124,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 2,
     centralTheme: "Wounds of Sin",
     slides: [
-      { type: "scripture", content: "Blessed is the man who perseveres in temptation, for when he has been proved he will receive the crown of life that he promised to those who love him. - James 1:12" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=xBlpk2Khc-U" },
+      { type: "text", content: "Blessed is the man who perseveres in temptation, for when he has been proved he will receive the crown of life that he promised to those who love him. - James 1:12" },
+      { type: "media", content: "https://www.youtube.com/watch?v=xBlpk2Khc-U" },
     ],
   },
   {
@@ -133,10 +133,10 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 2,
     centralTheme: "Examination of Conscience",
     slides: [
-      { type: "concepts", content: "God Does NOT Shame" },
-      { type: "video", content: "Provide Basic Instructions on Confession" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=HEV0DYYx-Hw" },
-      { type: "journal", content: "Provide Examination of Conscience in Online Form" },
+      { type: "text", content: "God Does NOT Shame" },
+      { type: "text", content: "Provide Basic Instructions on Confession" },
+      { type: "media", content: "https://www.youtube.com/watch?v=HEV0DYYx-Hw" },
+      { type: "text_input", content: "Provide Examination of Conscience in Online Form" },
     ],
   },
   {
@@ -144,7 +144,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 2,
     centralTheme: "Centrality of Jesus & Cross",
     slides: [
-      { type: "reflection", content: "https://www.youtube.com/watch?v=CtcKV65-9uY" },
+      { type: "media", content: "https://www.youtube.com/watch?v=CtcKV65-9uY" },
     ],
   },
   {
@@ -152,10 +152,10 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 2,
     centralTheme: "Meaning of the Passion & Cross",
     slides: [
-      { type: "concepts", content: "Transforming Suffering" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=j1JYsNwO-ZE" },
-      { type: "prayer", content: "Create AI Image" },
-      { type: "journal", content: "Song: Thank You Jesus for the Blood, Charity Gayle" },
+      { type: "text", content: "Transforming Suffering" },
+      { type: "media", content: "https://www.youtube.com/watch?v=j1JYsNwO-ZE" },
+      { type: "text", content: "Create AI Image" },
+      { type: "text", content: "Song: Thank You Jesus for the Blood, Charity Gayle" },
     ],
   },
   {
@@ -163,8 +163,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 2,
     centralTheme: "Message #1 - Salvation Through Jesus Christ",
     slides: [
-      { type: "reflection", content: "https://www.youtube.com/watch?v=EevRrWyBllY&t=11s" },
-      { type: "journal", content: "Complete Check-In Survey" },
+      { type: "media", content: "https://www.youtube.com/watch?v=EevRrWyBllY&t=11s" },
+      { type: "action", content: "Complete Check-In Survey" },
     ],
   },
   {
@@ -178,8 +178,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 3,
     centralTheme: "Message #2 - Forgiving Others",
     slides: [
-      { type: "scripture", content: "Put on then, as God's chosen ones, holy and beloved, heartfelt compassion, kindness, humility, gentleness, and patience, bearing with one another and forgiving one another, if one has a grievance against another; as the Lord has forgiven you, so must you also do. And over all these put on love, that is, the bond of perfection. - Col 3:12-14" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=kQFLsgQnQpI" },
+      { type: "text", content: "Put on then, as God's chosen ones, holy and beloved, heartfelt compassion, kindness, humility, gentleness, and patience, bearing with one another and forgiving one another, if one has a grievance against another; as the Lord has forgiven you, so must you also do. And over all these put on love, that is, the bond of perfection. - Col 3:12-14" },
+      { type: "media", content: "https://www.youtube.com/watch?v=kQFLsgQnQpI" },
     ],
   },
   {
@@ -187,8 +187,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 3,
     centralTheme: "Person of Jesus: Healer",
     slides: [
-      { type: "scripture", content: "He heals the brokenhearted and binds up their wounds. - Psalm 147:3" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=MHdKh2I8eUw" },
+      { type: "text", content: "He heals the brokenhearted and binds up their wounds. - Psalm 147:3" },
+      { type: "media", content: "https://www.youtube.com/watch?v=MHdKh2I8eUw" },
     ],
   },
   {
@@ -196,8 +196,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 3,
     centralTheme: "Person of Jesus: Deliverer",
     slides: [
-      { type: "scripture", content: "For freedom Christ has set us free; stand firm therefore, and do not submit again to a yoke of slavery. - Galatians 5:1" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=VPJ1jWp7-VM&list=RDVPJ1jWp7-VM&start_radio=1" },
+      { type: "text", content: "For freedom Christ has set us free; stand firm therefore, and do not submit again to a yoke of slavery. - Galatians 5:1" },
+      { type: "media", content: "https://www.youtube.com/watch?v=VPJ1jWp7-VM&list=RDVPJ1jWp7-VM&start_radio=1" },
     ],
   },
   {
@@ -205,8 +205,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 3,
     centralTheme: "Person of Jesus: Friend",
     slides: [
-      { type: "reflection", content: "https://www.youtube.com/watch?v=RyiYKDTPSGc" },
-      { type: "journal", content: "https://www.youtube.com/watch?v=KwX1f2gYKZ4&list=RDKwX1f2gYKZ4&start_radio=1" },
+      { type: "media", content: "https://www.youtube.com/watch?v=RyiYKDTPSGc" },
+      { type: "media", content: "https://www.youtube.com/watch?v=KwX1f2gYKZ4&list=RDKwX1f2gYKZ4&start_radio=1" },
     ],
   },
   {
@@ -214,7 +214,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 3,
     centralTheme: "Person of Jesus: Friend",
     slides: [
-      { type: "reflection", content: "https://www.youtube.com/watch?v=thGhSKQfOzI" },
+      { type: "media", content: "https://www.youtube.com/watch?v=thGhSKQfOzI" },
     ],
   },
   {
@@ -222,9 +222,9 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 3,
     centralTheme: "Person of Jesus: King",
     slides: [
-      { type: "video", content: "Complete Check-In Survey" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=8ZjodOy62qQ&list=RD8ZjodOy62qQ&start_radio=1" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=aabwei87sQM" },
+      { type: "action", content: "Complete Check-In Survey" },
+      { type: "media", content: "https://www.youtube.com/watch?v=8ZjodOy62qQ&list=RD8ZjodOy62qQ&start_radio=1" },
+      { type: "media", content: "https://www.youtube.com/watch?v=aabwei87sQM" },
     ],
   },
   {
@@ -238,9 +238,9 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 4,
     centralTheme: "Spiritual Warfare: Authority",
     slides: [
-      { type: "video", content: "Mentor Schedule Check-In" },
-      { type: "catechism", content: "Not only that, but we even boast of our afflictions, knowing that affliction produces endurance, and endurance, proven character, and proven character, hope, and hope does not disappoint, because the love of God has been poured out into our hearts through the holy Spirit that has been given to us. - Romans 5:3-5" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=xEFthlUVNlQ" },
+      { type: "action", content: "Mentor Schedule Check-In" },
+      { type: "text", content: "Not only that, but we even boast of our afflictions, knowing that affliction produces endurance, and endurance, proven character, and proven character, hope, and hope does not disappoint, because the love of God has been poured out into our hearts through the holy Spirit that has been given to us. - Romans 5:3-5" },
+      { type: "media", content: "https://www.youtube.com/watch?v=xEFthlUVNlQ" },
     ],
   },
   {
@@ -248,10 +248,10 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 4,
     centralTheme: "Conversion / Change Your Life",
     slides: [
-      { type: "concepts", content: "Repentance from Sin" },
-      { type: "scripture", content: "Following God's Commandments" },
-      { type: "catechism", content: "For it is better to suffer for doing good, if that be the will of God, than for doing evil. For Christ also suffered for sins once, the righteous for the sake of the unrighteous, that he might lead you to God. - 1 Peter 3:17-18" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=erOoxEFF9vU" },
+      { type: "text", content: "Repentance from Sin" },
+      { type: "text", content: "Following God's Commandments" },
+      { type: "text", content: "For it is better to suffer for doing good, if that be the will of God, than for doing evil. For Christ also suffered for sins once, the righteous for the sake of the unrighteous, that he might lead you to God. - 1 Peter 3:17-18" },
+      { type: "media", content: "https://www.youtube.com/watch?v=erOoxEFF9vU" },
     ],
   },
   {
@@ -259,7 +259,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 4,
     centralTheme: "Are You Ready to Change Your Life?",
     slides: [
-      { type: "concepts", content: "Survey: Are You Ready Quiz?" },
+      { type: "text", content: "Survey: Are You Ready Quiz?" },
     ],
   },
   {
@@ -267,12 +267,12 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 4,
     centralTheme: "Accepting the Invitation",
     slides: [
-      { type: "concepts", content: "Prayer of Surrender" },
-      { type: "video", content: "Song: Goodbye Yesterday" },
-      { type: "scripture", content: "Prayer to the Holy Spirit" },
-      { type: "reflection", content: "Time of Praise & Worship" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=s7jXASBWwwI" },
-      { type: "journal", content: "https://www.youtube.com/watch?v=R8MZbl-GRdY&list=RDR8MZbl-GRdY&start_radio=1" },
+      { type: "text", content: "Prayer of Surrender" },
+      { type: "text", content: "Song: Goodbye Yesterday" },
+      { type: "text", content: "Prayer to the Holy Spirit" },
+      { type: "text", content: "Time of Praise & Worship" },
+      { type: "media", content: "https://www.youtube.com/watch?v=s7jXASBWwwI" },
+      { type: "media", content: "https://www.youtube.com/watch?v=R8MZbl-GRdY&list=RDR8MZbl-GRdY&start_radio=1" },
     ],
   },
   {
@@ -280,10 +280,10 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 4,
     centralTheme: "What is Faith?",
     slides: [
-      { type: "concepts", content: "Developing an Eternal Perspective on Life" },
-      { type: "video", content: "https://www.youtube.com/watch?v=ubE3bmUn1jg" },
-      { type: "scripture", content: "What is Heaven?" },
-      { type: "prayer", content: "https://www.youtube.com/watch?v=1pvLeLAtweA" },
+      { type: "text", content: "Developing an Eternal Perspective on Life" },
+      { type: "media", content: "https://www.youtube.com/watch?v=ubE3bmUn1jg" },
+      { type: "text", content: "What is Heaven?" },
+      { type: "media", content: "https://www.youtube.com/watch?v=1pvLeLAtweA" },
     ],
   },
   {
@@ -291,9 +291,9 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 4,
     centralTheme: "Conversion / Change Your Life",
     slides: [
-      { type: "concepts", content: "Gift of Christian Baptism" },
-      { type: "video", content: "Complete Check-In Survey" },
-      { type: "reflection", content: "https://www.youtube.com/watch?v=hZlUZ3ub4mg" },
+      { type: "text", content: "Gift of Christian Baptism" },
+      { type: "action", content: "Complete Check-In Survey" },
+      { type: "media", content: "https://www.youtube.com/watch?v=hZlUZ3ub4mg" },
     ],
   },
   {
@@ -307,8 +307,8 @@ export const trackAContentData: InsertTrackAContent[] = [
     weekNumber: 5,
     centralTheme: "Conclusion",
     slides: [
-      { type: "reflection", content: "Final Written Reflection" },
-      { type: "journal", content: "Schedule 30 Day Online Exit Interview\nSchedule Initial Prayer Evaluation" },
+      { type: "text_input", content: "Final Written Reflection" },
+      { type: "action", content: "Schedule 30 Day Online Exit Interview\nSchedule Initial Prayer Evaluation" },
     ],
   },
 ];
