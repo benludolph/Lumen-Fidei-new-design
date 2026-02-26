@@ -229,64 +229,66 @@ export function LessonSlide({
   );
 }
 
-const staggerContainer = {
+const wordContainer = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.35,
-      delayChildren: 0.15,
+      staggerChildren: 0.08,
+      delayChildren: 0.2,
     },
   },
 };
 
-const staggerLine = {
-  hidden: { opacity: 0, y: 12 },
+const wordVariant = {
+  hidden: { opacity: 0, y: 6, filter: "blur(2px)" },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   },
 };
+
+function StaggeredWords({ text, className }: { text: string; className?: string }) {
+  const words = text.split(/(\s+)/);
+
+  return (
+    <motion.p
+      className={className}
+      variants={wordContainer}
+      initial="hidden"
+      animate="visible"
+    >
+      {words.map((word, i) =>
+        /^\s+$/.test(word) ? (
+          <span key={i}>{word}</span>
+        ) : (
+          <motion.span
+            key={i}
+            variants={wordVariant}
+            className="inline-block"
+          >
+            {word}
+          </motion.span>
+        )
+      )}
+    </motion.p>
+  );
+}
 
 function TextSlide({ content }: { content: string }) {
   const lines = content.split("\n").filter(Boolean);
 
-  if (lines.length === 1) {
-    return (
-      <motion.div
-        data-testid="slide-text"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.p
-          variants={staggerLine}
-          className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif] text-black"
-        >
-          {content}
-        </motion.p>
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.div
-      className="space-y-5"
-      data-testid="slide-text"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
+    <div className={lines.length > 1 ? "space-y-5" : undefined} data-testid="slide-text">
       {lines.map((paragraph, idx) => (
-        <motion.p
+        <StaggeredWords
           key={idx}
-          variants={staggerLine}
+          text={paragraph}
           className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black"
-        >
-          {paragraph}
-        </motion.p>
+        />
       ))}
-    </motion.div>
+    </div>
   );
 }
 
