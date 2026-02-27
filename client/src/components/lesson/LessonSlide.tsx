@@ -82,8 +82,23 @@ function MediaContent({ text }: { text: string }) {
   return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{text}</p>;
 }
 
+function stripHtmlToLines(html: string): string[] {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const lines: string[] = [];
+  div.querySelectorAll("h1, h2, h3, p, li").forEach((el) => {
+    const text = (el.textContent || "").trim();
+    if (text.length > 0) lines.push(text);
+  });
+  if (lines.length === 0) {
+    const fallback = (div.textContent || "").trim();
+    if (fallback) return fallback.split("\n").map(l => l.trim()).filter(Boolean);
+  }
+  return lines;
+}
+
 function parseOptions(content: string): { heading: string; options: string[] } {
-  const lines = content.split("\n");
+  const lines = isHtmlContent(content) ? stripHtmlToLines(content) : content.split("\n");
   const headingLines: string[] = [];
   const options: string[] = [];
 
