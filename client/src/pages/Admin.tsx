@@ -1810,8 +1810,10 @@ function TrackAContentManagementView() {
       toast({ title: "Track A content saved successfully" });
       setEditMode(false);
     },
-    onError: () => {
-      toast({ title: "Failed to save Track A content", variant: "destructive" });
+    onError: (error: any) => {
+      console.error("Track A save error:", error);
+      const msg = error?.message || "Unknown error";
+      toast({ title: "Failed to save Track A content", description: msg, variant: "destructive" });
     },
   });
 
