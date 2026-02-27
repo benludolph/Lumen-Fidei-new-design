@@ -135,15 +135,12 @@ export async function registerRoutes(
     const role = req.query.role as "participant" | "mentor" | undefined;
     const all = req.query.all === "true";
     
-    // Participants can only see their own mentor
     if (req.user!.role === 'participant') {
-      if (req.user!.mentorId) {
-        const mentor = await storage.getUser(req.user!.mentorId);
-        if (mentor) {
-          return res.json(sanitizeUsers([mentor]));
-        }
-      }
-      return res.json([]);
+      const partnerIds = await storage.getConversationPartnerIds(req.user!.id);
+      if (partnerIds.length === 0) return res.json([]);
+      const partners = await Promise.all(partnerIds.map(id => storage.getUser(id)));
+      const validPartners = partners.filter((u): u is NonNullable<typeof u> => u != null && u.id !== req.user!.id);
+      return res.json(sanitizeUsers(validPartners));
     }
     
     // Mentors: if requesting all users, return everyone for new conversation dialog

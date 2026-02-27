@@ -41,6 +41,7 @@ export interface IStorage {
 
   // Chat
   getMessages(user1Id: number, user2Id: number): Promise<Message[]>;
+  getConversationPartnerIds(userId: number): Promise<number[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(senderId: number, receiverId: number): Promise<void>;
   getUnreadMessageCount(userId: number): Promise<number>;
@@ -195,6 +196,19 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(asc(messages.createdAt));
+  }
+
+  async getConversationPartnerIds(userId: number): Promise<number[]> {
+    const sent = await db.selectDistinct({ id: messages.receiverId })
+      .from(messages)
+      .where(eq(messages.senderId, userId));
+    const received = await db.selectDistinct({ id: messages.senderId })
+      .from(messages)
+      .where(eq(messages.receiverId, userId));
+    const ids = new Set<number>();
+    for (const r of sent) ids.add(r.id);
+    for (const r of received) ids.add(r.id);
+    return Array.from(ids);
   }
 
   async createMessage(message: InsertMessage): Promise<Message> {
