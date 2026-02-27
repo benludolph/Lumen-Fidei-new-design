@@ -1731,6 +1731,7 @@ type TrackAContentData = {
   weekNumber: number;
   centralTheme: string;
   slides: TrackASlide[] | null;
+  imageUrl: string | null;
 };
 
 const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "quiz"] as const;
@@ -1946,6 +1947,7 @@ function TrackAContentManagementView() {
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
+  const [dayImageUrl, setDayImageUrl] = useState<string | null>(null);
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleSubtitle, setModuleSubtitle] = useState("");
@@ -2006,9 +2008,11 @@ function TrackAContentManagementView() {
     if (content) {
       setCentralTheme(content.centralTheme || "");
       setSlides(content.slides ? [...content.slides] : []);
+      setDayImageUrl(content.imageUrl || null);
     } else {
       setCentralTheme("");
       setSlides([]);
+      setDayImageUrl(null);
     }
     setExpandedSlide(null);
   };
@@ -2061,6 +2065,7 @@ function TrackAContentManagementView() {
       weekNumber: Math.ceil(selectedDay / 7),
       centralTheme: centralTheme || "Untitled",
       slides,
+      imageUrl: dayImageUrl,
     });
   };
 
@@ -2241,15 +2246,22 @@ function TrackAContentManagementView() {
               >
                 <CardContent className="py-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{dayNumber}</span>
-                    </div>
+                    {dayContent?.imageUrl ? (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src={dayContent.imageUrl} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{dayNumber}</span>
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium truncate" data-testid={`text-day-theme-${dayNumber}`}>
-                        {dayContent?.centralTheme || "No content yet"}
+                        Day {dayNumber}. {dayContent?.centralTheme || "No content yet"}
                       </h4>
                       <p className="text-xs text-muted-foreground">
                         {slideCount > 0 ? `${slideCount} slide${slideCount !== 1 ? "s" : ""}` : "Empty"}
+                        {dayContent?.imageUrl ? " · Has image" : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -2315,14 +2327,40 @@ function TrackAContentManagementView() {
         <div className="space-y-4">
           <Card>
             <CardContent className="pt-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Central Theme</label>
-                <Input
-                  value={centralTheme}
-                  onChange={(e) => setCentralTheme(e.target.value)}
-                  placeholder="e.g., What is Prayer? How to Pray"
-                  data-testid="input-central-theme"
-                />
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Central Theme</label>
+                  <Input
+                    value={centralTheme}
+                    onChange={(e) => setCentralTheme(e.target.value)}
+                    placeholder="e.g., What is Prayer? How to Pray"
+                    data-testid="input-central-theme"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Day Image</label>
+                  <div className="flex items-center gap-4">
+                    {dayImageUrl ? (
+                      <div className="relative w-24 h-16 rounded overflow-hidden border">
+                        <img src={dayImageUrl} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setDayImageUrl(null)}
+                          className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5 text-white hover:bg-black/80"
+                          data-testid="button-remove-day-image"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-16 rounded border border-dashed border-muted-foreground/30 flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <ModuleImageUpload currentUrl={dayImageUrl} onUploaded={setDayImageUrl} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">This image appears as the background on the participant's day card.</p>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -101,14 +101,11 @@ export function DayCard({
       <div
         className={cn(
           "absolute inset-0 rounded-lg",
-          backgroundImage && isToday && "bg-gradient-to-r from-[#003725]/80 to-[#003725]/30",
-          backgroundImage && isCompleted && !isToday && "bg-gradient-to-r from-[#003725]/85 to-[#003725]/40",
-          backgroundImage && isPast && !isCompleted && "bg-gradient-to-r from-zinc-800/90 to-zinc-800/50",
-          backgroundImage && isLocked && "bg-gradient-to-r from-zinc-900/90 to-zinc-900/50",
-          !backgroundImage && isToday && "bg-gradient-to-r from-[#003725] to-[#003725]/60",
-          !backgroundImage && isCompleted && !isToday && "bg-gradient-to-r from-[#003725]/90 to-[#003725]/40",
-          !backgroundImage && isPast && !isCompleted && "bg-gradient-to-r from-zinc-800 to-zinc-800/60",
-          !backgroundImage && isLocked && "bg-gradient-to-r from-zinc-900 to-zinc-900/60",
+          backgroundImage && "bg-black/40",
+          !backgroundImage && isToday && "bg-[#003725]",
+          !backgroundImage && isCompleted && !isToday && "bg-[#003725]/90",
+          !backgroundImage && isPast && !isCompleted && "bg-zinc-800",
+          !backgroundImage && isLocked && "bg-zinc-900",
         )}
       />
 

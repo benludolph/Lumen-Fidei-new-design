@@ -17,10 +17,9 @@ import trackAImg6 from "@assets/image_1771985236426.png";
 
 const TRACK_A_FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
 
-function getTrackAImage(dayNumber: number, modules?: TrackAModule[]): string {
-  const weekNumber = Math.ceil(dayNumber / 7);
-  const module = modules?.find(m => m.weekNumber === weekNumber);
-  if (module?.imageUrl) return module.imageUrl;
+function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
+  const content = trackASummaries?.find(c => c.dayNumber === dayNumber);
+  if (content?.imageUrl) return content.imageUrl;
   return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];
 }
 
@@ -203,7 +202,7 @@ export function DayGridView({
                       isTrackB={!isTrackA}
                       morningCompleted={isPeriodCompleted(day, "morning")}
                       eveningCompleted={isPeriodCompleted(day, "evening")}
-                      backgroundImage={isTrackA ? getTrackAImage(day, trackAModules) : undefined}
+                      backgroundImage={isTrackA ? getTrackAImage(day, trackASummaries) : undefined}
                       cohortStartDate={cohortStartDate}
                       onClick={() => handleCardClick(day)}
                     />

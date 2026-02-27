@@ -74,6 +74,7 @@ export const trackAContent = pgTable("track_a_content", {
   weekNumber: integer("week_number").notNull(),
   centralTheme: text("central_theme").notNull(),
   slides: json("slides").$type<{ type: string; content: string }[]>(),
+  imageUrl: text("image_url"),
 });
 
 export const userAnswers = pgTable("user_answers", {
