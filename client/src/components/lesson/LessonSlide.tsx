@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { motion, animate, stagger } from "framer-motion";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Square, CheckSquare, Circle, CheckCircle2 } from "lucide-react";
@@ -7,12 +7,6 @@ import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import DOMPurify from "dompurify";
 import { HtmlContent } from "@/components/ui/html-content";
-
-declare global {
-  interface Window {
-    SplitType: any;
-  }
-}
 
 export type SlideType =
   | "text"
@@ -267,69 +261,212 @@ function isHtmlContent(content: string): boolean {
   return HTML_TAG_REGEX.test(content);
 }
 
-function TextSlide({ content }: { content: string }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animatedRef = useRef(false);
+interface CharToken {
+  char: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+}
 
-  const sanitizedHtml = useMemo(() => {
-    const isHtml = isHtmlContent(content);
-    if (isHtml) {
-      return DOMPurify.sanitize(content, {
-        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
-      });
-    }
+interface TextBlock {
+  tag: "p" | "h1" | "h2" | "h3" | "blockquote" | "li";
+  chars: CharToken[];
+  listType?: "ul" | "ol";
+  listIndex?: number;
+}
+
+function parseContentToBlocks(content: string): TextBlock[] {
+  const isHtml = isHtmlContent(content);
+
+  if (!isHtml) {
     const lines = content.split("\n").filter(Boolean);
-    return lines.map(line => `<p>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join("");
-  }, [content]);
+    return lines.map((line) => ({
+      tag: "p" as const,
+      chars: Array.from(line).map((char) => ({ char })),
+    }));
+  }
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el || animatedRef.current) return;
-    animatedRef.current = true;
+  const sanitized = DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+  });
 
-    if (!window.SplitType) {
-      el.style.opacity = "1";
-      return;
+  const container = document.createElement("div");
+  container.innerHTML = sanitized;
+  const blocks: TextBlock[] = [];
+
+  function extractChars(node: Node, bold: boolean, italic: boolean, underline: boolean): CharToken[] {
+    const tokens: CharToken[] = [];
+    for (const child of Array.from(node.childNodes)) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.textContent || "";
+        for (const char of Array.from(text)) {
+          tokens.push({ char, bold, italic, underline });
+        }
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        const el = child as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+        if (tag === "br") {
+          tokens.push({ char: "\n" });
+          continue;
+        }
+        const b = bold || tag === "strong" || tag === "b";
+        const i = italic || tag === "em" || tag === "i";
+        const u = underline || tag === "u";
+        tokens.push(...extractChars(el, b, i, u));
+      }
     }
+    return tokens;
+  }
 
-    const split = new window.SplitType(el, { types: "chars" });
-    const chars = split.chars as HTMLElement[];
-    if (!chars || chars.length === 0) {
-      el.style.opacity = "1";
-      return;
+  function processElement(el: Element) {
+    const tag = el.tagName.toLowerCase();
+    if (tag === "ul" || tag === "ol") {
+      let liIdx = 0;
+      for (const li of Array.from(el.children)) {
+        if (li.tagName.toLowerCase() === "li") {
+          blocks.push({
+            tag: "li",
+            chars: extractChars(li, false, false, false),
+            listType: tag as "ul" | "ol",
+            listIndex: liIdx++,
+          });
+        }
+      }
+    } else if (["p", "h1", "h2", "h3", "blockquote"].includes(tag)) {
+      const chars = extractChars(el, false, false, false);
+      if (chars.length > 0) {
+        blocks.push({ tag: tag as TextBlock["tag"], chars });
+      }
+    } else {
+      const chars = extractChars(el, false, false, false);
+      if (chars.length > 0) {
+        blocks.push({ tag: "p", chars });
+      }
     }
+  }
 
-    for (const char of chars) {
-      char.style.opacity = "0";
-      char.style.transform = "translateY(100%)";
-      char.style.display = "inline-block";
+  for (const child of Array.from(container.childNodes)) {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      processElement(child as Element);
+    } else if (child.nodeType === Node.TEXT_NODE) {
+      const text = child.textContent || "";
+      if (text.trim().length > 0) {
+        blocks.push({
+          tag: "p",
+          chars: Array.from(text).map((char) => ({ char })),
+        });
+      }
     }
+  }
 
-    const parents = el.querySelectorAll(".word, p, h1, h2, h3, li, blockquote, span, strong, em, b, i, u");
-    parents.forEach((p) => {
-      (p as HTMLElement).style.overflow = "hidden";
-    });
-    el.style.overflow = "hidden";
+  return blocks;
+}
 
-    animate(
-      chars,
-      { opacity: 1, transform: "translateY(0%)" },
-      { delay: stagger(0.02), duration: 0.4, ease: [0.25, 0.4, 0.25, 1] },
-    );
+const revealContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.02, delayChildren: 0.3 },
+  },
+};
 
-    return () => {
-      split.revert();
-    };
-  }, [sanitizedHtml]);
+const revealChar = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "tween" as const,
+      ease: [0.25, 1, 0.5, 1],
+      duration: 0.8,
+    },
+  },
+};
+
+const blockStyles: Record<string, string> = {
+  p: "leading-[1.4] text-xl font-['Afacad',sans-serif] text-black",
+  h1: "leading-[1.2] text-[32px] font-bold font-['Afacad',sans-serif] text-black",
+  h2: "leading-[1.3] text-[26px] font-bold font-['Afacad',sans-serif] text-black",
+  h3: "leading-[1.3] text-[22px] font-semibold font-['Afacad',sans-serif] text-black",
+  blockquote: "leading-[1.4] text-xl font-['Afacad',sans-serif] text-black/70 italic border-l-4 border-black/20 pl-4",
+  li: "leading-[1.4] text-xl font-['Afacad',sans-serif] text-black",
+};
+
+function AnimatedChars({ chars }: { chars: CharToken[] }) {
+  return (
+    <>
+      {chars.map((t, i) => (
+        <motion.span
+          key={i}
+          variants={revealChar}
+          style={{ display: "inline-block", overflow: "hidden" }}
+          className={cn(
+            t.bold && "font-bold",
+            t.italic && "italic",
+            t.underline && "underline",
+          )}
+        >
+          {t.char === " " ? "\u00A0" : t.char}
+        </motion.span>
+      ))}
+    </>
+  );
+}
+
+function TextSlide({ content }: { content: string }) {
+  const blocks = useMemo(() => parseContentToBlocks(content), [content]);
+
+  const rendered: JSX.Element[] = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const block = blocks[i];
+
+    if (block.tag === "li") {
+      const listItems: TextBlock[] = [];
+      const lt = block.listType;
+      while (i < blocks.length && blocks[i].tag === "li" && blocks[i].listType === lt) {
+        listItems.push(blocks[i]);
+        i++;
+      }
+      const ListTag = lt === "ol" ? "ol" : "ul";
+      rendered.push(
+        <ListTag key={rendered.length} className="space-y-2 list-none">
+          {listItems.map((b, liIdx) => (
+            <motion.li key={liIdx} className={blockStyles.li} variants={revealContainer} initial="hidden" animate="visible" style={{ overflow: "hidden" }}>
+              {b.listType === "ul" && <motion.span variants={revealChar} style={{ display: "inline-block" }}>•{"\u00A0"}</motion.span>}
+              {b.listType === "ol" && <motion.span variants={revealChar} style={{ display: "inline-block" }}>{(b.listIndex ?? 0) + 1}.{"\u00A0"}</motion.span>}
+              <AnimatedChars chars={b.chars} />
+            </motion.li>
+          ))}
+        </ListTag>
+      );
+    } else {
+      const Tag = block.tag === "blockquote" ? motion.blockquote
+        : block.tag === "h1" ? motion.h1
+        : block.tag === "h2" ? motion.h2
+        : block.tag === "h3" ? motion.h3
+        : motion.p;
+      rendered.push(
+        <Tag
+          key={rendered.length}
+          className={blockStyles[block.tag] || blockStyles.p}
+          variants={revealContainer}
+          initial="hidden"
+          animate="visible"
+          style={{ overflow: "hidden" }}
+        >
+          <AnimatedChars chars={block.chars} />
+        </Tag>
+      );
+      i++;
+    }
+  }
 
   return (
-    <div
-      ref={containerRef}
-      className="slide-text-content space-y-5"
-      data-testid="slide-text"
-      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-    />
+    <div className={rendered.length > 1 ? "space-y-5" : undefined} data-testid="slide-text">
+      {rendered}
+    </div>
   );
 }
 
