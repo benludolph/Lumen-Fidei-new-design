@@ -2145,12 +2145,9 @@ function TrackAContentManagementView() {
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
-                                <Textarea
+                                <RichTextEditor
                                   value={slide.content}
-                                  onChange={(e) => updateSlide(index, "content", e.target.value)}
-                                  placeholder="Enter slide content..."
-                                  rows={4}
-                                  data-testid={`textarea-slide-content-${index}`}
+                                  onChange={(val) => updateSlide(index, "content", val)}
                                 />
                               </div>
                             )}
