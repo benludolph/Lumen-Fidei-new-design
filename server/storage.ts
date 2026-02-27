@@ -1,6 +1,6 @@
 import { db } from "./db";
 import {
-  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent,
+  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -9,7 +9,8 @@ import {
   type PrayerCompletion, type InsertPrayerCompletion,
   type PracticeResource, type InsertPracticeResource,
   type CohortSetting,
-  type TrackAContent, type InsertTrackAContent
+  type TrackAContent, type InsertTrackAContent,
+  type TrackAModule, type InsertTrackAModule
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc, isNotNull } from "drizzle-orm";
 
@@ -60,6 +61,10 @@ export interface IStorage {
   createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   upsertPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   
+  // Track A Modules
+  getTrackAModules(): Promise<TrackAModule[]>;
+  upsertTrackAModule(module: InsertTrackAModule): Promise<TrackAModule>;
+
   // Track A Content
   getTrackAContent(dayNumber: number): Promise<TrackAContent | undefined>;
   getAllTrackAContent(): Promise<TrackAContent[]>;
@@ -290,6 +295,24 @@ export class DatabaseStorage implements IStorage {
       return updated;
     }
     return this.createPracticeResource(resource);
+  }
+
+  // Track A Modules
+  async getTrackAModules(): Promise<TrackAModule[]> {
+    return await db.select().from(trackAModules).orderBy(asc(trackAModules.weekNumber));
+  }
+
+  async upsertTrackAModule(module: InsertTrackAModule): Promise<TrackAModule> {
+    const [existing] = await db.select().from(trackAModules).where(eq(trackAModules.weekNumber, module.weekNumber));
+    if (existing) {
+      const [updated] = await db.update(trackAModules)
+        .set(module)
+        .where(eq(trackAModules.weekNumber, module.weekNumber))
+        .returning();
+      return updated;
+    }
+    const [newModule] = await db.insert(trackAModules).values(module).returning();
+    return newModule;
   }
 
   // Track A Content

@@ -1,11 +1,12 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { DayCard } from "./DayCard";
 import { WeekSection } from "./WeekSection";
 import { StickyWeekHeader } from "./StickyWeekHeader";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
-import type { TrackAContent } from "@shared/schema";
+import type { TrackAContent, TrackAModule } from "@shared/schema";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -14,19 +15,14 @@ import trackAImg4 from "@assets/image_1771985210712.png";
 import trackAImg5 from "@assets/image_1771985228368.png";
 import trackAImg6 from "@assets/image_1771985236426.png";
 
-const TRACK_A_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
+const TRACK_A_FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
 
-function getTrackAImage(dayNumber: number): string {
-  return TRACK_A_IMAGES[(dayNumber - 1) % TRACK_A_IMAGES.length];
+function getTrackAImage(dayNumber: number, modules?: TrackAModule[]): string {
+  const weekNumber = Math.ceil(dayNumber / 7);
+  const module = modules?.find(m => m.weekNumber === weekNumber);
+  if (module?.imageUrl) return module.imageUrl;
+  return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];
 }
-
-const TRACK_A_WEEK_THEMES: Record<number, string> = {
-  1: 'Foundations — Who God Is & How We Relate to Him',
-  2: 'The Human Condition — Why We Struggle',
-  3: 'Encountering Jesus — Healer, Deliverer, Friend, King',
-  4: 'Conversion & Change — Choosing a New Direction',
-  5: 'Living the Faith — Scripture, Sacraments, and the Church',
-};
 
 interface DayGridViewProps {
   currentDay: number;
@@ -44,9 +40,12 @@ function getWeekTheme(
   isTrackA: boolean,
   trackASummaries?: TrackAContent[],
   trackBSummaries?: ContentSummary[],
+  modules?: TrackAModule[],
 ): string {
   if (isTrackA) {
-    return TRACK_A_WEEK_THEMES[weekNumber] || `Week ${weekNumber}`;
+    const mod = modules?.find(m => m.weekNumber === weekNumber);
+    if (mod) return mod.subtitle || mod.title;
+    return `Week ${weekNumber}`;
   }
   if (trackBSummaries) {
     const firstDay = trackBSummaries.find(c => c.weekNumber === weekNumber);
@@ -96,6 +95,11 @@ export function DayGridView({
   isPeriodCompleted,
   onDaySelect,
 }: DayGridViewProps) {
+  const { data: trackAModules } = useQuery<TrackAModule[]>({
+    queryKey: ["/api/track-a-modules"],
+    enabled: isTrackA,
+  });
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -147,7 +151,7 @@ export function DayGridView({
     onDaySelect(selectedDayForDialog, period);
   };
 
-  const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackASummaries, trackBSummaries);
+  const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackASummaries, trackBSummaries, trackAModules);
 
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
 
@@ -166,7 +170,7 @@ export function DayGridView({
               {groupIdx > 0 && (
                 <WeekSection
                   weekNumber={week}
-                  theme={getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries)}
+                  theme={getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries, trackAModules)}
                 />
               )}
               <div
@@ -199,7 +203,7 @@ export function DayGridView({
                       isTrackB={!isTrackA}
                       morningCompleted={isPeriodCompleted(day, "morning")}
                       eveningCompleted={isPeriodCompleted(day, "evening")}
-                      backgroundImage={isTrackA ? getTrackAImage(day) : undefined}
+                      backgroundImage={isTrackA ? getTrackAImage(day, trackAModules) : undefined}
                       cohortStartDate={cohortStartDate}
                       onClick={() => handleCardClick(day)}
                     />

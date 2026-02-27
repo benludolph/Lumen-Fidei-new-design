@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { Shell } from "@/components/layout/Shell";
@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
@@ -1884,21 +1884,119 @@ function QuizSlideEditor({ content, onChange, index }: { content: string; onChan
   );
 }
 
+type TrackAModuleData = {
+  id: number;
+  weekNumber: number;
+  title: string;
+  subtitle: string;
+  imageUrl: string | null;
+};
+
+function ModuleImageUpload({ currentUrl, onUploaded }: { currentUrl: string | null; onUploaded: (url: string) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      onUploaded(url);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      console.error("Image upload error:", msg);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [onUploaded]);
+
+  return (
+    <div className="space-y-2">
+      {currentUrl ? (
+        <div className="relative w-full h-32 rounded-lg overflow-hidden bg-muted">
+          <img src={currentUrl} alt="Module" className="w-full h-full object-cover" data-testid="img-module-preview" />
+        </div>
+      ) : (
+        <div className="w-full h-32 rounded-lg bg-muted flex items-center justify-center" data-testid="placeholder-module-image">
+          <ImageIcon className="w-8 h-8 text-muted-foreground" />
+        </div>
+      )}
+      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleUpload} data-testid="input-module-image" />
+      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="w-full" data-testid="button-upload-module-image">
+        <Upload className="w-4 h-4 mr-2" />
+        {uploading ? "Uploading..." : currentUrl ? "Change Image" : "Upload Image"}
+      </Button>
+    </div>
+  );
+}
+
 function TrackAContentManagementView() {
   const { toast } = useToast();
+  const [view, setView] = useState<"modules" | "days" | "slides">("modules");
+  const [selectedModule, setSelectedModule] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState(1);
   const [editMode, setEditMode] = useState(false);
   const [centralTheme, setCentralTheme] = useState("");
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
+  const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
+  const [moduleTitle, setModuleTitle] = useState("");
+  const [moduleSubtitle, setModuleSubtitle] = useState("");
+  const [moduleImageUrl, setModuleImageUrl] = useState<string | null>(null);
 
-  const { data: allContent, isLoading } = useQuery<TrackAContentData[]>({
+  const { data: modules, isLoading: modulesLoading } = useQuery<TrackAModuleData[]>({
+    queryKey: ['/api/track-a-modules'],
+    queryFn: async () => {
+      const res = await fetch('/api/track-a-modules', { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch modules");
+      return res.json();
+    },
+  });
+
+  const { data: allContent, isLoading: contentLoading } = useQuery<TrackAContentData[]>({
     queryKey: ['/api/track-a-content'],
     queryFn: async () => {
       const res = await fetch('/api/track-a-content', { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch Track A content");
       return res.json();
+    },
+  });
+
+  const moduleSaveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", '/api/admin/track-a-modules', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-modules'] });
+      toast({ title: "Module saved" });
+      setEditingModule(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save module", description: error?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", '/api/admin/track-a-content', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      toast({ title: "Lesson saved" });
+      setEditMode(false);
+    },
+    onError: (error: any) => {
+      console.error("Track A save error:", error);
+      toast({ title: "Failed to save", description: error?.message || "Unknown error", variant: "destructive" });
     },
   });
 
@@ -1915,29 +2013,47 @@ function TrackAContentManagementView() {
     setExpandedSlide(null);
   };
 
-  const handleDayChange = (day: number) => {
-    setSelectedDay(day);
+  const openModule = (weekNumber: number) => {
+    setSelectedModule(weekNumber);
+    setView("days");
     setEditMode(false);
-    const content = allContent?.find(c => c.dayNumber === day);
+  };
+
+  const openDay = (dayNumber: number) => {
+    setSelectedDay(dayNumber);
+    setView("slides");
+    setEditMode(false);
+    const content = allContent?.find(c => c.dayNumber === dayNumber);
     loadContentIntoState(content);
   };
 
-  const saveMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", '/api/admin/track-a-content', data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
-      toast({ title: "Track A content saved successfully" });
-      setEditMode(false);
-    },
-    onError: (error: any) => {
-      console.error("Track A save error:", error);
-      const msg = error?.message || "Unknown error";
-      toast({ title: "Failed to save Track A content", description: msg, variant: "destructive" });
-    },
-  });
+  const goBackToModules = () => {
+    setView("modules");
+    setSelectedModule(null);
+    setEditMode(false);
+  };
+
+  const goBackToDays = () => {
+    setView("days");
+    setEditMode(false);
+  };
+
+  const startEditModule = (mod: TrackAModuleData) => {
+    setEditingModule(mod);
+    setModuleTitle(mod.title);
+    setModuleSubtitle(mod.subtitle);
+    setModuleImageUrl(mod.imageUrl);
+  };
+
+  const saveModule = () => {
+    if (!editingModule) return;
+    moduleSaveMutation.mutate({
+      weekNumber: editingModule.weekNumber,
+      title: moduleTitle || "Untitled",
+      subtitle: moduleSubtitle || "",
+      imageUrl: moduleImageUrl,
+    });
+  };
 
   const handleSave = () => {
     saveMutation.mutate({
@@ -1985,7 +2101,13 @@ function TrackAContentManagementView() {
     setSlides(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
   };
 
-  if (isLoading) {
+  const getDaysForWeek = (weekNumber: number) => {
+    const start = (weekNumber - 1) * 7 + 1;
+    const end = Math.min(weekNumber * 7, 30);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
+  if (modulesLoading || contentLoading) {
     return (
       <Card>
         <CardContent className="py-8 text-center">Loading Track A content...</CardContent>
@@ -1993,80 +2115,192 @@ function TrackAContentManagementView() {
     );
   }
 
+  // === MODULE LIST VIEW ===
+  if (view === "modules") {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Layers className="w-5 h-5" />
+              Track A Modules
+              <Badge variant="secondary" className="no-default-active-elevate">{modules?.length || 0} modules</Badge>
+            </CardTitle>
+          </CardHeader>
+        </Card>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {(modules || []).map(mod => {
+            const days = getDaysForWeek(mod.weekNumber);
+            const dayContents = days.map(d => allContent?.find(c => c.dayNumber === d));
+            const filledCount = dayContents.filter(c => c && c.slides && c.slides.length > 0).length;
+
+            return (
+              <Card key={mod.weekNumber} className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow" data-testid={`card-module-${mod.weekNumber}`}>
+                <div onClick={() => openModule(mod.weekNumber)}>
+                  {mod.imageUrl ? (
+                    <div className="h-36 bg-muted overflow-hidden">
+                      <img src={mod.imageUrl} alt={mod.title} className="w-full h-full object-cover" data-testid={`img-module-${mod.weekNumber}`} />
+                    </div>
+                  ) : (
+                    <div className="h-36 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/20 flex items-center justify-center">
+                      <Layers className="w-10 h-10 text-emerald-400/50" />
+                    </div>
+                  )}
+                  <CardContent className="pt-4 pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-muted-foreground mb-1" data-testid={`text-module-week-${mod.weekNumber}`}>Week {mod.weekNumber}</p>
+                        <h3 className="font-semibold text-base truncate" data-testid={`text-module-title-${mod.weekNumber}`}>{mod.title}</h3>
+                        <p className="text-sm text-muted-foreground truncate" data-testid={`text-module-subtitle-${mod.weekNumber}`}>{mod.subtitle}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-muted-foreground">{days.length} lessons · {filledCount} with content</span>
+                    </div>
+                  </CardContent>
+                </div>
+                <div className="px-4 pb-3">
+                  <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); startEditModule(mod); }} data-testid={`button-edit-module-${mod.weekNumber}`}>
+                    <Edit2 className="w-3 h-3 mr-1" />
+                    Edit Module
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        {editingModule && (
+          <Card className="border-2 border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-base">Edit Module — Week {editingModule.weekNumber}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Title</label>
+                    <Input value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="e.g., Foundations" data-testid="input-module-title" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Subtitle</label>
+                    <Input value={moduleSubtitle} onChange={(e) => setModuleSubtitle(e.target.value)} placeholder="e.g., Who God Is & How We Relate to Him" data-testid="input-module-subtitle" />
+                  </div>
+                </div>
+                <ModuleImageUpload currentUrl={moduleImageUrl} onUploaded={setModuleImageUrl} />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditingModule(null)} data-testid="button-cancel-module">Cancel</Button>
+                <Button onClick={saveModule} disabled={moduleSaveMutation.isPending} data-testid="button-save-module">
+                  <Save className="w-4 h-4 mr-2" />
+                  {moduleSaveMutation.isPending ? "Saving..." : "Save Module"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  // === DAY LIST VIEW ===
+  if (view === "days" && selectedModule) {
+    const currentModule = modules?.find(m => m.weekNumber === selectedModule);
+    const days = getDaysForWeek(selectedModule);
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={goBackToModules} data-testid="button-back-to-modules">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg" data-testid="text-module-heading">
+                  Week {selectedModule}: {currentModule?.title || ""}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground" data-testid="text-module-sub">{currentModule?.subtitle || ""}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        <div className="space-y-2">
+          {days.map(dayNumber => {
+            const dayContent = allContent?.find(c => c.dayNumber === dayNumber);
+            const slideCount = dayContent?.slides?.length || 0;
+
+            return (
+              <Card
+                key={dayNumber}
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => openDay(dayNumber)}
+                data-testid={`card-day-${dayNumber}`}
+              >
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{dayNumber}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium truncate" data-testid={`text-day-theme-${dayNumber}`}>
+                        {dayContent?.centralTheme || "No content yet"}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        {slideCount > 0 ? `${slideCount} slide${slideCount !== 1 ? "s" : ""}` : "Empty"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {slideCount > 0 ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-muted-foreground/40" />
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // === SLIDE EDITOR VIEW ===
+  const currentModule = modules?.find(m => m.weekNumber === Math.ceil(selectedDay / 7));
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <CardTitle className="text-lg flex items-center gap-2 flex-wrap">
-              <BookOpen className="w-5 h-5" />
-              Track A Content Management
-              <Badge variant="secondary" className="no-default-active-elevate">Slide-Based</Badge>
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleDayChange(Math.max(1, selectedDay - 1))}
-                disabled={selectedDay <= 1}
-                data-testid="button-prev-day-a"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="font-medium min-w-[80px] text-center" data-testid="text-current-day-a">Day {selectedDay}</span>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleDayChange(Math.min(30, selectedDay + 1))}
-                disabled={selectedDay >= 30}
-                data-testid="button-next-day-a"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="hidden md:flex flex-wrap gap-1 mb-6">
-            {Array.from({ length: 30 }, (_, i) => i + 1).map(day => {
-              const hasContent = allContent?.some(c => c.dayNumber === day);
-              return (
-                <Button
-                  key={day}
-                  variant={selectedDay === day ? "default" : hasContent ? "secondary" : "outline"}
-                  size="sm"
-                  className="h-8 w-8 p-0 text-xs"
-                  onClick={() => handleDayChange(day)}
-                  data-testid={`button-day-a-${day}`}
-                >
-                  {day}
-                </Button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
-            <div>
-              <h3 className="font-serif text-xl" data-testid="text-day-label-a">
-                Day {selectedDay} - {currentContent?.centralTheme || "No content"}
-              </h3>
-              <p className="text-sm text-muted-foreground" data-testid="text-week-label-a">
-                Week {currentContent?.weekNumber || Math.ceil(selectedDay / 7)}
-                {currentContent?.slides && currentContent.slides.length > 0 && (
-                  <span className="ml-2">({currentContent.slides.length} slide{currentContent.slides.length !== 1 ? "s" : ""})</span>
-                )}
-              </p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={goBackToDays} data-testid="button-back-to-days">
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                <button className="hover:underline" onClick={goBackToModules} data-testid="link-modules-breadcrumb">Modules</button>
+                <ChevronRight className="w-3 h-3" />
+                <button className="hover:underline" onClick={goBackToDays} data-testid="link-days-breadcrumb">Week {currentModule?.weekNumber}: {currentModule?.title}</button>
+                <ChevronRight className="w-3 h-3" />
+                <span>Day {selectedDay}</span>
+              </div>
+              <CardTitle className="text-lg" data-testid="text-day-label-a">
+                Day {selectedDay} — {currentContent?.centralTheme || "No content"}
+              </CardTitle>
             </div>
             {!editMode ? (
               <Button onClick={startEdit} data-testid="button-edit-track-a">
                 <Edit2 className="w-4 h-4 mr-2" />
-                Edit Content
+                Edit
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-edit-a">
-                  Cancel
-                </Button>
+                <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-edit-a">Cancel</Button>
                 <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-track-a">
                   <Save className="w-4 h-4 mr-2" />
                   {saveMutation.isPending ? "Saving..." : "Save"}
@@ -2074,7 +2308,7 @@ function TrackAContentManagementView() {
               </div>
             )}
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
 
       {editMode ? (
@@ -2155,38 +2389,16 @@ function TrackAContentManagementView() {
                         )}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => moveSlide(index, "up")}
-                          disabled={index === 0}
-                          data-testid={`button-slide-up-${index}`}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => moveSlide(index, "up")} disabled={index === 0} data-testid={`button-slide-up-${index}`}>
                           <ChevronUp className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => moveSlide(index, "down")}
-                          disabled={index === slides.length - 1}
-                          data-testid={`button-slide-down-${index}`}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => moveSlide(index, "down")} disabled={index === slides.length - 1} data-testid={`button-slide-down-${index}`}>
                           <ChevronDown className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setExpandedSlide(isExpanded ? null : index)}
-                          data-testid={`button-slide-toggle-${index}`}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => setExpandedSlide(isExpanded ? null : index)} data-testid={`button-slide-toggle-${index}`}>
                           {isExpanded ? <Eye className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeSlide(index)}
-                          data-testid={`button-slide-delete-${index}`}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => removeSlide(index)} data-testid={`button-slide-delete-${index}`}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
@@ -2244,7 +2456,7 @@ function TrackAContentManagementView() {
               </div>
             ) : currentContent ? (
               <p className="text-muted-foreground text-center py-4" data-testid="text-no-slides">
-                Theme set: "{currentContent.centralTheme}" - No slides yet
+                Theme set: "{currentContent.centralTheme}" — No slides yet
               </p>
             ) : (
               <p className="text-muted-foreground text-center py-8" data-testid="text-no-track-a-content">No Track A content for this day</p>

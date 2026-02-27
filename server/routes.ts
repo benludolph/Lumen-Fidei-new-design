@@ -4,10 +4,38 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, type User } from "@shared/schema";
 import rateLimit from "express-rate-limit";
 import { dailyContentData, practiceResourcesData } from "./content-data";
 import { trackAContentData } from "./track-a-content-data";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const uploadDir = path.join(process.cwd(), "attached_assets");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: uploadDir,
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      cb(null, `${base}_${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/png", "image/jpeg", "image/webp"];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PNG, JPG, and WebP images are allowed"));
+    }
+  },
+});
 
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
@@ -64,6 +92,10 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Setup Authentication
   setupAuth(app);
+
+  // Serve uploaded images from attached_assets directory
+  const express = await import("express");
+  app.use("/attached_assets", express.default.static(uploadDir));
 
   // Apply rate limiting to all API routes
   app.use("/api", generalLimiter);
@@ -277,6 +309,36 @@ export async function registerRoutes(
       }
       throw error;
     }
+  });
+
+  // === Track A Modules ===
+
+  app.get('/api/track-a-modules', requireAuth, async (req, res) => {
+    const modules = await storage.getTrackAModules();
+    res.json(modules);
+  });
+
+  app.post('/api/admin/track-a-modules', requireRole('admin'), async (req, res) => {
+    try {
+      const validated = insertTrackAModuleSchema.parse(req.body);
+      const module = await storage.upsertTrackAModule(validated);
+      res.status(201).json(module);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      throw error;
+    }
+  });
+
+  // === Image Upload ===
+
+  app.post('/api/admin/upload-image', requireRole('admin'), upload.single('image'), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+    const filePath = `/attached_assets/${req.file.filename}`;
+    res.json({ url: filePath });
   });
 
   // === Answers ===
@@ -1643,6 +1705,23 @@ As you move into Week 2, continue these daily practices. They are building a fou
         });
     }
     
+    // Seed Track A modules if needed
+    const existingModules = await storage.getTrackAModules();
+    if (existingModules.length === 0) {
+        console.log("No Track A modules found - seeding...");
+        const defaultModules = [
+            { weekNumber: 1, title: "Foundations", subtitle: "Who God Is & How We Relate to Him" },
+            { weekNumber: 2, title: "The Human Condition", subtitle: "Why We Struggle" },
+            { weekNumber: 3, title: "Encountering Jesus", subtitle: "Healer, Deliverer, Friend, King" },
+            { weekNumber: 4, title: "Conversion & Change", subtitle: "Choosing a New Direction" },
+            { weekNumber: 5, title: "Living the Faith", subtitle: "Scripture, Sacraments, and the Church" },
+        ];
+        for (const mod of defaultModules) {
+            await storage.upsertTrackAModule(mod);
+        }
+        console.log("Track A modules seeded (5 modules).");
+    }
+
     // Seed Track A content if needed
     const existingTrackAContent = await storage.getAllTrackAContent();
     if (existingTrackAContent.length === 0) {

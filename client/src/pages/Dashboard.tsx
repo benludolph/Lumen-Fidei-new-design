@@ -23,6 +23,8 @@ import { useLocation } from "wouter";
 import { DayGridView } from "@/components/DayGridView";
 import { LessonFlow } from "@/components/lesson/LessonFlow";
 
+import type { TrackAModule } from "@shared/schema";
+
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
 import trackAImg3 from "@assets/image_1771985088299.png";
@@ -30,10 +32,13 @@ import trackAImg4 from "@assets/image_1771985210712.png";
 import trackAImg5 from "@assets/image_1771985228368.png";
 import trackAImg6 from "@assets/image_1771985236426.png";
 
-const TRACK_A_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
+const TRACK_A_FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
 
-function getTrackAImage(dayNumber: number): string {
-  return TRACK_A_IMAGES[(dayNumber - 1) % TRACK_A_IMAGES.length];
+function getTrackAImage(dayNumber: number, modules?: TrackAModule[]): string {
+  const weekNumber = Math.ceil(dayNumber / 7);
+  const module = modules?.find(m => m.weekNumber === weekNumber);
+  if (module?.imageUrl) return module.imageUrl;
+  return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];
 }
 
 const PRAYER_TEXTS = {
@@ -184,6 +189,10 @@ export default function Dashboard() {
   
   const { data: trackASummaries } = useAllTrackAContent();
   const { data: trackBSummaries } = useContentSummaries();
+  const { data: trackAModules } = useQuery<TrackAModule[]>({
+    queryKey: ["/api/track-a-modules"],
+    enabled: !!isTrackA,
+  });
   
   const isLoading = isTrackA ? isLoadingA : isLoadingB;
   
@@ -301,7 +310,7 @@ export default function Dashboard() {
           <LessonFlow
             content={trackADayContent}
             dayNumber={selectedDay}
-            backgroundImage={getTrackAImage(selectedDay)}
+            backgroundImage={getTrackAImage(selectedDay, trackAModules)}
             existingAnswer={answers?.find(a => a.dayNumber === selectedDay)?.content}
             onExit={handleBackToGrid}
             onComplete={() => {

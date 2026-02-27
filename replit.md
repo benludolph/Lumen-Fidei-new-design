@@ -26,7 +26,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL with Drizzle ORM
-- **Key Tables**: `users`, `dailyContent`, `trackAContent`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
+- **Key Tables**: `users`, `dailyContent`, `trackAContent`, `trackAModules`, `userAnswers`, `messages`, `trackRequirements`, `prayerCompletions`, `practiceResources`.
 - **Track System**: Two distinct program tracks:
   - **Track A**: Single daily activity per day. Content stored in `trackAContent` table with columns: `id`, `dayNumber`, `weekNumber`, `centralTheme`, `slides` (JSON array of `{type, content}` objects). The `slides` column is a jsonb array where each element has a `type` (one of 7 types: text, multi_select, single_select, media, text_input, action, quiz) and `content` (string; for quiz type, content is a JSON string with `questions` array and `results` mapping). At runtime, LessonFlow expands each quiz slide into N question slides + 1 result slide. The `quiz_result` type only exists at runtime, never in DB. Participants mark one completion per day (uses "morning" period). Seed data in `server/track-a-content-data.ts`.
   - **Track B**: Morning and evening meditations (the original program). Content stored in `dailyContent` table. Participants mark both morning and evening completions. Seed data in `server/content-data.ts`.
@@ -42,7 +42,8 @@ Preferred communication style: Simple, everyday language.
   - **Lesson flow (Track A)**: Clicking a day card launches a Duolingo-style multi-screen lesson flow (see below).
 - **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog`, `OverviewGuideModal` (all in `client/src/components/`)
 - **Sunday Cards**: Days 8, 15, 22, 29 are "Go to Mass" Sundays — non-clickable, col-span-2 cards with Church icon. Day 1 is also a Sunday but has intro content so it stays clickable. Detection: `day > 1 && (day - 1) % 7 === 0`.
-- **Week Themes**: Track A uses static `TRACK_A_WEEK_THEMES` map (5 weeks) in DayGridView instead of pulling from content data.
+- **Week Themes**: Track A uses dynamic module data from `trackAModules` table (fetched via `/api/track-a-modules`). Each module has a title, subtitle, and optional custom imageUrl. Falls back to rotating default images if no custom image is set.
+- **Track A Modules**: `trackAModules` table stores week-level metadata (weekNumber, title, subtitle, imageUrl). Admin can edit module titles/subtitles and upload custom images via the module management UI. Image upload endpoint: `POST /api/admin/upload-image` (multer, 5MB limit, PNG/JPG/WebP only). Uploaded images stored in `attached_assets/` and served as static files.
 - **Locked Day Tooltip**: Hovering locked cards shows "This lesson unlocks on [date]" calculated from cohort start date.
 - **Overview & Guide Modal**: Clicking "Overview & Guide" in sticky header opens a modal with week description and lesson flow instructions.
 - **Past Day Completion**: Users can complete missed past days (server allows dayNumber ≤ currentDay, not just ===). Future days still blocked.

@@ -60,6 +60,14 @@ export const trackRequirements = pgTable("track_requirements", {
   additionalRequirements: json("additional_requirements").$type<string[]>(), // e.g., ["Abstinence Fridays Only", "Monthly Confession"]
 });
 
+export const trackAModules = pgTable("track_a_modules", {
+  id: serial("id").primaryKey(),
+  weekNumber: integer("week_number").notNull().unique(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle").notNull(),
+  imageUrl: text("image_url"),
+});
+
 export const trackAContent = pgTable("track_a_content", {
   id: serial("id").primaryKey(),
   dayNumber: integer("day_number").notNull().unique(),
@@ -165,6 +173,7 @@ export const insertTrackRequirementsSchema = createInsertSchema(trackRequirement
 }).omit({ id: true });
 export const insertPrayerCompletionSchema = createInsertSchema(prayerCompletions).omit({ id: true, completedAt: true });
 export const insertPracticeResourceSchema = createInsertSchema(practiceResources).omit({ id: true });
+export const insertTrackAModuleSchema = createInsertSchema(trackAModules).omit({ id: true });
 export const insertTrackAContentSchema = createInsertSchema(trackAContent).omit({ id: true });
 export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omit({ id: true, updatedAt: true });
 
@@ -190,6 +199,9 @@ export type InsertPrayerCompletion = z.infer<typeof insertPrayerCompletionSchema
 
 export type PracticeResource = typeof practiceResources.$inferSelect;
 export type InsertPracticeResource = z.infer<typeof insertPracticeResourceSchema>;
+
+export type TrackAModule = typeof trackAModules.$inferSelect;
+export type InsertTrackAModule = z.infer<typeof insertTrackAModuleSchema>;
 
 export type TrackAContent = typeof trackAContent.$inferSelect;
 export type InsertTrackAContent = z.infer<typeof insertTrackAContentSchema>;
