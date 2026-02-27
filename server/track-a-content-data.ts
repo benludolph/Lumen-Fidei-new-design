@@ -48,10 +48,22 @@ export const trackAContentData: InsertTrackAContent[] = [
     slides: [
       { type: "single_select", content: "When you think about God, which word comes first?\n\n☐ Loving\n☐ Distant\n☐ Judgmental\n☐ Disappointed\n☐ Unknown" },
       { type: "text", content: "Most people don't struggle with God Himself — they struggle with their image of God.\nYour image of God is shaped by parents, authority figures, wounds, and past experiences.\nIf your image of God is distorted, your prayer life will feel unsafe or forced." },
-      { type: "action", content: "Spiritual inventory: \"Which image of God did I grow up with?\"" },
       { type: "text", content: "God is love — 1 John 4:8\n\nLove means presence and faithfulness, not permissiveness." },
       { type: "text", content: "Actual Images of God" },
-      { type: "text", content: "Spiritual Inventory Quiz" },
+      { type: "quiz", content: JSON.stringify({
+        questions: [
+          { question: "When life gets hard, what is your first instinct?", options: ["Turn to prayer", "Talk to someone I trust", "Distract myself", "Push through alone"] },
+          { question: "How do you most naturally experience God?", options: ["In silence and solitude", "Through community and others", "Through beauty, music, or nature", "Through serving and doing"] },
+          { question: "What word best describes your prayer life right now?", options: ["Consistent", "Conversational", "Sporadic", "Nonexistent"] },
+          { question: "When someone hurts you, how do you usually respond?", options: ["Forgive quickly and pray for them", "Process it with a friend", "Avoid the situation", "Internalize it and move on"] }
+        ],
+        results: {
+          A: { title: "The Contemplative", description: "You are drawn to the interior life. Silence, prayer, and solitude are where you meet God most deeply. Keep nurturing that space — it's a gift." },
+          B: { title: "The Connector", description: "You experience God most powerfully through relationships. Community, conversation, and shared faith energize your spiritual life." },
+          C: { title: "The Seeker", description: "You're honest about where you are — and that honesty is the beginning of real faith. God meets you right here, in the searching." },
+          D: { title: "The Servant", description: "You express your faith through action. Your hands-on love for others is a powerful witness, even when prayer feels hard." }
+        }
+      }) },
       { type: "action", content: "Ask God: \"Show me where my image of You may be distorted.\"" },
       { type: "text", content: "You can't relate to God rightly if you're relating to a false image of Him." },
     ],

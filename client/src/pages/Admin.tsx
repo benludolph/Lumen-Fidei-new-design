@@ -1733,7 +1733,7 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "quiz"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1742,6 +1742,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   media: "Media",
   text_input: "Text Input",
   action: "Action",
+  quiz: "Quiz",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -1751,6 +1752,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   media: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   text_input: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   action: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
 };
 
 function SlideTypeBadge({ type }: { type: string }) {
@@ -1759,6 +1761,126 @@ function SlideTypeBadge({ type }: { type: string }) {
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colorClass}`} data-testid={`badge-slide-type-${type}`}>
       {SLIDE_TYPE_LABELS[type] || type}
     </span>
+  );
+}
+
+interface QuizEditorData {
+  questions: { question: string; options: string[] }[];
+  results: Record<string, { title: string; description: string }>;
+}
+
+function QuizSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: QuizEditorData;
+  try {
+    data = JSON.parse(content || "{}");
+    if (!data.questions) data.questions = [{ question: "", options: ["", "", "", ""] }];
+    if (!data.results) data.results = { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } };
+  } catch {
+    data = {
+      questions: [{ question: "", options: ["", "", "", ""] }],
+      results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } },
+    };
+  }
+
+  const update = (d: QuizEditorData) => onChange(JSON.stringify(d, null, 2));
+
+  const updateQuestion = (qIdx: number, field: "question", value: string) => {
+    const next = { ...data, questions: data.questions.map((q, i) => i === qIdx ? { ...q, [field]: value } : q) };
+    update(next);
+  };
+
+  const updateOption = (qIdx: number, optIdx: number, value: string) => {
+    const next = {
+      ...data,
+      questions: data.questions.map((q, i) =>
+        i === qIdx ? { ...q, options: q.options.map((o, j) => j === optIdx ? value : o) } : q
+      ),
+    };
+    update(next);
+  };
+
+  const addQuestion = () => {
+    update({ ...data, questions: [...data.questions, { question: "", options: ["", "", "", ""] }] });
+  };
+
+  const removeQuestion = (qIdx: number) => {
+    if (data.questions.length <= 1) return;
+    update({ ...data, questions: data.questions.filter((_, i) => i !== qIdx) });
+  };
+
+  const updateResult = (letter: string, field: "title" | "description", value: string) => {
+    update({
+      ...data,
+      results: { ...data.results, [letter]: { ...data.results[letter], [field]: value } },
+    });
+  };
+
+  const letters = ["A", "B", "C", "D"];
+
+  return (
+    <div className="space-y-4" data-testid={`quiz-editor-${index}`}>
+      <div className="space-y-4">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Questions</label>
+        {data.questions.map((q, qIdx) => (
+          <div key={qIdx} className="border rounded-lg p-3 space-y-2 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">Question {qIdx + 1}</span>
+              {data.questions.length > 1 && (
+                <Button variant="ghost" size="sm" onClick={() => removeQuestion(qIdx)} className="h-6 px-2 text-xs text-destructive" data-testid={`button-remove-question-${qIdx}`}>
+                  Remove
+                </Button>
+              )}
+            </div>
+            <Input
+              value={q.question}
+              onChange={(e) => updateQuestion(qIdx, "question", e.target.value)}
+              placeholder="Enter question text..."
+              data-testid={`input-question-${qIdx}`}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              {q.options.map((opt, optIdx) => (
+                <div key={optIdx} className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-muted-foreground w-4">{letters[optIdx]}</span>
+                  <Input
+                    value={opt}
+                    onChange={(e) => updateOption(qIdx, optIdx, e.target.value)}
+                    placeholder={`Option ${letters[optIdx]}`}
+                    className="text-sm"
+                    data-testid={`input-option-${qIdx}-${optIdx}`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <Button variant="outline" size="sm" onClick={addQuestion} data-testid="button-add-question">
+          <Plus className="w-3 h-3 mr-1" />
+          Add Question
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Results (by dominant letter)</label>
+        {letters.map((letter) => (
+          <div key={letter} className="border rounded-lg p-3 space-y-2 bg-muted/30">
+            <span className="text-xs font-semibold text-muted-foreground">Result {letter}</span>
+            <Input
+              value={data.results[letter]?.title || ""}
+              onChange={(e) => updateResult(letter, "title", e.target.value)}
+              placeholder={`Result ${letter} title...`}
+              data-testid={`input-result-title-${letter}`}
+            />
+            <Textarea
+              value={data.results[letter]?.description || ""}
+              onChange={(e) => updateResult(letter, "description", e.target.value)}
+              placeholder={`Result ${letter} description...`}
+              rows={2}
+              data-testid={`input-result-desc-${letter}`}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1995,7 +2117,15 @@ function TrackAContentManagementView() {
                           <div className="space-y-3 mt-3">
                             <div className="space-y-1">
                               <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
-                              <Select value={slide.type} onValueChange={(val) => updateSlide(index, "type", val)}>
+                              <Select value={slide.type} onValueChange={(val) => {
+                                updateSlide(index, "type", val);
+                                if (val === "quiz" && !slide.content) {
+                                  updateSlide(index, "content", JSON.stringify({
+                                    questions: [{ question: "", options: ["", "", "", ""] }],
+                                    results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } }
+                                  }, null, 2));
+                                }
+                              }}>
                                 <SelectTrigger data-testid={`select-slide-type-${index}`}>
                                   <SelectValue />
                                 </SelectTrigger>
@@ -2006,16 +2136,24 @@ function TrackAContentManagementView() {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-1">
-                              <label className="text-xs font-medium text-muted-foreground">Content</label>
-                              <Textarea
-                                value={slide.content}
-                                onChange={(e) => updateSlide(index, "content", e.target.value)}
-                                placeholder="Enter slide content..."
-                                rows={4}
-                                data-testid={`textarea-slide-content-${index}`}
+                            {slide.type === "quiz" ? (
+                              <QuizSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
                               />
-                            </div>
+                            ) : (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Content</label>
+                                <Textarea
+                                  value={slide.content}
+                                  onChange={(e) => updateSlide(index, "content", e.target.value)}
+                                  placeholder="Enter slide content..."
+                                  rows={4}
+                                  data-testid={`textarea-slide-content-${index}`}
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2096,7 +2234,12 @@ function TrackAContentManagementView() {
                         <SlideTypeBadge type={slide.type} />
                       </div>
                       <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid={`text-slide-content-view-${index}`}>
-                        {slide.content || "(empty)"}
+                        {slide.type === "quiz" ? (() => {
+                          try {
+                            const d = JSON.parse(slide.content);
+                            return `${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""} — ${d.questions?.map((q: any, i: number) => `Q${i+1}: ${q.question || "(empty)"}`).join(", ")}`;
+                          } catch { return slide.content || "(empty)"; }
+                        })() : (slide.content || "(empty)")}
                       </p>
                     </div>
                   </div>

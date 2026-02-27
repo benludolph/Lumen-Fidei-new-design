@@ -1,15 +1,18 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
 import { LessonProgressBar } from "./LessonProgressBar";
-import { LessonSlide, type SlideType } from "./LessonSlide";
+import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
 
 interface SlideData {
   type: SlideType;
   content: string;
+  quizId?: number;
+  quizQuestionIndex?: number;
+  quizData?: QuizData;
 }
 
 interface LessonFlowProps {
@@ -35,17 +38,62 @@ export function LessonFlow({
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [animKey, setAnimKey] = useState(0);
   const [journalDraft, setJournalDraft] = useState(existingAnswer || "");
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, Record<number, string>>>({});
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const slides = useMemo<SlideData[]>(() => {
     if (!content.slides || content.slides.length === 0) return [];
-    return content.slides.map((s) => ({ type: s.type as SlideType, content: s.content }));
+    const expanded: SlideData[] = [];
+    let quizCounter = 0;
+    for (const s of content.slides) {
+      if (s.type === "quiz") {
+        try {
+          const parsed: QuizData = JSON.parse(s.content);
+          const qid = quizCounter++;
+          for (let i = 0; i < parsed.questions.length; i++) {
+            expanded.push({
+              type: "quiz",
+              content: s.content,
+              quizId: qid,
+              quizQuestionIndex: i,
+              quizData: parsed,
+            });
+          }
+          expanded.push({
+            type: "quiz_result",
+            content: s.content,
+            quizId: qid,
+            quizData: parsed,
+          });
+        } catch {
+          expanded.push({ type: "text", content: s.content });
+        }
+      } else {
+        expanded.push({ type: s.type as SlideType, content: s.content });
+      }
+    }
+    return expanded;
   }, [content]);
+
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    };
+  }, []);
+
+  const cancelAutoAdvance = useCallback(() => {
+    if (autoAdvanceTimer.current) {
+      clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = null;
+    }
+  }, []);
 
   const handleLoadingComplete = useCallback(() => {
     setFlowState("slides");
   }, []);
 
   const handleNext = useCallback(() => {
+    cancelAutoAdvance();
     if (currentSlide >= slides.length - 1) {
       setFlowState("complete");
     } else {
@@ -53,9 +101,10 @@ export function LessonFlow({
       setCurrentSlide((prev) => prev + 1);
       setAnimKey((prev) => prev + 1);
     }
-  }, [currentSlide, slides.length]);
+  }, [currentSlide, slides.length, cancelAutoAdvance]);
 
   const handlePrev = useCallback(() => {
+    cancelAutoAdvance();
     if (currentSlide <= 0) {
       onExit();
     } else {
@@ -63,7 +112,7 @@ export function LessonFlow({
       setCurrentSlide((prev) => prev - 1);
       setAnimKey((prev) => prev + 1);
     }
-  }, [currentSlide, onExit]);
+  }, [currentSlide, onExit, cancelAutoAdvance]);
 
   const handleContinue = useCallback(() => {
     onComplete();
@@ -101,6 +150,25 @@ export function LessonFlow({
     );
   }
 
+  const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
+    setQuizAnswers((prev) => ({
+      ...prev,
+      [quizId]: { ...(prev[quizId] || {}), [questionIndex]: letter },
+    }));
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = setTimeout(() => {
+      setDirection("forward");
+      setCurrentSlide((prev) => {
+        if (prev >= slides.length - 1) {
+          setFlowState("complete");
+          return prev;
+        }
+        return prev + 1;
+      });
+      setAnimKey((prev) => prev + 1);
+    }, 400);
+  }, [slides.length]);
+
   const currentSlideData = slides[currentSlide];
   const isLastSlide = currentSlide === slides.length - 1;
   const isFirstSlide = currentSlide === 0;
@@ -121,6 +189,13 @@ export function LessonFlow({
         existingAnswer={currentSlideData.type === "text_input" ? journalDraft : undefined}
         onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
         direction={direction}
+        quizData={currentSlideData.quizData}
+        quizQuestionIndex={currentSlideData.quizQuestionIndex}
+        quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}
+        onQuizAnswer={currentSlideData.quizId !== undefined && currentSlideData.quizQuestionIndex !== undefined
+          ? (letter: string) => handleQuizAnswer(currentSlideData.quizId!, currentSlideData.quizQuestionIndex!, letter)
+          : undefined
+        }
       />
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-50">

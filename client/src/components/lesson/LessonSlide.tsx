@@ -12,7 +12,14 @@ export type SlideType =
   | "single_select"
   | "media"
   | "text_input"
-  | "action";
+  | "action"
+  | "quiz"
+  | "quiz_result";
+
+export interface QuizData {
+  questions: { question: string; options: string[] }[];
+  results: Record<string, { title: string; description: string }>;
+}
 
 function extractYouTubeId(url: string): string | null {
   const patterns = [
@@ -181,6 +188,10 @@ interface LessonSlideProps {
   existingAnswer?: string;
   onJournalChange?: (value: string) => void;
   direction: "forward" | "backward";
+  quizData?: QuizData;
+  quizQuestionIndex?: number;
+  quizAnswers?: Record<number, string>;
+  onQuizAnswer?: (letter: string) => void;
 }
 
 export function LessonSlide({
@@ -190,6 +201,10 @@ export function LessonSlide({
   existingAnswer,
   onJournalChange,
   direction,
+  quizData,
+  quizQuestionIndex,
+  quizAnswers,
+  onQuizAnswer,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -221,6 +236,15 @@ export function LessonSlide({
           />
         ) : type === "action" ? (
           <ActionSlide content={content} />
+        ) : type === "quiz" && quizData && quizQuestionIndex !== undefined ? (
+          <QuizQuestionSlide
+            quizData={quizData}
+            questionIndex={quizQuestionIndex}
+            currentAnswer={quizAnswers?.[quizQuestionIndex] ?? null}
+            onAnswer={onQuizAnswer}
+          />
+        ) : type === "quiz_result" && quizData && quizAnswers ? (
+          <QuizResultSlide quizData={quizData} answers={quizAnswers} />
         ) : (
           <TextSlide content={content} />
         )}
@@ -348,6 +372,120 @@ function TextInputSlide({
           {isPending ? "Saving..." : saved ? "Saved" : "Save Response"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+const QUIZ_LETTERS = ["A", "B", "C", "D"] as const;
+
+function QuizQuestionSlide({
+  quizData,
+  questionIndex,
+  currentAnswer,
+  onAnswer,
+}: {
+  quizData: QuizData;
+  questionIndex: number;
+  currentAnswer: string | null;
+  onAnswer?: (letter: string) => void;
+}) {
+  const q = quizData.questions[questionIndex];
+  if (!q) return null;
+
+  return (
+    <div className="space-y-6" data-testid="slide-quiz-question">
+      <p className="text-sm font-medium text-black/40 font-['Afacad',sans-serif]" data-testid="text-quiz-progress">
+        Question {questionIndex + 1} of {quizData.questions.length}
+      </p>
+      <p className="font-bold leading-[1.4] text-[28px] font-['Afacad',sans-serif] text-black">
+        {q.question}
+      </p>
+      <div className="space-y-2">
+        {q.options.map((option, idx) => {
+          const letter = QUIZ_LETTERS[idx] || String.fromCharCode(65 + idx);
+          const isSelected = currentAnswer === letter;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onAnswer?.(letter)}
+              className={cn(
+                "flex items-start gap-3 w-full text-left p-4 rounded-xl transition-all duration-200",
+                isSelected
+                  ? "bg-black/5 ring-2 ring-[#00b57a]"
+                  : "bg-transparent hover:bg-black/[0.02]"
+              )}
+              data-testid={`quiz-option-${letter}`}
+            >
+              <span className={cn(
+                "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
+                isSelected
+                  ? "bg-[#00b57a] text-white"
+                  : "bg-black/5 text-black/60"
+              )}>
+                {letter}
+              </span>
+              <span className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black pt-1">
+                {option}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function QuizResultSlide({
+  quizData,
+  answers,
+}: {
+  quizData: QuizData;
+  answers: Record<number, string>;
+}) {
+  const answered = Object.keys(answers).length;
+  const total = quizData.questions.length;
+
+  const counts: Record<string, number> = {};
+  for (const letter of Object.values(answers)) {
+    counts[letter] = (counts[letter] || 0) + 1;
+  }
+
+  let dominant: string | null = null;
+  let maxCount = 0;
+  for (const letter of QUIZ_LETTERS) {
+    const count = counts[letter] || 0;
+    if (count > maxCount) {
+      maxCount = count;
+      dominant = letter;
+    }
+  }
+
+  const result = dominant ? quizData.results[dominant] : null;
+
+  return (
+    <div className="flex flex-col items-center justify-center text-center space-y-6 min-h-[300px]" data-testid="slide-quiz-result">
+      <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
+        <CheckCircle2 className="w-8 h-8 text-[#00b57a]" />
+      </div>
+      {answered === 0 ? (
+        <p className="text-xl font-['Afacad',sans-serif] text-black/70">
+          Go back and answer the questions to see your result.
+        </p>
+      ) : result ? (
+        <>
+          <h2 className="text-[32px] font-bold font-['Afacad',sans-serif] text-black leading-tight">
+            {result.title}
+          </h2>
+          <p className="text-xl leading-[1.5] font-['Afacad',sans-serif] text-black/70 max-w-[420px]">
+            {result.description}
+          </p>
+        </>
+      ) : (
+        <p className="text-xl font-['Afacad',sans-serif] text-black/70">
+          You answered {answered} of {total} questions.
+        </p>
+      )}
     </div>
   );
 }
