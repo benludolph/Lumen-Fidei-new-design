@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import DOMPurify from "dompurify";
 import { HtmlContent } from "@/components/ui/html-content";
+import gsap from "gsap";
 
 export type SlideType =
   | "text"
@@ -262,25 +263,60 @@ function isHtmlContent(content: string): boolean {
 }
 
 function TextSlide({ content }: { content: string }) {
-  const isHtml = isHtmlContent(content);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const sanitizedHtml = useMemo(() => {
+    const isHtml = isHtmlContent(content);
+    if (isHtml) {
+      return DOMPurify.sanitize(content, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span'],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+      });
+    }
+    const lines = content.split("\n").filter(Boolean);
+    return lines.map(line => `<p>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join("");
+  }, [content]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const targets = el.querySelectorAll(".reveal-text");
+    if (targets.length === 0) return;
+
+    gsap.set(targets, { y: "110%", skewY: 7 });
+    gsap.to(targets, {
+      y: 0,
+      skewY: 0,
+      duration: 1.5,
+      ease: "power4.out",
+      stagger: 0.1,
+    });
+  }, [sanitizedHtml]);
+
+  const wrappedHtml = useMemo(() => {
+    const temp = document.createElement("div");
+    temp.innerHTML = sanitizedHtml;
+
+    for (const child of Array.from(temp.children)) {
+      const el = child as HTMLElement;
+      const wrapper = document.createElement("div");
+      wrapper.style.overflow = "hidden";
+      el.classList.add("reveal-text");
+      el.parentNode?.insertBefore(wrapper, el);
+      wrapper.appendChild(el);
+    }
+
+    return temp.innerHTML;
+  }, [sanitizedHtml]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+    <div
+      ref={containerRef}
+      className="slide-text-content space-y-5"
       data-testid="slide-text"
-    >
-      {isHtml ? (
-        <HtmlContent content={content} className="slide-text-content space-y-5" />
-      ) : (
-        <div className="slide-text-content space-y-5">
-          {content.split("\n").filter(Boolean).map((line, i) => (
-            <p key={i}>{line}</p>
-          ))}
-        </div>
-      )}
-    </motion.div>
+      dangerouslySetInnerHTML={{ __html: wrappedHtml }}
+    />
   );
 }
 

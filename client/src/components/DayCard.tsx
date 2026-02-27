@@ -83,7 +83,8 @@ export function DayCard({
       className={cn(
         "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[120px]",
         isLocked && "opacity-40 cursor-not-allowed",
-        !isLocked && "cursor-pointer hover:shadow-lg hover:scale-[1.02]",
+        !isLocked && !isCompleted && "hover:shadow-md hover:scale-[1.01] cursor-pointer",
+        isCompleted && "cursor-pointer hover:shadow-md",
       )}
     >
       {backgroundImage && (
