@@ -290,6 +290,9 @@ export async function registerRoutes(
         dayNumber: c.dayNumber,
         weekNumber: c.weekNumber,
         centralTheme: c.centralTheme,
+        subtitle: c.subtitle,
+        imageUrl: c.imageUrl,
+        completionMessage: c.completionMessage,
       }));
       return res.json(summaries);
     }
