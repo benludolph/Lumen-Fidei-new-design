@@ -118,6 +118,25 @@ export function LessonFlow({
     onComplete();
   }, [onComplete]);
 
+  const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
+    setQuizAnswers((prev) => ({
+      ...prev,
+      [quizId]: { ...(prev[quizId] || {}), [questionIndex]: letter },
+    }));
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = setTimeout(() => {
+      setDirection("forward");
+      setCurrentSlide((prev) => {
+        if (prev >= slides.length - 1) {
+          setFlowState("complete");
+          return prev;
+        }
+        return prev + 1;
+      });
+      setAnimKey((prev) => prev + 1);
+    }, 400);
+  }, [slides.length]);
+
   if (flowState === "loading") {
     return (
       <LessonLoadingScreen
@@ -149,25 +168,6 @@ export function LessonFlow({
       </div>
     );
   }
-
-  const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
-    setQuizAnswers((prev) => ({
-      ...prev,
-      [quizId]: { ...(prev[quizId] || {}), [questionIndex]: letter },
-    }));
-    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
-    autoAdvanceTimer.current = setTimeout(() => {
-      setDirection("forward");
-      setCurrentSlide((prev) => {
-        if (prev >= slides.length - 1) {
-          setFlowState("complete");
-          return prev;
-        }
-        return prev + 1;
-      });
-      setAnimKey((prev) => prev + 1);
-    }, 400);
-  }, [slides.length]);
 
   const currentSlideData = slides[currentSlide];
   const isLastSlide = currentSlide === slides.length - 1;
