@@ -20,6 +20,7 @@ interface LessonFlowProps {
   dayNumber: number;
   backgroundImage?: string;
   existingAnswer?: string;
+  mentorId?: number | null;
   onExit: () => void;
   onComplete: () => void;
 }
@@ -29,6 +30,7 @@ export function LessonFlow({
   dayNumber,
   backgroundImage,
   existingAnswer,
+  mentorId,
   onExit,
   onComplete,
 }: LessonFlowProps) {
@@ -190,6 +192,7 @@ export function LessonFlow({
         existingAnswer={currentSlideData.type === "text_input" ? journalDraft : undefined}
         onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
         direction={direction}
+        mentorId={mentorId}
         quizData={currentSlideData.quizData}
         quizQuestionIndex={currentSlideData.quizQuestionIndex}
         quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}

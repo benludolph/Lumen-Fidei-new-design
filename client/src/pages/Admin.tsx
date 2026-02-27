@@ -1736,7 +1736,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "quiz"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "quiz"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1745,6 +1745,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   media: "Media",
   text_input: "Text Input",
   action: "Action",
+  mentor_message: "Mentor Message",
   quiz: "Quiz",
 };
 
@@ -1755,6 +1756,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   media: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   text_input: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   action: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  mentor_message: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
 };
 
@@ -2444,6 +2446,24 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : slide.type === "media" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Video URL or Image</label>
+                                  <input
+                                    type="text"
+                                    value={slide.content}
+                                    onChange={(e) => updateSlide(index, "content", e.target.value)}
+                                    placeholder="Paste YouTube URL or upload an image below"
+                                    className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+                                    data-testid={`input-media-url-${index}`}
+                                  />
+                                </div>
+                                <ModuleImageUpload
+                                  currentUrl={slide.content && (slide.content.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(slide.content)) ? slide.content : null}
+                                  onUploaded={(url) => updateSlide(index, "content", url)}
+                                />
+                              </div>
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>

@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2 } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
+import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
 import { HtmlContent } from "@/components/ui/html-content";
 
@@ -15,6 +16,7 @@ export type SlideType =
   | "media"
   | "text_input"
   | "action"
+  | "mentor_message"
   | "quiz"
   | "quiz_result";
 
@@ -56,11 +58,23 @@ function MediaContent({ text }: { text: string }) {
     );
   }
 
-  if (text.trim().startsWith("http")) {
-    if (/\.(jpg|jpeg|png|gif|svg|webp)$/i.test(text.trim())) {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
+    return (
+      <img
+        src={trimmed}
+        alt=""
+        className="w-full rounded-lg"
+        data-testid="media-image"
+      />
+    );
+  }
+
+  if (trimmed.startsWith("http")) {
+    if (/\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
       return (
         <img
-          src={text.trim()}
+          src={trimmed}
           alt=""
           className="w-full rounded-lg"
           data-testid="media-image"
@@ -69,12 +83,12 @@ function MediaContent({ text }: { text: string }) {
     }
     return (
       <a
-        href={text.trim()}
+        href={trimmed}
         target="_blank"
         rel="noopener noreferrer"
         className="text-primary underline break-all text-xl font-['Afacad',sans-serif]"
       >
-        {text.trim()}
+        {trimmed}
       </a>
     );
   }
@@ -205,6 +219,7 @@ interface LessonSlideProps {
   existingAnswer?: string;
   onJournalChange?: (value: string) => void;
   direction: "forward" | "backward";
+  mentorId?: number | null;
   quizData?: QuizData;
   quizQuestionIndex?: number;
   quizAnswers?: Record<number, string>;
@@ -218,6 +233,7 @@ export function LessonSlide({
   existingAnswer,
   onJournalChange,
   direction,
+  mentorId,
   quizData,
   quizQuestionIndex,
   quizAnswers,
@@ -253,6 +269,8 @@ export function LessonSlide({
           />
         ) : type === "action" ? (
           <ActionSlide content={content} />
+        ) : type === "mentor_message" ? (
+          <MentorMessageSlide content={content} mentorId={mentorId} />
         ) : type === "quiz" && quizData && quizQuestionIndex !== undefined ? (
           <QuizQuestionSlide
             quizData={quizData}
@@ -344,10 +362,14 @@ function TextInputSlide({
   const { mutate, isPending } = useCreateAnswer();
   const [journalContent, setJournalContent] = useState(existingAnswer || "");
   const [saved, setSaved] = useState(!!existingAnswer);
+  const lastSavedContent = useRef(existingAnswer || "");
 
   useEffect(() => {
-    setJournalContent(existingAnswer || "");
-    setSaved(!!existingAnswer);
+    if (existingAnswer !== undefined && existingAnswer !== lastSavedContent.current) {
+      setJournalContent(existingAnswer);
+      lastSavedContent.current = existingAnswer;
+      setSaved(true);
+    }
   }, [existingAnswer]);
 
   const handleChange = (value: string) => {
@@ -359,7 +381,12 @@ function TextInputSlide({
   const handleSave = () => {
     mutate(
       { dayNumber, content: journalContent },
-      { onSuccess: () => setSaved(true) }
+      {
+        onSuccess: () => {
+          setSaved(true);
+          lastSavedContent.current = journalContent;
+        },
+      }
     );
   };
 
@@ -386,6 +413,79 @@ function TextInputSlide({
           data-testid="button-save-response"
         >
           {isPending ? "Saving..." : saved ? "Saved" : "Save Response"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function MentorMessageSlide({
+  content,
+  mentorId,
+}: {
+  content: string;
+  mentorId?: number | null;
+}) {
+  const { mutate, isPending } = useSendMessage();
+  const [message, setMessage] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const handleSend = () => {
+    if (!mentorId || !message.trim()) return;
+    mutate(
+      { receiverId: mentorId, content: message.trim() },
+      { onSuccess: () => setSent(true) }
+    );
+  };
+
+  if (!mentorId) {
+    return (
+      <div className="space-y-4" data-testid="slide-mentor-message">
+        {isHtmlContent(content) ? (
+          <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black" />
+        ) : (
+          <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">{content}</p>
+        )}
+        <p className="text-sm text-black/50 font-['Afacad',sans-serif]">No mentor assigned yet.</p>
+      </div>
+    );
+  }
+
+  if (sent) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] space-y-4" data-testid="slide-mentor-message-sent">
+        <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
+          <CheckCircle className="w-8 h-8 text-[#00b57a]" />
+        </div>
+        <p className="text-[24px] font-bold font-['Afacad',sans-serif] text-black">Message Sent!</p>
+        <p className="text-lg font-['Afacad',sans-serif] text-black/60">Your mentor will see it in your conversation.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6" data-testid="slide-mentor-message">
+      {isHtmlContent(content) ? (
+        <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black" />
+      ) : (
+        <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">{content}</p>
+      )}
+      <Textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Type your message to your mentor..."
+        className="min-h-[150px] w-full bg-white border-black/10 text-base font-['Afacad',sans-serif]"
+        data-testid="input-mentor-message"
+      />
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSend}
+          disabled={isPending || !message.trim()}
+          className="gap-2"
+          data-testid="button-send-mentor"
+        >
+          <Send className="w-4 h-4" />
+          {isPending ? "Sending..." : "Send to Mentor"}
         </Button>
       </div>
     </div>

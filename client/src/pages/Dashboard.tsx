@@ -314,6 +314,7 @@ export default function Dashboard() {
             dayNumber={selectedDay}
             backgroundImage={getTrackAImage(selectedDay, trackASummaries, trackAModules)}
             existingAnswer={answers?.find(a => a.dayNumber === selectedDay)?.content}
+            mentorId={user?.mentorId}
             onExit={handleBackToGrid}
             onComplete={() => {
               if (!isPeriodCompleted(selectedDay, "morning")) {
