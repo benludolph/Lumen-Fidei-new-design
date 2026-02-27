@@ -23,7 +23,7 @@ import { useLocation } from "wouter";
 import { DayGridView } from "@/components/DayGridView";
 import { LessonFlow } from "@/components/lesson/LessonFlow";
 
-import type { TrackAModule } from "@shared/schema";
+import type { TrackAModule, TrackAContent } from "@shared/schema";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -34,7 +34,9 @@ import trackAImg6 from "@assets/image_1771985236426.png";
 
 const TRACK_A_FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
 
-function getTrackAImage(dayNumber: number, modules?: TrackAModule[]): string {
+function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[], modules?: TrackAModule[]): string {
+  const dayContent = trackASummaries?.find(c => c.dayNumber === dayNumber);
+  if (dayContent?.imageUrl) return dayContent.imageUrl;
   const weekNumber = Math.ceil(dayNumber / 7);
   const module = modules?.find(m => m.weekNumber === weekNumber);
   if (module?.imageUrl) return module.imageUrl;
@@ -310,7 +312,7 @@ export default function Dashboard() {
           <LessonFlow
             content={trackADayContent}
             dayNumber={selectedDay}
-            backgroundImage={getTrackAImage(selectedDay, trackAModules)}
+            backgroundImage={getTrackAImage(selectedDay, trackASummaries, trackAModules)}
             existingAnswer={answers?.find(a => a.dayNumber === selectedDay)?.content}
             onExit={handleBackToGrid}
             onComplete={() => {
