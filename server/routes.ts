@@ -4,7 +4,9 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, type User } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import { dailyContentData, practiceResourcesData } from "./content-data";
 import { trackAContentData } from "./track-a-content-data";
@@ -18,14 +20,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: uploadDir,
-    filename: (_req, file, cb) => {
-      const ext = path.extname(file.originalname);
-      const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
-      cb(null, `${base}_${Date.now()}${ext}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ["image/png", "image/jpeg", "image/webp"];
@@ -93,11 +88,39 @@ export async function registerRoutes(
   // Setup Authentication
   setupAuth(app);
 
-  // Serve uploaded images from attached_assets directory
   const express = await import("express");
   app.use("/attached_assets", express.default.static(uploadDir));
 
-  // Apply rate limiting to all API routes
+  app.get("/attached_assets/:filename", async (req, res) => {
+    try {
+      const [image] = await db.select().from(uploadedImages).where(eq(uploadedImages.filename, req.params.filename));
+      if (!image) {
+        return res.sendStatus(404);
+      }
+      const buffer = Buffer.from(image.data, "base64");
+      res.set("Content-Type", image.mimeType);
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      res.send(buffer);
+    } catch {
+      res.sendStatus(500);
+    }
+  });
+
+  app.get("/api/images/:filename", async (req, res) => {
+    try {
+      const [image] = await db.select().from(uploadedImages).where(eq(uploadedImages.filename, req.params.filename));
+      if (!image) {
+        return res.sendStatus(404);
+      }
+      const buffer = Buffer.from(image.data, "base64");
+      res.set("Content-Type", image.mimeType);
+      res.set("Cache-Control", "public, max-age=31536000, immutable");
+      res.send(buffer);
+    } catch {
+      res.sendStatus(500);
+    }
+  });
+
   app.use("/api", generalLimiter);
   
   // Apply stricter rate limiting to auth endpoints
@@ -333,12 +356,31 @@ export async function registerRoutes(
 
   // === Image Upload ===
 
-  app.post('/api/admin/upload-image', requireRole('admin'), upload.single('image'), (req, res) => {
+  app.post('/api/admin/upload-image', requireRole('admin'), upload.single('image'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
     }
-    const filePath = `/attached_assets/${req.file.filename}`;
-    res.json({ url: filePath });
+    try {
+      const ext = path.extname(req.file.originalname);
+      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${base}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+
+      await db.insert(uploadedImages).values({
+        filename,
+        mimeType: req.file.mimetype,
+        data: base64Data,
+      }).onConflictDoUpdate({
+        target: uploadedImages.filename,
+        set: { data: base64Data, mimeType: req.file.mimetype },
+      });
+
+      const filePath = `/api/images/${filename}`;
+      res.json({ url: filePath });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      res.status(500).json({ message: "Failed to save image" });
+    }
   });
 
   // === Answers ===
@@ -1106,7 +1148,38 @@ export async function registerRoutes(
   return httpServer;
 }
 
+async function migrateFilesystemImages() {
+  try {
+    const files = fs.readdirSync(uploadDir).filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f));
+    if (files.length === 0) return;
+
+    const existing = await db.select({ filename: uploadedImages.filename }).from(uploadedImages);
+    const existingSet = new Set(existing.map(e => e.filename));
+
+    let migrated = 0;
+    for (const file of files) {
+      if (existingSet.has(file)) continue;
+      const filePath = path.join(uploadDir, file);
+      const buffer = fs.readFileSync(filePath);
+      const ext = path.extname(file).toLowerCase();
+      const mimeType = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
+      await db.insert(uploadedImages).values({
+        filename: file,
+        mimeType,
+        data: buffer.toString("base64"),
+      }).onConflictDoNothing();
+      migrated++;
+    }
+    if (migrated > 0) {
+      console.log(`Migrated ${migrated} filesystem images to database.`);
+    }
+  } catch (e) {
+    console.warn("Image migration warning (non-fatal):", e);
+  }
+}
+
 async function seed() {
+    await migrateFilesystemImages();
     // Seed users if needed
     const users = await storage.getAllUsers();
     if (users.length === 0) {

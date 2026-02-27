@@ -96,6 +96,14 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const uploadedImages = pgTable("uploaded_images", {
+  id: serial("id").primaryKey(),
+  filename: text("filename").notNull().unique(),
+  mimeType: text("mime_type").notNull(),
+  data: text("data").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Cohort settings - stores program-wide configuration like start date
 export const cohortSettings = pgTable("cohort_settings", {
   id: serial("id").primaryKey(),
