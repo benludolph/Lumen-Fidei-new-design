@@ -73,6 +73,7 @@ export const trackAContent = pgTable("track_a_content", {
   dayNumber: integer("day_number").notNull().unique(),
   weekNumber: integer("week_number").notNull(),
   centralTheme: text("central_theme").notNull(),
+  subtitle: text("subtitle"),
   slides: json("slides").$type<{ type: string; content: string }[]>(),
   imageUrl: text("image_url"),
   completionMessage: text("completion_message"),

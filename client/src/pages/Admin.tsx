@@ -1730,6 +1730,7 @@ type TrackAContentData = {
   dayNumber: number;
   weekNumber: number;
   centralTheme: string;
+  subtitle: string | null;
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
@@ -1949,6 +1950,7 @@ function TrackAContentManagementView() {
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
   const [dayImageUrl, setDayImageUrl] = useState<string | null>(null);
+  const [daySubtitle, setDaySubtitle] = useState("");
   const [completionMessage, setCompletionMessage] = useState("");
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
   const [moduleTitle, setModuleTitle] = useState("");
@@ -2011,11 +2013,13 @@ function TrackAContentManagementView() {
       setCentralTheme(content.centralTheme || "");
       setSlides(content.slides ? [...content.slides] : []);
       setDayImageUrl(content.imageUrl || null);
+      setDaySubtitle(content.subtitle || "");
       setCompletionMessage(content.completionMessage || "");
     } else {
       setCentralTheme("");
       setSlides([]);
       setDayImageUrl(null);
+      setDaySubtitle("");
       setCompletionMessage("");
     }
     setExpandedSlide(null);
@@ -2068,6 +2072,7 @@ function TrackAContentManagementView() {
       dayNumber: selectedDay,
       weekNumber: Math.ceil(selectedDay / 7),
       centralTheme: centralTheme || "Untitled",
+      subtitle: daySubtitle || null,
       slides,
       imageUrl: dayImageUrl,
       completionMessage: completionMessage || null,
@@ -2365,6 +2370,16 @@ function TrackAContentManagementView() {
                     <ModuleImageUpload currentUrl={dayImageUrl} onUploaded={setDayImageUrl} />
                   </div>
                   <p className="text-xs text-muted-foreground">This image appears as the background on the participant's day card.</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Day Card Subtitle</label>
+                  <Input
+                    value={daySubtitle}
+                    onChange={(e) => setDaySubtitle(e.target.value)}
+                    placeholder="e.g., The call to follow"
+                    data-testid="input-day-subtitle"
+                  />
+                  <p className="text-xs text-muted-foreground">Secondary text shown below the title on the participant's day card. Leave blank to hide.</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Completion Message</label>

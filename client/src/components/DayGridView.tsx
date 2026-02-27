@@ -184,10 +184,8 @@ export function DayGridView({
                   const isSunday = day > 1 && (day - 1) % 7 === 0;
                   const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
 
-                  const prevDayTitle = day > 1
-                    ? getDayTitle(day - 1, isTrackA, trackASummaries, trackBSummaries)
-                    : undefined;
-                  const subtitle = !isToday && day > 1 ? `Day ${day - 1}. ${prevDayTitle}` : undefined;
+                  const trackADay = isTrackA ? trackASummaries?.find(c => c.dayNumber === day) : undefined;
+                  const subtitle = trackADay?.subtitle || undefined;
 
                   return (
                     <DayCard
