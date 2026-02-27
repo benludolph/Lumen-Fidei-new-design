@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface LessonCompletionScreenProps {
   dayNumber: number;
   theme: string;
+  completionMessage?: string | null;
   onContinue: () => void;
 }
 
@@ -21,12 +22,13 @@ const ENCOURAGING_MESSAGES = [
 export function LessonCompletionScreen({
   dayNumber,
   theme,
+  completionMessage,
   onContinue,
 }: LessonCompletionScreenProps) {
   const [showContent, setShowContent] = useState(false);
   const [showButton, setShowButton] = useState(false);
 
-  const message =
+  const message = completionMessage ||
     ENCOURAGING_MESSAGES[(dayNumber - 1) % ENCOURAGING_MESSAGES.length];
 
   const sparkles = useMemo(

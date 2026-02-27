@@ -1732,6 +1732,7 @@ type TrackAContentData = {
   centralTheme: string;
   slides: TrackASlide[] | null;
   imageUrl: string | null;
+  completionMessage: string | null;
 };
 
 const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "quiz"] as const;
@@ -1948,6 +1949,7 @@ function TrackAContentManagementView() {
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
   const [dayImageUrl, setDayImageUrl] = useState<string | null>(null);
+  const [completionMessage, setCompletionMessage] = useState("");
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleSubtitle, setModuleSubtitle] = useState("");
@@ -2009,10 +2011,12 @@ function TrackAContentManagementView() {
       setCentralTheme(content.centralTheme || "");
       setSlides(content.slides ? [...content.slides] : []);
       setDayImageUrl(content.imageUrl || null);
+      setCompletionMessage(content.completionMessage || "");
     } else {
       setCentralTheme("");
       setSlides([]);
       setDayImageUrl(null);
+      setCompletionMessage("");
     }
     setExpandedSlide(null);
   };
@@ -2066,6 +2070,7 @@ function TrackAContentManagementView() {
       centralTheme: centralTheme || "Untitled",
       slides,
       imageUrl: dayImageUrl,
+      completionMessage: completionMessage || null,
     });
   };
 
@@ -2360,6 +2365,16 @@ function TrackAContentManagementView() {
                     <ModuleImageUpload currentUrl={dayImageUrl} onUploaded={setDayImageUrl} />
                   </div>
                   <p className="text-xs text-muted-foreground">This image appears as the background on the participant's day card.</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Completion Message</label>
+                  <Input
+                    value={completionMessage}
+                    onChange={(e) => setCompletionMessage(e.target.value)}
+                    placeholder="e.g., Well done, faithful servant."
+                    data-testid="input-completion-message"
+                  />
+                  <p className="text-xs text-muted-foreground">Custom message shown on the success screen when the lesson is finished. Leave blank for default.</p>
                 </div>
               </div>
             </CardContent>
