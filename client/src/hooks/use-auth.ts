@@ -32,8 +32,8 @@ export function useAuth() {
       return api.auth.login.responses[200].parse(await res.json());
     },
     onSuccess: (user) => {
+      queryClient.clear();
       queryClient.setQueryData(["/api/user"], user);
-      // Redirect based on role logic usually handled in UI, but good to have user data fresh
     },
   });
 
@@ -45,7 +45,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.clear();
       setLocation("/login");
     },
   });
