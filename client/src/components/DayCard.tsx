@@ -46,7 +46,7 @@ export function DayCard({
       <div
         data-testid={`card-day-${dayNumber}`}
         className={cn(
-          "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left w-full min-h-[120px] col-span-2",
+          "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left w-full min-h-[120px] sm:col-span-2",
           "bg-gradient-to-r from-[#2d4a22]/90 to-[#5c6b32]/70 dark:from-[#2d4a22]/80 dark:to-[#5c6b32]/60",
           "border border-[#8b7d3c]/30"
         )}
