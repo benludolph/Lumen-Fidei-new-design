@@ -1837,12 +1837,11 @@ function KnowledgeCheckEditor({ content, onChange, index }: { content: string; o
             <button
               type="button"
               onClick={() => update({ ...data, correctIndex: idx })}
-              className={cn(
-                "shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+              className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
                 data.correctIndex === idx
                   ? "border-green-500 bg-green-500 text-white"
                   : "border-gray-300 bg-white hover:border-gray-400"
-              )}
+              }`}
               title={data.correctIndex === idx ? "Correct answer" : "Mark as correct"}
               data-testid={`kc-correct-radio-${index}-${idx}`}
             >
