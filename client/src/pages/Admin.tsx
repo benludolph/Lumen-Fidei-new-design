@@ -1736,7 +1736,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "quiz"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "quiz"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1746,6 +1746,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   text_input: "Text Input",
   action: "Action",
   mentor_message: "Mentor Message",
+  timer: "Timer",
   quiz: "Quiz",
 };
 
@@ -1757,6 +1758,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   text_input: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   action: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   mentor_message: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+  timer: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
 };
 
@@ -1772,6 +1774,48 @@ function SlideTypeBadge({ type }: { type: string }) {
 interface QuizEditorData {
   questions: { question: string; options: string[] }[];
   results: Record<string, { title: string; description: string }>;
+}
+
+function TimerSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { duration: number; text: string };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      duration: typeof parsed.duration === "number" ? parsed.duration : 60,
+      text: typeof parsed.text === "string" ? parsed.text : "",
+    };
+  } catch {
+    data = { duration: 60, text: content || "" };
+  }
+
+  const update = (field: "duration" | "text", value: number | string) => {
+    const next = { ...data, [field]: value };
+    onChange(JSON.stringify(next));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Duration (seconds)</label>
+        <input
+          type="number"
+          min={5}
+          max={3600}
+          value={data.duration}
+          onChange={(e) => update("duration", Math.max(5, parseInt(e.target.value) || 60))}
+          className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-timer-duration-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Content (displayed during timer)</label>
+        <RichTextEditor
+          value={data.text}
+          onChange={(val) => update("text", val)}
+        />
+      </div>
+    </div>
+  );
 }
 
 function QuizSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
@@ -2429,6 +2473,11 @@ function TrackAContentManagementView() {
                                     results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } }
                                   }, null, 2));
                                 }
+                                if (val === "timer") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ duration: 60, text: "" }));
+                                  }
+                                }
                               }}>
                                 <SelectTrigger data-testid={`select-slide-type-${index}`}>
                                   <SelectValue />
@@ -2464,6 +2513,12 @@ function TrackAContentManagementView() {
                                   onUploaded={(url) => updateSlide(index, "content", url)}
                                 />
                               </div>
+                            ) : slide.type === "timer" ? (
+                              <TimerSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -2535,6 +2590,11 @@ function TrackAContentManagementView() {
                           try {
                             const d = JSON.parse(slide.content);
                             return `${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""} — ${d.questions?.map((q: any, i: number) => `Q${i+1}: ${q.question || "(empty)"}`).join(", ")}`;
+                          } catch { return slide.content || "(empty)"; }
+                        })() : slide.type === "timer" ? (() => {
+                          try {
+                            const d = JSON.parse(slide.content);
+                            return `${d.duration || 60}s timer`;
                           } catch { return slide.content || "(empty)"; }
                         })() : (slide.content || "(empty)")}
                       </p>

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
 import { LessonProgressBar } from "./LessonProgressBar";
@@ -41,6 +42,7 @@ export function LessonFlow({
   const [animKey, setAnimKey] = useState(0);
   const [journalDraft, setJournalDraft] = useState(existingAnswer || "");
   const [quizAnswers, setQuizAnswers] = useState<Record<number, Record<number, string>>>({});
+  const [timerDone, setTimerDone] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const slides = useMemo<SlideData[]>(() => {
@@ -102,6 +104,7 @@ export function LessonFlow({
       setDirection("forward");
       setCurrentSlide((prev) => prev + 1);
       setAnimKey((prev) => prev + 1);
+      setTimerDone(false);
     }
   }, [currentSlide, slides.length, cancelAutoAdvance]);
 
@@ -113,8 +116,13 @@ export function LessonFlow({
       setDirection("backward");
       setCurrentSlide((prev) => prev - 1);
       setAnimKey((prev) => prev + 1);
+      setTimerDone(false);
     }
   }, [currentSlide, onExit, cancelAutoAdvance]);
+
+  const handleTimerComplete = useCallback(() => {
+    setTimerDone(true);
+  }, []);
 
   const handleContinue = useCallback(() => {
     onComplete();
@@ -193,6 +201,7 @@ export function LessonFlow({
         onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
         direction={direction}
         mentorId={mentorId}
+        onTimerComplete={currentSlideData.type === "timer" ? handleTimerComplete : undefined}
         quizData={currentSlideData.quizData}
         quizQuestionIndex={currentSlideData.quizQuestionIndex}
         quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}
@@ -217,7 +226,13 @@ export function LessonFlow({
           <Button
             variant="default"
             onClick={handleNext}
-            className="gap-2 bg-black text-white hover:bg-black/90"
+            disabled={currentSlideData.type === "timer" && !timerDone}
+            className={cn(
+              "gap-2",
+              currentSlideData.type === "timer" && !timerDone
+                ? "bg-black/30 text-white/50 cursor-not-allowed"
+                : "bg-black text-white hover:bg-black/90"
+            )}
             data-testid="button-lesson-next"
           >
             {isLastSlide ? "Finish" : "Continue"}

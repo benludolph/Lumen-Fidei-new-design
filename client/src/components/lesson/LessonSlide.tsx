@@ -17,6 +17,7 @@ export type SlideType =
   | "text_input"
   | "action"
   | "mentor_message"
+  | "timer"
   | "quiz"
   | "quiz_result";
 
@@ -220,6 +221,7 @@ interface LessonSlideProps {
   onJournalChange?: (value: string) => void;
   direction: "forward" | "backward";
   mentorId?: number | null;
+  onTimerComplete?: () => void;
   quizData?: QuizData;
   quizQuestionIndex?: number;
   quizAnswers?: Record<number, string>;
@@ -234,6 +236,7 @@ export function LessonSlide({
   onJournalChange,
   direction,
   mentorId,
+  onTimerComplete,
   quizData,
   quizQuestionIndex,
   quizAnswers,
@@ -271,6 +274,8 @@ export function LessonSlide({
           <ActionSlide content={content} />
         ) : type === "mentor_message" ? (
           <MentorMessageSlide content={content} mentorId={mentorId} />
+        ) : type === "timer" ? (
+          <TimerSlide content={content} onTimerComplete={onTimerComplete} />
         ) : type === "quiz" && quizData && quizQuestionIndex !== undefined ? (
           <QuizQuestionSlide
             quizData={quizData}
@@ -487,6 +492,110 @@ function MentorMessageSlide({
           <Send className="w-4 h-4" />
           {isPending ? "Sending..." : "Send to Mentor"}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+function parseTimerContent(content: string): { duration: number; text: string } {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed && typeof parsed.text === "string") {
+      const dur = typeof parsed.duration === "number" ? parsed.duration : parseInt(parsed.duration) || 60;
+      return { duration: Math.max(0, dur), text: parsed.text };
+    }
+  } catch {}
+  return { duration: 60, text: content };
+}
+
+function TimerSlide({
+  content,
+  onTimerComplete,
+}: {
+  content: string;
+  onTimerComplete?: () => void;
+}) {
+  const { duration, text } = useMemo(() => parseTimerContent(content), [content]);
+  const [remaining, setRemaining] = useState(duration);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const completedRef = useRef(false);
+
+  useEffect(() => {
+    if (duration <= 0) {
+      setRemaining(0);
+      completedRef.current = true;
+      onTimerComplete?.();
+      return;
+    }
+    setRemaining(duration);
+    completedRef.current = false;
+    timerRef.current = setInterval(() => {
+      setRemaining((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          if (!completedRef.current) {
+            completedRef.current = true;
+            onTimerComplete?.();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [duration, onTimerComplete]);
+
+  const progress = duration > 0 ? (duration - remaining) / duration : 1;
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+  const circumference = 2 * Math.PI * 54;
+  const strokeOffset = circumference * (1 - progress);
+  const done = remaining === 0;
+
+  return (
+    <div className="flex flex-col items-center space-y-8" data-testid="slide-timer">
+      <div className="relative w-[140px] h-[140px] flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="#e4e4e7" strokeWidth="6" />
+          <circle
+            cx="60" cy="60" r="54" fill="none"
+            stroke={done ? "#00b57a" : "#18181b"}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeOffset}
+            className="transition-all duration-1000 ease-linear"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {done ? (
+            <CheckCircle className="w-10 h-10 text-[#00b57a]" />
+          ) : (
+            <span className="text-[32px] font-bold font-['Afacad',sans-serif] text-black tabular-nums">
+              {minutes}:{seconds.toString().padStart(2, "0")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {!done && (
+        <p className="text-sm text-black/40 font-['Afacad',sans-serif]">
+          Take a moment to reflect on this passage
+        </p>
+      )}
+
+      <div className="w-full">
+        {isHtmlContent(text) ? (
+          <HtmlContent content={text} className="slide-text-content space-y-5" />
+        ) : (
+          <div className="slide-text-content space-y-5">
+            {text.split("\n").filter(Boolean).map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
