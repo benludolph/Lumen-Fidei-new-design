@@ -1736,7 +1736,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "quiz"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1747,6 +1747,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   action: "Action",
   mentor_message: "Mentor Message",
   timer: "Timer",
+  knowledge_check: "Knowledge Check",
   quiz: "Quiz",
 };
 
@@ -1759,6 +1760,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   action: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   mentor_message: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   timer: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+  knowledge_check: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
 };
 
@@ -1774,6 +1776,125 @@ function SlideTypeBadge({ type }: { type: string }) {
 interface QuizEditorData {
   questions: { question: string; options: string[] }[];
   results: Record<string, { title: string; description: string }>;
+}
+
+function KnowledgeCheckEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { question: string; options: string[]; correctIndex: number; explanation: string };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      question: parsed.question || "",
+      options: Array.isArray(parsed.options) ? parsed.options : ["", ""],
+      correctIndex: typeof parsed.correctIndex === "number" ? parsed.correctIndex : 0,
+      explanation: parsed.explanation || "",
+    };
+  } catch {
+    data = { question: "", options: ["", ""], correctIndex: 0, explanation: "" };
+  }
+
+  const update = (next: typeof data) => {
+    onChange(JSON.stringify(next));
+  };
+
+  const updateOption = (idx: number, value: string) => {
+    const opts = [...data.options];
+    opts[idx] = value;
+    update({ ...data, options: opts });
+  };
+
+  const addOption = () => {
+    if (data.options.length >= 6) return;
+    update({ ...data, options: [...data.options, ""] });
+  };
+
+  const removeOption = (idx: number) => {
+    if (data.options.length <= 2) return;
+    const opts = data.options.filter((_, i) => i !== idx);
+    let ci = data.correctIndex;
+    if (idx === ci) ci = 0;
+    else if (idx < ci) ci = ci - 1;
+    update({ ...data, options: opts, correctIndex: ci });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Question</label>
+        <input
+          type="text"
+          value={data.question}
+          onChange={(e) => update({ ...data, question: e.target.value })}
+          placeholder="Enter the question..."
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-kc-question-${index}`}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Options (select the correct one)</label>
+        {data.options.map((opt, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => update({ ...data, correctIndex: idx })}
+              className={cn(
+                "shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
+                data.correctIndex === idx
+                  ? "border-green-500 bg-green-500 text-white"
+                  : "border-gray-300 bg-white hover:border-gray-400"
+              )}
+              title={data.correctIndex === idx ? "Correct answer" : "Mark as correct"}
+              data-testid={`kc-correct-radio-${index}-${idx}`}
+            >
+              {data.correctIndex === idx && (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+            <input
+              type="text"
+              value={opt}
+              onChange={(e) => updateOption(idx, e.target.value)}
+              placeholder={`Option ${idx + 1}`}
+              className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-kc-option-${index}-${idx}`}
+            />
+            {data.options.length > 2 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 h-8 w-8"
+                onClick={() => removeOption(idx)}
+                data-testid={`button-kc-remove-option-${index}-${idx}`}
+              >
+                <Trash2 className="w-3.5 h-3.5 text-destructive" />
+              </Button>
+            )}
+          </div>
+        ))}
+        {data.options.length < 6 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addOption}
+            data-testid={`button-kc-add-option-${index}`}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            Add Option
+          </Button>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Explanation (shown after answering)</label>
+        <RichTextEditor
+          value={data.explanation}
+          onChange={(val) => update({ ...data, explanation: val })}
+        />
+      </div>
+    </div>
+  );
 }
 
 function TimerSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
@@ -2478,6 +2599,11 @@ function TrackAContentManagementView() {
                                     updateSlide(index, "content", JSON.stringify({ duration: 60, text: "" }));
                                   }
                                 }
+                                if (val === "knowledge_check") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" }));
+                                  }
+                                }
                               }}>
                                 <SelectTrigger data-testid={`select-slide-type-${index}`}>
                                   <SelectValue />
@@ -2515,6 +2641,12 @@ function TrackAContentManagementView() {
                               </div>
                             ) : slide.type === "timer" ? (
                               <TimerSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "knowledge_check" ? (
+                              <KnowledgeCheckEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -2590,6 +2722,11 @@ function TrackAContentManagementView() {
                           try {
                             const d = JSON.parse(slide.content);
                             return `${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""} — ${d.questions?.map((q: any, i: number) => `Q${i+1}: ${q.question || "(empty)"}`).join(", ")}`;
+                          } catch { return slide.content || "(empty)"; }
+                        })() : slide.type === "knowledge_check" ? (() => {
+                          try {
+                            const d = JSON.parse(slide.content);
+                            return `Q: ${d.question || "(empty)"} — ${d.options?.length || 0} options`;
                           } catch { return slide.content || "(empty)"; }
                         })() : slide.type === "timer" ? (() => {
                           try {

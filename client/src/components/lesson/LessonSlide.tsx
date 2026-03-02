@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -19,7 +19,8 @@ export type SlideType =
   | "mentor_message"
   | "timer"
   | "quiz"
-  | "quiz_result";
+  | "quiz_result"
+  | "knowledge_check";
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -222,6 +223,8 @@ interface LessonSlideProps {
   direction: "forward" | "backward";
   mentorId?: number | null;
   onTimerComplete?: () => void;
+  onKnowledgeCheckAnswered?: () => void;
+  onKnowledgeCheckNext?: () => void;
   quizData?: QuizData;
   quizQuestionIndex?: number;
   quizAnswers?: Record<number, string>;
@@ -237,6 +240,8 @@ export function LessonSlide({
   direction,
   mentorId,
   onTimerComplete,
+  onKnowledgeCheckAnswered,
+  onKnowledgeCheckNext,
   quizData,
   quizQuestionIndex,
   quizAnswers,
@@ -276,6 +281,12 @@ export function LessonSlide({
           <MentorMessageSlide content={content} mentorId={mentorId} />
         ) : type === "timer" ? (
           <TimerSlide content={content} onTimerComplete={onTimerComplete} />
+        ) : type === "knowledge_check" ? (
+          <KnowledgeCheckSlide
+            content={content}
+            onAnswered={onKnowledgeCheckAnswered}
+            onNext={onKnowledgeCheckNext}
+          />
         ) : type === "quiz" && quizData && quizQuestionIndex !== undefined ? (
           <QuizQuestionSlide
             quizData={quizData}
@@ -598,6 +609,180 @@ function TimerSlide({
         )}
       </div>
     </div>
+  );
+}
+
+interface KnowledgeCheckData {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+function parseKnowledgeCheckContent(content: string): KnowledgeCheckData {
+  try {
+    const parsed = JSON.parse(content);
+    return {
+      question: parsed.question || "",
+      options: Array.isArray(parsed.options) ? parsed.options : [],
+      correctIndex: typeof parsed.correctIndex === "number" ? parsed.correctIndex : 0,
+      explanation: parsed.explanation || "",
+    };
+  } catch {
+    return { question: content, options: [], correctIndex: 0, explanation: "" };
+  }
+}
+
+function KnowledgeCheckSlide({
+  content,
+  onAnswered,
+  onNext,
+}: {
+  content: string;
+  onAnswered?: () => void;
+  onNext?: () => void;
+}) {
+  const data = useMemo(() => parseKnowledgeCheckContent(content), [content]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const answeredRef = useRef(false);
+
+  const isCorrect = selectedIndex !== null ? selectedIndex === data.correctIndex : null;
+
+  const handleSelect = useCallback((idx: number) => {
+    if (selectedIndex !== null) return;
+    setSelectedIndex(idx);
+    if (!answeredRef.current) {
+      answeredRef.current = true;
+      onAnswered?.();
+    }
+  }, [selectedIndex, onAnswered]);
+
+  if (data.options.length === 0) {
+    return <div className="slide-text-content"><p>{data.question || "(No question configured)"}</p></div>;
+  }
+
+  return (
+    <>
+      <div className="space-y-6" data-testid="slide-knowledge-check">
+        <p className="font-bold leading-[1.4] text-[28px] font-['Afacad',sans-serif] text-black">
+          {data.question}
+        </p>
+        <div className="space-y-2">
+          {data.options.map((option, idx) => {
+            const answered = selectedIndex !== null;
+            const isThis = selectedIndex === idx;
+            const isCorrectOption = idx === data.correctIndex;
+
+            let optionStyle = "bg-transparent hover:bg-black/[0.02]";
+            let circleStyle = "bg-black/5 text-black/60 border-2 border-transparent";
+
+            if (answered) {
+              if (isThis && isCorrect) {
+                optionStyle = "bg-[#00b57a]/10 ring-2 ring-[#00b57a]";
+                circleStyle = "bg-[#00b57a] text-white border-2 border-[#00b57a]";
+              } else if (isThis && !isCorrect) {
+                optionStyle = "bg-[#ef4444]/10 ring-2 ring-[#ef4444]";
+                circleStyle = "bg-[#ef4444] text-white border-2 border-[#ef4444]";
+              } else if (isCorrectOption) {
+                optionStyle = "bg-[#00b57a]/5 ring-1 ring-[#00b57a]/40";
+                circleStyle = "bg-[#00b57a]/20 text-[#00b57a] border-2 border-[#00b57a]/40";
+              } else {
+                optionStyle = "bg-transparent opacity-50";
+              }
+            }
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                disabled={answered}
+                onClick={() => handleSelect(idx)}
+                className={cn(
+                  "flex items-start gap-3 w-full text-left p-4 rounded-xl transition-all duration-200",
+                  optionStyle,
+                  answered && "cursor-default"
+                )}
+                data-testid={`kc-option-${idx}`}
+              >
+                <span className={cn(
+                  "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
+                  circleStyle
+                )}>
+                  {answered && isThis ? (
+                    isCorrect ? <CheckCircle2 className="w-5 h-5" /> : <XIcon className="w-5 h-5" />
+                  ) : answered && isCorrectOption ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : (
+                    <Circle className="w-4 h-4" />
+                  )}
+                </span>
+                <span className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black pt-1">
+                  {option}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {selectedIndex !== null && (
+        <div
+          className={cn(
+            "fixed bottom-0 left-0 right-0 z-[60] border-t px-6 py-5 animate-in slide-in-from-bottom duration-300",
+            isCorrect
+              ? "bg-[#f0fdf4] border-[#00b57a]/30"
+              : "bg-[#fef2f2] border-[#ef4444]/30"
+          )}
+          data-testid="kc-feedback-banner"
+        >
+          <div className="max-w-[540px] mx-auto flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className={cn(
+                "text-lg font-bold font-['Afacad',sans-serif] mb-1",
+                isCorrect ? "text-[#00b57a]" : "text-[#ef4444]"
+              )} data-testid="kc-feedback-title">
+                {isCorrect ? "CORRECT!" : "INCORRECT"}
+              </p>
+              {!isCorrect && (
+                <p className="text-sm font-medium font-['Afacad',sans-serif] text-[#ef4444]/80 mb-1" data-testid="kc-correct-answer">
+                  Answer: {data.options[data.correctIndex]}
+                </p>
+              )}
+              {data.explanation && (
+                <div className="mt-1">
+                  <p className={cn(
+                    "text-xs font-semibold font-['Afacad',sans-serif] uppercase tracking-wide mb-0.5",
+                    isCorrect ? "text-[#00b57a]/70" : "text-[#ef4444]/70"
+                  )}>
+                    Explanation:
+                  </p>
+                  {isHtmlContent(data.explanation) ? (
+                    <HtmlContent content={data.explanation} className="text-sm font-['Afacad',sans-serif] text-black/80 leading-relaxed" />
+                  ) : (
+                    <p className="text-sm font-['Afacad',sans-serif] text-black/80 leading-relaxed" data-testid="kc-explanation">
+                      {data.explanation}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={onNext}
+              className={cn(
+                "shrink-0 gap-2 text-white mt-1",
+                isCorrect
+                  ? "bg-[#00b57a] hover:bg-[#00a06a]"
+                  : "bg-[#ef4444] hover:bg-[#dc2626]"
+              )}
+              data-testid="kc-continue-button"
+            >
+              Continue
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

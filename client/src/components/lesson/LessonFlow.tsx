@@ -43,6 +43,7 @@ export function LessonFlow({
   const [journalDraft, setJournalDraft] = useState(existingAnswer || "");
   const [quizAnswers, setQuizAnswers] = useState<Record<number, Record<number, string>>>({});
   const [timerDone, setTimerDone] = useState(false);
+  const [kcAnswered, setKcAnswered] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const slides = useMemo<SlideData[]>(() => {
@@ -105,6 +106,7 @@ export function LessonFlow({
       setCurrentSlide((prev) => prev + 1);
       setAnimKey((prev) => prev + 1);
       setTimerDone(false);
+      setKcAnswered(false);
     }
   }, [currentSlide, slides.length, cancelAutoAdvance]);
 
@@ -117,11 +119,16 @@ export function LessonFlow({
       setCurrentSlide((prev) => prev - 1);
       setAnimKey((prev) => prev + 1);
       setTimerDone(false);
+      setKcAnswered(false);
     }
   }, [currentSlide, onExit, cancelAutoAdvance]);
 
   const handleTimerComplete = useCallback(() => {
     setTimerDone(true);
+  }, []);
+
+  const handleKcAnswered = useCallback(() => {
+    setKcAnswered(true);
   }, []);
 
   const handleContinue = useCallback(() => {
@@ -184,6 +191,13 @@ export function LessonFlow({
   const isLastSlide = currentSlide === slides.length - 1;
   const isFirstSlide = currentSlide === 0;
 
+  const isValidKc = currentSlideData.type === "knowledge_check" && (() => {
+    try {
+      const d = JSON.parse(currentSlideData.content);
+      return Array.isArray(d.options) && d.options.length > 0;
+    } catch { return false; }
+  })();
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
       <LessonProgressBar
@@ -202,6 +216,8 @@ export function LessonFlow({
         direction={direction}
         mentorId={mentorId}
         onTimerComplete={currentSlideData.type === "timer" ? handleTimerComplete : undefined}
+        onKnowledgeCheckAnswered={currentSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
+        onKnowledgeCheckNext={currentSlideData.type === "knowledge_check" ? handleNext : undefined}
         quizData={currentSlideData.quizData}
         quizQuestionIndex={currentSlideData.quizQuestionIndex}
         quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}
@@ -211,35 +227,37 @@ export function LessonFlow({
         }
       />
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-50">
-        <div className="max-w-[540px] mx-auto flex items-center justify-between">
-          <Button
-            variant="secondary"
-            onClick={handlePrev}
-            className="gap-2 bg-[#f0f0f0] text-black hover:bg-[#e4e4e4]"
-            data-testid="button-lesson-prev"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            {isFirstSlide ? "Exit" : "Back"}
-          </Button>
+      {isValidKc && kcAnswered ? null : (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-50">
+          <div className="max-w-[540px] mx-auto flex items-center justify-between">
+            <Button
+              variant="secondary"
+              onClick={handlePrev}
+              className="gap-2 bg-[#f0f0f0] text-black hover:bg-[#e4e4e4]"
+              data-testid="button-lesson-prev"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              {isFirstSlide ? "Exit" : "Back"}
+            </Button>
 
-          <Button
-            variant="default"
-            onClick={handleNext}
-            disabled={currentSlideData.type === "timer" && !timerDone}
-            className={cn(
-              "gap-2",
-              currentSlideData.type === "timer" && !timerDone
-                ? "bg-black/30 text-white/50 cursor-not-allowed"
-                : "bg-black text-white hover:bg-black/90"
-            )}
-            data-testid="button-lesson-next"
-          >
-            {isLastSlide ? "Finish" : "Continue"}
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+            <Button
+              variant="default"
+              onClick={handleNext}
+              disabled={(currentSlideData.type === "timer" && !timerDone) || isValidKc}
+              className={cn(
+                "gap-2",
+                (currentSlideData.type === "timer" && !timerDone) || isValidKc
+                  ? "bg-black/30 text-white/50 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-black/90"
+              )}
+              data-testid="button-lesson-next"
+            >
+              {isLastSlide ? "Finish" : "Continue"}
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
