@@ -1778,6 +1778,58 @@ interface QuizEditorData {
   results: Record<string, { title: string; description: string }>;
 }
 
+function MediaSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { url: string; text: string };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    if (parsed && typeof parsed.url === "string") {
+      data = { url: parsed.url, text: parsed.text || "" };
+    } else {
+      data = { url: content || "", text: "" };
+    }
+  } catch {
+    data = { url: content || "", text: "" };
+  }
+
+  const updateData = (next: typeof data) => {
+    if (!next.text) {
+      onChange(next.url);
+    } else {
+      onChange(JSON.stringify(next));
+    }
+  };
+
+  const mediaUrl = data.url;
+  const isImage = mediaUrl && (mediaUrl.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(mediaUrl));
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Video URL or Image</label>
+        <input
+          type="text"
+          value={data.url}
+          onChange={(e) => updateData({ ...data, url: e.target.value })}
+          placeholder="Paste YouTube URL or upload an image below"
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-media-url-${index}`}
+        />
+      </div>
+      <ModuleImageUpload
+        currentUrl={isImage ? mediaUrl : null}
+        onUploaded={(url) => updateData({ ...data, url })}
+      />
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Caption / Text (optional)</label>
+        <RichTextEditor
+          value={data.text}
+          onChange={(val) => updateData({ ...data, text: val })}
+        />
+      </div>
+    </div>
+  );
+}
+
 function KnowledgeCheckEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: { question: string; options: string[]; correctIndex: number; explanation: string };
   try {
@@ -2621,23 +2673,12 @@ function TrackAContentManagementView() {
                                 index={index}
                               />
                             ) : slide.type === "media" ? (
-                              <div className="space-y-3">
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Video URL or Image</label>
-                                  <input
-                                    type="text"
-                                    value={slide.content}
-                                    onChange={(e) => updateSlide(index, "content", e.target.value)}
-                                    placeholder="Paste YouTube URL or upload an image below"
-                                    className="w-full px-3 py-2 text-sm border rounded-md bg-background"
-                                    data-testid={`input-media-url-${index}`}
-                                  />
-                                </div>
-                                <ModuleImageUpload
-                                  currentUrl={slide.content && (slide.content.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(slide.content)) ? slide.content : null}
-                                  onUploaded={(url) => updateSlide(index, "content", url)}
-                                />
-                              </div>
+                              <MediaSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            
                             ) : slide.type === "timer" ? (
                               <TimerSlideEditor
                                 content={slide.content}

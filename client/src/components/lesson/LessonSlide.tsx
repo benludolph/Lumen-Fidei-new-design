@@ -98,6 +98,37 @@ function MediaContent({ text }: { text: string }) {
   return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{text}</p>;
 }
 
+function parseMediaContent(content: string): { url: string; text: string } {
+  try {
+    const parsed = JSON.parse(content);
+    if (parsed && typeof parsed.url === "string") {
+      return { url: parsed.url, text: parsed.text || "" };
+    }
+  } catch {}
+  return { url: content, text: "" };
+}
+
+function MediaSlide({ content }: { content: string }) {
+  const { url, text } = useMemo(() => parseMediaContent(content), [content]);
+
+  return (
+    <div className="space-y-6" data-testid="slide-media">
+      <MediaContent text={url} />
+      {text && (
+        isHtmlContent(text) ? (
+          <HtmlContent content={text} className="slide-text-content space-y-5" />
+        ) : (
+          <div className="slide-text-content space-y-5">
+            {text.split("\n").filter(Boolean).map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
 function stripHtmlToLines(html: string): string[] {
   const div = document.createElement("div");
   div.innerHTML = html;
@@ -267,9 +298,7 @@ export function LessonSlide({
         ) : type === "single_select" ? (
           <SingleSelectList content={content} />
         ) : type === "media" ? (
-          <div data-testid="slide-media">
-            <MediaContent text={content} />
-          </div>
+          <MediaSlide content={content} />
         ) : type === "text_input" ? (
           <TextInputSlide
             dayNumber={dayNumber}
