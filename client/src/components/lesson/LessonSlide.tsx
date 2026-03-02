@@ -223,6 +223,7 @@ interface LessonSlideProps {
   direction: "forward" | "backward";
   mentorId?: number | null;
   onTimerComplete?: () => void;
+  timerAlreadyDone?: boolean;
   onKnowledgeCheckAnswered?: () => void;
   onKnowledgeCheckNext?: () => void;
   quizData?: QuizData;
@@ -240,6 +241,7 @@ export function LessonSlide({
   direction,
   mentorId,
   onTimerComplete,
+  timerAlreadyDone,
   onKnowledgeCheckAnswered,
   onKnowledgeCheckNext,
   quizData,
@@ -280,7 +282,7 @@ export function LessonSlide({
         ) : type === "mentor_message" ? (
           <MentorMessageSlide content={content} mentorId={mentorId} />
         ) : type === "timer" ? (
-          <TimerSlide content={content} onTimerComplete={onTimerComplete} />
+          <TimerSlide content={content} onTimerComplete={onTimerComplete} alreadyDone={timerAlreadyDone} />
         ) : type === "knowledge_check" ? (
           <KnowledgeCheckSlide
             content={content}
@@ -522,16 +524,23 @@ function parseTimerContent(content: string): { duration: number; text: string } 
 function TimerSlide({
   content,
   onTimerComplete,
+  alreadyDone,
 }: {
   content: string;
   onTimerComplete?: () => void;
+  alreadyDone?: boolean;
 }) {
   const { duration, text } = useMemo(() => parseTimerContent(content), [content]);
-  const [remaining, setRemaining] = useState(duration);
+  const [remaining, setRemaining] = useState(alreadyDone ? 0 : duration);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const completedRef = useRef(false);
+  const completedRef = useRef(!!alreadyDone);
 
   useEffect(() => {
+    if (alreadyDone) {
+      setRemaining(0);
+      completedRef.current = true;
+      return;
+    }
     if (duration <= 0) {
       setRemaining(0);
       completedRef.current = true;

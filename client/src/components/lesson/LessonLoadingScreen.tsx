@@ -40,7 +40,7 @@ export function LessonLoadingScreen({
           className="absolute inset-0 w-full h-full object-cover opacity-30"
         />
       )}
-      <div className="absolute inset-0 bg-[#001a10]/90" />
+      <div className="absolute inset-0 bg-black/90" />
 
       <div className="lesson-loading-glow" />
 

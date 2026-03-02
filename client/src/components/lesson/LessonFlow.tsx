@@ -43,6 +43,7 @@ export function LessonFlow({
   const [journalDraft, setJournalDraft] = useState(existingAnswer || "");
   const [quizAnswers, setQuizAnswers] = useState<Record<number, Record<number, string>>>({});
   const [timerDone, setTimerDone] = useState(false);
+  const [completedTimerSlides, setCompletedTimerSlides] = useState<Set<number>>(new Set());
   const [kcAnswered, setKcAnswered] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -102,30 +103,33 @@ export function LessonFlow({
     if (currentSlide >= slides.length - 1) {
       setFlowState("complete");
     } else {
+      const nextSlide = currentSlide + 1;
       setDirection("forward");
-      setCurrentSlide((prev) => prev + 1);
+      setCurrentSlide(nextSlide);
       setAnimKey((prev) => prev + 1);
-      setTimerDone(false);
+      setTimerDone(completedTimerSlides.has(nextSlide));
       setKcAnswered(false);
     }
-  }, [currentSlide, slides.length, cancelAutoAdvance]);
+  }, [currentSlide, slides.length, cancelAutoAdvance, completedTimerSlides]);
 
   const handlePrev = useCallback(() => {
     cancelAutoAdvance();
     if (currentSlide <= 0) {
       onExit();
     } else {
+      const prevSlide = currentSlide - 1;
       setDirection("backward");
-      setCurrentSlide((prev) => prev - 1);
+      setCurrentSlide(prevSlide);
       setAnimKey((prev) => prev + 1);
-      setTimerDone(false);
+      setTimerDone(completedTimerSlides.has(prevSlide));
       setKcAnswered(false);
     }
-  }, [currentSlide, onExit, cancelAutoAdvance]);
+  }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides]);
 
   const handleTimerComplete = useCallback(() => {
     setTimerDone(true);
-  }, []);
+    setCompletedTimerSlides((prev) => new Set(prev).add(currentSlide));
+  }, [currentSlide]);
 
   const handleKcAnswered = useCallback(() => {
     setKcAnswered(true);
@@ -216,6 +220,7 @@ export function LessonFlow({
         direction={direction}
         mentorId={mentorId}
         onTimerComplete={currentSlideData.type === "timer" ? handleTimerComplete : undefined}
+        timerAlreadyDone={currentSlideData.type === "timer" ? completedTimerSlides.has(currentSlide) : undefined}
         onKnowledgeCheckAnswered={currentSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
         onKnowledgeCheckNext={currentSlideData.type === "knowledge_check" ? handleNext : undefined}
         quizData={currentSlideData.quizData}

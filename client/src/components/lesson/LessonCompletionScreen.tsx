@@ -53,7 +53,7 @@ export function LessonCompletionScreen({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#001a10]/95"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
       data-testid="lesson-completion-screen"
     >
       <div className="lesson-completion-glow" />
