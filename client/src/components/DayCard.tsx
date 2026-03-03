@@ -100,8 +100,9 @@ export function DayCard({
 
       <div
         className={cn(
-          "absolute inset-0 rounded-lg",
+          "absolute inset-0 rounded-lg transition-colors duration-300",
           backgroundImage && "bg-black/40",
+          backgroundImage && isCompleted && !isLocked && "group-hover:bg-black/0",
           !backgroundImage && isToday && "bg-[#003725]",
           !backgroundImage && isCompleted && !isToday && "bg-[#003725]/90",
           !backgroundImage && isPast && !isCompleted && "bg-zinc-800",
