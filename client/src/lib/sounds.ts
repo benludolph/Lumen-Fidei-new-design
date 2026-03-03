@@ -5,36 +5,64 @@ import clickContinueUrl from "@assets/Click_Continue_1772555574975.wav";
 import timerCompleteUrl from "@assets/Unrealsfx_-_Building_Game_UI_-_Pop_Up_Message_Inviting_1772562554662.wav";
 import sendMessageUrl from "@assets/Sending_a_Message_1772567972547.wav";
 
-const preloaded: Record<string, HTMLAudioElement> = {};
+const volumes: Record<string, number> = {
+  [answerCorrectUrl]: 0.5,
+  [wrongAnswerUrl]: 0.5,
+  [lessonCompleteUrl]: 0.5,
+  [clickContinueUrl]: 0.25,
+  [timerCompleteUrl]: 0.5,
+  [sendMessageUrl]: 0.5,
+};
 
-function preload(url: string, volume = 0.5): HTMLAudioElement {
-  const audio = new Audio(url);
-  audio.preload = "auto";
-  audio.volume = volume;
-  audio.load();
-  return audio;
+let audioUnlocked = false;
+const audioBuffers: Record<string, HTMLAudioElement> = {};
+
+function ensureBuffer(url: string): HTMLAudioElement {
+  if (!audioBuffers[url]) {
+    const audio = new Audio(url);
+    audio.preload = "auto";
+    audio.load();
+    audioBuffers[url] = audio;
+  }
+  return audioBuffers[url];
 }
+
+Object.keys(volumes).forEach(ensureBuffer);
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  Object.values(audioBuffers).forEach((audio) => {
+    const orig = audio.volume;
+    audio.volume = 0;
+    audio.play().then(() => {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = orig;
+    }).catch(() => {});
+  });
+
+  document.removeEventListener("touchstart", unlockAudio, true);
+  document.removeEventListener("touchend", unlockAudio, true);
+  document.removeEventListener("click", unlockAudio, true);
+}
+
+document.addEventListener("touchstart", unlockAudio, true);
+document.addEventListener("touchend", unlockAudio, true);
+document.addEventListener("click", unlockAudio, true);
 
 function play(url: string) {
   try {
-    let audio = preloaded[url];
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
-    } else {
-      audio = preload(url);
-      preloaded[url] = audio;
-      audio.play().catch(() => {});
-    }
+    const vol = volumes[url] ?? 0.5;
+    const clone = ensureBuffer(url).cloneNode(true) as HTMLAudioElement;
+    clone.volume = vol;
+    clone.play().catch(() => {});
+    clone.addEventListener("ended", () => {
+      clone.remove();
+    });
   } catch {}
 }
-
-preloaded[answerCorrectUrl] = preload(answerCorrectUrl);
-preloaded[wrongAnswerUrl] = preload(wrongAnswerUrl);
-preloaded[lessonCompleteUrl] = preload(lessonCompleteUrl);
-preloaded[clickContinueUrl] = preload(clickContinueUrl, 0.25);
-preloaded[timerCompleteUrl] = preload(timerCompleteUrl);
-preloaded[sendMessageUrl] = preload(sendMessageUrl);
 
 export function playAnswerCorrect() {
   play(answerCorrectUrl);

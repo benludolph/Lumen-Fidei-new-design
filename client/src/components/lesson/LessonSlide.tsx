@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -40,17 +40,18 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
-function MediaContent({ text }: { text: string }) {
-  if (!text) return null;
+function YouTubeEmbed({ videoId, originalUrl }: { videoId: string; originalUrl: string }) {
+  const watchUrl = originalUrl.includes("youtube.com") || originalUrl.includes("youtu.be")
+    ? originalUrl.split("&list=")[0].split("&start_radio")[0]
+    : `https://www.youtube.com/watch?v=${videoId}`;
 
-  const youtubeId = extractYouTubeId(text.trim());
-  if (youtubeId) {
-    return (
+  return (
+    <div className="space-y-2">
       <div className="aspect-video rounded-lg overflow-hidden">
         <iframe
           width="100%"
           height="100%"
-          src={`https://www.youtube.com/embed/${youtubeId}`}
+          src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
           title="Video"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -58,7 +59,26 @@ function MediaContent({ text }: { text: string }) {
           className="w-full h-full"
         />
       </div>
-    );
+      <a
+        href={watchUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-1.5 text-white/50 hover:text-white/80 transition-colors"
+        data-testid="link-youtube-external"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+        <span className="font-['Afacad',sans-serif] text-xs">If video doesn't load, watch on YouTube</span>
+      </a>
+    </div>
+  );
+}
+
+function MediaContent({ text }: { text: string }) {
+  if (!text) return null;
+
+  const youtubeId = extractYouTubeId(text.trim());
+  if (youtubeId) {
+    return <YouTubeEmbed videoId={youtubeId} originalUrl={text.trim()} />;
   }
 
   const trimmed = text.trim();
