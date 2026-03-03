@@ -187,6 +187,17 @@ export function DayGridView({
                   const trackADay = isTrackA ? trackASummaries?.find(c => c.dayNumber === day) : undefined;
                   const subtitle = trackADay?.subtitle || undefined;
 
+                  let outOfOrder = false;
+                  if (isTrackA && completed) {
+                    for (let prev = 1; prev < day; prev++) {
+                      const prevIsSunday = prev > 1 && (prev - 1) % 7 === 0;
+                      if (!prevIsSunday && !isDayCompleted(prev)) {
+                        outOfOrder = true;
+                        break;
+                      }
+                    }
+                  }
+
                   return (
                     <DayCard
                       key={day}
@@ -194,6 +205,7 @@ export function DayGridView({
                       title={title}
                       subtitle={subtitle}
                       isCompleted={completed}
+                      isCompletedOutOfOrder={outOfOrder}
                       isToday={isToday}
                       isLocked={isLocked}
                       isSunday={isSunday}

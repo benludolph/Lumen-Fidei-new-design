@@ -7,6 +7,7 @@ interface DayCardProps {
   title: string;
   subtitle?: string;
   isCompleted: boolean;
+  isCompletedOutOfOrder?: boolean;
   isToday: boolean;
   isLocked: boolean;
   isSunday?: boolean;
@@ -31,6 +32,7 @@ export function DayCard({
   title,
   subtitle,
   isCompleted,
+  isCompletedOutOfOrder,
   isToday,
   isLocked,
   isSunday,
@@ -139,7 +141,10 @@ export function DayCard({
             <Lock className="w-4 h-4 text-white/50" />
           </div>
         ) : isCompleted ? (
-          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-green-500 shadow-sm">
+          <div className={cn(
+            "flex items-center justify-center w-9 h-9 rounded-md shadow-sm",
+            isCompletedOutOfOrder ? "bg-yellow-500" : "bg-green-500"
+          )}>
             <Check className="w-5 h-5 text-white" />
           </div>
         ) : (
