@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playLessonComplete } from "@/lib/sounds";
 import { TextReveal } from "@/components/ui/text-reveal";
-import successVideo from "@assets/bearcla_httpss.mj.runy4vu3Y0aYQg_simple_sheen_shine_animation__1772577273211.mp4";
+import successVideo from "@assets/Untitled_design_1772578374170.mp4";
 import imgPadrePio from "@assets/PadrePio_1772577338030.png";
 import imgTeresaCalcutta from "@assets/image_1772578071253.png";
 import imgJohnVianney from "@assets/st-john-vianney-icon-415_1772578077577.jpg";
