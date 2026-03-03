@@ -23,12 +23,19 @@ function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): s
   return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];
 }
 
+interface PrayerCompletionRecord {
+  dayNumber: number;
+  period: string;
+  completedAt: string;
+}
+
 interface DayGridViewProps {
   currentDay: number;
   isTrackA: boolean;
   trackASummaries?: TrackAContent[];
   trackBSummaries?: ContentSummary[];
   cohortStartDate?: string | null;
+  prayerCompletions?: PrayerCompletionRecord[];
   isDayCompleted: (day: number) => boolean;
   isPeriodCompleted: (day: number, period: "morning" | "evening") => boolean;
   onDaySelect: (day: number, period?: "morning" | "evening") => void;
@@ -90,6 +97,7 @@ export function DayGridView({
   trackASummaries,
   trackBSummaries,
   cohortStartDate,
+  prayerCompletions,
   isDayCompleted,
   isPeriodCompleted,
   onDaySelect,
@@ -187,13 +195,22 @@ export function DayGridView({
                   const trackADay = isTrackA ? trackASummaries?.find(c => c.dayNumber === day) : undefined;
                   const subtitle = trackADay?.subtitle || undefined;
 
-                  let outOfOrder = false;
-                  if (isTrackA && completed) {
-                    for (let prev = 1; prev < day; prev++) {
-                      const prevIsSunday = prev > 1 && (prev - 1) % 7 === 0;
-                      if (!prevIsSunday && !isDayCompleted(prev)) {
-                        outOfOrder = true;
-                        break;
+                  let completedLate = false;
+                  if (isTrackA && completed && cohortStartDate && prayerCompletions) {
+                    const record = prayerCompletions.find(c => c.dayNumber === day && c.period === "morning");
+                    if (record) {
+                      const start = new Date(cohortStartDate + "T00:00:00");
+                      const expectedDate = new Date(start);
+                      expectedDate.setDate(start.getDate() + (day - 1));
+                      const expectedStr = expectedDate.getFullYear() + "-" +
+                        String(expectedDate.getMonth() + 1).padStart(2, "0") + "-" +
+                        String(expectedDate.getDate()).padStart(2, "0");
+                      const completed_d = new Date(record.completedAt);
+                      const completedStr = completed_d.getFullYear() + "-" +
+                        String(completed_d.getMonth() + 1).padStart(2, "0") + "-" +
+                        String(completed_d.getDate()).padStart(2, "0");
+                      if (completedStr > expectedStr) {
+                        completedLate = true;
                       }
                     }
                   }
@@ -205,7 +222,7 @@ export function DayGridView({
                       title={title}
                       subtitle={subtitle}
                       isCompleted={completed}
-                      isCompletedOutOfOrder={outOfOrder}
+                      isCompletedOutOfOrder={completedLate}
                       isToday={isToday}
                       isLocked={isLocked}
                       isSunday={isSunday}
