@@ -46,6 +46,7 @@ export function LessonFlow({
   const [timerDone, setTimerDone] = useState(false);
   const [completedTimerSlides, setCompletedTimerSlides] = useState<Set<number>>(new Set());
   const [kcAnswered, setKcAnswered] = useState(false);
+  const [slideInteracted, setSlideInteracted] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const slides = useMemo<SlideData[]>(() => {
@@ -111,6 +112,7 @@ export function LessonFlow({
       setAnimKey((prev) => prev + 1);
       setTimerDone(completedTimerSlides.has(nextSlide));
       setKcAnswered(false);
+      setSlideInteracted(false);
     }
   }, [currentSlide, slides.length, cancelAutoAdvance, completedTimerSlides]);
 
@@ -125,6 +127,7 @@ export function LessonFlow({
       setAnimKey((prev) => prev + 1);
       setTimerDone(completedTimerSlides.has(prevSlide));
       setKcAnswered(false);
+      setSlideInteracted(false);
     }
   }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides]);
 
@@ -135,6 +138,10 @@ export function LessonFlow({
 
   const handleKcAnswered = useCallback(() => {
     setKcAnswered(true);
+  }, []);
+
+  const handleSlideInteracted = useCallback(() => {
+    setSlideInteracted(true);
   }, []);
 
   const handleContinue = useCallback(() => {
@@ -204,6 +211,9 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message"]);
+  const requiresInteraction = INTERACTIVE_TYPES.has(currentSlideData.type) && !slideInteracted;
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
       <LessonProgressBar
@@ -232,6 +242,7 @@ export function LessonFlow({
           ? (letter: string) => handleQuizAnswer(currentSlideData.quizId!, currentSlideData.quizQuestionIndex!, letter)
           : undefined
         }
+        onInteracted={handleSlideInteracted}
       />
 
       {isValidKc && kcAnswered ? null : (
@@ -250,10 +261,10 @@ export function LessonFlow({
             <Button
               variant="default"
               onClick={handleNext}
-              disabled={(currentSlideData.type === "timer" && !timerDone) || isValidKc}
+              disabled={(currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction}
               className={cn(
                 "gap-2",
-                (currentSlideData.type === "timer" && !timerDone) || isValidKc
+                (currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction
                   ? "bg-black/30 text-white/50 cursor-not-allowed"
                   : "bg-black text-white hover:bg-black/90"
               )}

@@ -162,13 +162,22 @@ function parseOptions(content: string): { heading: string; options: string[] } {
   return { heading: headingLines.join("\n"), options };
 }
 
-function MultiSelectList({ content }: { content: string }) {
+function MultiSelectList({ content, onInteracted }: { content: string; onInteracted?: () => void }) {
   const { heading, options } = parseOptions(content);
   const [checked, setChecked] = useState<Record<number, boolean>>({});
+  const interactedRef = useRef(false);
 
   const toggle = (idx: number) => {
     setChecked((prev) => ({ ...prev, [idx]: !prev[idx] }));
+    if (!interactedRef.current) {
+      interactedRef.current = true;
+      onInteracted?.();
+    }
   };
+
+  useEffect(() => {
+    if (options.length === 0) onInteracted?.();
+  }, []);
 
   if (options.length === 0) {
     return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{content}</p>;
@@ -206,9 +215,14 @@ function MultiSelectList({ content }: { content: string }) {
   );
 }
 
-function SingleSelectList({ content }: { content: string }) {
+function SingleSelectList({ content, onInteracted }: { content: string; onInteracted?: () => void }) {
   const { heading, options } = parseOptions(content);
   const [selected, setSelected] = useState<number | null>(null);
+  const interactedRef = useRef(false);
+
+  useEffect(() => {
+    if (options.length === 0) onInteracted?.();
+  }, []);
 
   if (options.length === 0) {
     return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{content}</p>;
@@ -224,7 +238,13 @@ function SingleSelectList({ content }: { content: string }) {
           <button
             key={idx}
             type="button"
-            onClick={() => setSelected(idx)}
+            onClick={() => {
+              setSelected(idx);
+              if (!interactedRef.current) {
+                interactedRef.current = true;
+                onInteracted?.();
+              }
+            }}
             className={cn(
               "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors",
               selected === idx
@@ -262,6 +282,7 @@ interface LessonSlideProps {
   quizQuestionIndex?: number;
   quizAnswers?: Record<number, string>;
   onQuizAnswer?: (letter: string) => void;
+  onInteracted?: () => void;
 }
 
 export function LessonSlide({
@@ -280,6 +301,7 @@ export function LessonSlide({
   quizQuestionIndex,
   quizAnswers,
   onQuizAnswer,
+  onInteracted,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -295,9 +317,9 @@ export function LessonSlide({
         {type === "text" ? (
           <TextSlide content={content} />
         ) : type === "multi_select" ? (
-          <MultiSelectList content={content} />
+          <MultiSelectList content={content} onInteracted={onInteracted} />
         ) : type === "single_select" ? (
-          <SingleSelectList content={content} />
+          <SingleSelectList content={content} onInteracted={onInteracted} />
         ) : type === "media" ? (
           <MediaSlide content={content} />
         ) : type === "text_input" ? (
@@ -306,11 +328,12 @@ export function LessonSlide({
             prompt={content}
             existingAnswer={existingAnswer}
             onJournalChange={onJournalChange}
+            onInteracted={onInteracted}
           />
         ) : type === "action" ? (
-          <ActionSlide content={content} />
+          <ActionSlide content={content} onInteracted={onInteracted} />
         ) : type === "mentor_message" ? (
-          <MentorMessageSlide content={content} mentorId={mentorId} />
+          <MentorMessageSlide content={content} mentorId={mentorId} onInteracted={onInteracted} />
         ) : type === "timer" ? (
           <TimerSlide content={content} onTimerComplete={onTimerComplete} alreadyDone={timerAlreadyDone} />
         ) : type === "knowledge_check" ? (
@@ -363,7 +386,7 @@ function TextSlide({ content }: { content: string }) {
   );
 }
 
-function ActionSlide({ content }: { content: string }) {
+function ActionSlide({ content, onInteracted }: { content: string; onInteracted?: () => void }) {
   const [done, setDone] = useState(false);
   const isHtml = isHtmlContent(content);
 
@@ -379,7 +402,10 @@ function ActionSlide({ content }: { content: string }) {
       <Button
         variant={done ? "secondary" : "default"}
         size="lg"
-        onClick={() => setDone(!done)}
+        onClick={() => {
+          setDone(!done);
+          if (!done) onInteracted?.();
+        }}
         className="gap-2"
         data-testid="button-action-done"
       >
@@ -401,16 +427,19 @@ function TextInputSlide({
   prompt,
   existingAnswer,
   onJournalChange,
+  onInteracted,
 }: {
   dayNumber: number;
   prompt: string;
   existingAnswer?: string;
   onJournalChange?: (value: string) => void;
+  onInteracted?: () => void;
 }) {
   const { mutate, isPending } = useCreateAnswer();
   const [journalContent, setJournalContent] = useState(existingAnswer || "");
   const [saved, setSaved] = useState(!!existingAnswer);
   const lastSavedContent = useRef(existingAnswer || "");
+  const interactedRef = useRef(!!existingAnswer);
 
   useEffect(() => {
     if (existingAnswer !== undefined && existingAnswer !== lastSavedContent.current) {
@@ -420,10 +449,20 @@ function TextInputSlide({
     }
   }, [existingAnswer]);
 
+  useEffect(() => {
+    if (existingAnswer && existingAnswer.trim()) {
+      onInteracted?.();
+    }
+  }, []);
+
   const handleChange = (value: string) => {
     setJournalContent(value);
     setSaved(false);
     onJournalChange?.(value);
+    if (value.trim() && !interactedRef.current) {
+      interactedRef.current = true;
+      onInteracted?.();
+    }
   };
 
   const handleSave = () => {
@@ -470,9 +509,11 @@ function TextInputSlide({
 function MentorMessageSlide({
   content,
   mentorId,
+  onInteracted,
 }: {
   content: string;
   mentorId?: number | null;
+  onInteracted?: () => void;
 }) {
   const { mutate, isPending } = useSendMessage();
   const [message, setMessage] = useState("");
@@ -482,9 +523,13 @@ function MentorMessageSlide({
     if (!mentorId || !message.trim()) return;
     mutate(
       { receiverId: mentorId, content: message.trim() },
-      { onSuccess: () => { playSendMessage(); setSent(true); } }
+      { onSuccess: () => { playSendMessage(); setSent(true); onInteracted?.(); } }
     );
   };
+
+  useEffect(() => {
+    if (!mentorId) onInteracted?.();
+  }, [mentorId, onInteracted]);
 
   if (!mentorId) {
     return (
