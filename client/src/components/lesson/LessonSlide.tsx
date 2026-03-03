@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
-import { playAnswerCorrect, playWrongAnswer } from "@/lib/sounds";
+import { playAnswerCorrect, playWrongAnswer, playTimerComplete } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
 
 export type SlideType =
@@ -585,6 +585,7 @@ function TimerSlide({
           if (timerRef.current) clearInterval(timerRef.current);
           if (!completedRef.current) {
             completedRef.current = true;
+            playTimerComplete();
             onTimerComplete?.();
           }
           return 0;
