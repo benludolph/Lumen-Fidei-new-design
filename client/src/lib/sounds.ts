@@ -3,6 +3,7 @@ import wrongAnswerUrl from "@assets/Wrong_Answer_1772557340180.wav";
 import lessonCompleteUrl from "@assets/Lesson_Complete_1772555574975.wav";
 import clickContinueUrl from "@assets/Click_Continue_1772555574975.wav";
 import timerCompleteUrl from "@assets/Unrealsfx_-_Building_Game_UI_-_Pop_Up_Message_Inviting_1772562554662.wav";
+import sendMessageUrl from "@assets/Sending_a_Message_1772567972547.wav";
 
 const preloaded: Record<string, HTMLAudioElement> = {};
 
@@ -33,6 +34,7 @@ preloaded[wrongAnswerUrl] = preload(wrongAnswerUrl);
 preloaded[lessonCompleteUrl] = preload(lessonCompleteUrl);
 preloaded[clickContinueUrl] = preload(clickContinueUrl, 0.25);
 preloaded[timerCompleteUrl] = preload(timerCompleteUrl);
+preloaded[sendMessageUrl] = preload(sendMessageUrl);
 
 export function playAnswerCorrect() {
   play(answerCorrectUrl);
@@ -52,4 +54,8 @@ export function playClickContinue() {
 
 export function playTimerComplete() {
   play(timerCompleteUrl);
+}
+
+export function playSendMessage() {
+  play(sendMessageUrl);
 }

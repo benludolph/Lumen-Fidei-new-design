@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
-import { playAnswerCorrect, playWrongAnswer, playTimerComplete } from "@/lib/sounds";
+import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
 
 export type SlideType =
@@ -482,7 +482,7 @@ function MentorMessageSlide({
     if (!mentorId || !message.trim()) return;
     mutate(
       { receiverId: mentorId, content: message.trim() },
-      { onSuccess: () => setSent(true) }
+      { onSuccess: () => { playSendMessage(); setSent(true); } }
     );
   };
 
