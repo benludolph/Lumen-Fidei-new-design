@@ -22,7 +22,7 @@ Preferred communication style: Simple, everyday language.
 - **Framework**: Express 5 on Node.js
 - **Language**: TypeScript (ES modules)
 - **Authentication**: Passport.js with local strategy and express-session
-- **Security**: bcryptjs for password hashing, rate limiting, role-based access control, and data isolation.
+- **Security**: bcryptjs for password hashing, helmet (security headers), rate limiting (general 200/15min, auth 10/15min, messages 30/15min, uploads 10/15min, writes 60/15min), HTML sanitization on user text inputs via sanitize-html, role-based access control, and data isolation.
 
 ### Data Storage
 - **Database**: PostgreSQL with Drizzle ORM

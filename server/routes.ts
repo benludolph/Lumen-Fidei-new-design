@@ -8,6 +8,7 @@ import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, ty
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
+import sanitizeHtml from "sanitize-html";
 import { dailyContentData, practiceResourcesData } from "./content-data";
 import { trackAContentData } from "./track-a-content-data";
 import multer from "multer";
@@ -42,13 +43,41 @@ const generalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 login/register attempts per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: { message: "Too many authentication attempts, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true, // Don't count successful requests
+  skipSuccessfulRequests: true,
 });
+
+const messageLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { message: "Too many messages, please slow down" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Too many uploads, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { message: "Too many requests, please slow down" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+function stripHtml(text: string): string {
+  return sanitizeHtml(text, { allowedTags: [], allowedAttributes: {} });
+}
 
 // Middleware to require specific roles
 function requireRole(...roles: string[]) {
@@ -356,7 +385,7 @@ export async function registerRoutes(
 
   // === Image Upload ===
 
-  app.post('/api/admin/upload-image', requireRole('admin'), upload.single('image'), async (req, res) => {
+  app.post('/api/admin/upload-image', requireRole('admin'), uploadLimiter, upload.single('image'), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
     }
@@ -406,13 +435,14 @@ export async function registerRoutes(
     res.json(answers);
   });
 
-  app.post(api.answers.create.path, async (req, res) => {
+  app.post(api.answers.create.path, writeLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const input = api.answers.create.input.parse(req.body);
     
     const answer = await storage.createUserAnswer({
       ...input,
+      answer: stripHtml(input.answer),
       userId: req.user!.id
     });
     
@@ -467,35 +497,29 @@ export async function registerRoutes(
     res.json(messages);
   });
 
-  app.post(api.chat.send.path, async (req, res) => {
+  app.post(api.chat.send.path, messageLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const input = api.chat.send.input.parse(req.body);
     const receiver = await storage.getUser(input.receiverId);
     if (!receiver) return res.status(404).json({ message: "Receiver not found" });
     
-    // Access control:
-    // - Participants can only message their assigned mentor
-    // - Mentors can message their mentees OR admins
-    // - Admins can message anyone
     if (req.user!.role === 'participant') {
       if (input.receiverId !== req.user!.mentorId) {
         return res.status(403).json({ message: "You can only message your assigned mentor" });
       }
     } else if (req.user!.role === 'mentor') {
-      // Mentors can message their mentees or admins
       const isMentee = receiver.mentorId === req.user!.id;
       const isAdmin = receiver.role === 'admin';
       if (!isMentee && !isAdmin) {
         return res.status(403).json({ message: "You can only message your mentees or admin" });
       }
     }
-    // Admin can message anyone - no restrictions
 
     const message = await storage.createMessage({
       senderId: req.user!.id,
       receiverId: input.receiverId,
-      content: input.content
+      content: stripHtml(input.content)
     });
     
     res.status(201).json(message);
@@ -570,7 +594,7 @@ export async function registerRoutes(
     res.json(completion || null);
   });
 
-  app.post(api.prayerCompletions.create.path, async (req, res) => {
+  app.post(api.prayerCompletions.create.path, writeLimiter, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const input = api.prayerCompletions.create.input.parse(req.body);
