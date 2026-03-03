@@ -48,11 +48,21 @@ export function DayCard({
       <div
         data-testid={`card-day-${dayNumber}`}
         className={cn(
-          "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left w-full min-h-[120px] sm:col-span-2",
-          "bg-gradient-to-r from-[#2d4a22]/90 to-[#5c6b32]/70 dark:from-[#2d4a22]/80 dark:to-[#5c6b32]/60",
+          "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left w-full min-h-[120px] sm:col-span-2 overflow-hidden",
+          !backgroundImage && "bg-gradient-to-r from-[#2d4a22]/90 to-[#5c6b32]/70 dark:from-[#2d4a22]/80 dark:to-[#5c6b32]/60",
           "border border-[#8b7d3c]/30"
         )}
       >
+        {backgroundImage && (
+          <img
+            src={backgroundImage}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+          />
+        )}
+        {backgroundImage && (
+          <div className="absolute inset-0 rounded-lg bg-black/50" />
+        )}
         <div className="relative z-10 flex items-center gap-4 w-full justify-center">
           <Church className="w-7 h-7 text-[#d4c876]/80" />
           <div className="flex flex-col items-center gap-0.5">
@@ -84,6 +94,7 @@ export function DayCard({
       data-testid={`card-day-${dayNumber}`}
       className={cn(
         "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[120px]",
+        dayNumber === 1 && "sm:col-span-2",
         isLocked && "opacity-40 cursor-not-allowed",
         !isLocked && !isCompleted && "hover:shadow-md hover:scale-[1.01] cursor-pointer",
         isCompleted && "cursor-pointer hover:shadow-md",

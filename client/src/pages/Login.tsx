@@ -68,7 +68,7 @@ export default function Login() {
                 className="w-20 h-20 mx-auto rounded-xl"
                 data-testid="img-lumen-icon"
               />
-              <h1 className="font-serif text-3xl font-bold text-black">Lumen Fidei</h1>
+              <h1 className="font-serif text-3xl font-bold text-black uppercase tracking-[0.15em]">Lumen Fidei</h1>
               <p className="text-muted-foreground text-sm">30-Day Spiritual Journey</p>
             </div>
             <div className="pt-4 border-t border-border">

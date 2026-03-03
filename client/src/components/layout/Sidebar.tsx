@@ -61,7 +61,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
     <>
       <div className="flex items-center gap-3 mb-10 px-2">
         <div>
-          <h1 className="font-serif font-bold text-lg leading-tight text-black">Lumen Fidei</h1>
+          <h1 className="font-serif font-bold text-lg leading-tight text-black uppercase tracking-[0.15em]">Lumen Fidei</h1>
           <p className="text-xs text-muted-foreground">30-Day Spiritual Journey</p>
         </div>
       </div>
@@ -143,7 +143,7 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border flex items-center justify-between px-4 z-30">
       <div className="flex items-center gap-3">
-        <h1 className="font-serif font-bold text-base text-black">Lumen Fidei</h1>
+        <h1 className="font-serif font-bold text-base text-black uppercase tracking-[0.15em]">Lumen Fidei</h1>
       </div>
       <div className="flex items-center gap-2">
         {unreadCount > 0 && (
