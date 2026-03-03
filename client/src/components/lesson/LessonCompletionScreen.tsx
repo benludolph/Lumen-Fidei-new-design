@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playLessonComplete } from "@/lib/sounds";
+import { TextReveal } from "@/components/ui/text-reveal";
 import fireworksVideo from "@assets/bearcla_httpss.mj.run9sb94es-b58_simple_fireworks._Nothing_el__1772560150122.mp4";
 
 interface LessonCompletionScreenProps {
@@ -155,18 +156,19 @@ export function LessonCompletionScreen({
               <SaintCard image={saintData.image} />
             </div>
 
-            <div
-              className={cn(
-                "text-center space-y-2 transition-all duration-700",
-                showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-              )}
-            >
-              <p className="font-['Afacad',sans-serif] font-semibold text-black text-[22px] sm:text-[25px] leading-[37.5px]">
+            <div className="text-center space-y-2">
+              <TextReveal
+                className="font-['Afacad',sans-serif] font-semibold text-black text-[22px] sm:text-[25px] leading-[37.5px] text-center"
+                delay={0.4}
+              >
                 {saintData.quote}
-              </p>
-              <p className="font-['Afacad',sans-serif] font-bold text-black text-[18px] leading-[37.5px]">
-                ─ {saintData.saint}
-              </p>
+              </TextReveal>
+              <TextReveal
+                className="font-['Afacad',sans-serif] font-bold text-black text-[18px] leading-[37.5px] text-center"
+                delay={1.2}
+              >
+                {`─ ${saintData.saint}`}
+              </TextReveal>
             </div>
           </div>
         </div>
