@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { playLessonComplete } from "@/lib/sounds";
 
 interface LessonCompletionScreenProps {
   dayNumber: number;
@@ -43,6 +44,7 @@ export function LessonCompletionScreen({
   );
 
   useEffect(() => {
+    playLessonComplete();
     const contentTimer = setTimeout(() => setShowContent(true), 400);
     const buttonTimer = setTimeout(() => setShowButton(true), 1200);
     return () => {

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
+import { playAnswerCorrect } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
 
 export type SlideType =
@@ -689,6 +690,7 @@ function KnowledgeCheckSlide({
   const handleSelect = useCallback((idx: number) => {
     if (selectedIndex !== null) return;
     setSelectedIndex(idx);
+    playAnswerCorrect();
     if (!answeredRef.current) {
       answeredRef.current = true;
       onAnswered?.();

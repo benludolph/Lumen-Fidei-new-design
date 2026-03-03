@@ -7,6 +7,7 @@ import { LessonLoadingScreen } from "./LessonLoadingScreen";
 import { LessonProgressBar } from "./LessonProgressBar";
 import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
+import { playClickContinue } from "@/lib/sounds";
 
 interface SlideData {
   type: SlideType;
@@ -103,6 +104,7 @@ export function LessonFlow({
     if (currentSlide >= slides.length - 1) {
       setFlowState("complete");
     } else {
+      playClickContinue();
       const nextSlide = currentSlide + 1;
       setDirection("forward");
       setCurrentSlide(nextSlide);
