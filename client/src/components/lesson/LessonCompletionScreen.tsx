@@ -4,7 +4,12 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playLessonComplete } from "@/lib/sounds";
 import { TextReveal } from "@/components/ui/text-reveal";
-import fireworksVideo from "@assets/bearcla_httpss.mj.run9sb94es-b58_simple_fireworks._Nothing_el__1772560150122.mp4";
+import successVideo from "@assets/bearcla_httpss.mj.runy4vu3Y0aYQg_simple_sheen_shine_animation__1772577273211.mp4";
+import imgPadrePio from "@assets/PadrePio_1772577338030.png";
+import imgTeresaCalcutta from "@assets/image_1772578071253.png";
+import imgJohnVianney from "@assets/st-john-vianney-icon-415_1772578077577.jpg";
+import imgAugustine from "@assets/image_1772578111200.png";
+import imgAnthony from "@assets/image_1772578126634.png";
 
 interface LessonCompletionScreenProps {
   dayNumber: number;
@@ -16,52 +21,52 @@ const SAINT_QUOTES = [
   {
     quote: "Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer.",
     saint: "St. Padre Pio",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Padre_Pio.jpg/220px-Padre_Pio.jpg",
+    image: imgPadrePio,
   },
   {
-    quote: "The soul that walks in love neither tires others nor grows tired.",
-    saint: "St. John of the Cross",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Fray_Juan_de_la_Cruz.jpg/220px-Fray_Juan_de_la_Cruz.jpg",
+    quote: "If you are what you should be, you will set the whole world on fire.",
+    saint: "St. Teresa of Calcutta",
+    image: imgTeresaCalcutta,
   },
   {
-    quote: "You must ask God to give you power to fight against the sin of pride which is your greatest enemy — the root of all that is evil, and the failure of all that is good.",
-    saint: "St. Vincent de Paul",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/St_Vincent_de_Paul.PNG/220px-St_Vincent_de_Paul.PNG",
-  },
-  {
-    quote: "Do not be dismayed by the sins you commit, for even the saints died daily in their struggle.",
-    saint: "St. Josemaría Escrivá",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Jmescriva.jpg/220px-Jmescriva.jpg",
-  },
-  {
-    quote: "Have patience with all things, but chiefly have patience with yourself.",
-    saint: "St. Francis de Sales",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Francis_de_Sales.jpg/220px-Francis_de_Sales.jpg",
-  },
-  {
-    quote: "Lord, make me an instrument of Your peace. Where there is hatred, let me sow love.",
-    saint: "St. Francis of Assisi",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Saint_Francis_of_Assisi_by_Jusepe_de_Ribera.jpg/220px-Saint_Francis_of_Assisi_by_Jusepe_de_Ribera.jpg",
-  },
-  {
-    quote: "If God can work through me, He can work through anyone.",
-    saint: "St. Francis of Assisi",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Saint_Francis_of_Assisi_by_Jusepe_de_Ribera.jpg/220px-Saint_Francis_of_Assisi_by_Jusepe_de_Ribera.jpg",
+    quote: "The eyes of the world see no further than this life, but the eyes of the Christian see deep into eternity.",
+    saint: "St. John Vianney",
+    image: imgJohnVianney,
   },
   {
     quote: "The greatest glory in living lies not in never falling, but in rising every time we fall.",
     saint: "St. Augustine",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Saint_Augustine_by_Philippe_de_Champaigne.jpg/220px-Saint_Augustine_by_Philippe_de_Champaigne.jpg",
+    image: imgAugustine,
   },
   {
-    quote: "To one who has faith, no explanation is necessary. To one without faith, no explanation is possible.",
-    saint: "St. Thomas Aquinas",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/St-thomas-aquinas.jpg/220px-St-thomas-aquinas.jpg",
+    quote: "Actions speak louder than words; let your words teach and your actions speak.",
+    saint: "St. Anthony of Padua",
+    image: imgAnthony,
   },
   {
-    quote: "Be who God meant you to be and you will set the world on fire.",
-    saint: "St. Catherine of Siena",
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Giovanni_Battista_Tiepolo_094.jpg/220px-Giovanni_Battista_Tiepolo_094.jpg",
+    quote: "Have patience with all things, but chiefly have patience with yourself.",
+    saint: "St. Padre Pio",
+    image: imgPadrePio,
+  },
+  {
+    quote: "Not all of us can do great things. But we can do small things with great love.",
+    saint: "St. Teresa of Calcutta",
+    image: imgTeresaCalcutta,
+  },
+  {
+    quote: "Private prayer is like straw scattered here and there: if you set it on fire, it makes a lot of little flames. But gather these straws into a bundle and light them, and you get a mighty fire.",
+    saint: "St. John Vianney",
+    image: imgJohnVianney,
+  },
+  {
+    quote: "You have made us for Yourself, O Lord, and our hearts are restless until they rest in You.",
+    saint: "St. Augustine",
+    image: imgAugustine,
+  },
+  {
+    quote: "The life of the body is the soul; the life of the soul is God.",
+    saint: "St. Anthony of Padua",
+    image: imgAnthony,
   },
 ];
 
@@ -205,15 +210,15 @@ export function LessonCompletionScreen({
               showContent ? "opacity-100 scale-100" : "opacity-0 scale-90"
             )}
           >
-            <div className="w-[212px] h-[212px] rounded-xl overflow-hidden">
+            <div className="w-[160px] h-[160px] rounded-xl overflow-hidden">
               <video
-                src={fireworksVideo}
+                src={successVideo}
                 autoPlay
                 loop
                 muted
                 playsInline
                 className="w-full h-full object-cover"
-                data-testid="fireworks-video"
+                data-testid="success-video"
               />
             </div>
           </div>
