@@ -80,7 +80,7 @@ I will:
     <Shell>
       <div className="max-w-3xl mx-auto py-8 px-4">
         <div className="text-center mb-8">
-          <h1 className="font-serif text-3xl font-bold text-black mb-2">Welcome to <span className="uppercase tracking-[0.15em]">Lumen Fidei</span></h1>
+          <h1 className="font-serif text-3xl font-bold text-black mb-2">Welcome to <span className="uppercase tracking-[0.05em]">Lumen Fidei</span></h1>
           <p className="text-muted-foreground">Your 30-Day Spiritual Journey Begins Here</p>
         </div>
 
