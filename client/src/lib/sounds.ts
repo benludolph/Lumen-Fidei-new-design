@@ -1,4 +1,5 @@
 import answerCorrectUrl from "@assets/Answer_Correct_1772555574960.wav";
+import wrongAnswerUrl from "@assets/Wrong_Answer_1772557340180.wav";
 import lessonCompleteUrl from "@assets/Lesson_Complete_1772555574975.wav";
 import clickContinueUrl from "@assets/Click_Continue_1772555574975.wav";
 
@@ -27,11 +28,16 @@ function play(url: string) {
 }
 
 preloaded[answerCorrectUrl] = preload(answerCorrectUrl);
+preloaded[wrongAnswerUrl] = preload(wrongAnswerUrl);
 preloaded[lessonCompleteUrl] = preload(lessonCompleteUrl);
 preloaded[clickContinueUrl] = preload(clickContinueUrl);
 
 export function playAnswerCorrect() {
   play(answerCorrectUrl);
+}
+
+export function playWrongAnswer() {
+  play(wrongAnswerUrl);
 }
 
 export function playLessonComplete() {

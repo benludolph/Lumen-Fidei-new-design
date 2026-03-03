@@ -340,17 +340,6 @@
   50% { opacity: 0.3; transform: scale(1.05); }
 }
 
-@keyframes lessonCheckScale {
-  0% { opacity: 0; transform: scale(0.3); }
-  60% { opacity: 1; transform: scale(1.15); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes lessonSparkle {
-  0%, 100% { opacity: 0; transform: scale(0); }
-  50% { opacity: 1; transform: scale(1); }
-}
-
 @keyframes lessonDotPulse {
   0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
   40% { opacity: 1; transform: scale(1.2); }
@@ -481,46 +470,4 @@
   animation: lessonSlideInLeft 0.35s ease-out;
 }
 
-.lesson-completion-glow {
-  position: absolute;
-  width: 250px;
-  height: 250px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 40%, transparent 70%);
-  animation: lessonGlowPulse 4s ease-in-out infinite;
-}
-
-@media (min-width: 640px) {
-  .lesson-completion-glow {
-    width: 400px;
-    height: 400px;
-  }
-}
-
-.lesson-completion-check {
-  opacity: 0;
-  transform: scale(0.3);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.lesson-completion-check-visible {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.lesson-sparkle {
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.7);
-  animation: lessonSparkle 3s ease-in-out infinite;
-}
-
-@media (min-width: 640px) {
-  .lesson-sparkle {
-    width: 4px;
-    height: 4px;
-  }
-}
 

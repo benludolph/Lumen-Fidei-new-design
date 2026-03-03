@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
-import { playAnswerCorrect } from "@/lib/sounds";
+import { playAnswerCorrect, playWrongAnswer } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
 
 export type SlideType =
@@ -690,12 +690,16 @@ function KnowledgeCheckSlide({
   const handleSelect = useCallback((idx: number) => {
     if (selectedIndex !== null) return;
     setSelectedIndex(idx);
-    playAnswerCorrect();
+    if (idx === data.correctIndex && data.correctIndex !== undefined) {
+      playAnswerCorrect();
+    } else {
+      playWrongAnswer();
+    }
     if (!answeredRef.current) {
       answeredRef.current = true;
       onAnswered?.();
     }
-  }, [selectedIndex, onAnswered]);
+  }, [selectedIndex, onAnswered, data.correctIndex]);
 
   if (data.options.length === 0) {
     return <div className="slide-text-content"><p>{data.question || "(No question configured)"}</p></div>;
