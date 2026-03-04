@@ -11,12 +11,12 @@ import imgAnthony from "@assets/image_161_1772648401411.png";
 import imgAlphonsus from "@assets/image_161-1_1772648401411.png";
 import imgPadrePio from "@assets/image_162_1772648401412.png";
 import imgTherese from "@assets/image_162-1_1772648401412.png";
-import imgAugustine from "@assets/image_163_1772648401412.png";
+import imgAugustine from "@assets/image_163_1772649687455.png";
 import imgCatherine from "@assets/image_164_1772648401412.png";
 import imgFrancis from "@assets/image_164-1_1772648401412.png";
 import imgTeresaAvila from "@assets/image_164-2_1772648401412.png";
 import imgGemma from "@assets/image_165_1772648401412.png";
-import imgJohnCross from "@assets/image_165-1_1772648401412.png";
+import imgJohnCross from "@assets/image_165_1772649687455.png";
 import imgJohnPaul from "@assets/image_166_1772648401412.png";
 import { addToSaintCollection } from "@/lib/saintCollection";
 import { useAuth } from "@/hooks/use-auth";
@@ -148,7 +148,6 @@ export function LessonCompletionScreen({
         saintName={saintData.saint}
         quote={saintData.quote}
         imageUrl={saintData.image}
-        onContinue={onContinue}
         onAddToCollection={handleAddToCollection}
       />
     );

@@ -7,7 +7,6 @@ interface SaintRevealModalProps {
   saintName: string;
   quote: string;
   imageUrl: string;
-  onContinue: () => void;
   onAddToCollection: () => void;
 }
 
@@ -17,7 +16,6 @@ export function SaintRevealModal({
   saintName,
   quote,
   imageUrl,
-  onContinue,
   onAddToCollection,
 }: SaintRevealModalProps) {
   const [phase, setPhase] = useState<Phase>("slideUp");
@@ -216,16 +214,6 @@ export function SaintRevealModal({
             </motion.div>
           </motion.div>
 
-          <motion.button
-            className="mt-8 font-['Afacad',sans-serif] text-white/40 text-[14px] hover:text-white/60 transition-colors"
-            onClick={onContinue}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: showText && !isCollecting ? 1 : 0 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            data-testid="button-continue-after-reveal"
-          >
-            Continue
-          </motion.button>
         </motion.div>
       </div>
     </div>
