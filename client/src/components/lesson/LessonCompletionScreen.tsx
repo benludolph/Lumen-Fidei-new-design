@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookmarkPlus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { playLessonComplete } from "@/lib/sounds";
+import { SaintRevealModal } from "./SaintRevealModal";
 import successVideo from "@assets/Untitled_design_1772578374170.mp4";
-import imgPadrePio from "@assets/PadrePio_1772577338030.png";
+import imgPadrePio from "@assets/St.PadrePio_1772600715389.png";
 import imgTeresaCalcutta from "@assets/image_1772578071253.png";
 import imgJohnVianney from "@assets/st-john-vianney-icon-415_1772578077577.jpg";
 import imgAugustine from "@assets/image_1772578111200.png";
@@ -70,137 +70,6 @@ const SAINT_QUOTES = [
   },
 ];
 
-function SaintRevealStep({
-  saintData,
-  onContinue,
-}: {
-  saintData: typeof SAINT_QUOTES[0];
-  onContinue: () => void;
-}) {
-  return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      data-testid="lesson-saint-reveal"
-    >
-      <motion.div
-        className="absolute inset-0 bg-black/80"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      />
-
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 1.2 }}
-      >
-        <div
-          className="w-[400px] h-[400px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, rgba(212,200,118,0.25) 0%, rgba(212,200,118,0.08) 40%, transparent 70%)",
-            filter: "blur(30px)",
-          }}
-        />
-      </motion.div>
-
-      <motion.div
-        className="relative z-10 flex flex-col items-center w-full max-w-[340px] mx-4"
-        initial={{ y: 60, scale: 0.92, opacity: 0 }}
-        animate={{ y: 0, scale: 1, opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.7, ease: "easeOut" }}
-      >
-        <div
-          className="relative rounded-2xl overflow-hidden bg-zinc-900/90 border border-[#d4c876]/20 shadow-2xl w-full"
-          style={{
-            boxShadow: "0 0 60px rgba(212,200,118,0.15), 0 25px 50px rgba(0,0,0,0.5)",
-          }}
-        >
-          <div
-            className="absolute inset-0 pointer-events-none z-20"
-            style={{ overflow: "hidden" }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "60%",
-                height: "200%",
-                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)",
-                animation: "light-sweep 1.8s ease-in-out 1.0s forwards",
-                transform: "translateX(-100%) rotate(-45deg)",
-              }}
-            />
-          </div>
-
-          <div className="relative z-10 flex flex-col items-center px-6 pt-8 pb-6">
-            <motion.div
-              className="mb-5 rounded-xl overflow-hidden shadow-lg"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-              style={{ boxShadow: "0 0 30px rgba(212,200,118,0.2)" }}
-            >
-              <img
-                src={saintData.image}
-                alt={saintData.saint}
-                className="w-[180px] h-[240px] object-cover rounded-xl"
-                data-testid="saint-reveal-image"
-              />
-            </motion.div>
-
-            <motion.h2
-              className="font-['Afacad',sans-serif] font-bold text-[#d4c876] text-[24px] leading-tight text-center mb-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.1, duration: 0.5 }}
-              data-testid="saint-reveal-name"
-            >
-              {saintData.saint}
-            </motion.h2>
-
-            <motion.p
-              className="font-['Afacad',sans-serif] text-white/80 text-[15px] leading-[24px] text-center italic px-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.4, duration: 0.5 }}
-              data-testid="saint-reveal-quote"
-            >
-              "{saintData.quote}"
-            </motion.p>
-          </div>
-        </div>
-
-        <motion.div
-          className="flex flex-col gap-3 w-full mt-6"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.8, duration: 0.5 }}
-        >
-          <Button
-            onClick={onContinue}
-            variant="outline"
-            className="w-full h-11 gap-2 font-['Afacad',sans-serif] font-medium text-sm bg-transparent border-[#d4c876]/40 text-[#d4c876] hover:bg-[#d4c876]/10 hover:text-[#d4c876] hover:border-[#d4c876]/60 rounded-lg"
-            data-testid="button-add-to-collection"
-          >
-            <BookmarkPlus className="w-4 h-4" />
-            Add to Collection
-          </Button>
-          <Button
-            onClick={onContinue}
-            className="w-full h-11 gap-2 font-['Afacad',sans-serif] font-medium text-sm bg-[#d4c876] hover:bg-[#d4c876]/90 text-black rounded-lg shadow-md"
-            data-testid="button-continue-after-reveal"
-          >
-            Continue
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </motion.div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
 export function LessonCompletionScreen({
   dayNumber,
   theme,
@@ -227,7 +96,15 @@ export function LessonCompletionScreen({
   }, []);
 
   if (step === "reveal") {
-    return <SaintRevealStep saintData={saintData} onContinue={onContinue} />;
+    return (
+      <SaintRevealModal
+        saintName={saintData.saint}
+        quote={saintData.quote}
+        imageUrl={saintData.image}
+        onContinue={onContinue}
+        onAddToCollection={onContinue}
+      />
+    );
   }
 
   return (
