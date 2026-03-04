@@ -294,11 +294,12 @@ function ChatWindow({
                   <div 
                     key={msg.id} 
                     className={cn(
-                      "max-w-[80%] sm:max-w-[75%] px-3 sm:px-4 py-2 rounded-2xl text-sm",
+                      "max-w-[80%] sm:max-w-[75%] px-3 sm:px-4 py-2 rounded-2xl text-sm break-words overflow-hidden",
                       isMe 
                         ? "bg-primary text-primary-foreground self-end rounded-br-none" 
                         : "bg-secondary text-secondary-foreground self-start rounded-bl-none"
                     )}
+                    style={{ overflowWrap: "break-word", wordBreak: "break-word" }}
                     data-testid={`message-${msg.id}`}
                   >
                     {msg.content}

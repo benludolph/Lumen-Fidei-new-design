@@ -9,6 +9,7 @@ import {
   Settings, 
   LogOut, 
   Library,
+  Trophy,
   Menu,
   X
 } from "lucide-react";
@@ -72,7 +73,10 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
         </div>
         
         {user.role === 'participant' && (
-          <NavItem href="/dashboard" icon={BookOpen} label="My Journey" onClick={onNavClick} />
+          <>
+            <NavItem href="/dashboard" icon={BookOpen} label="My Journey" onClick={onNavClick} />
+            <NavItem href="/collections" icon={Trophy} label="Collection" onClick={onNavClick} />
+          </>
         )}
         
         {(user.role === 'mentor' || user.role === 'admin') && (

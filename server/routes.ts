@@ -1166,6 +1166,28 @@ export async function registerRoutes(
     res.send(csv);
   });
   
+  // === Admin Message Management ===
+
+  app.get('/api/admin/messages/:userId1/:userId2', requireRole('admin'), async (req, res) => {
+    const userId1 = Number(req.params.userId1);
+    const userId2 = Number(req.params.userId2);
+    if (isNaN(userId1) || isNaN(userId2)) {
+      return res.status(400).json({ message: "Invalid user IDs" });
+    }
+    const msgs = await storage.getMessagesBetweenUsers(userId1, userId2);
+    res.json(msgs);
+  });
+
+  app.delete('/api/admin/messages/:userId1/:userId2', requireRole('admin'), async (req, res) => {
+    const userId1 = Number(req.params.userId1);
+    const userId2 = Number(req.params.userId2);
+    if (isNaN(userId1) || isNaN(userId2)) {
+      return res.status(400).json({ message: "Invalid user IDs" });
+    }
+    const count = await storage.deleteMessagesBetweenUsers(userId1, userId2);
+    res.json({ message: `Deleted ${count} messages`, count });
+  });
+
   // Seed Data
   await seed();
 

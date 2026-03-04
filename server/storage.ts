@@ -75,6 +75,10 @@ export interface IStorage {
   getCohortSetting(key: string): Promise<string | null>;
   setCohortSetting(key: string, value: string): Promise<CohortSetting>;
   
+  // Admin message management
+  getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
+  deleteMessagesBetweenUsers(userId1: number, userId2: number): Promise<number>;
+
   // session store
   sessionStore: any;
 }
@@ -354,6 +358,31 @@ export class DatabaseStorage implements IStorage {
     }
     const [newContent] = await db.insert(trackAContent).values(data).returning();
     return newContent;
+  }
+
+  // Admin message management
+  async getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]> {
+    return await db.select()
+      .from(messages)
+      .where(
+        or(
+          and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
+          and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
+        )
+      )
+      .orderBy(asc(messages.createdAt));
+  }
+
+  async deleteMessagesBetweenUsers(userId1: number, userId2: number): Promise<number> {
+    const existing = await this.getMessagesBetweenUsers(userId1, userId2);
+    const count = existing.length;
+    await db.delete(messages).where(
+      or(
+        and(eq(messages.senderId, userId1), eq(messages.receiverId, userId2)),
+        and(eq(messages.senderId, userId2), eq(messages.receiverId, userId1))
+      )
+    );
+    return count;
   }
 
   // Cohort Settings

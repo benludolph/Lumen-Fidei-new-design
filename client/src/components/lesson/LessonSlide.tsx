@@ -554,11 +554,13 @@ function MentorMessageSlide({
   if (!mentorId) {
     return (
       <div className="space-y-4" data-testid="slide-mentor-message">
-        {isHtmlContent(content) ? (
-          <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black" />
-        ) : (
-          <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">{content}</p>
-        )}
+        <div className="overflow-y-auto max-h-[50vh]" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
+          {isHtmlContent(content) ? (
+            <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words" />
+          ) : (
+            <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words">{content}</p>
+          )}
+        </div>
         <p className="text-sm text-black/50 font-['Afacad',sans-serif]">No mentor assigned yet.</p>
       </div>
     );
@@ -578,11 +580,13 @@ function MentorMessageSlide({
 
   return (
     <div className="space-y-6" data-testid="slide-mentor-message">
-      {isHtmlContent(content) ? (
-        <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black" />
-      ) : (
-        <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">{content}</p>
-      )}
+      <div className="overflow-y-auto max-h-[40vh]" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
+        {isHtmlContent(content) ? (
+          <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words" />
+        ) : (
+          <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words">{content}</p>
+        )}
+      </div>
       <Textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -697,7 +701,7 @@ function TimerSlide({
       </div>
 
       {!done && (
-        <p className="text-sm text-black/40 font-['Afacad',sans-serif]">
+        <p className="text-[16px] text-black/40 font-['Afacad',sans-serif]">
           Take a moment to reflect on this passage
         </p>
       )}
