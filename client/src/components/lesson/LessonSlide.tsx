@@ -702,7 +702,7 @@ function TimerSlide({
       </div>
 
       {!done && (
-        <p className="text-[16px] text-black/40 font-['Afacad',sans-serif]">
+        <p className="text-[16px] text-black/70 font-['Afacad',sans-serif]">
           Take a moment to reflect on this passage
         </p>
       )}
