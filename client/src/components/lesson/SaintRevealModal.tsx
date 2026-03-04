@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookmarkPlus } from "lucide-react";
+import { BookmarkPlus } from "lucide-react";
 
 interface SaintRevealModalProps {
   saintName: string;
@@ -11,7 +11,7 @@ interface SaintRevealModalProps {
   onAddToCollection: () => void;
 }
 
-type Phase = "overlay" | "silhouette" | "glow" | "flip" | "text";
+type Phase = "slideUp" | "center" | "indent" | "popReveal" | "showText";
 
 export function SaintRevealModal({
   saintName,
@@ -20,153 +20,140 @@ export function SaintRevealModal({
   onContinue,
   onAddToCollection,
 }: SaintRevealModalProps) {
-  const [phase, setPhase] = useState<Phase>("overlay");
+  const [phase, setPhase] = useState<Phase>("slideUp");
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setPhase("silhouette"), 500),
-      setTimeout(() => setPhase("glow"), 1200),
-      setTimeout(() => setPhase("flip"), 2000),
-      setTimeout(() => setPhase("text"), 2700),
+      setTimeout(() => setPhase("center"), 600),
+      setTimeout(() => setPhase("indent"), 1200),
+      setTimeout(() => setPhase("popReveal"), 1550),
+      setTimeout(() => setPhase("showText"), 2100),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
 
-  const phaseIndex = ["overlay", "silhouette", "glow", "flip", "text"].indexOf(phase);
-  const pastSilhouette = phaseIndex >= 1;
-  const pastGlow = phaseIndex >= 2;
-  const pastFlip = phaseIndex >= 3;
-  const pastText = phaseIndex >= 4;
+  const isCenter = ["center", "indent", "popReveal", "showText"].includes(phase);
+  const isIndent = phase === "indent";
+  const isRevealed = ["popReveal", "showText"].includes(phase);
+  const showText = phase === "showText";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ perspective: "1200px" }}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
       data-testid="saint-reveal-modal"
     >
       <motion.div
-        className="absolute inset-0 bg-black/85"
+        className="absolute inset-0"
+        style={{ backgroundColor: "#1a1a1a" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4 }}
       />
-
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        initial={{ opacity: 0, scale: 0.6 }}
-        animate={{
-          opacity: pastGlow ? 1 : 0,
-          scale: pastGlow ? 1 : 0.6,
-        }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-      >
-        <div
-          className="w-[350px] h-[450px] rounded-full"
-          style={{
-            background: "radial-gradient(circle, rgba(212,175,55,0.3) 0%, rgba(212,175,55,0.1) 35%, transparent 65%)",
-            filter: "blur(40px)",
-          }}
-        />
-      </motion.div>
 
       <div className="relative z-10 flex flex-col items-center w-full max-w-[320px] mx-4">
         <motion.div
-          className="relative w-full"
-          style={{
-            transformStyle: "preserve-3d",
-          }}
-          initial={{ rotateY: 180, scale: 0.9, opacity: 0 }}
+          className="relative"
+          initial={{ y: "100vh", opacity: 0 }}
           animate={{
-            rotateY: pastFlip ? 0 : 180,
-            scale: pastSilhouette ? 1 : 0.9,
-            opacity: pastSilhouette ? (pastFlip ? 1 : 0.35) : 0,
+            y: isCenter ? 0 : "100vh",
+            opacity: isCenter ? 1 : 0,
+            scale: isIndent ? 0.82 : isRevealed ? 1.02 : 1,
           }}
-          transition={{
-            rotateY: { duration: 0.7, ease: "easeOut" },
-            scale: { duration: 0.6, ease: "easeOut" },
-            opacity: { duration: 0.5 },
-          }}
+          transition={
+            isIndent
+              ? { scale: { duration: 0.25, ease: "easeIn" } }
+              : isRevealed
+                ? { scale: { type: "spring", stiffness: 400, damping: 15, mass: 0.8 } }
+                : { y: { duration: 0.55, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.3 } }
+          }
         >
-          <div
-            className="relative overflow-hidden rounded-xl"
+          <motion.div
+            className="relative overflow-hidden rounded-lg"
+            animate={{
+              filter: isRevealed ? "brightness(1) saturate(1)" : "brightness(0.3) saturate(0)",
+            }}
+            transition={{ duration: isRevealed ? 0.35 : 0.1 }}
             style={{
-              backfaceVisibility: "hidden",
-              boxShadow: pastFlip
-                ? "0 0 40px rgba(212,175,55,0.25), 0 20px 40px rgba(0,0,0,0.4)"
-                : "none",
+              boxShadow: isRevealed
+                ? "0 8px 40px rgba(212,175,55,0.3), 0 20px 60px rgba(0,0,0,0.5)"
+                : "0 4px 20px rgba(0,0,0,0.6)",
             }}
           >
             <img
               src={imageUrl}
               alt={saintName}
-              className="w-full h-auto object-cover rounded-xl"
+              className="w-[152px] h-[225px] object-cover rounded-lg"
               data-testid="saint-reveal-image"
             />
-
-            {!pastFlip && (
-              <div
-                className="absolute inset-0 rounded-xl"
-                style={{
-                  background: "linear-gradient(135deg, rgba(30,30,30,0.9) 0%, rgba(20,20,20,0.95) 100%)",
-                  mixBlendMode: "multiply",
-                }}
-              />
-            )}
-          </div>
+          </motion.div>
         </motion.div>
 
-        <motion.h2
-          className="font-['Afacad',sans-serif] font-bold text-[#d4af37] text-[26px] leading-tight text-center mt-5"
-          initial={{ opacity: 0, y: 12 }}
+        <motion.div
+          className="flex flex-col items-center mt-6 w-full"
+          initial={{ opacity: 0, y: 20 }}
           animate={{
-            opacity: pastText ? 1 : 0,
-            y: pastText ? 0 : 12,
+            opacity: showText ? 1 : 0,
+            y: showText ? 0 : 20,
           }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          data-testid="saint-reveal-name"
         >
-          {saintName}
-        </motion.h2>
-
-        <motion.p
-          className="font-['Afacad',sans-serif] text-white/75 text-[15px] leading-[22px] text-center italic mt-3 px-2"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{
-            opacity: pastText ? 1 : 0,
-            y: pastText ? 0 : 12,
-          }}
-          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-          data-testid="saint-reveal-quote"
-        >
-          "{quote}"
-        </motion.p>
-
-        <motion.div
-          className="flex flex-col gap-3 w-full mt-7"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{
-            opacity: pastText ? 1 : 0,
-            y: pastText ? 0 : 15,
-          }}
-          transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
-        >
-          <Button
-            onClick={onAddToCollection}
-            variant="outline"
-            className="w-full h-11 gap-2 font-['Afacad',sans-serif] font-medium text-sm bg-transparent border-[#d4af37]/40 text-[#d4af37] hover:bg-[#d4af37]/10 hover:text-[#d4af37] hover:border-[#d4af37]/60 rounded-lg"
-            data-testid="button-add-to-collection"
+          <p
+            className="font-['Afacad',sans-serif] text-[#d4af37]/70 text-[13px] font-semibold tracking-[3px] uppercase mb-1"
+            data-testid="text-unlocked-label"
           >
-            <BookmarkPlus className="w-4 h-4" />
-            Add to Collection
-          </Button>
-          <Button
+            UNLOCKED
+          </p>
+
+          <h2
+            className="font-['Afacad',sans-serif] font-bold text-white text-[24px] leading-tight text-center mb-3"
+            data-testid="saint-reveal-name"
+          >
+            {saintName}
+          </h2>
+
+          <motion.p
+            className="font-['Afacad',sans-serif] text-white/60 text-[15px] leading-[22px] text-center italic px-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{
+              opacity: showText ? 1 : 0,
+              y: showText ? 0 : 10,
+            }}
+            transition={{ duration: 0.4, delay: 0.15, ease: "easeOut" }}
+            data-testid="saint-reveal-quote"
+          >
+            "{quote}"
+          </motion.p>
+
+          <motion.div
+            className="mt-6 w-full flex justify-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{
+              opacity: showText ? 1 : 0,
+              y: showText ? 0 : 10,
+            }}
+            transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+          >
+            <Button
+              onClick={onAddToCollection}
+              variant="outline"
+              className="gap-2 font-['Afacad',sans-serif] font-medium text-sm bg-transparent border-white/20 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/40 rounded-full px-6 h-9"
+              data-testid="button-add-to-collection"
+            >
+              <BookmarkPlus className="w-4 h-4" />
+              Add to Collection
+            </Button>
+          </motion.div>
+
+          <motion.button
+            className="mt-8 font-['Afacad',sans-serif] text-white/40 text-[14px] hover:text-white/60 transition-colors"
             onClick={onContinue}
-            className="w-full h-11 gap-2 font-['Afacad',sans-serif] font-medium text-sm bg-[#d4af37] hover:bg-[#c9a432] text-black rounded-lg shadow-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showText ? 1 : 0 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
             data-testid="button-continue-after-reveal"
           >
             Continue
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          </motion.button>
         </motion.div>
       </div>
     </div>
