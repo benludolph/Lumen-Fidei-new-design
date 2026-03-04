@@ -183,7 +183,7 @@ export function LessonFlow({
       <LessonCompletionScreen
         dayNumber={dayNumber}
         theme={content.centralTheme}
-
+        saintId={content.saintId}
         onContinue={handleContinue}
       />
     );

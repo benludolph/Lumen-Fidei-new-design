@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { ALL_SAINTS } from "@/components/lesson/LessonCompletionScreen";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1741,6 +1742,7 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
+  saintId: string | null;
 };
 
 const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz"] as const;
@@ -2177,6 +2179,7 @@ function TrackAContentManagementView() {
   const [dayImageUrl, setDayImageUrl] = useState<string | null>(null);
   const [daySubtitle, setDaySubtitle] = useState("");
   const [completionMessage, setCompletionMessage] = useState("");
+  const [selectedSaintId, setSelectedSaintId] = useState<string>("");
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleSubtitle, setModuleSubtitle] = useState("");
@@ -2240,12 +2243,14 @@ function TrackAContentManagementView() {
       setDayImageUrl(content.imageUrl || null);
       setDaySubtitle(content.subtitle || "");
       setCompletionMessage(content.completionMessage || "");
+      setSelectedSaintId(content.saintId || "");
     } else {
       setCentralTheme("");
       setSlides([]);
       setDayImageUrl(null);
       setDaySubtitle("");
       setCompletionMessage("");
+      setSelectedSaintId("");
     }
     setExpandedSlide(null);
   };
@@ -2301,6 +2306,7 @@ function TrackAContentManagementView() {
       slides,
       imageUrl: dayImageUrl,
       completionMessage: completionMessage || null,
+      saintId: (selectedSaintId && selectedSaintId !== "__none__") ? selectedSaintId : null,
     });
   };
 
@@ -2615,6 +2621,23 @@ function TrackAContentManagementView() {
                     data-testid="input-completion-message"
                   />
                   <p className="text-xs text-muted-foreground">Custom message shown on the success screen when the lesson is finished. Leave blank for default.</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Saint Card</label>
+                  <Select value={selectedSaintId} onValueChange={setSelectedSaintId}>
+                    <SelectTrigger data-testid="select-saint-card">
+                      <SelectValue placeholder="Auto-assign based on day number" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Auto-assign based on day number</SelectItem>
+                      {ALL_SAINTS.map((saint) => (
+                        <SelectItem key={saint.id} value={saint.id} data-testid={`option-saint-${saint.id}`}>
+                          {saint.saint}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Choose which saint card is revealed when the participant completes this lesson. Leave as auto-assign for default rotation.</p>
                 </div>
               </div>
             </CardContent>

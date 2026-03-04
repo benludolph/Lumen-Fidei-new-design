@@ -77,6 +77,7 @@ export const trackAContent = pgTable("track_a_content", {
   slides: json("slides").$type<{ type: string; content: string }[]>(),
   imageUrl: text("image_url"),
   completionMessage: text("completion_message"),
+  saintId: text("saint_id"),
 });
 
 export const userAnswers = pgTable("user_answers", {

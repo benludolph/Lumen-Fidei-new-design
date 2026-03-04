@@ -25,6 +25,7 @@ interface LessonCompletionScreenProps {
   dayNumber: number;
   theme: string;
   onContinue: () => void;
+  saintId?: string | null;
 }
 
 export interface SaintData {
@@ -113,13 +114,14 @@ export function LessonCompletionScreen({
   dayNumber,
   theme,
   onContinue,
+  saintId,
 }: LessonCompletionScreenProps) {
   const [step, setStep] = useState<"success" | "reveal">("success");
   const [showContent, setShowContent] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const { user } = useAuth();
 
-  const saintData = ALL_SAINTS[(dayNumber - 1) % ALL_SAINTS.length];
+  const saintData = (saintId && ALL_SAINTS.find(s => s.id === saintId)) || ALL_SAINTS[(dayNumber - 1) % ALL_SAINTS.length];
 
   useEffect(() => {
     playLessonComplete();
