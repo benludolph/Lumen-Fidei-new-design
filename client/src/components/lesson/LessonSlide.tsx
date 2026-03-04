@@ -56,6 +56,7 @@ function YouTubeEmbed({ videoId, originalUrl }: { videoId: string; originalUrl: 
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
           className="w-full h-full"
         />
       </div>
