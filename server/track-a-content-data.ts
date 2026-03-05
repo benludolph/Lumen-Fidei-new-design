@@ -4,14 +4,6 @@ export const trackAContentData: InsertTrackAContent[] = [
   {
     dayNumber: 1,
     weekNumber: 1,
-    centralTheme: "Introduction - Goal of 30 Days",
-    slides: [
-      { type: "text", content: "Knowing the Truth / Dispelling Distortions & Lies" },
-    ],
-  },
-  {
-    dayNumber: 2,
-    weekNumber: 1,
     centralTheme: "What is Prayer? How to Pray",
     slides: [
       { type: "multi_select", content: "When you pray, what usually happens?\n\n☐ I don't know what to say\n☐ I get distracted\n☐ I feel awkward\n☐ I only pray when I'm stressed\n☐ I avoid prayer altogether" },
@@ -25,7 +17,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 3,
+    dayNumber: 2,
     weekNumber: 1,
     centralTheme: "Is God Real?",
     slides: [
@@ -42,7 +34,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 4,
+    dayNumber: 3,
     weekNumber: 1,
     centralTheme: "What is your Image of God? Tackling Lies",
     slides: [
@@ -69,7 +61,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 5,
+    dayNumber: 4,
     weekNumber: 1,
     centralTheme: "Spiritual Warfare Basics",
     slides: [
@@ -84,7 +76,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 6,
+    dayNumber: 5,
     weekNumber: 1,
     centralTheme: "God Loves You / Made for Relationship",
     slides: [
@@ -99,7 +91,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 7,
+    dayNumber: 6,
     weekNumber: 1,
     centralTheme: "We Are His Children / Receiving a New Identity",
     slides: [
@@ -116,13 +108,13 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 8,
+    dayNumber: 7,
     weekNumber: 2,
     centralTheme: "ATTEND SUNDAY MASS",
     slides: [],
   },
   {
-    dayNumber: 9,
+    dayNumber: 8,
     weekNumber: 2,
     centralTheme: "Wounds of Sin & Original Sin",
     slides: [
@@ -132,7 +124,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 10,
+    dayNumber: 9,
     weekNumber: 2,
     centralTheme: "Wounds of Sin",
     slides: [
@@ -141,7 +133,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 11,
+    dayNumber: 10,
     weekNumber: 2,
     centralTheme: "Examination of Conscience",
     slides: [
@@ -152,7 +144,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 12,
+    dayNumber: 11,
     weekNumber: 2,
     centralTheme: "Centrality of Jesus & Cross",
     slides: [
@@ -160,7 +152,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 13,
+    dayNumber: 12,
     weekNumber: 2,
     centralTheme: "Meaning of the Passion & Cross",
     slides: [
@@ -171,7 +163,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 14,
+    dayNumber: 13,
     weekNumber: 2,
     centralTheme: "Message #1 - Salvation Through Jesus Christ",
     slides: [
@@ -180,13 +172,13 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 15,
+    dayNumber: 14,
     weekNumber: 3,
     centralTheme: "ATTEND SUNDAY MASS",
     slides: [],
   },
   {
-    dayNumber: 16,
+    dayNumber: 15,
     weekNumber: 3,
     centralTheme: "Message #2 - Forgiving Others",
     slides: [
@@ -195,7 +187,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 17,
+    dayNumber: 16,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Healer",
     slides: [
@@ -204,7 +196,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 18,
+    dayNumber: 17,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Deliverer",
     slides: [
@@ -213,7 +205,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 19,
+    dayNumber: 18,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Friend",
     slides: [
@@ -222,7 +214,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 20,
+    dayNumber: 19,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Friend",
     slides: [
@@ -230,7 +222,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 21,
+    dayNumber: 20,
     weekNumber: 3,
     centralTheme: "Person of Jesus: King",
     slides: [
@@ -240,13 +232,13 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 22,
+    dayNumber: 21,
     weekNumber: 4,
     centralTheme: "ATTEND SUNDAY MASS",
     slides: [],
   },
   {
-    dayNumber: 23,
+    dayNumber: 22,
     weekNumber: 4,
     centralTheme: "Spiritual Warfare: Authority",
     slides: [
@@ -256,7 +248,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 24,
+    dayNumber: 23,
     weekNumber: 4,
     centralTheme: "Conversion / Change Your Life",
     slides: [
@@ -267,7 +259,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 25,
+    dayNumber: 24,
     weekNumber: 4,
     centralTheme: "Are You Ready to Change Your Life?",
     slides: [
@@ -275,7 +267,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 26,
+    dayNumber: 25,
     weekNumber: 4,
     centralTheme: "Accepting the Invitation",
     slides: [
@@ -288,7 +280,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 27,
+    dayNumber: 26,
     weekNumber: 4,
     centralTheme: "What is Faith?",
     slides: [
@@ -299,7 +291,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 28,
+    dayNumber: 27,
     weekNumber: 4,
     centralTheme: "Conversion / Change Your Life",
     slides: [
@@ -309,18 +301,27 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 29,
+    dayNumber: 28,
     weekNumber: 5,
     centralTheme: "ATTEND SUNDAY MASS",
     slides: [],
   },
   {
-    dayNumber: 30,
+    dayNumber: 29,
     weekNumber: 5,
     centralTheme: "Conclusion",
     slides: [
       { type: "text_input", content: "Final Written Reflection" },
       { type: "action", content: "Schedule 30 Day Online Exit Interview\nSchedule Initial Prayer Evaluation" },
+    ],
+  },
+  {
+    dayNumber: 30,
+    weekNumber: 5,
+    centralTheme: "Closing & Next Steps",
+    slides: [
+      { type: "text", content: "Congratulations on completing the Lumen Fidei 30-day journey. Take a moment to reflect on how far you've come." },
+      { type: "action", content: "Share one thing that changed for you during these 30 days." },
     ],
   },
 ];

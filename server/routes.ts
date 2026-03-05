@@ -4,9 +4,9 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, type User } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
 import { dailyContentData, practiceResourcesData } from "./content-data";
@@ -967,8 +967,9 @@ export async function registerRoutes(
     }
     
     const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
+    const introContent = await storage.getCohortSetting("day0_intro_content");
     const agreementText = await storage.getCohortSetting("day0_agreement_text");
-    res.json({ introVideoUrl, agreementText });
+    res.json({ introVideoUrl, introContent, agreementText });
   });
 
   app.post(api.admin.day0Settings.update.path, async (req, res) => {
@@ -976,10 +977,13 @@ export async function registerRoutes(
       return res.status(403).json({ message: "Admin access required" });
     }
     
-    const { introVideoUrl, agreementText } = req.body;
+    const { introVideoUrl, introContent, agreementText } = req.body;
     
     if (introVideoUrl !== undefined) {
       await storage.setCohortSetting("day0_intro_video_url", introVideoUrl);
+    }
+    if (introContent !== undefined) {
+      await storage.setCohortSetting("day0_intro_content", introContent);
     }
     if (agreementText !== undefined) {
       await storage.setCohortSetting("day0_agreement_text", agreementText);
@@ -994,10 +998,11 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
+    const introContent = await storage.getCohortSetting("day0_intro_content");
     const agreementText = await storage.getCohortSetting("day0_agreement_text");
     const agreementSigned = !!req.user!.agreementSignedAt;
     
-    res.json({ introVideoUrl, agreementText, agreementSigned });
+    res.json({ introVideoUrl, introContent, agreementText, agreementSigned });
   });
 
   app.post(api.day0.signAgreement.path, async (req, res) => {
@@ -1841,16 +1846,43 @@ As you move into Week 2, continue these daily practices. They are building a fou
         console.log("Track A modules seeded (5 modules).");
     }
 
-    // Seed Track A content if needed
+    // One-time migration: shift Track A content to remove Day 1 "Introduction" 
+    // and renumber Days 2-30 → 1-29, then add new Day 30
     const existingTrackAContent = await storage.getAllTrackAContent();
-    if (existingTrackAContent.length === 0) {
+    const day1Content = existingTrackAContent.find(c => c.dayNumber === 1);
+    if (day1Content && day1Content.centralTheme === "Introduction - Goal of 30 Days") {
+        console.log("Migrating Track A: removing Introduction from Day 1 and shifting days...");
+        const introSlides = day1Content.slides as { type: string; content: string }[] | null;
+        const introText = introSlides?.map(s => s.content).join("\n\n") || "Introduction - Goal of 30 Days";
+        await storage.setCohortSetting("day0_intro_content", `${day1Content.centralTheme}\n\n${introText}`);
+        await db.delete(trackAContent).where(eq(trackAContent.dayNumber, 1));
+        for (let d = 2; d <= 30; d++) {
+            await db.update(trackAContent)
+                .set({ dayNumber: d - 1, weekNumber: Math.ceil((d - 1) / 7) })
+                .where(eq(trackAContent.dayNumber, d));
+        }
+        await storage.upsertTrackAContent({
+            dayNumber: 30,
+            weekNumber: 5,
+            centralTheme: "Closing & Next Steps",
+            slides: [
+                { type: "text", content: "Congratulations on completing the Lumen Fidei 30-day journey. Take a moment to reflect on how far you've come." },
+                { type: "action", content: "Share one thing that changed for you during these 30 days." },
+            ],
+        });
+        console.log("Track A migration complete. Day 1 is now 'What is Prayer? How to Pray'.");
+    }
+
+    // Seed Track A content if needed (fresh databases only)
+    const currentTrackAContent = await storage.getAllTrackAContent();
+    if (currentTrackAContent.length === 0) {
         console.log("No Track A content found - seeding...");
         for (const content of trackAContentData) {
             await storage.upsertTrackAContent(content);
         }
         console.log(`Track A content seeded successfully (${trackAContentData.length} days).`);
     } else {
-        console.log(`Track A content already exists (${existingTrackAContent.length} days) - preserving admin edits.`);
+        console.log(`Track A content already exists (${currentTrackAContent.length} days) - preserving admin edits.`);
     }
 
     console.log("Seeding complete.");

@@ -1173,9 +1173,10 @@ function DataExportCard() {
 function Day0SettingsCard() {
   const { toast } = useToast();
   const [introVideoUrl, setIntroVideoUrl] = useState("");
+  const [introContent, setIntroContent] = useState("");
   const [agreementText, setAgreementText] = useState("");
   
-  const { data: day0Data, isLoading } = useQuery<{ introVideoUrl: string | null; agreementText: string | null }>({
+  const { data: day0Data, isLoading } = useQuery<{ introVideoUrl: string | null; introContent: string | null; agreementText: string | null }>({
     queryKey: ["/api/admin/day0-settings"],
     queryFn: async () => {
       const res = await fetch("/api/admin/day0-settings", { credentials: "include" });
@@ -1185,7 +1186,7 @@ function Day0SettingsCard() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: { introVideoUrl?: string; agreementText?: string }) => {
+    mutationFn: async (data: { introVideoUrl?: string; introContent?: string; agreementText?: string }) => {
       const res = await apiRequest("POST", "/api/admin/day0-settings", data);
       return res.json();
     },
@@ -1201,11 +1202,13 @@ function Day0SettingsCard() {
   const handleSave = () => {
     updateMutation.mutate({
       introVideoUrl: introVideoUrl || day0Data?.introVideoUrl || "",
+      introContent: introContent || day0Data?.introContent || "",
       agreementText: agreementText || day0Data?.agreementText || "",
     });
   };
 
   const currentVideoUrl = day0Data?.introVideoUrl || "";
+  const currentIntroContent = day0Data?.introContent || "";
   const currentAgreementText = day0Data?.agreementText || "";
 
   return (
@@ -1233,6 +1236,23 @@ function Day0SettingsCard() {
                   value={introVideoUrl || currentVideoUrl}
                   onChange={(e) => setIntroVideoUrl(e.target.value)}
                   data-testid="input-day0-video-url"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-medium mb-2">Introduction Content</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Introductory text shown to participants on Day 0 before the agreement. Use this for program goals, overview, or orientation content.
+                </p>
+                <Textarea 
+                  placeholder="Enter introduction content (e.g., Goal of 30 Days, what to expect...)"
+                  value={introContent || currentIntroContent}
+                  onChange={(e) => setIntroContent(e.target.value)}
+                  rows={6}
+                  className="resize-none"
+                  data-testid="textarea-day0-intro-content"
                 />
               </div>
             </div>

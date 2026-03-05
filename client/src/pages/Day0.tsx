@@ -8,10 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Shell } from "@/components/layout/Shell";
-import { Loader2, Play, CheckCircle2 } from "lucide-react";
+import { Loader2, Play, CheckCircle2, BookOpen } from "lucide-react";
 
 interface Day0Data {
   introVideoUrl: string | null;
+  introContent: string | null;
   agreementText: string | null;
   agreementSigned: boolean;
 }
@@ -105,6 +106,7 @@ I will:
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
                   className="w-full h-full"
                 />
               </div>
@@ -118,6 +120,27 @@ I will:
             )}
           </CardContent>
         </Card>
+
+        {data?.introContent && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Introduction
+              </CardTitle>
+              <CardDescription>
+                Read this before beginning the program.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed" data-testid="text-intro-content">
+                  {data.introContent}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
