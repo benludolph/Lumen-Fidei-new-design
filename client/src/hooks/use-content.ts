@@ -14,7 +14,8 @@ export function useDailyContent(day: number) {
       
       return api.content.get.responses[200].parse(await res.json());
     },
-    retry: false
+    retry: false,
+    enabled: day > 0,
   });
 }
 

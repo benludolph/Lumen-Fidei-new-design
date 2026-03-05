@@ -9,7 +9,6 @@ import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule } from "@shared/schema";
 import { Church, BookOpen } from "lucide-react";
-import { useLocation } from "wouter";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -210,7 +209,6 @@ export function DayGridView({
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
 
   const day0Unlocked = currentDay >= 1;
-  const [, navigate] = useLocation();
 
   return (
     <div className="flex flex-col h-full">
@@ -226,7 +224,7 @@ export function DayGridView({
             <div className="mb-3">
               <Day0Card
                 isUnlocked={day0Unlocked}
-                onClick={() => navigate("/day0")}
+                onClick={() => onDaySelect(0)}
               />
             </div>
           )}

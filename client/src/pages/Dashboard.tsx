@@ -183,10 +183,10 @@ export default function Dashboard() {
   const markComplete = useMarkPrayerComplete();
   
   const { data: dayContent, isLoading: isLoadingB } = useDailyContent(
-    !isTrackA && viewMode === "detail" && selectedDay > 0 ? selectedDay : 0
+    !isTrackA && viewMode === "detail" && selectedDay > 0 ? selectedDay : -1
   );
   const { data: trackADayContent, isLoading: isLoadingA } = useTrackADailyContent(
-    isTrackA && viewMode === "detail" && selectedDay > 0 ? selectedDay : 0
+    isTrackA && viewMode === "detail" ? selectedDay : -1
   );
   
   const { data: trackASummaries } = useAllTrackAContent();
@@ -318,7 +318,7 @@ export default function Dashboard() {
             mentorId={user?.mentorId}
             onExit={handleBackToGrid}
             onComplete={() => {
-              if (!isPeriodCompleted(selectedDay, "morning")) {
+              if (selectedDay > 0 && !isPeriodCompleted(selectedDay, "morning")) {
                 markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
               }
               handleBackToGrid();

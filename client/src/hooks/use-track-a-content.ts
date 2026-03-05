@@ -12,7 +12,7 @@ export function useTrackADailyContent(day: number) {
       return res.json();
     },
     retry: false,
-    enabled: day > 0,
+    enabled: day >= 0,
   });
 }
 
