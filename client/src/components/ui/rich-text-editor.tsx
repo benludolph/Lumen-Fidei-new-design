@@ -1,6 +1,7 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import TextAlign from '@tiptap/extension-text-align'
 import { useEffect } from 'react'
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
@@ -12,7 +13,10 @@ import {
   ListOrdered,
   Heading1,
   Heading2,
-  Quote
+  Quote,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from 'lucide-react'
 
 interface RichTextEditorProps {
@@ -117,6 +121,39 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       >
         <Quote className="h-4 w-4" />
       </Button>
+
+      <div className="w-px bg-border mx-1" />
+
+      <Button
+        type="button"
+        size="sm"
+        variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
+        onClick={() => editor.chain().focus().setTextAlign('left').run()}
+        data-testid="button-align-left"
+        className="px-2"
+      >
+        <AlignLeft className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={editor.isActive({ textAlign: 'center' }) ? 'secondary' : 'ghost'}
+        onClick={() => editor.chain().focus().setTextAlign('center').run()}
+        data-testid="button-align-center"
+        className="px-2"
+      >
+        <AlignCenter className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={editor.isActive({ textAlign: 'right' }) ? 'secondary' : 'ghost'}
+        onClick={() => editor.chain().focus().setTextAlign('right').run()}
+        data-testid="button-align-right"
+        className="px-2"
+      >
+        <AlignRight className="h-4 w-4" />
+      </Button>
     </div>
   )
 }
@@ -126,6 +163,9 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
     extensions: [
       StarterKit,
       Underline,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
     ],
     content: value,
     editorProps: {

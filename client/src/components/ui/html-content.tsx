@@ -12,7 +12,7 @@ export function HtmlContent({ content, className }: HtmlContentProps) {
   if (isHtml) {
     const sanitizedHtml = DOMPurify.sanitize(content, {
       ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span'],
-      ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
     });
     
     return (
