@@ -60,7 +60,6 @@ export function DayCard({
       data-testid={`card-day-${dayNumber}`}
       className={cn(
         "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[120px]",
-        dayNumber === 1 && "sm:col-span-2",
         isLocked && "opacity-40 cursor-not-allowed",
         !isLocked && !isCompleted && "hover:shadow-md hover:scale-[1.01] cursor-pointer",
         isCompleted && "cursor-pointer hover:shadow-md",

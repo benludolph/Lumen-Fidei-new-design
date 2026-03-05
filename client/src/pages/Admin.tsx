@@ -2395,6 +2395,41 @@ function TrackAContentManagementView() {
           </CardHeader>
         </Card>
 
+        <Card
+          className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow mb-4"
+          onClick={() => openDay(0)}
+          data-testid="card-day-0-intro"
+        >
+          <CardContent className="py-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium" data-testid="text-day0-admin-title">
+                  Introduction — Goal of 30 Days
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  {(() => {
+                    const d0 = allContent?.find(c => c.dayNumber === 0);
+                    const count = d0?.slides?.length || 0;
+                    return count > 0 ? `${count} slide${count !== 1 ? "s" : ""}` : "Empty";
+                  })()}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const d0 = allContent?.find(c => c.dayNumber === 0);
+                  return d0?.slides && d0.slides.length > 0
+                    ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    : <Circle className="w-4 h-4 text-muted-foreground/40" />;
+                })()}
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {(modules || []).map(mod => {
             const days = getDaysForWeek(mod.weekNumber);
@@ -2544,26 +2579,33 @@ function TrackAContentManagementView() {
   }
 
   // === SLIDE EDITOR VIEW ===
-  const currentModule = modules?.find(m => m.weekNumber === Math.ceil(selectedDay / 6));
+  const currentModule = selectedDay > 0 ? modules?.find(m => m.weekNumber === Math.ceil(selectedDay / 6)) : null;
+  const isDay0 = selectedDay === 0;
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={goBackToDays} data-testid="button-back-to-days">
+            <Button variant="ghost" size="icon" onClick={isDay0 ? goBackToModules : goBackToDays} data-testid="button-back-to-days">
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <button className="hover:underline" onClick={goBackToModules} data-testid="link-modules-breadcrumb">Modules</button>
                 <ChevronRight className="w-3 h-3" />
-                <button className="hover:underline" onClick={goBackToDays} data-testid="link-days-breadcrumb">Week {currentModule?.weekNumber}: {currentModule?.title}</button>
-                <ChevronRight className="w-3 h-3" />
-                <span>Day {selectedDay}</span>
+                {isDay0 ? (
+                  <span>Introduction</span>
+                ) : (
+                  <>
+                    <button className="hover:underline" onClick={goBackToDays} data-testid="link-days-breadcrumb">Week {currentModule?.weekNumber}: {currentModule?.title}</button>
+                    <ChevronRight className="w-3 h-3" />
+                    <span>Day {selectedDay}</span>
+                  </>
+                )}
               </div>
               <CardTitle className="text-lg" data-testid="text-day-label-a">
-                Day {selectedDay} — {currentContent?.centralTheme || "No content"}
+                {isDay0 ? "Introduction — Goal of 30 Days" : `Day ${selectedDay} — ${currentContent?.centralTheme || "No content"}`}
               </CardTitle>
             </div>
             {!editMode ? (

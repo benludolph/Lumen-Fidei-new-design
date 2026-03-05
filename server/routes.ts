@@ -956,11 +956,15 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
-    const introContent = await storage.getCohortSetting("day0_intro_content");
     const agreementText = await storage.getCohortSetting("day0_agreement_text");
     const agreementSigned = !!req.user!.agreementSignedAt;
     
-    res.json({ introVideoUrl, introContent, agreementText, agreementSigned });
+    const day0TrackAContent = await storage.getTrackAContent(0);
+    const introSlides = day0TrackAContent?.slides || null;
+    
+    const introContent = await storage.getCohortSetting("day0_intro_content");
+    
+    res.json({ introVideoUrl, introContent, introSlides, agreementText, agreementSigned });
   });
 
   app.post(api.day0.signAgreement.path, async (req, res) => {
@@ -1854,6 +1858,25 @@ As you move into Week 2, continue these daily practices. They are building a fou
         console.log(`Track A content seeded successfully (${trackAContentData.length} days).`);
     } else {
         console.log(`Track A content already exists (${currentTrackAContent.length} days) - preserving admin edits.`);
+    }
+
+    // Ensure Day 0 (Introduction) exists in trackAContent
+    const day0Content = await storage.getTrackAContent(0);
+    if (!day0Content) {
+        const existingIntro = await storage.getCohortSetting("day0_intro_content");
+        const introSlides: { type: string; content: string }[] = [];
+        if (existingIntro) {
+            introSlides.push({ type: "text", content: existingIntro });
+        } else {
+            introSlides.push({ type: "text", content: "Welcome to Lumen Fidei, your 30-day spiritual journey." });
+        }
+        await storage.upsertTrackAContent({
+            dayNumber: 0,
+            weekNumber: 0,
+            centralTheme: "Introduction - Goal of 30 Days",
+            slides: introSlides,
+        });
+        console.log("Day 0 (Introduction) seeded in Track A content.");
     }
 
     console.log("Seeding complete.");
