@@ -1797,6 +1797,55 @@ As you move into Week 2, continue these daily practices. They are building a fou
         console.log("Track A modules seeded (5 modules).");
     }
 
+    // One-time migration: fix duplicate Introduction at Day 0 and Day 1
+    // Production had old Day 1 = "Introduction" which should have been shifted to Day 0.
+    // Detects the duplicate and renumbers Day 2-30 → Day 1-29, then pads to 30.
+    const preFixContent = await storage.getAllTrackAContent();
+    const day0Entry = preFixContent.find(c => c.dayNumber === 0);
+    const day1Entry = preFixContent.find(c => c.dayNumber === 1);
+    if (day0Entry && day1Entry &&
+        day0Entry.centralTheme === "Introduction - Goal of 30 Days" &&
+        day1Entry.centralTheme === "Introduction - Goal of 30 Days") {
+        console.log("Migrating Track A: removing duplicate Day 1 Introduction and renumbering...");
+        // Delete the old Day 1 duplicate
+        await db.delete(trackAContent).where(eq(trackAContent.dayNumber, 1));
+        // Get remaining content days (Day 0 stays, Days 2-30 need to shift down by 1)
+        const toShift = preFixContent
+            .filter(c => c.dayNumber >= 2)
+            .sort((a, b) => a.dayNumber - b.dayNumber);
+        // Shift to temporary negative values to avoid unique constraint conflicts
+        for (let i = 0; i < toShift.length; i++) {
+            await db.update(trackAContent)
+                .set({ dayNumber: -(i + 1) })
+                .where(eq(trackAContent.dayNumber, toShift[i].dayNumber));
+        }
+        // Now set final day numbers (shift down by 1, so old Day 2 → Day 1, etc.)
+        for (let i = 0; i < toShift.length; i++) {
+            const newDay = i + 1;
+            const newWeek = Math.ceil(newDay / 6);
+            await db.update(trackAContent)
+                .set({ dayNumber: newDay, weekNumber: newWeek })
+                .where(eq(trackAContent.dayNumber, -(i + 1)));
+        }
+        const finalCount = toShift.length; // Should be 29 (old Days 2-30)
+        // Pad to 30 if needed
+        const padPlaceholders = [
+            { theme: "Community & Accountability", slides: [{ type: "text", content: "Faith is not meant to be lived alone. We are the Body of Christ." }, { type: "action", content: "Identify one person you will continue to walk with in faith." }] },
+        ];
+        for (let i = finalCount; i < 30; i++) {
+            const p = padPlaceholders[i - finalCount];
+            if (p) {
+                await storage.upsertTrackAContent({
+                    dayNumber: i + 1,
+                    weekNumber: Math.ceil((i + 1) / 6),
+                    centralTheme: p.theme,
+                    slides: p.slides,
+                });
+            }
+        }
+        console.log(`Track A Day 1 duplicate fix complete. Shifted ${toShift.length} days down by 1. Total: ${Math.min(finalCount + padPlaceholders.length, 30)} days.`);
+    }
+
     // One-time migration: remove Sunday "ATTEND SUNDAY MASS" entries from Track A
     // and renumber remaining content as days 1-30 (6 days per week, Sundays are UI-only)
     const existingTrackAContent = await storage.getAllTrackAContent();
