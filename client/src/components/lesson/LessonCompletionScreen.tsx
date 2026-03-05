@@ -121,7 +121,9 @@ export function LessonCompletionScreen({
   const [showButton, setShowButton] = useState(false);
   const { user } = useAuth();
 
-  const saintData = (saintId && ALL_SAINTS.find(s => s.id === saintId)) || ALL_SAINTS[(dayNumber - 1) % ALL_SAINTS.length];
+  const saintData = dayNumber === 0
+    ? ALL_SAINTS[0]
+    : (saintId && ALL_SAINTS.find(s => s.id === saintId)) || ALL_SAINTS[(dayNumber - 1) % ALL_SAINTS.length];
 
   useEffect(() => {
     playLessonComplete();
@@ -134,8 +136,12 @@ export function LessonCompletionScreen({
   }, []);
 
   const handleContinueToReveal = useCallback(() => {
+    if (dayNumber === 0) {
+      onContinue();
+      return;
+    }
     setStep("reveal");
-  }, []);
+  }, [dayNumber, onContinue]);
 
   const handleAddToCollection = useCallback(() => {
     if (user) {
@@ -191,9 +197,11 @@ export function LessonCompletionScreen({
               Lesson Complete
             </h1>
             <div className="space-y-0">
-              <p className="font-['Afacad',sans-serif] font-semibold text-black text-[16px] tracking-[1.6px] uppercase leading-none pt-3">
-                DAY {dayNumber}
-              </p>
+              {dayNumber > 0 && (
+                <p className="font-['Afacad',sans-serif] font-semibold text-black text-[16px] tracking-[1.6px] uppercase leading-none pt-3">
+                  DAY {dayNumber}
+                </p>
+              )}
               <p className="font-['Afacad',sans-serif] font-semibold text-black text-[18px] leading-[37.5px]">
                 {theme}
               </p>

@@ -2,13 +2,31 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
 import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
+
+import audioDay0 from "@assets/Day_0_1772743901058.mp3";
+import audioDay1 from "@assets/Day_1_1772743901058.mp3";
+import audioDay2 from "@assets/Day_2_1772743901058.mp3";
+import audioDay3 from "@assets/Day_3_1772743901058.mp3";
+import audioDay4 from "@assets/Day_4_1772743901057.mp3";
+import audioDay5 from "@assets/Day_5_1772743901057.mp3";
+import audioDay6 from "@assets/Day_6_1772743901057.mp3";
+
+const TIMER_AUDIO: Record<number, string> = {
+  0: audioDay0,
+  1: audioDay1,
+  2: audioDay2,
+  3: audioDay3,
+  4: audioDay4,
+  5: audioDay5,
+  6: audioDay6,
+};
 
 export type SlideType =
   | "text"
@@ -356,7 +374,7 @@ export function LessonSlide({
         ) : type === "mentor_message" ? (
           <MentorMessageSlide content={content} mentorId={mentorId} onInteracted={onInteracted} />
         ) : type === "timer" ? (
-          <TimerSlide content={content} onTimerComplete={onTimerComplete} alreadyDone={timerAlreadyDone} />
+          <TimerSlide content={content} dayNumber={dayNumber} onTimerComplete={onTimerComplete} alreadyDone={timerAlreadyDone} />
         ) : type === "knowledge_check" ? (
           <KnowledgeCheckSlide
             content={content}
@@ -623,10 +641,12 @@ function parseTimerContent(content: string): { duration: number; text: string } 
 
 function TimerSlide({
   content,
+  dayNumber,
   onTimerComplete,
   alreadyDone,
 }: {
   content: string;
+  dayNumber: number;
   onTimerComplete?: () => void;
   alreadyDone?: boolean;
 }) {
@@ -634,6 +654,9 @@ function TimerSlide({
   const [remaining, setRemaining] = useState(alreadyDone ? 0 : duration);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completedRef = useRef(!!alreadyDone);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioSrc = TIMER_AUDIO[dayNumber] || null;
 
   useEffect(() => {
     if (alreadyDone) {
@@ -667,6 +690,30 @@ function TimerSlide({
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [duration, onTimerComplete]);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleAudio = useCallback(() => {
+    if (!audioSrc) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(audioSrc);
+      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
+    }
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  }, [audioSrc, isPlaying]);
 
   const progress = duration > 0 ? (duration - remaining) / duration : 1;
   const minutes = Math.floor(remaining / 60);
@@ -705,6 +752,31 @@ function TimerSlide({
         <p className="text-[16px] text-black/70 font-['Afacad',sans-serif]">
           Take a moment to reflect on this passage
         </p>
+      )}
+
+      {audioSrc && (
+        <button
+          onClick={toggleAudio}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-['Afacad',sans-serif] text-[14px] font-medium",
+            isPlaying
+              ? "bg-zinc-900 text-white shadow-md"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+          )}
+          data-testid="button-audio-toggle"
+        >
+          {isPlaying ? (
+            <>
+              <Pause className="w-4 h-4" />
+              Pause Audio
+            </>
+          ) : (
+            <>
+              <Volume2 className="w-4 h-4" />
+              Listen to Scripture
+            </>
+          )}
+        </button>
       )}
 
       <div className="w-full">
