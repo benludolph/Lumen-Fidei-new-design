@@ -93,7 +93,7 @@ export default function Messages() {
     <Shell>
       <div className={cn(
         "bg-white dark:bg-card rounded-xl shadow-sm border border-border overflow-hidden",
-        isMobile ? "h-[calc(100vh-6rem)]" : "h-[calc(100vh-8rem)] grid grid-cols-12"
+        isMobile ? "h-[calc(100dvh-6rem)]" : "h-[calc(100dvh-4rem)] grid grid-cols-12"
       )}>
         {/* Contacts List - Hidden on mobile when chat is open */}
         {showContacts && (
@@ -198,7 +198,7 @@ export default function Messages() {
         {/* Chat Area */}
         {showChat && (
           <div className={cn(
-            "flex flex-col bg-white dark:bg-card",
+            "flex flex-col bg-white dark:bg-card min-h-0",
             isMobile ? "h-full" : "col-span-8"
           )}>
             {selectedContactId ? (
@@ -274,8 +274,8 @@ function ChatWindow({
         <span className="font-medium text-sm sm:text-base">{otherUserName}</span>
       </div>
       
-      {/* Messages - Scrollable container with fixed height */}
-      <div className="flex-1 overflow-hidden">
+      {/* Messages - Scrollable container */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full overflow-y-auto p-3 sm:p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
