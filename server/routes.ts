@@ -33,6 +33,32 @@ const upload = multer({
   },
 });
 
+/**
+ * Convert calendar days elapsed since cohort start to program day number.
+ * Program runs Mon-Sat (6 days/week), skipping Sundays.
+ * Cohort starts on a Monday (day 0 of calendar = program day 1).
+ */
+function calendarDaysToProgramDay(calendarDaysElapsed: number): number {
+  if (calendarDaysElapsed < 0) return 0;
+  const fullWeeks = Math.floor(calendarDaysElapsed / 7);
+  const remainder = calendarDaysElapsed % 7;
+  const extraDays = Math.min(remainder, 6);
+  const programDay = fullWeeks * 6 + extraDays + 1;
+  return Math.min(programDay, 30);
+}
+
+function computeCurrentProgramDay(cohortStartDateStr: string | null): number {
+  if (!cohortStartDateStr) return 0;
+  const startParts = cohortStartDateStr.split('-').map(Number);
+  const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffTime = today.getTime() - startDate.getTime();
+  const calendarDaysElapsed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  if (calendarDaysElapsed < 0) return 0;
+  return calendarDaysToProgramDay(calendarDaysElapsed);
+}
+
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -280,21 +306,9 @@ export async function registerRoutes(
     
     const day = Number(req.params.day);
     
-    // Time-gating logic using cohort-based start date
     if (req.user!.role === 'participant') {
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      
-      let currentDay = 0;
-      if (cohortStartDateStr) {
-        const startParts = cohortStartDateStr.split('-').map(Number);
-        const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const diffTime = today.getTime() - startDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
-      }
-      
+      const currentDay = computeCurrentProgramDay(cohortStartDateStr);
       if (day > currentDay || currentDay === 0) {
         return res.status(403).json({ message: "This day is locked." });
       }
@@ -330,16 +344,7 @@ export async function registerRoutes(
 
     if (req.user!.role === 'participant') {
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      let currentDay = 0;
-      if (cohortStartDateStr) {
-        const startParts = cohortStartDateStr.split('-').map(Number);
-        const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const diffTime = today.getTime() - startDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
-      }
+      const currentDay = computeCurrentProgramDay(cohortStartDateStr);
       if (day > currentDay || currentDay === 0) {
         return res.status(403).json({ message: "This day is locked." });
       }
@@ -599,21 +604,9 @@ export async function registerRoutes(
     
     const input = api.prayerCompletions.create.input.parse(req.body);
     
-    // Time-gating: Can only complete current cohort day
     if (req.user!.role === 'participant') {
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      
-      let currentDay = 0;
-      if (cohortStartDateStr) {
-        const startParts = cohortStartDateStr.split('-').map(Number);
-        const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const diffTime = today.getTime() - startDate.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
-      }
-      
+      const currentDay = computeCurrentProgramDay(cohortStartDateStr);
       if (input.dayNumber > currentDay || currentDay === 0) {
         return res.status(403).json({ message: "Cannot complete prayers for this day" });
       }
@@ -682,25 +675,12 @@ export async function registerRoutes(
     const users = await storage.getAllUsers();
     const completions = await storage.getAllPrayerCompletions();
     
-    // Get cohort start date for calculating current day
     const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-    const now = new Date();
-    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    // Calculate cohort-based current day
-    let cohortCurrentDay = 0;
-    if (cohortStartDateStr) {
-      const startParts = cohortStartDateStr.split('-').map(Number);
-      const cohortStartDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-      const diffTime = todayLocal.getTime() - cohortStartDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      cohortCurrentDay = Math.min(Math.max(diffDays + 1, 0), 30);
-    }
+    const cohortCurrentDay = computeCurrentProgramDay(cohortStartDateStr);
     
     const progressData = users
       .filter(u => u.role === 'participant')
       .map(u => {
-        // Use cohort-based current day for all users
         const currentDay = cohortCurrentDay;
         
         // Get completions for this user
@@ -756,21 +736,7 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const startDateStr = await storage.getCohortSetting("cohort_start_date");
-    
-    // Calculate current day based on cohort start date
-    let currentDay = 0;
-    if (startDateStr) {
-      // Parse dates as local dates (without time) to avoid timezone issues
-      const startParts = startDateStr.split('-').map(Number);
-      const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      const diffTime = today.getTime() - startDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      // Day 1 starts on the start date itself
-      currentDay = Math.min(Math.max(diffDays + 1, 0), 30);
-    }
+    const currentDay = computeCurrentProgramDay(startDateStr);
     
     res.json({ startDate: startDateStr, currentDay });
   });
@@ -883,16 +849,8 @@ export async function registerRoutes(
       mentorName = mentor?.name || null;
     }
     
-    // Get cohort start date for calculating current day
     const cohortStartDate = await storage.getCohortSetting("cohort_start_date");
-    let currentDay = 0;
-    if (cohortStartDate) {
-      const start = new Date(cohortStartDate);
-      const today = new Date();
-      const diffTime = today.getTime() - start.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      currentDay = Math.max(0, Math.min(diffDays + 1, 30));
-    }
+    const currentDay = computeCurrentProgramDay(cohortStartDate);
     
     // Get prayer completions
     const prayerCompletions = await storage.getUserPrayerCompletions(userId);
@@ -1094,19 +1052,8 @@ export async function registerRoutes(
     const users = await storage.getAllUsers();
     const completions = await storage.getAllPrayerCompletions();
     
-    // Get cohort start date for calculating current day
     const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-    const now = new Date();
-    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    let cohortCurrentDay = 0;
-    if (cohortStartDateStr) {
-      const startParts = cohortStartDateStr.split('-').map(Number);
-      const cohortStartDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-      const diffTime = todayLocal.getTime() - cohortStartDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      cohortCurrentDay = Math.min(Math.max(diffDays + 1, 0), 30);
-    }
+    const cohortCurrentDay = computeCurrentProgramDay(cohortStartDateStr);
     
     const progressData = users
       .filter(u => u.role === 'participant')
@@ -1846,31 +1793,55 @@ As you move into Week 2, continue these daily practices. They are building a fou
         console.log("Track A modules seeded (5 modules).");
     }
 
-    // One-time migration: shift Track A content to remove Day 1 "Introduction" 
-    // and renumber Days 2-30 → 1-29, then add new Day 30
+    // One-time migration: remove Sunday "ATTEND SUNDAY MASS" entries from Track A
+    // and renumber remaining content as days 1-30 (6 days per week, Sundays are UI-only)
     const existingTrackAContent = await storage.getAllTrackAContent();
-    const day1Content = existingTrackAContent.find(c => c.dayNumber === 1);
-    if (day1Content && day1Content.centralTheme === "Introduction - Goal of 30 Days") {
-        console.log("Migrating Track A: removing Introduction from Day 1 and shifting days...");
-        const introSlides = day1Content.slides as { type: string; content: string }[] | null;
-        const introText = introSlides?.map(s => s.content).join("\n\n") || "Introduction - Goal of 30 Days";
-        await storage.setCohortSetting("day0_intro_content", `${day1Content.centralTheme}\n\n${introText}`);
-        await db.delete(trackAContent).where(eq(trackAContent.dayNumber, 1));
-        for (let d = 2; d <= 30; d++) {
-            await db.update(trackAContent)
-                .set({ dayNumber: d - 1, weekNumber: Math.ceil((d - 1) / 7) })
-                .where(eq(trackAContent.dayNumber, d));
+    const hasSundayEntries = existingTrackAContent.some(c => c.centralTheme === "ATTEND SUNDAY MASS");
+    if (hasSundayEntries && existingTrackAContent.length > 0) {
+        console.log("Migrating Track A: removing Sunday entries and renumbering...");
+        const sundayDays = existingTrackAContent
+            .filter(c => c.centralTheme === "ATTEND SUNDAY MASS")
+            .map(c => c.dayNumber);
+        for (const sd of sundayDays) {
+            await db.delete(trackAContent).where(eq(trackAContent.dayNumber, sd));
         }
-        await storage.upsertTrackAContent({
-            dayNumber: 30,
-            weekNumber: 5,
-            centralTheme: "Closing & Next Steps",
-            slides: [
-                { type: "text", content: "Congratulations on completing the Lumen Fidei 30-day journey. Take a moment to reflect on how far you've come." },
-                { type: "action", content: "Share one thing that changed for you during these 30 days." },
-            ],
-        });
-        console.log("Track A migration complete. Day 1 is now 'What is Prayer? How to Pray'.");
+        const remaining = existingTrackAContent
+            .filter(c => c.centralTheme !== "ATTEND SUNDAY MASS")
+            .sort((a, b) => a.dayNumber - b.dayNumber);
+        // Renumber to temporary negative values to avoid unique constraint conflicts
+        for (let i = 0; i < remaining.length; i++) {
+            await db.update(trackAContent)
+                .set({ dayNumber: -(i + 1) })
+                .where(eq(trackAContent.dayNumber, remaining[i].dayNumber));
+        }
+        // Now set final day numbers (1-based, 6 per week)
+        for (let i = 0; i < remaining.length; i++) {
+            const newDay = i + 1;
+            const newWeek = Math.ceil(newDay / 6);
+            await db.update(trackAContent)
+                .set({ dayNumber: newDay, weekNumber: newWeek })
+                .where(eq(trackAContent.dayNumber, -(i + 1)));
+        }
+        // Add placeholder days if we have fewer than 30
+        const finalCount = remaining.length;
+        const placeholders = [
+            { theme: "Living in the Holy Spirit", slides: [{ type: "text", content: "The Holy Spirit is your daily companion on this journey." }, { type: "action", content: "Invite the Holy Spirit into your day with a simple prayer." }] },
+            { theme: "The Sacramental Life", slides: [{ type: "text", content: "The sacraments are encounters with the living Christ." }, { type: "action", content: "Reflect on which sacrament has been most meaningful to you." }] },
+            { theme: "Building a Rule of Life", slides: [{ type: "text", content: "A Rule of Life is a simple plan for how you will continue to grow spiritually." }, { type: "action", content: "Draft a simple daily prayer plan for after the program ends." }] },
+            { theme: "Community & Accountability", slides: [{ type: "text", content: "Faith is not meant to be lived alone. We are the Body of Christ." }, { type: "action", content: "Identify one person you will continue to walk with in faith." }] },
+        ];
+        for (let i = finalCount; i < 30; i++) {
+            const p = placeholders[i - finalCount];
+            if (p) {
+                await storage.upsertTrackAContent({
+                    dayNumber: i + 1,
+                    weekNumber: Math.ceil((i + 1) / 6),
+                    centralTheme: p.theme,
+                    slides: p.slides,
+                });
+            }
+        }
+        console.log(`Track A migration complete. Removed ${sundayDays.length} Sunday entries, renumbered to ${Math.min(remaining.length + placeholders.length, 30)} days.`);
     }
 
     // Seed Track A content if needed (fresh databases only)

@@ -2320,7 +2320,7 @@ function TrackAContentManagementView() {
   const handleSave = () => {
     saveMutation.mutate({
       dayNumber: selectedDay,
-      weekNumber: Math.ceil(selectedDay / 7),
+      weekNumber: Math.ceil(selectedDay / 6),
       centralTheme: centralTheme || "Untitled",
       subtitle: daySubtitle || null,
       slides,
@@ -2368,8 +2368,8 @@ function TrackAContentManagementView() {
   };
 
   const getDaysForWeek = (weekNumber: number) => {
-    const start = (weekNumber - 1) * 7 + 1;
-    const end = Math.min(weekNumber * 7, 30);
+    const start = (weekNumber - 1) * 6 + 1;
+    const end = Math.min(weekNumber * 6, 30);
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
@@ -2544,7 +2544,7 @@ function TrackAContentManagementView() {
   }
 
   // === SLIDE EDITOR VIEW ===
-  const currentModule = modules?.find(m => m.weekNumber === Math.ceil(selectedDay / 7));
+  const currentModule = modules?.find(m => m.weekNumber === Math.ceil(selectedDay / 6));
 
   return (
     <div className="space-y-6">

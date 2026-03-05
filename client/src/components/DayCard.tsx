@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Lock, Check, ArrowRight, Sun, Moon, Church } from "lucide-react";
+import { Lock, Check, ArrowRight, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DayCardProps {
@@ -10,7 +10,6 @@ interface DayCardProps {
   isCompletedOutOfOrder?: boolean;
   isToday: boolean;
   isLocked: boolean;
-  isSunday?: boolean;
   morningCompleted?: boolean;
   eveningCompleted?: boolean;
   isTrackB?: boolean;
@@ -21,8 +20,12 @@ interface DayCardProps {
 
 function getUnlockDateLabel(cohortStartDate: string, dayNumber: number): string {
   const start = new Date(cohortStartDate + "T00:00:00");
+  const programDayIndex = dayNumber - 1;
+  const fullWeeks = Math.floor(programDayIndex / 6);
+  const remainder = programDayIndex % 6;
+  const calendarDaysOffset = fullWeeks * 7 + remainder;
   const unlock = new Date(start);
-  unlock.setDate(start.getDate() + (dayNumber - 1));
+  unlock.setDate(start.getDate() + calendarDaysOffset);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `This lesson unlocks on ${months[unlock.getMonth()]} ${unlock.getDate()}`;
 }
@@ -35,7 +38,6 @@ export function DayCard({
   isCompletedOutOfOrder,
   isToday,
   isLocked,
-  isSunday,
   morningCompleted,
   eveningCompleted,
   isTrackB,
@@ -43,42 +45,6 @@ export function DayCard({
   cohortStartDate,
   onClick,
 }: DayCardProps) {
-  if (isSunday) {
-    return (
-      <div
-        data-testid={`card-day-${dayNumber}`}
-        className={cn(
-          "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left w-full min-h-[120px] sm:col-span-2 overflow-hidden",
-          !backgroundImage && "bg-gradient-to-r from-[#2d4a22]/90 to-[#5c6b32]/70 dark:from-[#2d4a22]/80 dark:to-[#5c6b32]/60",
-          "border border-[#8b7d3c]/30"
-        )}
-      >
-        {backgroundImage && (
-          <img
-            src={backgroundImage}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover rounded-lg"
-          />
-        )}
-        {backgroundImage && (
-          <div className="absolute inset-0 rounded-lg bg-black/50" />
-        )}
-        <div className="relative z-10 flex items-center gap-4 w-full justify-center">
-          <Church className="w-7 h-7 text-[#d4c876]/80" />
-          <div className="flex flex-col items-center gap-0.5">
-            <p className="font-serif text-[#d4c876] text-lg font-semibold tracking-wide">
-              Sunday — Go to Mass
-            </p>
-            <p className="font-['Afacad',sans-serif] text-white/50 text-xs">
-              Day {dayNumber}
-            </p>
-          </div>
-          <Church className="w-7 h-7 text-[#d4c876]/80" />
-        </div>
-      </div>
-    );
-  }
-
   const isPast = !isToday && !isLocked;
   const showGrayscale = !isToday && !isCompleted;
 

@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import { DayCard } from "./DayCard";
 import { WeekSection } from "./WeekSection";
 import { StickyWeekHeader } from "./StickyWeekHeader";
@@ -7,6 +8,8 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule } from "@shared/schema";
+import { Church, BookOpen } from "lucide-react";
+import { useLocation } from "wouter";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -81,15 +84,58 @@ function getDayTitle(
 function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
   const weeks: { week: number; days: number[] }[] = [];
   for (let w = 1; w <= 5; w++) {
-    const weekDays = days.filter(d => {
-      const weekNum = Math.ceil(d / 7);
-      return weekNum === w;
-    });
+    const weekDays = days.filter(d => Math.ceil(d / 6) === w);
     if (weekDays.length > 0) {
       weeks.push({ week: w, days: weekDays });
     }
   }
   return weeks;
+}
+
+function SundayBanner() {
+  return (
+    <div
+      data-testid="banner-sunday"
+      className="relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left w-full min-h-[72px] sm:col-span-2 overflow-hidden bg-gradient-to-r from-[#2d4a22]/90 to-[#5c6b32]/70 dark:from-[#2d4a22]/80 dark:to-[#5c6b32]/60 border border-[#8b7d3c]/30 my-3"
+    >
+      <div className="flex items-center gap-4 w-full justify-center">
+        <Church className="w-6 h-6 text-[#d4c876]/80" />
+        <p className="font-serif text-[#d4c876] text-base font-semibold tracking-wide">
+          Sunday — Go to Mass
+        </p>
+        <Church className="w-6 h-6 text-[#d4c876]/80" />
+      </div>
+    </div>
+  );
+}
+
+function Day0Card({ isUnlocked, onClick }: { isUnlocked: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={isUnlocked ? onClick : undefined}
+      disabled={!isUnlocked}
+      data-testid="card-day-0"
+      className={cn(
+        "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[100px] sm:col-span-2",
+        !isUnlocked && "opacity-40 cursor-not-allowed bg-zinc-900",
+        isUnlocked && "hover:shadow-md cursor-pointer bg-gradient-to-r from-[#003725] to-[#004d33]",
+      )}
+    >
+      <div className="relative z-10 flex items-center gap-4 w-full">
+        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 shrink-0">
+          <BookOpen className="w-5 h-5 text-white/80" />
+        </div>
+        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+          <p data-testid="text-day0-title" className="font-['Afacad',sans-serif] font-semibold text-white text-[16px] leading-7">
+            Introduction — Goal of 30 Days
+          </p>
+          <p data-testid="text-day0-subtitle" className="font-['Afacad',sans-serif] text-white/60 text-[13px]">
+            Begin your journey
+          </p>
+        </div>
+      </div>
+    </button>
+  );
 }
 
 export function DayGridView({
@@ -111,7 +157,7 @@ export function DayGridView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  const [activeWeek, setActiveWeek] = useState(() => Math.min(Math.ceil(currentDay / 7), 5) || 1);
+  const [activeWeek, setActiveWeek] = useState(() => Math.min(Math.ceil(currentDay / 6), 5) || 1);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDayForDialog, setSelectedDayForDialog] = useState<number>(0);
@@ -163,6 +209,9 @@ export function DayGridView({
 
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
 
+  const day0Unlocked = currentDay >= 1;
+  const [, navigate] = useLocation();
+
   return (
     <div className="flex flex-col h-full">
       <StickyWeekHeader
@@ -173,13 +222,25 @@ export function DayGridView({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 pb-8 custom-scrollbar">
         <div className="max-w-[640px] mx-auto px-2 sm:px-4">
+          {isTrackA && (
+            <div className="mb-3">
+              <Day0Card
+                isUnlocked={day0Unlocked}
+                onClick={() => navigate("/day0")}
+              />
+            </div>
+          )}
+
           {weekGroups.map(({ week, days }, groupIdx) => (
             <div key={week}>
               {groupIdx > 0 && (
-                <WeekSection
-                  weekNumber={week}
-                  theme={getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries, trackAModules)}
-                />
+                <>
+                  <SundayBanner />
+                  <WeekSection
+                    weekNumber={week}
+                    theme={getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries, trackAModules)}
+                  />
+                </>
               )}
               <div
                 ref={(el) => setWeekRef(week, el)}
@@ -190,7 +251,6 @@ export function DayGridView({
                   const isLocked = day > currentDay;
                   const isToday = day === currentDay;
                   const completed = isDayCompleted(day);
-                  const isSunday = day > 1 && (day - 1) % 7 === 0;
                   const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
 
                   const trackADay = isTrackA ? trackASummaries?.find(c => c.dayNumber === day) : undefined;
@@ -201,8 +261,12 @@ export function DayGridView({
                     const record = prayerCompletions.find(c => c.dayNumber === day && c.period === "morning");
                     if (record) {
                       const start = new Date(cohortStartDate + "T00:00:00");
+                      const programDayIndex = day - 1;
+                      const fullWeeks = Math.floor(programDayIndex / 6);
+                      const remainder = programDayIndex % 6;
+                      const calendarOffset = fullWeeks * 7 + remainder;
                       const expectedDate = new Date(start);
-                      expectedDate.setDate(start.getDate() + (day - 1));
+                      expectedDate.setDate(start.getDate() + calendarOffset);
                       const expectedStr = expectedDate.getFullYear() + "-" +
                         String(expectedDate.getMonth() + 1).padStart(2, "0") + "-" +
                         String(expectedDate.getDate()).padStart(2, "0");
@@ -226,7 +290,6 @@ export function DayGridView({
                       isCompletedOutOfOrder={completedLate}
                       isToday={isToday}
                       isLocked={isLocked}
-                      isSunday={isSunday}
                       isTrackB={!isTrackA}
                       morningCompleted={isPeriodCompleted(day, "morning")}
                       eveningCompleted={isPeriodCompleted(day, "evening")}

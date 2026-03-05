@@ -110,12 +110,6 @@ export const trackAContentData: InsertTrackAContent[] = [
   {
     dayNumber: 7,
     weekNumber: 2,
-    centralTheme: "ATTEND SUNDAY MASS",
-    slides: [],
-  },
-  {
-    dayNumber: 8,
-    weekNumber: 2,
     centralTheme: "Wounds of Sin & Original Sin",
     slides: [
       { type: "text", content: "Now the works of the flesh are evident: sexual immorality, impurity, sensuality, idolatry, sorcery, enmity, strife, jealousy, fits of anger, rivalries, dissensions, divisions, envy, drunkenness, orgies, and things like these. I warn you, as I warned you before, that those who do such things will not inherit the kingdom of God. - Gal 5:19-21" },
@@ -124,7 +118,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 9,
+    dayNumber: 8,
     weekNumber: 2,
     centralTheme: "Wounds of Sin",
     slides: [
@@ -133,7 +127,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 10,
+    dayNumber: 9,
     weekNumber: 2,
     centralTheme: "Examination of Conscience",
     slides: [
@@ -144,7 +138,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 11,
+    dayNumber: 10,
     weekNumber: 2,
     centralTheme: "Centrality of Jesus & Cross",
     slides: [
@@ -152,7 +146,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 12,
+    dayNumber: 11,
     weekNumber: 2,
     centralTheme: "Meaning of the Passion & Cross",
     slides: [
@@ -163,7 +157,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 13,
+    dayNumber: 12,
     weekNumber: 2,
     centralTheme: "Message #1 - Salvation Through Jesus Christ",
     slides: [
@@ -172,13 +166,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 14,
-    weekNumber: 3,
-    centralTheme: "ATTEND SUNDAY MASS",
-    slides: [],
-  },
-  {
-    dayNumber: 15,
+    dayNumber: 13,
     weekNumber: 3,
     centralTheme: "Message #2 - Forgiving Others",
     slides: [
@@ -187,7 +175,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 16,
+    dayNumber: 14,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Healer",
     slides: [
@@ -196,7 +184,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 17,
+    dayNumber: 15,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Deliverer",
     slides: [
@@ -205,7 +193,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 18,
+    dayNumber: 16,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Friend",
     slides: [
@@ -214,7 +202,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 19,
+    dayNumber: 17,
     weekNumber: 3,
     centralTheme: "Person of Jesus: Friend",
     slides: [
@@ -222,7 +210,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 20,
+    dayNumber: 18,
     weekNumber: 3,
     centralTheme: "Person of Jesus: King",
     slides: [
@@ -232,13 +220,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 21,
-    weekNumber: 4,
-    centralTheme: "ATTEND SUNDAY MASS",
-    slides: [],
-  },
-  {
-    dayNumber: 22,
+    dayNumber: 19,
     weekNumber: 4,
     centralTheme: "Spiritual Warfare: Authority",
     slides: [
@@ -248,7 +230,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 23,
+    dayNumber: 20,
     weekNumber: 4,
     centralTheme: "Conversion / Change Your Life",
     slides: [
@@ -259,7 +241,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 24,
+    dayNumber: 21,
     weekNumber: 4,
     centralTheme: "Are You Ready to Change Your Life?",
     slides: [
@@ -267,7 +249,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 25,
+    dayNumber: 22,
     weekNumber: 4,
     centralTheme: "Accepting the Invitation",
     slides: [
@@ -280,7 +262,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 26,
+    dayNumber: 23,
     weekNumber: 4,
     centralTheme: "What is Faith?",
     slides: [
@@ -291,7 +273,7 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
-    dayNumber: 27,
+    dayNumber: 24,
     weekNumber: 4,
     centralTheme: "Conversion / Change Your Life",
     slides: [
@@ -301,10 +283,40 @@ export const trackAContentData: InsertTrackAContent[] = [
     ],
   },
   {
+    dayNumber: 25,
+    weekNumber: 5,
+    centralTheme: "Living in the Holy Spirit",
+    slides: [
+      { type: "text", content: "The Holy Spirit is your daily companion on this journey." },
+      { type: "action", content: "Invite the Holy Spirit into your day with a simple prayer." },
+    ],
+  },
+  {
+    dayNumber: 26,
+    weekNumber: 5,
+    centralTheme: "The Sacramental Life",
+    slides: [
+      { type: "text", content: "The sacraments are encounters with the living Christ." },
+      { type: "action", content: "Reflect on which sacrament has been most meaningful to you." },
+    ],
+  },
+  {
+    dayNumber: 27,
+    weekNumber: 5,
+    centralTheme: "Building a Rule of Life",
+    slides: [
+      { type: "text", content: "A Rule of Life is a simple plan for how you will continue to grow spiritually." },
+      { type: "action", content: "Draft a simple daily prayer plan for after the program ends." },
+    ],
+  },
+  {
     dayNumber: 28,
     weekNumber: 5,
-    centralTheme: "ATTEND SUNDAY MASS",
-    slides: [],
+    centralTheme: "Community & Accountability",
+    slides: [
+      { type: "text", content: "Faith is not meant to be lived alone. We are the Body of Christ." },
+      { type: "action", content: "Identify one person you will continue to walk with in faith." },
+    ],
   },
   {
     dayNumber: 29,

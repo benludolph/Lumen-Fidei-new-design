@@ -37,7 +37,7 @@ const TRACK_A_FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4,
 function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[], modules?: TrackAModule[]): string {
   const dayContent = trackASummaries?.find(c => c.dayNumber === dayNumber);
   if (dayContent?.imageUrl) return dayContent.imageUrl;
-  const weekNumber = Math.ceil(dayNumber / 7);
+  const weekNumber = Math.ceil(dayNumber / 6);
   const module = modules?.find(m => m.weekNumber === weekNumber);
   if (module?.imageUrl) return module.imageUrl;
   return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];

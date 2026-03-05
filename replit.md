@@ -41,7 +41,7 @@ Preferred communication style: Simple, everyday language.
   - **Detail mode (Track B)**: Clicking a day card opens the full content view with morning/evening tabs. "Back to Overview" button returns to grid.
   - **Lesson flow (Track A)**: Clicking a day card launches a Duolingo-style multi-screen lesson flow (see below).
 - **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog`, `OverviewGuideModal` (all in `client/src/components/`)
-- **Sunday Cards**: Days 8, 15, 22, 29 are "Go to Mass" Sundays — non-clickable, col-span-2 cards with Church icon. Day 1 is also a Sunday but has intro content so it stays clickable. Detection: `day > 1 && (day - 1) % 7 === 0`.
+- **Sunday Banners**: Sundays are NOT numbered program days. Static "Sunday — Go to Mass" banners with Church icons appear between week groups in the grid (purely visual, no DB content, no completion tracking). Days 1-30 are all real content days (6 per week × 5 weeks).
 - **Week Themes**: Track A uses dynamic module data from `trackAModules` table (fetched via `/api/track-a-modules`). Each module has a title, subtitle, and optional custom imageUrl. Falls back to rotating default images if no custom image is set.
 - **Track A Modules**: `trackAModules` table stores week-level metadata (weekNumber, title, subtitle, imageUrl). Admin can edit module titles/subtitles and upload custom images via the module management UI.
 - **Per-Day Images**: Each day in `trackAContent` has an optional `imageUrl` column. Admin can upload a custom image per day in the slide editor. The participant dashboard uses per-day images as day card backgrounds, falling back to a rotating set of default images. Day cards display the photo without a gradient overlay (just a subtle dark scrim for text readability).
@@ -70,7 +70,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Features
 - **User Roles**: Participant, Mentor, Admin.
-- **Time-Gating**: Cohort-based content release, where all users progress together from an admin-defined start date. Participants can review past days but not access future ones.
+- **Time-Gating**: Cohort-based content release (6 program days per calendar week, Mon-Sat, skipping Sundays). All users progress together from an admin-defined start date. The `calendarDaysToProgramDay()` utility in `server/routes.ts` converts elapsed calendar days to program days. Participants can review past days but not access future ones.
+- **Day 0 (Introduction)**: Shown as a special card at the top of the Track A grid, links to `/day0` page. Unlocked when Day 1 is unlocked.
 - **Progress Tracking**: Users mark prayers complete, and an admin dashboard visualizes participant progress, completion rates, and graduation status (80% threshold).
 - **Messaging**: Real-time, role-based chat system with unread message notifications.
 - **Onboarding**: Day 0 onboarding with an introduction video and participant agreement.
