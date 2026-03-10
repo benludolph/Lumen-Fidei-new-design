@@ -158,10 +158,15 @@ export function LessonCompletionScreen({
 
   const handleAddToCollection = useCallback(() => {
     if (user) {
-      addToSaintCollection(user.id, saintData.id);
+      addToSaintCollection(user.id, {
+        dayNumber,
+        name: saintData.saint,
+        image: saintData.image,
+        quote: saintData.quote,
+      });
     }
     onContinue();
-  }, [user, saintData, onContinue]);
+  }, [user, saintData, dayNumber, onContinue]);
 
   if (step === "reveal") {
     return (

@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { Shell } from "@/components/layout/Shell";
 import { useAuth } from "@/hooks/use-auth";
-import { ALL_SAINTS, SaintData } from "@/components/lesson/LessonCompletionScreen";
-import { getCollectedSaints } from "@/lib/saintCollection";
+import { getCollectedSaints, CollectedSaint } from "@/lib/saintCollection";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { TrackAContent } from "@shared/schema";
 
-function SaintCardDetail({ saint, onClose }: { saint: SaintData; onClose: () => void }) {
+interface DisplaySaint {
+  dayNumber: number;
+  name: string;
+  image: string;
+  quote: string;
+  isCollected: boolean;
+}
+
+function SaintCardDetail({ saint, onClose }: { saint: DisplaySaint; onClose: () => void }) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -42,9 +51,9 @@ function SaintCardDetail({ saint, onClose }: { saint: SaintData; onClose: () => 
         >
           <img
             src={saint.image}
-            alt={saint.saint}
+            alt={saint.name}
             className="w-[200px] h-[296px] object-cover"
-            data-testid={`saint-detail-image-${saint.id}`}
+            data-testid={`saint-detail-image-${saint.dayNumber}`}
           />
         </div>
 
@@ -55,7 +64,7 @@ function SaintCardDetail({ saint, onClose }: { saint: SaintData; onClose: () => 
         </p>
 
         <h2 className="font-['Afacad',sans-serif] font-bold text-white text-[22px] leading-tight text-center mb-3">
-          {saint.saint}
+          {saint.name}
         </h2>
 
         <p className="font-['Afacad',sans-serif] text-white/60 text-[15px] leading-[22px] text-center italic px-2">
@@ -68,11 +77,47 @@ function SaintCardDetail({ saint, onClose }: { saint: SaintData; onClose: () => 
 
 export default function Collections() {
   const { user } = useAuth();
-  const [selectedSaint, setSelectedSaint] = useState<SaintData | null>(null);
+  const [selectedSaint, setSelectedSaint] = useState<DisplaySaint | null>(null);
+
+  const { data: trackAContent } = useQuery<TrackAContent[]>({
+    queryKey: ["/api/track-a-content"],
+  });
 
   const collected = user ? getCollectedSaints(user.id) : [];
-  const collectedCount = collected.length;
-  const totalCount = ALL_SAINTS.length;
+
+  const saints: DisplaySaint[] = [];
+  if (trackAContent) {
+    for (const content of trackAContent) {
+      if (content.dayNumber === 0) continue;
+      if (!content.saintName && !content.saintImage) continue;
+
+      const collectedEntry = collected.find(c => c.dayNumber === content.dayNumber);
+      saints.push({
+        dayNumber: content.dayNumber,
+        name: collectedEntry?.name || content.saintName || "",
+        image: collectedEntry?.image || content.saintImage || "",
+        quote: collectedEntry?.quote || content.saintQuote || "",
+        isCollected: !!collectedEntry,
+      });
+    }
+  }
+
+  if (collected.length > 0 && saints.length === 0) {
+    for (const c of collected) {
+      saints.push({
+        dayNumber: c.dayNumber,
+        name: c.name,
+        image: c.image,
+        quote: c.quote,
+        isCollected: true,
+      });
+    }
+  }
+
+  saints.sort((a, b) => a.dayNumber - b.dayNumber);
+
+  const collectedCount = saints.filter(s => s.isCollected).length;
+  const totalCount = saints.length || 30;
 
   return (
     <Shell>
@@ -100,36 +145,47 @@ export default function Collections() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
-          {ALL_SAINTS.map((saint) => {
-            const isCollected = collected.includes(saint.id);
-            return (
+        {saints.length === 0 ? (
+          <p className="font-['Afacad',sans-serif] text-muted-foreground text-center py-12">
+            Saints will appear here as your admin adds them to the program.
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
+            {saints.map((saint) => (
               <motion.div
-                key={saint.id}
+                key={saint.dayNumber}
                 className="relative cursor-pointer group"
-                whileHover={isCollected ? { scale: 1.03 } : undefined}
-                whileTap={isCollected ? { scale: 0.97 } : undefined}
-                onClick={() => isCollected && setSelectedSaint(saint)}
-                data-testid={`card-saint-${saint.id}`}
+                whileHover={saint.isCollected ? { scale: 1.03 } : undefined}
+                whileTap={saint.isCollected ? { scale: 0.97 } : undefined}
+                onClick={() => saint.isCollected && setSelectedSaint(saint)}
+                data-testid={`card-saint-day-${saint.dayNumber}`}
               >
                 <div
                   className="rounded-lg overflow-hidden aspect-[152/225]"
                   style={{
-                    boxShadow: isCollected
+                    boxShadow: saint.isCollected
                       ? "0 4px 16px rgba(212,175,55,0.15), 0 2px 8px rgba(0,0,0,0.2)"
                       : "0 2px 8px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <img
-                    src={saint.image}
-                    alt={isCollected ? saint.saint : "Locked"}
-                    className={`w-full h-full object-cover transition-all duration-300 ${
-                      isCollected
-                        ? "brightness-100 saturate-100"
-                        : "brightness-[0.3] saturate-0 blur-[1px]"
-                    }`}
-                  />
-                  {!isCollected && (
+                  {saint.image ? (
+                    <img
+                      src={saint.image}
+                      alt={saint.isCollected ? saint.name : "Locked"}
+                      className={`w-full h-full object-cover transition-all duration-300 ${
+                        saint.isCollected
+                          ? "brightness-100 saturate-100"
+                          : "brightness-[0.3] saturate-0 blur-[1px]"
+                      }`}
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-muted flex items-center justify-center ${
+                      !saint.isCollected ? "brightness-[0.3]" : ""
+                    }`}>
+                      <Lock className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  {!saint.isCollected && saint.image && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center border border-white/10">
                         <Lock className="w-4 h-4 text-white/40" />
@@ -139,15 +195,15 @@ export default function Collections() {
                 </div>
                 <p
                   className={`font-['Afacad',sans-serif] text-[12px] sm:text-[13px] mt-1.5 text-center leading-tight truncate ${
-                    isCollected ? "text-foreground font-medium" : "text-muted-foreground/50"
+                    saint.isCollected ? "text-foreground font-medium" : "text-muted-foreground/50"
                   }`}
                 >
-                  {isCollected ? saint.saint.replace("St. ", "") : "???"}
+                  {saint.isCollected ? saint.name.replace("St. ", "") : "???"}
                 </p>
               </motion.div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
