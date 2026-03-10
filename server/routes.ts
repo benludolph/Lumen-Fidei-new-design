@@ -1232,6 +1232,7 @@ async function ensureSchemaColumns() {
         console.log(`Added column ${column} to ${table}`);
       }
     };
+    await checkCol("track_a_content", "saint_name", "TEXT");
     await checkCol("track_a_content", "saint_image", "TEXT");
     await checkCol("track_a_content", "saint_quote", "TEXT");
   } catch (e) {

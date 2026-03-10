@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { ALL_SAINTS } from "@/components/lesson/LessonCompletionScreen";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1763,6 +1762,7 @@ type TrackAContentData = {
   imageUrl: string | null;
   completionMessage: string | null;
   saintId: string | null;
+  saintName: string | null;
   saintImage: string | null;
   saintQuote: string | null;
 };
@@ -2267,6 +2267,7 @@ function TrackAContentManagementView() {
   const [daySubtitle, setDaySubtitle] = useState("");
   const [completionMessage, setCompletionMessage] = useState("");
   const [selectedSaintId, setSelectedSaintId] = useState<string>("");
+  const [saintName, setSaintName] = useState("");
   const [saintImage, setSaintImage] = useState<string | null>(null);
   const [saintQuote, setSaintQuote] = useState("");
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
@@ -2333,6 +2334,7 @@ function TrackAContentManagementView() {
       setDaySubtitle(content.subtitle || "");
       setCompletionMessage(content.completionMessage || "");
       setSelectedSaintId(content.saintId || "");
+      setSaintName(content.saintName || "");
       setSaintImage(content.saintImage || null);
       setSaintQuote(content.saintQuote || "");
     } else {
@@ -2342,6 +2344,7 @@ function TrackAContentManagementView() {
       setDaySubtitle("");
       setCompletionMessage("");
       setSelectedSaintId("");
+      setSaintName("");
       setSaintImage(null);
       setSaintQuote("");
     }
@@ -2400,6 +2403,7 @@ function TrackAContentManagementView() {
       imageUrl: dayImageUrl,
       completionMessage: completionMessage || null,
       saintId: (selectedSaintId && selectedSaintId !== "__none__") ? selectedSaintId : null,
+      saintName: saintName || null,
       saintImage: saintImage || null,
       saintQuote: saintQuote || null,
     });
@@ -2759,43 +2763,37 @@ function TrackAContentManagementView() {
                   />
                   <p className="text-xs text-muted-foreground">Custom message shown on the success screen when the lesson is finished. Leave blank for default.</p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Saint Card</label>
-                  <Select value={selectedSaintId} onValueChange={setSelectedSaintId}>
-                    <SelectTrigger data-testid="select-saint-card">
-                      <SelectValue placeholder="Auto-assign based on day number" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">Auto-assign based on day number</SelectItem>
-                      {ALL_SAINTS.map((saint) => (
-                        <SelectItem key={saint.id} value={saint.id} data-testid={`option-saint-${saint.id}`}>
-                          {saint.saint}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">Choose which saint card is revealed when the participant completes this lesson. Leave as auto-assign for default rotation.</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Saint Image</label>
-                  <ModuleImageUpload currentUrl={saintImage} onUploaded={setSaintImage} />
-                  {saintImage && (
-                    <Button variant="ghost" size="sm" onClick={() => setSaintImage(null)} className="text-xs text-muted-foreground" data-testid="button-remove-saint-image">
-                      Remove image
-                    </Button>
-                  )}
-                  <p className="text-xs text-muted-foreground">Upload a custom saint image for the unlock card. If left empty, the default image for the selected saint will be used.</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Saint Quote</label>
-                  <Textarea
-                    value={saintQuote}
-                    onChange={(e) => setSaintQuote(e.target.value)}
-                    placeholder="e.g., Not all of us can do great things..."
-                    rows={3}
-                    data-testid="input-saint-quote"
-                  />
-                  <p className="text-xs text-muted-foreground">Custom quote shown on the saint unlock card. If left empty, the default quote for the selected saint will be used.</p>
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="text-sm font-semibold">Saint Unlock Card</h4>
+                  <p className="text-xs text-muted-foreground -mt-2">Set the saint name, image, and quote shown when a participant finishes this lesson. If left empty, a default saint will be used.</p>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Saint Name</label>
+                    <Input
+                      value={saintName}
+                      onChange={(e) => setSaintName(e.target.value)}
+                      placeholder="e.g., St. Mother Teresa of Calcutta"
+                      data-testid="input-saint-name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Saint Image</label>
+                    <ModuleImageUpload currentUrl={saintImage} onUploaded={setSaintImage} />
+                    {saintImage && (
+                      <Button variant="ghost" size="sm" onClick={() => setSaintImage(null)} className="text-xs text-muted-foreground" data-testid="button-remove-saint-image">
+                        Remove image
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Saint Quote</label>
+                    <Textarea
+                      value={saintQuote}
+                      onChange={(e) => setSaintQuote(e.target.value)}
+                      placeholder="e.g., Not all of us can do great things..."
+                      rows={3}
+                      data-testid="input-saint-quote"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

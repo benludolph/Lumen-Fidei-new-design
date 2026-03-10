@@ -26,6 +26,7 @@ interface LessonCompletionScreenProps {
   theme: string;
   onContinue: () => void;
   saintId?: string | null;
+  saintName?: string | null;
   saintImage?: string | null;
   saintQuote?: string | null;
 }
@@ -117,6 +118,7 @@ export function LessonCompletionScreen({
   theme,
   onContinue,
   saintId,
+  saintName: customSaintName,
   saintImage,
   saintQuote,
 }: LessonCompletionScreenProps) {
@@ -131,6 +133,7 @@ export function LessonCompletionScreen({
 
   const saintData = {
     ...baseSaint,
+    saint: customSaintName || baseSaint.saint,
     image: saintImage || baseSaint.image,
     quote: saintQuote || baseSaint.quote,
   };
