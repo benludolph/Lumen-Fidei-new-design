@@ -78,6 +78,8 @@ export const trackAContent = pgTable("track_a_content", {
   imageUrl: text("image_url"),
   completionMessage: text("completion_message"),
   saintId: text("saint_id"),
+  saintImage: text("saint_image"),
+  saintQuote: text("saint_quote"),
 });
 
 export const userAnswers = pgTable("user_answers", {

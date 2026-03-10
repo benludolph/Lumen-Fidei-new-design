@@ -26,6 +26,8 @@ interface LessonCompletionScreenProps {
   theme: string;
   onContinue: () => void;
   saintId?: string | null;
+  saintImage?: string | null;
+  saintQuote?: string | null;
 }
 
 export interface SaintData {
@@ -115,15 +117,23 @@ export function LessonCompletionScreen({
   theme,
   onContinue,
   saintId,
+  saintImage,
+  saintQuote,
 }: LessonCompletionScreenProps) {
   const [step, setStep] = useState<"success" | "reveal">("success");
   const [showContent, setShowContent] = useState(false);
   const [showButton, setShowButton] = useState(false);
   const { user } = useAuth();
 
-  const saintData = dayNumber === 0
+  const baseSaint = dayNumber === 0
     ? ALL_SAINTS[0]
     : (saintId && ALL_SAINTS.find(s => s.id === saintId)) || ALL_SAINTS[(dayNumber - 1) % ALL_SAINTS.length];
+
+  const saintData = {
+    ...baseSaint,
+    image: saintImage || baseSaint.image,
+    quote: saintQuote || baseSaint.quote,
+  };
 
   useEffect(() => {
     playLessonComplete();

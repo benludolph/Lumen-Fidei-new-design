@@ -184,6 +184,8 @@ export function LessonFlow({
         dayNumber={dayNumber}
         theme={content.centralTheme}
         saintId={content.saintId}
+        saintImage={content.saintImage}
+        saintQuote={content.saintQuote}
         onContinue={handleContinue}
       />
     );

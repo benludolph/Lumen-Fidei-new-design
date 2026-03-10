@@ -1763,6 +1763,8 @@ type TrackAContentData = {
   imageUrl: string | null;
   completionMessage: string | null;
   saintId: string | null;
+  saintImage: string | null;
+  saintQuote: string | null;
 };
 
 const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz"] as const;
@@ -2265,6 +2267,8 @@ function TrackAContentManagementView() {
   const [daySubtitle, setDaySubtitle] = useState("");
   const [completionMessage, setCompletionMessage] = useState("");
   const [selectedSaintId, setSelectedSaintId] = useState<string>("");
+  const [saintImage, setSaintImage] = useState<string | null>(null);
+  const [saintQuote, setSaintQuote] = useState("");
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleSubtitle, setModuleSubtitle] = useState("");
@@ -2329,6 +2333,8 @@ function TrackAContentManagementView() {
       setDaySubtitle(content.subtitle || "");
       setCompletionMessage(content.completionMessage || "");
       setSelectedSaintId(content.saintId || "");
+      setSaintImage(content.saintImage || null);
+      setSaintQuote(content.saintQuote || "");
     } else {
       setCentralTheme("");
       setSlides([]);
@@ -2336,6 +2342,8 @@ function TrackAContentManagementView() {
       setDaySubtitle("");
       setCompletionMessage("");
       setSelectedSaintId("");
+      setSaintImage(null);
+      setSaintQuote("");
     }
     setExpandedSlide(null);
   };
@@ -2392,6 +2400,8 @@ function TrackAContentManagementView() {
       imageUrl: dayImageUrl,
       completionMessage: completionMessage || null,
       saintId: (selectedSaintId && selectedSaintId !== "__none__") ? selectedSaintId : null,
+      saintImage: saintImage || null,
+      saintQuote: saintQuote || null,
     });
   };
 
@@ -2765,6 +2775,27 @@ function TrackAContentManagementView() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">Choose which saint card is revealed when the participant completes this lesson. Leave as auto-assign for default rotation.</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Saint Image</label>
+                  <ModuleImageUpload currentUrl={saintImage} onUploaded={setSaintImage} />
+                  {saintImage && (
+                    <Button variant="ghost" size="sm" onClick={() => setSaintImage(null)} className="text-xs text-muted-foreground" data-testid="button-remove-saint-image">
+                      Remove image
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground">Upload a custom saint image for the unlock card. If left empty, the default image for the selected saint will be used.</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Saint Quote</label>
+                  <Textarea
+                    value={saintQuote}
+                    onChange={(e) => setSaintQuote(e.target.value)}
+                    placeholder="e.g., Not all of us can do great things..."
+                    rows={3}
+                    data-testid="input-saint-quote"
+                  />
+                  <p className="text-xs text-muted-foreground">Custom quote shown on the saint unlock card. If left empty, the default quote for the selected saint will be used.</p>
                 </div>
               </div>
             </CardContent>
