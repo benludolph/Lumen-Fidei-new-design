@@ -36,13 +36,6 @@ const allowlist = [
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
-  console.log("pushing database schema...");
-  try {
-    execSync("npx drizzle-kit push", { stdio: "inherit" });
-  } catch (e) {
-    console.warn("drizzle-kit push warning (non-fatal):", e);
-  }
-
   console.log("building client...");
   await viteBuild();
 

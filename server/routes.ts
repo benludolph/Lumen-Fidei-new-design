@@ -1220,7 +1220,27 @@ async function migrateFilesystemImages() {
   }
 }
 
+async function ensureSchemaColumns() {
+  try {
+    const checkCol = async (table: string, column: string, colType: string) => {
+      const result = await db.execute(sql`
+        SELECT column_name FROM information_schema.columns 
+        WHERE table_name = ${table} AND column_name = ${column}
+      `);
+      if (result.rows.length === 0) {
+        await db.execute(sql.raw(`ALTER TABLE ${table} ADD COLUMN ${column} ${colType}`));
+        console.log(`Added column ${column} to ${table}`);
+      }
+    };
+    await checkCol("track_a_content", "saint_image", "TEXT");
+    await checkCol("track_a_content", "saint_quote", "TEXT");
+  } catch (e) {
+    console.warn("Schema migration warning (non-fatal):", e);
+  }
+}
+
 async function seed() {
+    await ensureSchemaColumns();
     await migrateFilesystemImages();
     // Seed users if needed
     const users = await storage.getAllUsers();
