@@ -108,7 +108,7 @@ function SundayBanner() {
   );
 }
 
-function Day0Card({ isUnlocked, onClick }: { isUnlocked: boolean; onClick: () => void }) {
+function Day0Card({ isUnlocked, onClick, imageUrl }: { isUnlocked: boolean; onClick: () => void; imageUrl?: string | null }) {
   return (
     <button
       onClick={isUnlocked ? onClick : undefined}
@@ -120,6 +120,16 @@ function Day0Card({ isUnlocked, onClick }: { isUnlocked: boolean; onClick: () =>
         isUnlocked && "hover:shadow-md cursor-pointer bg-gradient-to-r from-[#003725] to-[#004d33]",
       )}
     >
+      {imageUrl && (
+        <img
+          src={imageUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover rounded-lg"
+        />
+      )}
+      {imageUrl && (
+        <div className="absolute inset-0 bg-black/40 rounded-lg" />
+      )}
       <div className="relative z-10 flex items-center gap-4 w-full">
         <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 shrink-0">
           <BookOpen className="w-5 h-5 text-white/80" />
@@ -225,6 +235,7 @@ export function DayGridView({
               <Day0Card
                 isUnlocked={day0Unlocked}
                 onClick={() => onDaySelect(0)}
+                imageUrl={trackASummaries?.find(c => c.dayNumber === 0)?.imageUrl}
               />
             </div>
           )}
