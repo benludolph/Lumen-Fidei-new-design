@@ -33,6 +33,19 @@ const upload = multer({
   },
 });
 
+const audioUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a", "audio/aac"];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only MP3, WAV, OGG, M4A, and AAC audio files are allowed"));
+    }
+  },
+});
+
 /**
  * Convert calendar days elapsed since cohort start to program day number.
  * Program runs Mon-Sat (6 days/week), skipping Sundays.
@@ -414,6 +427,33 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Image upload error:", error);
       res.status(500).json({ message: "Failed to save image" });
+    }
+  });
+
+  app.post('/api/admin/upload-audio', requireRole('admin'), uploadLimiter, audioUpload.single('audio'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No audio file provided" });
+    }
+    try {
+      const ext = path.extname(req.file.originalname);
+      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${base}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+
+      await db.insert(uploadedImages).values({
+        filename,
+        mimeType: req.file.mimetype,
+        data: base64Data,
+      }).onConflictDoUpdate({
+        target: uploadedImages.filename,
+        set: { data: base64Data, mimeType: req.file.mimetype },
+      });
+
+      const filePath = `/api/images/${filename}`;
+      res.json({ url: filePath });
+    } catch (error) {
+      console.error("Audio upload error:", error);
+      res.status(500).json({ message: "Failed to save audio" });
     }
   });
 

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ALL_SAINTS } from "@/components/lesson/LessonCompletionScreen";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -1978,21 +1978,49 @@ function KnowledgeCheckEditor({ content, onChange, index }: { content: string; o
 }
 
 function TimerSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  let data: { duration: number; text: string };
+  let data: { duration: number; text: string; audioUrl?: string };
   try {
     const parsed = JSON.parse(content || "{}");
     data = {
       duration: typeof parsed.duration === "number" ? parsed.duration : 60,
       text: typeof parsed.text === "string" ? parsed.text : "",
+      audioUrl: typeof parsed.audioUrl === "string" ? parsed.audioUrl : undefined,
     };
   } catch {
     data = { duration: 60, text: content || "" };
   }
 
-  const update = (field: "duration" | "text", value: number | string) => {
+  const update = (field: "duration" | "text" | "audioUrl", value: number | string | undefined) => {
     const next = { ...data, [field]: value };
+    if (value === undefined) delete (next as any)[field];
     onChange(JSON.stringify(next));
   };
+
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const [audioUploading, setAudioUploading] = useState(false);
+  const contentRef = useRef(content);
+  contentRef.current = content;
+
+  const handleAudioUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAudioUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("audio", file);
+      const res = await fetch("/api/admin/upload-audio", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      let latest: any = {};
+      try { latest = JSON.parse(contentRef.current || "{}"); } catch {}
+      onChange(JSON.stringify({ ...latest, audioUrl: url }));
+    } catch (err) {
+      console.error("Audio upload error:", err);
+    } finally {
+      setAudioUploading(false);
+      if (audioInputRef.current) audioInputRef.current.value = "";
+    }
+  }, [onChange]);
 
   return (
     <div className="space-y-3">
@@ -2014,6 +2042,43 @@ function TimerSlideEditor({ content, onChange, index }: { content: string; onCha
           value={data.text}
           onChange={(val) => update("text", val)}
         />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Scripture Audio (optional)</label>
+        {data.audioUrl ? (
+          <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+            <Volume2 className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground truncate flex-1">{data.audioUrl.split("/").pop()}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => update("audioUrl", undefined)}
+              className="h-6 px-2"
+              data-testid={`button-remove-audio-${index}`}
+            >
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        ) : null}
+        <input
+          ref={audioInputRef}
+          type="file"
+          accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac"
+          className="hidden"
+          onChange={handleAudioUpload}
+          data-testid={`input-timer-audio-${index}`}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => audioInputRef.current?.click()}
+          disabled={audioUploading}
+          className="w-full"
+          data-testid={`button-upload-audio-${index}`}
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          {audioUploading ? "Uploading..." : data.audioUrl ? "Change Audio" : "Upload Audio"}
+        </Button>
       </div>
     </div>
   );
@@ -2863,7 +2928,7 @@ function TrackAContentManagementView() {
                         })() : slide.type === "timer" ? (() => {
                           try {
                             const d = JSON.parse(slide.content);
-                            return `${d.duration || 60}s timer`;
+                            return `${d.duration || 60}s timer${d.audioUrl ? " 🔊" : ""}`;
                           } catch { return slide.content || "(empty)"; }
                         })() : (slide.content || "(empty)")}
                       </p>

@@ -18,7 +18,7 @@ import audioDay4 from "@assets/Day_4_1772743901057.mp3";
 import audioDay5 from "@assets/Day_5_1772743901057.mp3";
 import audioDay6 from "@assets/Day_6_1772743901057.mp3";
 
-const TIMER_AUDIO: Record<number, string> = {
+const TIMER_AUDIO_FALLBACK: Record<number, string> = {
   0: audioDay0,
   1: audioDay1,
   2: audioDay2,
@@ -628,12 +628,12 @@ function MentorMessageSlide({
   );
 }
 
-function parseTimerContent(content: string): { duration: number; text: string } {
+function parseTimerContent(content: string): { duration: number; text: string; audioUrl?: string } {
   try {
     const parsed = JSON.parse(content);
     if (parsed && typeof parsed.text === "string") {
       const dur = typeof parsed.duration === "number" ? parsed.duration : parseInt(parsed.duration) || 60;
-      return { duration: Math.max(0, dur), text: parsed.text };
+      return { duration: Math.max(0, dur), text: parsed.text, audioUrl: typeof parsed.audioUrl === "string" ? parsed.audioUrl : undefined };
     }
   } catch {}
   return { duration: 60, text: content };
@@ -650,13 +650,13 @@ function TimerSlide({
   onTimerComplete?: () => void;
   alreadyDone?: boolean;
 }) {
-  const { duration, text } = useMemo(() => parseTimerContent(content), [content]);
+  const { duration, text, audioUrl } = useMemo(() => parseTimerContent(content), [content]);
   const [remaining, setRemaining] = useState(alreadyDone ? 0 : duration);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completedRef = useRef(!!alreadyDone);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioSrc = TIMER_AUDIO[dayNumber] || null;
+  const audioSrc = audioUrl || TIMER_AUDIO_FALLBACK[dayNumber] || null;
 
   useEffect(() => {
     if (alreadyDone) {
