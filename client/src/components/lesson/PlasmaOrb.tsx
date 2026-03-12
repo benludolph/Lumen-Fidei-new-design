@@ -21,11 +21,11 @@ const STAGE_PRESETS: Record<OrbState, OrbParams> = {
   pure: {
     animSpeed: 0.12,
     textureScale: 0.05,
-    brightness: 1.8,
+    brightness: 2.4,
     voids: 0.0,
-    colorDeep: [1.0, 0.7, 0.1],
-    colorMid: [1.0, 0.82, 0.2],
-    colorBright: [1.0, 0.95, 0.5],
+    colorDeep: [1.0, 0.85, 0.3],
+    colorMid: [1.0, 0.92, 0.45],
+    colorBright: [1.0, 1.0, 0.7],
     edgeColor: [1.0, 1.0, 1.0],
     edgeOpacity: 0.6,
     rotSpeedX: 0.06,
@@ -181,7 +181,7 @@ const SHELL_VERTEX = `
 varying vec3 vNormal;
 void main() {
   vNormal = normalize(normalMatrix * normal);
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position * 1.02, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position * 1.06, 1.0);
 }
 `;
 
@@ -190,7 +190,7 @@ uniform vec3 uEdgeColor;
 uniform float uEdgeOpacity;
 varying vec3 vNormal;
 void main() {
-  float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.0);
+  float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 1.2);
   float alpha = fresnel * uEdgeOpacity;
   gl_FragColor = vec4(uEdgeColor, alpha);
 }
@@ -320,7 +320,7 @@ export default function PlasmaOrb({ orbState, shake, onError }: PlasmaOrbProps) 
       const plasma = new THREE.Mesh(plasmaGeo, plasmaMat);
       orbGroup.add(plasma);
 
-      const shellGeo = new THREE.SphereGeometry(1.02, 48, 48);
+      const shellGeo = new THREE.SphereGeometry(1.06, 48, 48);
       const shellMat = new THREE.ShaderMaterial({
         vertexShader: SHELL_VERTEX,
         fragmentShader: SHELL_FRAGMENT,
