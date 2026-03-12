@@ -291,10 +291,30 @@ export function InteractiveStorySlide({
   const handlePlasmaError = useCallback(() => setPlasmaFailed(true), []);
 
   const progressAudioRef = useRef<HTMLAudioElement | null>(null);
+  const bgLoopRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
     progressAudioRef.current = new Audio("/sounds/piano_progress.mp3");
     progressAudioRef.current.volume = 0.6;
+
+    const bgLoop = new Audio("/sounds/bg_piano_loop.wav");
+    bgLoop.loop = true;
+    bgLoop.volume = 0.05;
+    bgLoopRef.current = bgLoop;
+    bgLoop.play().catch(() => {});
+
+    return () => {
+      bgLoop.pause();
+      bgLoop.currentTime = 0;
+    };
   }, []);
+
+  useEffect(() => {
+    if (storyComplete && bgLoopRef.current) {
+      bgLoopRef.current.pause();
+      bgLoopRef.current.currentTime = 0;
+    }
+  }, [storyComplete]);
 
   const playProgressSound = useCallback(() => {
     const audio = progressAudioRef.current;
