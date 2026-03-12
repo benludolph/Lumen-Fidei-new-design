@@ -9,6 +9,7 @@ import { useSendMessage } from "@/hooks/use-chat";
 import DOMPurify from "dompurify";
 import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
+import { InteractiveStorySlide } from "./InteractiveStorySlide";
 
 import audioDay0 from "@assets/Day_0_1772743901058.mp3";
 import audioDay1 from "@assets/Day_1_1772743901058.mp3";
@@ -39,7 +40,8 @@ export type SlideType =
   | "timer"
   | "quiz"
   | "quiz_result"
-  | "knowledge_check";
+  | "knowledge_check"
+  | "interactive_story";
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -346,6 +348,19 @@ export function LessonSlide({
     direction === "forward"
       ? "lesson-slide-in-right"
       : "lesson-slide-in-left";
+
+  if (type === "interactive_story") {
+    return (
+      <div
+        className={cn("flex-1 overflow-y-auto pb-28", animationClass)}
+        data-testid={`lesson-slide-${type}`}
+      >
+        <div className="flex flex-col justify-center min-h-full">
+          <InteractiveStorySlide content={content} onInteracted={onInteracted} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

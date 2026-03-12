@@ -1,0 +1,121 @@
+I want to create a new slide type called “Interactive Story Slide.”
+
+This slide will contain a visual glowing orb that represents the heart/soul and the user progresses through a story by clicking buttons.
+
+Important:
+Use the exact wording I provide. Do NOT rewrite the text.
+The focus is the visual interaction with the orb.
+
+Orb Design
+
+Create a soft glowing orb in the center of the screen.
+
+The orb should:
+
+• glow gold / warm light
+• slowly pulse like breathing
+• feel alive and gentle
+• have a subtle light aura around it
+
+The pulsing animation should:
+
+• expand slightly
+• increase brightness
+• then contract
+• cycle every 3–4 seconds
+
+It should feel calm and spiritual, not like a video game.
+
+Orb States
+
+The orb will change appearance as the story progresses.
+
+States include:
+
+State 1 — Pure Light
+Bright glowing orb with soft pulse.
+
+State 2 — Crack
+A thin jagged black crack appears inside the orb.
+The glow flickers slightly.
+
+State 3 — Shell
+A gray protective shell forms around the orb's edge.
+
+State 4 — Scribbles
+Dark scribbles and marks appear over the orb.
+
+Important:
+The golden light should always remain faintly visible behind the damage.
+
+Interaction
+
+The story progresses through stages inside the slide.
+
+Each stage includes:
+
+• text narration
+• orb visual change
+• button to continue
+
+Example:
+
+Stage 1
+Orb bright and glowing
+
+Text:
+“Hi [NAME]!
+I’m your soul as a child!
+I’m excited for life! I’m hopeful for the future!
+I wonder what life has in store for me!”
+
+Button: Step into the world
+
+Stage 2
+Small crack appears
+
+Text:
+“Something happened today.
+Someone I loved said something mean.
+It felt like a cold wind blew through me.”
+
+Button: Keep going
+
+Stage 3
+Shell forms
+
+Text:
+“To make sure that doesn't happen again,
+I built a little wall.”
+
+Button: Try to be strong
+
+Stage 4
+Orb dim with scribbles
+
+Text:
+“Now I’m older.
+I’ve been hurt, so I hurt people back.”
+
+Button: Keep going
+
+Stage 5
+User presses Try Harder
+
+Each click shakes the orb slightly but does not remove the scribbles.
+
+After several clicks show message:
+
+“I tried to fix myself…
+but I couldn’t reach the light anymore.”
+
+Then show Continue button.
+
+Integration
+
+This interactive story must behave like a single slide in the lesson system.
+
+When the story finishes, the normal Next Slide button should appear.
+
+Do not modify the existing lesson engine.
+Only add a new slide type and renderer.
