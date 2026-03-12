@@ -19,56 +19,56 @@ interface OrbParams {
 
 const STAGE_PRESETS: Record<OrbState, OrbParams> = {
   pure: {
-    animSpeed: 0.15,
+    animSpeed: 0.12,
     textureScale: 0.05,
-    brightness: 1.48,
-    voids: 0.8,
-    colorDeep: [1.0, 0.533, 0.0],
-    colorMid: [1.0, 0.635, 0.0],
-    colorBright: [1.0, 0.835, 0.0],
+    brightness: 1.8,
+    voids: 0.0,
+    colorDeep: [1.0, 0.7, 0.1],
+    colorMid: [1.0, 0.82, 0.2],
+    colorBright: [1.0, 0.95, 0.5],
     edgeColor: [1.0, 1.0, 1.0],
-    edgeOpacity: 1.0,
+    edgeOpacity: 0.6,
     rotSpeedX: 0.06,
     rotSpeedY: 0.04,
   },
   crack: {
-    animSpeed: 0.18,
-    textureScale: 0.08,
-    brightness: 1.3,
-    voids: 0.85,
-    colorDeep: [0.9, 0.47, 0.0],
-    colorMid: [0.92, 0.57, 0.0],
-    colorBright: [0.95, 0.78, 0.0],
-    edgeColor: [0.95, 0.95, 0.95],
-    edgeOpacity: 1.0,
-    rotSpeedX: 0.08,
-    rotSpeedY: 0.05,
+    animSpeed: 0.2,
+    textureScale: 0.3,
+    brightness: 1.5,
+    voids: 0.15,
+    colorDeep: [1.0, 0.55, 0.05],
+    colorMid: [1.0, 0.65, 0.1],
+    colorBright: [1.0, 0.85, 0.3],
+    edgeColor: [0.95, 0.92, 0.85],
+    edgeOpacity: 0.7,
+    rotSpeedX: 0.2,
+    rotSpeedY: 0.15,
   },
   shell: {
-    animSpeed: 0.12,
-    textureScale: 0.12,
-    brightness: 1.15,
-    voids: 0.88,
-    colorDeep: [0.8, 0.4, 0.0],
-    colorMid: [0.85, 0.52, 0.0],
-    colorBright: [0.9, 0.72, 0.0],
+    animSpeed: 0.15,
+    textureScale: 0.6,
+    brightness: 1.25,
+    voids: 0.3,
+    colorDeep: [0.9, 0.45, 0.0],
+    colorMid: [0.95, 0.6, 0.08],
+    colorBright: [1.0, 0.78, 0.2],
     edgeColor: [0.75, 0.73, 0.7],
-    edgeOpacity: 1.0,
-    rotSpeedX: 0.05,
-    rotSpeedY: 0.03,
+    edgeOpacity: 0.85,
+    rotSpeedX: 0.35,
+    rotSpeedY: 0.25,
   },
   scribbles: {
-    animSpeed: 0.28,
-    textureScale: 0.2,
-    brightness: 0.85,
-    voids: 0.92,
-    colorDeep: [0.6, 0.28, 0.0],
-    colorMid: [0.7, 0.4, 0.0],
-    colorBright: [0.8, 0.6, 0.05],
+    animSpeed: 0.3,
+    textureScale: 1.2,
+    brightness: 0.95,
+    voids: 0.45,
+    colorDeep: [0.75, 0.35, 0.0],
+    colorMid: [0.85, 0.5, 0.05],
+    colorBright: [0.95, 0.7, 0.15],
     edgeColor: [0.6, 0.58, 0.55],
     edgeOpacity: 1.0,
-    rotSpeedX: 0.14,
-    rotSpeedY: 0.1,
+    rotSpeedX: 0.5,
+    rotSpeedY: 0.35,
   },
 };
 
@@ -157,13 +157,14 @@ void main() {
   float noise = n1 + n2 + n3;
 
   float voidMask = smoothstep(-uVoids, uVoids * 0.5, noise);
+  voidMask = mix(0.35, 1.0, voidMask);
 
   vec3 color = mix(uColorDeep, uColorMid, smoothstep(-0.5, 0.3, noise));
   color = mix(color, uColorBright, smoothstep(0.2, 0.8, noise));
 
   color *= uBrightness * voidMask;
 
-  float innerGlow = 0.18 + 0.08 * sin(uTime * 0.8);
+  float innerGlow = 0.25 + 0.1 * sin(uTime * 0.8);
   color = max(color, uColorDeep * innerGlow);
 
   float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.5);

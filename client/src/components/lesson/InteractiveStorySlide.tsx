@@ -329,9 +329,13 @@ export function InteractiveStorySlide({
     }
 
     if (currentStage < data.stages.length - 1) {
-      setCurrentStage(currentStage + 1);
-      setTryHarderCount(0);
-      setShowFinalMessage(false);
+      setShaking(true);
+      setTimeout(() => {
+        setShaking(false);
+        setCurrentStage(currentStage + 1);
+        setTryHarderCount(0);
+        setShowFinalMessage(false);
+      }, 550);
     }
   }, [stage, currentStage, data.stages.length, tryHarderCount, maxTaps]);
 
