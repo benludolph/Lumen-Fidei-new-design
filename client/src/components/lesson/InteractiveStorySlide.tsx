@@ -294,7 +294,7 @@ export function InteractiveStorySlide({
   const bgLoopRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    progressAudioRef.current = new Audio("/sounds/piano_progress.mp3");
+    progressAudioRef.current = new Audio("/sounds/violin_transition.mp3");
     progressAudioRef.current.volume = 0.6;
 
     const bgLoop = new Audio("/sounds/bg_piano_loop.wav");
