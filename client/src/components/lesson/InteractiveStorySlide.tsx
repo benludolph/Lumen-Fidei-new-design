@@ -309,12 +309,6 @@ export function InteractiveStorySlide({
     };
   }, []);
 
-  useEffect(() => {
-    if (storyComplete && bgLoopRef.current) {
-      bgLoopRef.current.pause();
-      bgLoopRef.current.currentTime = 0;
-    }
-  }, [storyComplete]);
 
   const playProgressSound = useCallback(() => {
     const audio = progressAudioRef.current;
