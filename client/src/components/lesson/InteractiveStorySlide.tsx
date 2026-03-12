@@ -299,7 +299,7 @@ export function InteractiveStorySlide({
 
     const bgLoop = new Audio("/sounds/bg_piano_loop.wav");
     bgLoop.loop = true;
-    bgLoop.volume = 0.003;
+    bgLoop.volume = 0.01;
     bgLoopRef.current = bgLoop;
     bgLoop.play().catch(() => {});
 
