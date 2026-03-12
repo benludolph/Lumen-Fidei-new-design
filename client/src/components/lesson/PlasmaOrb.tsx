@@ -19,56 +19,56 @@ interface OrbParams {
 
 const STAGE_PRESETS: Record<OrbState, OrbParams> = {
   pure: {
-    animSpeed: 0.3,
-    textureScale: 1.2,
-    brightness: 1.6,
-    voids: 0.15,
-    colorDeep: [0.55, 0.35, 0.05],
-    colorMid: [0.85, 0.65, 0.15],
-    colorBright: [1.0, 0.92, 0.55],
-    edgeColor: [0.8, 0.7, 0.3],
-    edgeOpacity: 0.0,
-    rotSpeedX: 0.15,
-    rotSpeedY: 0.1,
+    animSpeed: 0.15,
+    textureScale: 0.05,
+    brightness: 1.48,
+    voids: 0.8,
+    colorDeep: [1.0, 0.533, 0.0],
+    colorMid: [1.0, 0.635, 0.0],
+    colorBright: [1.0, 0.835, 0.0],
+    edgeColor: [1.0, 1.0, 1.0],
+    edgeOpacity: 1.0,
+    rotSpeedX: 0.06,
+    rotSpeedY: 0.04,
   },
   crack: {
-    animSpeed: 0.45,
-    textureScale: 1.5,
-    brightness: 1.2,
-    voids: 0.35,
-    colorDeep: [0.4, 0.28, 0.08],
-    colorMid: [0.7, 0.5, 0.15],
-    colorBright: [0.9, 0.78, 0.4],
-    edgeColor: [0.6, 0.5, 0.3],
-    edgeOpacity: 0.08,
-    rotSpeedX: 0.2,
-    rotSpeedY: 0.15,
+    animSpeed: 0.18,
+    textureScale: 0.08,
+    brightness: 1.3,
+    voids: 0.85,
+    colorDeep: [0.9, 0.47, 0.0],
+    colorMid: [0.92, 0.57, 0.0],
+    colorBright: [0.95, 0.78, 0.0],
+    edgeColor: [0.95, 0.95, 0.95],
+    edgeOpacity: 1.0,
+    rotSpeedX: 0.08,
+    rotSpeedY: 0.05,
   },
   shell: {
-    animSpeed: 0.35,
-    textureScale: 1.8,
-    brightness: 0.9,
-    voids: 0.4,
-    colorDeep: [0.3, 0.22, 0.08],
-    colorMid: [0.6, 0.45, 0.15],
-    colorBright: [0.8, 0.65, 0.3],
-    edgeColor: [0.45, 0.42, 0.38],
-    edgeOpacity: 0.45,
-    rotSpeedX: 0.12,
-    rotSpeedY: 0.08,
+    animSpeed: 0.12,
+    textureScale: 0.12,
+    brightness: 1.15,
+    voids: 0.88,
+    colorDeep: [0.8, 0.4, 0.0],
+    colorMid: [0.85, 0.52, 0.0],
+    colorBright: [0.9, 0.72, 0.0],
+    edgeColor: [0.75, 0.73, 0.7],
+    edgeOpacity: 1.0,
+    rotSpeedX: 0.05,
+    rotSpeedY: 0.03,
   },
   scribbles: {
-    animSpeed: 0.6,
-    textureScale: 2.2,
-    brightness: 0.6,
-    voids: 0.6,
-    colorDeep: [0.2, 0.12, 0.05],
-    colorMid: [0.45, 0.3, 0.1],
-    colorBright: [0.7, 0.5, 0.2],
-    edgeColor: [0.35, 0.32, 0.28],
-    edgeOpacity: 0.65,
-    rotSpeedX: 0.3,
-    rotSpeedY: 0.25,
+    animSpeed: 0.28,
+    textureScale: 0.2,
+    brightness: 0.85,
+    voids: 0.92,
+    colorDeep: [0.6, 0.28, 0.0],
+    colorMid: [0.7, 0.4, 0.0],
+    colorBright: [0.8, 0.6, 0.05],
+    edgeColor: [0.6, 0.58, 0.55],
+    edgeOpacity: 1.0,
+    rotSpeedX: 0.14,
+    rotSpeedY: 0.1,
   },
 };
 
@@ -163,13 +163,13 @@ void main() {
 
   color *= uBrightness * voidMask;
 
-  float innerGlow = 0.12 + 0.06 * sin(uTime * 0.8);
+  float innerGlow = 0.18 + 0.08 * sin(uTime * 0.8);
   color = max(color, uColorDeep * innerGlow);
 
   float fresnel = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.5);
-  color += uColorBright * fresnel * 0.25 * uBrightness;
+  color += uColorBright * fresnel * 0.3 * uBrightness;
 
-  float breathe = 1.0 + 0.04 * sin(uTime * 1.2);
+  float breathe = 1.0 + 0.06 * sin(uTime * 0.9);
   color *= breathe;
 
   gl_FragColor = vec4(color, 1.0);
@@ -307,13 +307,13 @@ export default function PlasmaOrb({ orbState, shake, onError }: PlasmaOrbProps) 
         fragmentShader: FRAGMENT_SHADER,
         uniforms: {
           uTime: { value: 0 },
-          uAnimSpeed: { value: 0.3 },
-          uTextureScale: { value: 1.2 },
-          uBrightness: { value: 1.6 },
-          uVoids: { value: 0.15 },
-          uColorDeep: { value: new THREE.Vector3(0.55, 0.35, 0.05) },
-          uColorMid: { value: new THREE.Vector3(0.85, 0.65, 0.15) },
-          uColorBright: { value: new THREE.Vector3(1.0, 0.92, 0.55) },
+          uAnimSpeed: { value: STAGE_PRESETS.pure.animSpeed },
+          uTextureScale: { value: STAGE_PRESETS.pure.textureScale },
+          uBrightness: { value: STAGE_PRESETS.pure.brightness },
+          uVoids: { value: STAGE_PRESETS.pure.voids },
+          uColorDeep: { value: new THREE.Vector3(...STAGE_PRESETS.pure.colorDeep) },
+          uColorMid: { value: new THREE.Vector3(...STAGE_PRESETS.pure.colorMid) },
+          uColorBright: { value: new THREE.Vector3(...STAGE_PRESETS.pure.colorBright) },
         },
       });
       const plasma = new THREE.Mesh(plasmaGeo, plasmaMat);
@@ -324,8 +324,8 @@ export default function PlasmaOrb({ orbState, shake, onError }: PlasmaOrbProps) 
         vertexShader: SHELL_VERTEX,
         fragmentShader: SHELL_FRAGMENT,
         uniforms: {
-          uEdgeColor: { value: new THREE.Vector3(0.8, 0.7, 0.3) },
-          uEdgeOpacity: { value: 0.0 },
+          uEdgeColor: { value: new THREE.Vector3(...STAGE_PRESETS.pure.edgeColor) },
+          uEdgeOpacity: { value: STAGE_PRESETS.pure.edgeOpacity },
         },
         transparent: true,
         side: THREE.FrontSide,

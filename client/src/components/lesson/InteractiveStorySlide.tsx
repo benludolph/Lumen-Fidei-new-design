@@ -264,7 +264,7 @@ function StoryText({ text, stageKey }: { text: string; stageKey: string }) {
           initial={{ opacity: 0, y: 8 }}
           animate={i < visibleCount ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="font-['Afacad',sans-serif] text-neutral-700 dark:text-neutral-300 text-[16px] leading-[26px]"
+          className="font-['Afacad',sans-serif] text-neutral-700 dark:text-neutral-300 text-2xl leading-[36px] font-medium"
         >
           {line}
         </motion.p>
