@@ -357,6 +357,8 @@ export function InteractiveStorySlide({
 
       if (nextCount >= maxTaps) {
         setShowFinalMessage(true);
+        setStoryComplete(true);
+        onInteracted?.();
       }
       return;
     }
@@ -375,24 +377,6 @@ export function InteractiveStorySlide({
     }
   }, [stage, currentStage, data.stages.length, tryHarderCount, maxTaps, playProgressSound]);
 
-  const handleContinueAfterFinal = useCallback(() => {
-    if (currentStage < data.stages.length - 1) {
-      playProgressSound();
-      setTimeout(() => {
-        setShaking(true);
-        setTimeout(() => {
-          setShaking(false);
-          setCurrentStage(currentStage + 1);
-          setTryHarderCount(0);
-          setShowFinalMessage(false);
-        }, 550);
-      }, 600);
-    } else {
-      playProgressSound();
-      setStoryComplete(true);
-      onInteracted?.();
-    }
-  }, [currentStage, data.stages.length, onInteracted, playProgressSound]);
 
   if (!stage) return null;
 
@@ -439,16 +423,7 @@ export function InteractiveStorySlide({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
             >
-              {showFinalMessage ? (
-                <Button
-                  onClick={handleContinueAfterFinal}
-                  className="rounded-full px-8 py-3 text-[15px] font-medium bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/30 hover:bg-[#d4af37]/30 transition-colors"
-                  variant="ghost"
-                  data-testid="button-story-continue-final"
-                >
-                  Continue
-                </Button>
-              ) : isLastStage && !isTryHarder ? (
+              {isLastStage && !isTryHarder ? (
                 <Button
                   onClick={handleNonMechanicLast}
                   className="rounded-full px-8 py-3 text-[15px] font-medium bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/30 hover:bg-[#d4af37]/30 transition-colors"
