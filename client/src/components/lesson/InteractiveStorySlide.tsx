@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, lazy, Suspense, Component, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, lazy, Suspense, Component, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -290,6 +290,19 @@ export function InteractiveStorySlide({
 
   const handlePlasmaError = useCallback(() => setPlasmaFailed(true), []);
 
+  const progressAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    progressAudioRef.current = new Audio("/sounds/piano_progress.mp3");
+    progressAudioRef.current.volume = 0.6;
+  }, []);
+
+  const playProgressSound = useCallback(() => {
+    const audio = progressAudioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }, []);
+
   const data = useMemo<InteractiveStoryData>(() => {
     try {
       const parsed = JSON.parse(content);
@@ -329,26 +342,37 @@ export function InteractiveStorySlide({
     }
 
     if (currentStage < data.stages.length - 1) {
-      setShaking(true);
+      playProgressSound();
       setTimeout(() => {
-        setShaking(false);
-        setCurrentStage(currentStage + 1);
-        setTryHarderCount(0);
-        setShowFinalMessage(false);
-      }, 550);
+        setShaking(true);
+        setTimeout(() => {
+          setShaking(false);
+          setCurrentStage(currentStage + 1);
+          setTryHarderCount(0);
+          setShowFinalMessage(false);
+        }, 550);
+      }, 600);
     }
-  }, [stage, currentStage, data.stages.length, tryHarderCount, maxTaps]);
+  }, [stage, currentStage, data.stages.length, tryHarderCount, maxTaps, playProgressSound]);
 
   const handleContinueAfterFinal = useCallback(() => {
     if (currentStage < data.stages.length - 1) {
-      setCurrentStage(currentStage + 1);
-      setTryHarderCount(0);
-      setShowFinalMessage(false);
+      playProgressSound();
+      setTimeout(() => {
+        setShaking(true);
+        setTimeout(() => {
+          setShaking(false);
+          setCurrentStage(currentStage + 1);
+          setTryHarderCount(0);
+          setShowFinalMessage(false);
+        }, 550);
+      }, 600);
     } else {
+      playProgressSound();
       setStoryComplete(true);
       onInteracted?.();
     }
-  }, [currentStage, data.stages.length, onInteracted]);
+  }, [currentStage, data.stages.length, onInteracted, playProgressSound]);
 
   if (!stage) return null;
 
@@ -357,10 +381,11 @@ export function InteractiveStorySlide({
 
   const handleNonMechanicLast = useCallback(() => {
     if (isLastStage && !isTryHarder) {
+      playProgressSound();
       setStoryComplete(true);
       onInteracted?.();
     }
-  }, [isLastStage, isTryHarder, onInteracted]);
+  }, [isLastStage, isTryHarder, onInteracted, playProgressSound]);
 
   const textKey = `${currentStage}-${showFinalMessage ? "final" : "normal"}`;
   const currentText = showFinalMessage
