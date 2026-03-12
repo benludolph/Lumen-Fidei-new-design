@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, lazy, Suspense, Component, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, lazy, Suspense, Component, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -241,6 +241,38 @@ function GlowOrb({ state, shake }: { state: OrbState; shake: boolean }) {
   );
 }
 
+function StoryText({ text, stageKey }: { text: string; stageKey: string }) {
+  const lines = text.split("\n").filter((l) => l.trim().length > 0);
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  useEffect(() => {
+    setVisibleCount(0);
+  }, [stageKey]);
+
+  useEffect(() => {
+    if (visibleCount >= lines.length) return;
+    const delay = visibleCount === 0 ? 200 : 600;
+    const timer = setTimeout(() => setVisibleCount((c) => c + 1), delay);
+    return () => clearTimeout(timer);
+  }, [visibleCount, lines.length]);
+
+  return (
+    <div className="text-center space-y-2">
+      {lines.map((line, i) => (
+        <motion.p
+          key={`${stageKey}-line-${i}`}
+          initial={{ opacity: 0, y: 8 }}
+          animate={i < visibleCount ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="font-['Afacad',sans-serif] text-neutral-700 dark:text-neutral-300 text-[16px] leading-[26px]"
+        >
+          {line}
+        </motion.p>
+      ))}
+    </div>
+  );
+}
+
 export function InteractiveStorySlide({
   content,
   onInteracted,
@@ -326,10 +358,14 @@ export function InteractiveStorySlide({
     }
   }, [isLastStage, isTryHarder, onInteracted]);
 
+  const textKey = `${currentStage}-${showFinalMessage ? "final" : "normal"}`;
+  const currentText = showFinalMessage
+    ? finalMessage.replace(/\[NAME\]/g, userName)
+    : displayText;
+
   return (
     <div
-      className="flex flex-col items-center justify-center min-h-full select-none"
-      style={{ background: "radial-gradient(ellipse at center, rgba(20,15,5,0.95) 0%, rgba(10,8,3,1) 100%)" }}
+      className="flex flex-col items-center justify-center min-h-full select-none bg-white dark:bg-neutral-950"
       data-testid="interactive-story-slide"
     >
       <div className="flex flex-col items-center max-w-sm mx-auto px-4 gap-8">
@@ -343,26 +379,7 @@ export function InteractiveStorySlide({
           </OrbErrorBoundary>
         )}
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`text-${currentStage}-${showFinalMessage ? "final" : "normal"}`}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            {showFinalMessage ? (
-              <p className="font-['Afacad',sans-serif] text-white/80 text-[16px] leading-[26px] whitespace-pre-line">
-                {finalMessage.replace(/\[NAME\]/g, userName)}
-              </p>
-            ) : (
-              <p className="font-['Afacad',sans-serif] text-white/80 text-[16px] leading-[26px] whitespace-pre-line">
-                {displayText}
-              </p>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        <StoryText text={currentText} stageKey={textKey} />
 
         {!storyComplete && (
           <AnimatePresence mode="wait">
