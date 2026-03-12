@@ -1,0 +1,165 @@
+Use the following Three.js plasma orb example as the base visual engine for the Interactive Story Slide in my app.
+
+This code currently uses a GUI panel (lil-gui) so a developer can manually change parameters like brightness, texture scale, voids, shell opacity, etc.
+
+In my app, users should NOT see the GUI controls.
+
+Instead, these parameters should change automatically based on story stages triggered by buttons in the interactive story slide.
+
+Here is the import section of the code that should remain as the base engine:
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+canvas {
+  display: block;
+}
+
+/* GUI container positioning */
+
+.lil-gui.root {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  top: auto !important;
+}
+
+This example currently allows parameters like:
+
+Plasma settings:
+
+Anim Speed
+
+Texture Scale
+
+Brightness
+
+Voids
+
+Color Deep
+
+Color Mid
+
+Color Bright
+
+Shell settings:
+
+Edge Color
+
+Edge Opacity
+
+Rotation settings:
+
+Speed X
+
+Speed Y
+
+These settings should still control the orb, but they should no longer be controlled by sliders.
+
+Instead, create preset parameter states that correspond to stages in the interactive story.
+
+When the user clicks the story button to advance the stage, smoothly animate the orb parameters to the next preset.
+
+Story Stage Presets
+
+Create presets for these stages.
+
+Stage 1 — Pure Light (Childhood)
+
+high brightness
+
+warm gold colors
+
+low voids
+
+no shell
+
+slow rotation
+
+smooth plasma movement
+
+Stage 2 — First Wound
+
+slightly lower brightness
+
+slightly higher voids
+
+slight flicker or instability
+
+color slightly cooler
+
+Stage 3 — Protective Wall
+
+increase shell opacity
+
+shell edge color becomes muted gray
+
+plasma brightness reduced slightly
+
+texture scale slightly higher
+
+Stage 4 — Distortion
+
+brightness lower
+
+voids higher
+
+color deep darker
+
+plasma more chaotic
+
+shell opacity stronger
+
+Stage 5 — Try Harder
+
+clicking the button causes a brief shake animation
+
+parameters do NOT improve
+
+orb remains wounded
+
+Important visual rule:
+
+The orb must always retain a faint inner glow, representing that the soul is wounded but not destroyed.
+
+Integration with my app
+
+This orb will appear inside an Interactive Story Slide that already exists in my platform.
+
+The slide has stages that change when the user clicks buttons.
+
+When the stage changes, call a function that applies the parameter preset and smoothly animates the orb to the new state.
+
+The orb should stay running continuously while parameters change.
+
+Remove the GUI
+
+Remove all references to lil-gui so users cannot see or manipulate sliders.
+
+Animation requirements
+
+Transitions between stages should be smooth, not instant.
+
+Parameters should interpolate gradually over about 1–2 seconds.
+
+The orb should always have:
+
+gentle breathing pulse
+
+slow rotation
+
+subtle plasma motion
+
+It should feel alive and organic.

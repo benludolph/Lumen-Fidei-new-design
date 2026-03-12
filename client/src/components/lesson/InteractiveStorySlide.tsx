@@ -1,9 +1,23 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, lazy, Suspense, Component, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 
+const LazyPlasmaOrb = lazy(() => import("./PlasmaOrb"));
+
 type OrbState = "pure" | "crack" | "shell" | "scribbles";
+
+class OrbErrorBoundary extends Component<
+  { onError: () => void; fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch() { this.props.onError(); }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
 
 interface StoryStage {
   text: string;
@@ -240,6 +254,9 @@ export function InteractiveStorySlide({
   const [shaking, setShaking] = useState(false);
   const [showFinalMessage, setShowFinalMessage] = useState(false);
   const [storyComplete, setStoryComplete] = useState(false);
+  const [plasmaFailed, setPlasmaFailed] = useState(false);
+
+  const handlePlasmaError = useCallback(() => setPlasmaFailed(true), []);
 
   const data = useMemo<InteractiveStoryData>(() => {
     try {
@@ -316,7 +333,15 @@ export function InteractiveStorySlide({
       data-testid="interactive-story-slide"
     >
       <div className="flex flex-col items-center max-w-sm mx-auto px-4 gap-8">
-        <GlowOrb state={stage.orbState} shake={shaking} />
+        {plasmaFailed ? (
+          <GlowOrb state={stage.orbState} shake={shaking} />
+        ) : (
+          <OrbErrorBoundary onError={handlePlasmaError} fallback={<GlowOrb state={stage.orbState} shake={shaking} />}>
+            <Suspense fallback={<GlowOrb state={stage.orbState} shake={shaking} />}>
+              <LazyPlasmaOrb orbState={stage.orbState} shake={shaking} onError={handlePlasmaError} />
+            </Suspense>
+          </OrbErrorBoundary>
+        )}
 
         <AnimatePresence mode="wait">
           <motion.div
