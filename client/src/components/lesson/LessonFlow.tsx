@@ -214,7 +214,7 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "interactive_story"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(currentSlideData.type) && !slideInteracted;
 
   return (

@@ -1767,7 +1767,7 @@ type TrackAContentData = {
   saintQuote: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "interactive_story"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1780,7 +1780,6 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   timer: "Timer",
   knowledge_check: "Knowledge Check",
   quiz: "Quiz",
-  interactive_story: "Interactive Story",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -1794,7 +1793,6 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   timer: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   knowledge_check: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
-  interactive_story: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
 };
 
 function SlideTypeBadge({ type }: { type: string }) {
@@ -1858,160 +1856,6 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
           value={data.text}
           onChange={(val) => updateData({ ...data, text: val })}
         />
-      </div>
-    </div>
-  );
-}
-
-function InteractiveStoryEditor({ content, onChange }: { content: string; onChange: (val: string) => void }) {
-  const ORB_STATES = ["pure", "crack", "shell", "scribbles"] as const;
-  let data: {
-    stages: { orbState: string; text: string; buttonLabel: string; mechanic?: string }[];
-    tryHarderTaps: number;
-    tryHarderMessage: string;
-  };
-  try {
-    const parsed = JSON.parse(content || "{}");
-    data = {
-      stages: Array.isArray(parsed.stages) ? parsed.stages : [],
-      tryHarderTaps: parsed.tryHarderTaps ?? 4,
-      tryHarderMessage: parsed.tryHarderMessage ?? "",
-    };
-  } catch {
-    data = { stages: [], tryHarderTaps: 4, tryHarderMessage: "" };
-  }
-
-  const update = (next: typeof data) => onChange(JSON.stringify(next, null, 2));
-
-  const updateStage = (idx: number, field: string, value: string) => {
-    const stages = [...data.stages];
-    stages[idx] = { ...stages[idx], [field]: value };
-    update({ ...data, stages });
-  };
-
-  const addStage = () => {
-    update({ ...data, stages: [...data.stages, { orbState: "pure", text: "", buttonLabel: "Continue" }] });
-  };
-
-  const removeStage = (idx: number) => {
-    update({ ...data, stages: data.stages.filter((_, i) => i !== idx) });
-  };
-
-  const toggleMechanic = (idx: number) => {
-    const stages = [...data.stages];
-    if (stages[idx].mechanic === "tryHarder") {
-      const { mechanic, ...rest } = stages[idx];
-      stages[idx] = rest;
-    } else {
-      stages[idx] = { ...stages[idx], mechanic: "tryHarder" };
-    }
-    update({ ...data, stages });
-  };
-
-  return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">
-        Configure the interactive story stages. Use [NAME] in text to insert the user's first name.
-      </p>
-      {data.stages.map((stage, idx) => (
-        <div key={idx} className="border rounded-md p-3 space-y-2 bg-muted/30">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground">Stage {idx + 1}</span>
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={stage.mechanic === "tryHarder"}
-                  onChange={() => toggleMechanic(idx)}
-                  className="rounded"
-                />
-                Try Harder
-              </label>
-              <button
-                type="button"
-                onClick={() => removeStage(idx)}
-                className="text-xs text-destructive hover:underline"
-                data-testid={`button-remove-story-stage-${idx}`}
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Orb State</label>
-              <select
-                value={stage.orbState}
-                onChange={(e) => updateStage(idx, "orbState", e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border rounded-md bg-background"
-                data-testid={`select-orb-state-${idx}`}
-              >
-                {ORB_STATES.map(s => (
-                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Button Label</label>
-              <input
-                type="text"
-                value={stage.buttonLabel}
-                onChange={(e) => updateStage(idx, "buttonLabel", e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border rounded-md bg-background"
-                data-testid={`input-story-button-${idx}`}
-              />
-            </div>
-          </div>
-          {stage.mechanic !== "tryHarder" && (
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Narration Text</label>
-              <textarea
-                value={stage.text}
-                onChange={(e) => updateStage(idx, "text", e.target.value)}
-                rows={3}
-                className="w-full px-2 py-1.5 text-sm border rounded-md bg-background resize-y"
-                placeholder="Enter narration text..."
-                data-testid={`textarea-story-text-${idx}`}
-              />
-            </div>
-          )}
-        </div>
-      ))}
-      <button
-        type="button"
-        onClick={addStage}
-        className="text-sm text-primary hover:underline"
-        data-testid="button-add-story-stage"
-      >
-        + Add Stage
-      </button>
-      <div className="border-t pt-3 space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Try Harder Settings</label>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Taps Required</label>
-            <input
-              type="number"
-              min={1}
-              max={20}
-              value={data.tryHarderTaps}
-              onChange={(e) => update({ ...data, tryHarderTaps: parseInt(e.target.value) || 4 })}
-              className="w-full px-2 py-1.5 text-sm border rounded-md bg-background"
-              data-testid="input-try-harder-taps"
-            />
-          </div>
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">Final Message (after taps)</label>
-          <textarea
-            value={data.tryHarderMessage}
-            onChange={(e) => update({ ...data, tryHarderMessage: e.target.value })}
-            rows={2}
-            className="w-full px-2 py-1.5 text-sm border rounded-md bg-background resize-y"
-            placeholder="I tried to fix myself…"
-            data-testid="textarea-try-harder-message"
-          />
-        </div>
       </div>
     </div>
   );
@@ -2575,26 +2419,8 @@ function TrackAContentManagementView() {
     setExpandedSlide(null);
   };
 
-  const getDefaultContent = (type: string): string => {
-    if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
-    if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
-    if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
-    if (type === "interactive_story") return JSON.stringify({
-      stages: [
-        { orbState: "pure", text: "Hi [NAME]!\nI'm your soul as a child!\nI'm excited for life! I'm hopeful for the future!\nI wonder what life has in store for me!", buttonLabel: "Step into the world" },
-        { orbState: "crack", text: "Something happened today.\nSomeone I loved said something mean.\nIt felt like a cold wind blew through me.", buttonLabel: "Keep going" },
-        { orbState: "shell", text: "To make sure that doesn't happen again,\nI built a little wall.", buttonLabel: "Try to be strong" },
-        { orbState: "scribbles", text: "Now I'm older.\nI've been hurt, so I hurt people back.", buttonLabel: "Keep going" },
-        { orbState: "scribbles", text: "", buttonLabel: "Try Harder", mechanic: "tryHarder" }
-      ],
-      tryHarderTaps: 4,
-      tryHarderMessage: "I tried to fix myself…\nbut I couldn't reach the light anymore."
-    }, null, 2);
-    return "";
-  };
-
   const addSlide = () => {
-    setSlides(prev => [...prev, { type: addSlideType, content: getDefaultContent(addSlideType) }]);
+    setSlides(prev => [...prev, { type: addSlideType, content: "" }]);
     setExpandedSlide(slides.length);
   };
 
@@ -2999,11 +2825,21 @@ function TrackAContentManagementView() {
                               <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
                               <Select value={slide.type} onValueChange={(val) => {
                                 updateSlide(index, "type", val);
-                                const needsDefault = ["quiz", "timer", "knowledge_check", "interactive_story"];
-                                if (needsDefault.includes(val)) {
-                                  let hasValid = false;
-                                  try { JSON.parse(slide.content); hasValid = !!slide.content; } catch {}
-                                  if (!hasValid) updateSlide(index, "content", getDefaultContent(val));
+                                if (val === "quiz" && !slide.content) {
+                                  updateSlide(index, "content", JSON.stringify({
+                                    questions: [{ question: "", options: ["", "", "", ""] }],
+                                    results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } }
+                                  }, null, 2));
+                                }
+                                if (val === "timer") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ duration: 60, text: "" }));
+                                  }
+                                }
+                                if (val === "knowledge_check") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" }));
+                                  }
                                 }
                               }}>
                                 <SelectTrigger data-testid={`select-slide-type-${index}`}>
@@ -3040,11 +2876,6 @@ function TrackAContentManagementView() {
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
-                              />
-                            ) : slide.type === "interactive_story" ? (
-                              <InteractiveStoryEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
                               />
                             ) : (
                               <div className="space-y-1">
