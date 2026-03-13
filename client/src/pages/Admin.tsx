@@ -3627,12 +3627,12 @@ function SurveyResultsView() {
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">Day</label>
-          <Select value={filterDay} onValueChange={setFilterDay}>
+          <Select value={filterDay || "all"} onValueChange={v => setFilterDay(v === "all" ? "" : v)}>
             <SelectTrigger className="w-40" data-testid="select-survey-day">
               <SelectValue placeholder="All days" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All days</SelectItem>
+              <SelectItem value="all">All days</SelectItem>
               {Array.from({ length: 31 }, (_, i) => i).map(d => (
                 <SelectItem key={d} value={String(d)}>Day {d}</SelectItem>
               ))}
