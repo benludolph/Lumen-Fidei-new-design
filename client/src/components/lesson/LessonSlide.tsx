@@ -6,6 +6,7 @@ import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRigh
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
+import { useAuth } from "@/hooks/use-auth";
 import DOMPurify from "dompurify";
 import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
@@ -39,7 +40,8 @@ export type SlideType =
   | "timer"
   | "quiz"
   | "quiz_result"
-  | "knowledge_check";
+  | "knowledge_check"
+  | "survey";
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -322,6 +324,8 @@ interface LessonSlideProps {
   quizAnswers?: Record<number, string>;
   onQuizAnswer?: (letter: string) => void;
   onInteracted?: () => void;
+  onSurveySubmitted?: () => void;
+  surveyAlreadySubmitted?: boolean;
 }
 
 export function LessonSlide({
@@ -341,6 +345,8 @@ export function LessonSlide({
   quizAnswers,
   onQuizAnswer,
   onInteracted,
+  onSurveySubmitted,
+  surveyAlreadySubmitted,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -390,6 +396,13 @@ export function LessonSlide({
           />
         ) : type === "quiz_result" && quizData && quizAnswers ? (
           <QuizResultSlide quizData={quizData} answers={quizAnswers} />
+        ) : type === "survey" ? (
+          <SurveySlide
+            content={content}
+            dayNumber={dayNumber}
+            onSubmitted={onSurveySubmitted}
+            alreadySubmitted={surveyAlreadySubmitted}
+          />
         ) : (
           <TextSlide content={content} />
         )}
@@ -970,6 +983,311 @@ function KnowledgeCheckSlide({
         </div>
       )}
     </>
+  );
+}
+
+// ============================================================
+// Survey Slide
+// ============================================================
+
+interface SurveyQuestion {
+  id: string;
+  type: "single_select" | "multi_select" | "rating" | "text";
+  label: string;
+  options?: string[];
+}
+
+interface SurveyData {
+  title?: string;
+  description?: string;
+  questions: SurveyQuestion[];
+}
+
+function parseSurveyContent(content: string): SurveyData {
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed.questions)) return parsed as SurveyData;
+  } catch {}
+  return { questions: [] };
+}
+
+function SurveySlide({
+  content,
+  dayNumber,
+  onSubmitted,
+  alreadySubmitted,
+}: {
+  content: string;
+  dayNumber: number;
+  onSubmitted?: () => void;
+  alreadySubmitted?: boolean;
+}) {
+  const { user } = useAuth();
+  const data = useMemo(() => parseSurveyContent(content), [content]);
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const onSubmittedRef = useRef(onSubmitted);
+  onSubmittedRef.current = onSubmitted;
+
+  // Check server if already submitted (only if we don't already know)
+  useEffect(() => {
+    if (alreadySubmitted) {
+      setSubmitted(true);
+      setChecked(true);
+      onSubmittedRef.current?.();
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/survey-responses/submitted?dayNumber=${dayNumber}`, { credentials: "include" })
+      .then(r => r.json())
+      .then(d => {
+        if (cancelled) return;
+        if (d.submitted) {
+          setSubmitted(true);
+          onSubmittedRef.current?.();
+        }
+        setChecked(true);
+      })
+      .catch(() => { if (!cancelled) setChecked(true); });
+    return () => { cancelled = true; };
+  }, [dayNumber, alreadySubmitted]);
+
+  const allAnswered = useMemo(() => {
+    return data.questions.every(q => {
+      const a = answers[q.id];
+      if (q.type === "multi_select") return Array.isArray(a) && a.length > 0;
+      return typeof a === "string" && a.trim().length > 0;
+    });
+  }, [answers, data.questions]);
+
+  const toggleMulti = useCallback((qid: string, option: string) => {
+    setAnswers(prev => {
+      const current = (prev[qid] as string[] | undefined) || [];
+      const next = current.includes(option)
+        ? current.filter(o => o !== option)
+        : [...current, option];
+      return { ...prev, [qid]: next };
+    });
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    if (!allAnswered || submitting || !user) return;
+    setSubmitting(true);
+    try {
+      const responses = data.questions.map((q, idx) => {
+        const raw = answers[q.id];
+        const response = Array.isArray(raw) ? JSON.stringify(raw) : (raw as string) || "";
+        return {
+          questionIndex: idx,
+          questionLabel: q.label,
+          questionType: q.type,
+          response,
+        };
+      });
+      const res = await fetch("/api/survey-responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          track: user.track || "A",
+          dayNumber,
+          responses,
+        }),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        onSubmittedRef.current?.();
+      }
+    } catch (e) {
+      console.error("Survey submit error:", e);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [allAnswered, submitting, user, data.questions, answers, dayNumber]);
+
+  if (!checked) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]" data-testid="slide-survey-loading">
+        <div className="w-6 h-6 border-2 border-[#00b57a] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center space-y-4 min-h-[260px]" data-testid="slide-survey-complete">
+        <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
+          <CheckCircle2 className="w-8 h-8 text-[#00b57a]" />
+        </div>
+        <h3 className="text-2xl font-bold font-['Afacad',sans-serif] text-black">Response Received</h3>
+        <p className="text-lg font-['Afacad',sans-serif] text-black/60 max-w-[320px]">
+          Thank you for sharing your experience. You can continue.
+        </p>
+      </div>
+    );
+  }
+
+  if (data.questions.length === 0) {
+    return (
+      <div className="slide-text-content" data-testid="slide-survey-empty">
+        <p className="text-black/50 italic">Survey not configured.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8" data-testid="slide-survey">
+      {/* Header */}
+      {(data.title || data.description) && (
+        <div className="space-y-2">
+          {data.title && (
+            <h2 className="font-bold text-[28px] font-['Afacad',sans-serif] text-black leading-tight">
+              {data.title}
+            </h2>
+          )}
+          {data.description && (
+            <p className="text-lg font-['Afacad',sans-serif] text-black/60 leading-[1.4]">
+              {data.description}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Questions */}
+      <div className="space-y-8">
+        {data.questions.map((q, idx) => (
+          <div key={q.id} className="space-y-3" data-testid={`survey-question-${idx}`}>
+            <p className="font-semibold text-[18px] font-['Afacad',sans-serif] text-black leading-[1.3]">
+              <span className="text-[#00b57a] mr-1.5">{idx + 1}.</span>
+              {q.label}
+            </p>
+
+            {q.type === "single_select" && q.options && (
+              <div className="space-y-2">
+                {q.options.map(opt => {
+                  const selected = answers[q.id] === opt;
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                      className={cn(
+                        "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-['Afacad',sans-serif] text-[17px]",
+                        selected
+                          ? "border-[#00b57a] bg-[#00b57a]/5 text-black"
+                          : "border-black/10 bg-transparent text-black/70 hover:border-black/25"
+                      )}
+                      data-testid={`survey-option-${idx}-${opt}`}
+                    >
+                      <span className={cn(
+                        "shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-black/25"
+                      )}>
+                        {selected && <span className="w-2 h-2 rounded-full bg-white block" />}
+                      </span>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {q.type === "multi_select" && q.options && (
+              <div className="space-y-2">
+                <p className="text-sm text-black/40 font-['Afacad',sans-serif]">Select all that apply</p>
+                {q.options.map(opt => {
+                  const selected = Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleMulti(q.id, opt)}
+                      className={cn(
+                        "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-['Afacad',sans-serif] text-[17px]",
+                        selected
+                          ? "border-[#00b57a] bg-[#00b57a]/5 text-black"
+                          : "border-black/10 bg-transparent text-black/70 hover:border-black/25"
+                      )}
+                      data-testid={`survey-option-${idx}-${opt}`}
+                    >
+                      <span className={cn(
+                        "shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors",
+                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-black/25"
+                      )}>
+                        {selected && (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {q.type === "rating" && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2" data-testid={`survey-rating-${idx}`}>
+                  {[1, 2, 3, 4, 5].map(n => {
+                    const selected = answers[q.id] === String(n);
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setAnswers(prev => ({ ...prev, [q.id]: String(n) }))}
+                        className={cn(
+                          "flex-1 h-12 rounded-xl border-2 font-bold text-lg font-['Afacad',sans-serif] transition-all duration-150",
+                          selected
+                            ? "border-[#00b57a] bg-[#00b57a] text-white shadow-sm"
+                            : "border-black/10 bg-transparent text-black/50 hover:border-black/30 hover:text-black/70"
+                        )}
+                        data-testid={`survey-rating-${idx}-${n}`}
+                      >
+                        {n}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between px-0.5">
+                  <span className="text-xs text-black/35 font-['Afacad',sans-serif]">Not at all</span>
+                  <span className="text-xs text-black/35 font-['Afacad',sans-serif]">Very much</span>
+                </div>
+              </div>
+            )}
+
+            {q.type === "text" && (
+              <Textarea
+                value={(answers[q.id] as string) || ""}
+                onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                placeholder="Write your response here..."
+                rows={3}
+                className="font-['Afacad',sans-serif] text-[17px] resize-none border-black/15 focus:border-[#00b57a] focus:ring-[#00b57a]/20"
+                data-testid={`survey-text-${idx}`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Submit button */}
+      <Button
+        onClick={handleSubmit}
+        disabled={!allAnswered || submitting}
+        className={cn(
+          "w-full h-12 text-[17px] font-semibold font-['Afacad',sans-serif] transition-all",
+          allAnswered
+            ? "bg-[#00b57a] hover:bg-[#00a06a] text-white"
+            : "bg-black/10 text-black/30 cursor-not-allowed"
+        )}
+        data-testid="button-survey-submit"
+      >
+        {submitting ? "Submitting..." : "Submit"}
+      </Button>
+    </div>
   );
 }
 

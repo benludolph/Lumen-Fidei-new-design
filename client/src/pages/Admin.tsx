@@ -63,6 +63,9 @@ export default function Admin() {
           <TabsTrigger value="messages" className="gap-2" data-testid="tab-messages">
             <MessageSquare className="w-4 h-4" /> Messages
           </TabsTrigger>
+          <TabsTrigger value="surveys" className="gap-2" data-testid="tab-surveys">
+            <BarChart3 className="w-4 h-4" /> Surveys
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -122,6 +125,10 @@ export default function Admin() {
 
         <TabsContent value="messages">
           <MessageManagementView />
+        </TabsContent>
+
+        <TabsContent value="surveys">
+          <SurveyResultsView />
         </TabsContent>
       </Tabs>
     </Shell>
@@ -1767,7 +1774,7 @@ type TrackAContentData = {
   saintQuote: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1780,6 +1787,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   timer: "Timer",
   knowledge_check: "Knowledge Check",
   quiz: "Quiz",
+  survey: "Survey",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -1793,6 +1801,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   timer: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   knowledge_check: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
+  survey: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
 };
 
 function SlideTypeBadge({ type }: { type: string }) {
@@ -2196,6 +2205,212 @@ function QuizSlideEditor({ content, onChange, index }: { content: string; onChan
             />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Survey Slide Editor
+// ============================================================
+
+interface SurveyEditorQuestion {
+  id: string;
+  type: "single_select" | "multi_select" | "rating" | "text";
+  label: string;
+  options?: string[];
+}
+
+interface SurveyEditorData {
+  title: string;
+  description: string;
+  questions: SurveyEditorQuestion[];
+}
+
+const SURVEY_Q_TYPE_LABELS: Record<string, string> = {
+  single_select: "Single Select",
+  multi_select: "Multi Select",
+  rating: "Rating (1–5)",
+  text: "Short Text",
+};
+
+function parseSurveyEditorData(content: string): SurveyEditorData {
+  try {
+    const p = JSON.parse(content || "{}");
+    return {
+      title: p.title || "",
+      description: p.description || "",
+      questions: Array.isArray(p.questions) ? p.questions : [],
+    };
+  } catch {
+    return { title: "", description: "", questions: [] };
+  }
+}
+
+function newSurveyQuestion(): SurveyEditorQuestion {
+  return { id: `q${Date.now()}`, type: "single_select", label: "", options: ["", ""] };
+}
+
+function SurveySlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  const data = parseSurveyEditorData(content);
+
+  const update = (next: SurveyEditorData) => onChange(JSON.stringify(next, null, 2));
+
+  const updateQuestion = (qIdx: number, patch: Partial<SurveyEditorQuestion>) => {
+    const questions = data.questions.map((q, i) => i === qIdx ? { ...q, ...patch } : q);
+    update({ ...data, questions });
+  };
+
+  const updateOption = (qIdx: number, optIdx: number, value: string) => {
+    const q = data.questions[qIdx];
+    if (!q.options) return;
+    const options = q.options.map((o, i) => i === optIdx ? value : o);
+    updateQuestion(qIdx, { options });
+  };
+
+  const addOption = (qIdx: number) => {
+    const q = data.questions[qIdx];
+    const options = [...(q.options || []), ""];
+    updateQuestion(qIdx, { options });
+  };
+
+  const removeOption = (qIdx: number, optIdx: number) => {
+    const q = data.questions[qIdx];
+    if (!q.options || q.options.length <= 2) return;
+    updateQuestion(qIdx, { options: q.options.filter((_, i) => i !== optIdx) });
+  };
+
+  const addQuestion = () => {
+    update({ ...data, questions: [...data.questions, newSurveyQuestion()] });
+  };
+
+  const removeQuestion = (qIdx: number) => {
+    if (data.questions.length <= 1) return;
+    update({ ...data, questions: data.questions.filter((_, i) => i !== qIdx) });
+  };
+
+  const moveQuestion = (qIdx: number, dir: "up" | "down") => {
+    const qs = [...data.questions];
+    const target = dir === "up" ? qIdx - 1 : qIdx + 1;
+    if (target < 0 || target >= qs.length) return;
+    [qs[qIdx], qs[target]] = [qs[target], qs[qIdx]];
+    update({ ...data, questions: qs });
+  };
+
+  const needsOptions = (type: string) => type === "single_select" || type === "multi_select";
+
+  return (
+    <div className="space-y-4" data-testid={`survey-editor-${index}`}>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Survey Title (optional)</label>
+        <Input
+          value={data.title}
+          onChange={e => update({ ...data, title: e.target.value })}
+          placeholder="e.g. End of Week 1 Reflection"
+          data-testid={`input-survey-title-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Description (optional)</label>
+        <Textarea
+          value={data.description}
+          onChange={e => update({ ...data, description: e.target.value })}
+          placeholder="Brief instructions for participants..."
+          rows={2}
+          data-testid={`input-survey-description-${index}`}
+        />
+      </div>
+
+      <div className="space-y-3">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Questions</label>
+        {data.questions.length === 0 && (
+          <p className="text-sm text-muted-foreground italic">No questions yet. Add one below.</p>
+        )}
+        {data.questions.map((q, qIdx) => (
+          <div key={q.id} className="border rounded-lg p-3 space-y-3 bg-muted/30">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-muted-foreground">Question {qIdx + 1}</span>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveQuestion(qIdx, "up")} disabled={qIdx === 0} data-testid={`button-survey-q-up-${qIdx}`}>
+                  <ChevronUp className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveQuestion(qIdx, "down")} disabled={qIdx === data.questions.length - 1} data-testid={`button-survey-q-down-${qIdx}`}>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+                {data.questions.length > 1 && (
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeQuestion(qIdx)} data-testid={`button-survey-q-remove-${qIdx}`}>
+                    <Trash2 className="w-3 h-3 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <Select
+              value={q.type}
+              onValueChange={val => {
+                const t = val as SurveyEditorQuestion["type"];
+                const needOpts = needsOptions(t);
+                updateQuestion(qIdx, { type: t, options: needOpts ? (q.options?.length ? q.options : ["", ""]) : undefined });
+              }}
+            >
+              <SelectTrigger className="h-8 text-xs" data-testid={`select-survey-q-type-${qIdx}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SURVEY_Q_TYPE_LABELS).map(([v, l]) => (
+                  <SelectItem key={v} value={v}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              value={q.label}
+              onChange={e => updateQuestion(qIdx, { label: e.target.value })}
+              placeholder="Question text..."
+              className="text-sm"
+              data-testid={`input-survey-q-label-${qIdx}`}
+            />
+
+            {needsOptions(q.type) && (
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Options</label>
+                {(q.options || []).map((opt, optIdx) => (
+                  <div key={optIdx} className="flex items-center gap-1.5">
+                    <Input
+                      value={opt}
+                      onChange={e => updateOption(qIdx, optIdx, e.target.value)}
+                      placeholder={`Option ${optIdx + 1}`}
+                      className="text-sm flex-1"
+                      data-testid={`input-survey-opt-${qIdx}-${optIdx}`}
+                    />
+                    {(q.options || []).length > 2 && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeOption(qIdx, optIdx)} data-testid={`button-survey-opt-remove-${qIdx}-${optIdx}`}>
+                        <Trash2 className="w-3 h-3 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                {(q.options || []).length < 8 && (
+                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => addOption(qIdx)} data-testid={`button-survey-opt-add-${qIdx}`}>
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Option
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {q.type === "rating" && (
+              <p className="text-xs text-muted-foreground italic">Rating question: participants tap 1–5.</p>
+            )}
+            {q.type === "text" && (
+              <p className="text-xs text-muted-foreground italic">Text question: participants write a short response.</p>
+            )}
+          </div>
+        ))}
+        <Button variant="outline" size="sm" onClick={addQuestion} data-testid={`button-survey-add-q-${index}`}>
+          <Plus className="w-3 h-3 mr-1" />
+          Add Question
+        </Button>
       </div>
     </div>
   );
@@ -2877,6 +3092,12 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : slide.type === "survey" ? (
+                              <SurveySlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -3197,6 +3418,257 @@ function MessageManagementView() {
             )}
           </CardContent>
         </Card>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Survey Results View (T004)
+// ============================================================
+
+interface SurveyResponseRow {
+  id: number;
+  userId: number;
+  track: string;
+  dayNumber: number;
+  questionIndex: number;
+  questionLabel: string;
+  questionType: string;
+  response: string;
+  submittedAt: string;
+}
+
+interface AggregatedQuestion {
+  index: number;
+  label: string;
+  type: string;
+  responses: string[];
+}
+
+function aggregateQuestions(rows: SurveyResponseRow[]): AggregatedQuestion[] {
+  const map = new Map<number, AggregatedQuestion>();
+  for (const row of rows) {
+    if (!map.has(row.questionIndex)) {
+      map.set(row.questionIndex, { index: row.questionIndex, label: row.questionLabel, type: row.questionType, responses: [] });
+    }
+    map.get(row.questionIndex)!.responses.push(row.response);
+  }
+  return Array.from(map.values()).sort((a, b) => a.index - b.index);
+}
+
+function countOptions(responses: string[], type: string): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const r of responses) {
+    if (type === "multi_select") {
+      try {
+        const arr: string[] = JSON.parse(r);
+        for (const o of arr) counts[o] = (counts[o] || 0) + 1;
+      } catch { counts[r] = (counts[r] || 0) + 1; }
+    } else {
+      counts[r] = (counts[r] || 0) + 1;
+    }
+  }
+  return counts;
+}
+
+function QuestionResultCard({ q, totalRespondents }: { q: AggregatedQuestion; totalRespondents: number }) {
+  if (q.type === "text") {
+    return (
+      <Card data-testid={`survey-result-q-${q.index}`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-2">
+            <Badge variant="outline" className="shrink-0 text-xs mt-0.5">Text</Badge>
+            <CardTitle className="text-base leading-snug">{q.label}</CardTitle>
+          </div>
+          <p className="text-xs text-muted-foreground">{q.responses.length} response{q.responses.length !== 1 ? "s" : ""}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {q.responses.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">No responses yet.</p>
+            ) : q.responses.map((r, i) => (
+              <div key={i} className="p-2.5 bg-muted/40 rounded-md border border-border/50">
+                <p className="text-sm text-foreground leading-relaxed">{r}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (q.type === "rating") {
+    const counts = countOptions(q.responses, "rating");
+    const total = q.responses.filter(r => r.trim()).length;
+    const avg = total > 0 ? q.responses.reduce((s, r) => s + (parseInt(r) || 0), 0) / total : 0;
+    const max = Math.max(...Object.values(counts), 1);
+    return (
+      <Card data-testid={`survey-result-q-${q.index}`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start gap-2">
+            <Badge variant="outline" className="shrink-0 text-xs mt-0.5">Rating</Badge>
+            <CardTitle className="text-base leading-snug">{q.label}</CardTitle>
+          </div>
+          <p className="text-xs text-muted-foreground">{total} response{total !== 1 ? "s" : ""} · avg {avg.toFixed(1)}/5</p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map(n => {
+              const c = counts[String(n)] || 0;
+              const pct = total > 0 ? Math.round((c / total) * 100) : 0;
+              return (
+                <div key={n} className="flex items-center gap-3" data-testid={`survey-rating-bar-${n}`}>
+                  <span className="w-4 text-sm font-semibold text-muted-foreground text-right shrink-0">{n}</span>
+                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-full bg-[#00b57a] rounded-full transition-all"
+                      style={{ width: `${max > 0 ? (c / max) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="w-16 text-xs text-muted-foreground shrink-0">{c} ({pct}%)</span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // single_select / multi_select
+  const counts = countOptions(q.responses, q.type);
+  const denominator = q.type === "multi_select"
+    ? q.responses.filter(r => r.trim()).length
+    : q.responses.filter(r => r.trim()).length;
+  const allOptions = Object.keys(counts).sort();
+  const maxCount = Math.max(...Object.values(counts), 1);
+  const typeLabel = q.type === "multi_select" ? "Multi Select" : "Single Select";
+
+  return (
+    <Card data-testid={`survey-result-q-${q.index}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-2">
+          <Badge variant="outline" className="shrink-0 text-xs mt-0.5">{typeLabel}</Badge>
+          <CardTitle className="text-base leading-snug">{q.label}</CardTitle>
+        </div>
+        <p className="text-xs text-muted-foreground">{denominator} response{denominator !== 1 ? "s" : ""}</p>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {allOptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">No responses yet.</p>
+          ) : allOptions.map(opt => {
+            const c = counts[opt] || 0;
+            const pct = denominator > 0 ? Math.round((c / denominator) * 100) : 0;
+            return (
+              <div key={opt} className="space-y-0.5" data-testid={`survey-option-bar-${opt}`}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium truncate max-w-[70%]">{opt}</span>
+                  <span className="text-muted-foreground text-xs shrink-0">{c} ({pct}%)</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full bg-[#00b57a] rounded-full transition-all"
+                    style={{ width: `${maxCount > 0 ? (c / maxCount) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SurveyResultsView() {
+  const [filterTrack, setFilterTrack] = useState<string>("A");
+  const [filterDay, setFilterDay] = useState<string>("");
+
+  const queryKey = ["/api/admin/survey-responses", filterTrack, filterDay];
+  const { data: rows = [], isLoading } = useQuery<SurveyResponseRow[]>({
+    queryKey,
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filterTrack) params.set("track", filterTrack);
+      if (filterDay) params.set("dayNumber", filterDay);
+      const res = await fetch(`/api/admin/survey-responses?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  const questions = aggregateQuestions(rows);
+  const respondentCount = filterDay
+    ? new Set(rows.filter(r => r.questionIndex === 0).map(r => r.userId)).size
+    : 0;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold font-serif text-primary mb-1">Survey Results</h2>
+        <p className="text-sm text-muted-foreground">Filter by track and day to view aggregated responses.</p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Track</label>
+          <Select value={filterTrack} onValueChange={setFilterTrack}>
+            <SelectTrigger className="w-36" data-testid="select-survey-track">
+              <SelectValue placeholder="All tracks" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A">Track A</SelectItem>
+              <SelectItem value="B">Track B</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Day</label>
+          <Select value={filterDay} onValueChange={setFilterDay}>
+            <SelectTrigger className="w-40" data-testid="select-survey-day">
+              <SelectValue placeholder="All days" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All days</SelectItem>
+              {Array.from({ length: 31 }, (_, i) => i).map(d => (
+                <SelectItem key={d} value={String(d)}>Day {d}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {filterDay && respondentCount > 0 && (
+          <div className="pb-1">
+            <Badge variant="secondary" className="text-xs">
+              {respondentCount} respondent{respondentCount !== 1 ? "s" : ""}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : rows.length === 0 ? (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+            <p className="text-muted-foreground font-medium">No survey responses found</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filterDay ? `No responses for Track ${filterTrack}, Day ${filterDay} yet.` : "Select a day to view results."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {questions.map(q => (
+            <QuestionResultCard key={q.index} q={q} totalRespondents={respondentCount} />
+          ))}
+        </div>
       )}
     </div>
   );

@@ -4,9 +4,9 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, type User } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
 import { dailyContentData, practiceResourcesData } from "./content-data";
@@ -454,6 +454,89 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Audio upload error:", error);
       res.status(500).json({ message: "Failed to save audio" });
+    }
+  });
+
+  // === Survey Responses ===
+
+  const surveyBatchSchema = z.object({
+    track: z.string(),
+    dayNumber: z.number().int(),
+    responses: z.array(z.object({
+      questionIndex: z.number().int(),
+      questionLabel: z.string(),
+      questionType: z.string(),
+      response: z.string(),
+    })).min(1),
+  });
+
+  // Submit survey responses (batch)
+  app.post('/api/survey-responses', requireAuth, writeLimiter, async (req, res) => {
+    try {
+      const body = surveyBatchSchema.parse(req.body);
+      const userId = req.user!.id;
+      const rows = body.responses.map(r => ({
+        userId,
+        track: body.track,
+        dayNumber: body.dayNumber,
+        questionIndex: r.questionIndex,
+        questionLabel: r.questionLabel,
+        questionType: r.questionType,
+        response: r.response,
+      }));
+      await db.insert(surveyResponses).values(rows);
+      res.status(201).json({ success: true });
+    } catch (e) {
+      if (e instanceof z.ZodError) return res.status(400).json({ message: "Invalid request", errors: e.errors });
+      console.error("Survey submit error:", e);
+      res.status(500).json({ message: "Failed to save survey responses" });
+    }
+  });
+
+  // Check if current user already submitted a survey for a given day
+  app.get('/api/survey-responses/submitted', requireAuth, async (req, res) => {
+    try {
+      const dayNumber = parseInt(req.query.dayNumber as string);
+      if (isNaN(dayNumber)) return res.status(400).json({ message: "dayNumber required" });
+      const userId = req.user!.id;
+      const existing = await db.select({ id: surveyResponses.id })
+        .from(surveyResponses)
+        .where(and(eq(surveyResponses.userId, userId), eq(surveyResponses.dayNumber, dayNumber)))
+        .limit(1);
+      res.json({ submitted: existing.length > 0 });
+    } catch (e) {
+      console.error("Survey check error:", e);
+      res.status(500).json({ message: "Failed to check survey status" });
+    }
+  });
+
+  // Admin: get all survey responses for a track + day
+  app.get('/api/admin/survey-responses', requireRole('admin'), async (req, res) => {
+    try {
+      const track = req.query.track as string | undefined;
+      const dayNumber = req.query.dayNumber !== undefined ? parseInt(req.query.dayNumber as string) : undefined;
+      const hasTrack = !!track;
+      const hasDay = dayNumber !== undefined && !isNaN(dayNumber);
+      let rows;
+      if (hasTrack && hasDay) {
+        rows = await db.select().from(surveyResponses)
+          .where(and(eq(surveyResponses.track, track!), eq(surveyResponses.dayNumber, dayNumber!)))
+          .orderBy(surveyResponses.submittedAt);
+      } else if (hasTrack) {
+        rows = await db.select().from(surveyResponses)
+          .where(eq(surveyResponses.track, track!))
+          .orderBy(surveyResponses.submittedAt);
+      } else if (hasDay) {
+        rows = await db.select().from(surveyResponses)
+          .where(eq(surveyResponses.dayNumber, dayNumber!))
+          .orderBy(surveyResponses.submittedAt);
+      } else {
+        rows = await db.select().from(surveyResponses).orderBy(surveyResponses.submittedAt);
+      }
+      res.json(rows);
+    } catch (e) {
+      console.error("Admin survey responses error:", e);
+      res.status(500).json({ message: "Failed to fetch survey responses" });
     }
   });
 
@@ -1235,6 +1318,21 @@ async function ensureSchemaColumns() {
     await checkCol("track_a_content", "saint_name", "TEXT");
     await checkCol("track_a_content", "saint_image", "TEXT");
     await checkCol("track_a_content", "saint_quote", "TEXT");
+
+    // Create survey_responses table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS survey_responses (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        track TEXT NOT NULL,
+        day_number INTEGER NOT NULL,
+        question_index INTEGER NOT NULL,
+        question_label TEXT NOT NULL,
+        question_type TEXT NOT NULL,
+        response TEXT NOT NULL,
+        submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
   } catch (e) {
     console.warn("Schema migration warning (non-fatal):", e);
   }

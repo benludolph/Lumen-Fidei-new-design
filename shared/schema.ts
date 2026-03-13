@@ -108,6 +108,19 @@ export const uploadedImages = pgTable("uploaded_images", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Survey responses - stores participant answers to survey slides
+export const surveyResponses = pgTable("survey_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  track: text("track").notNull(), // "A" or "B"
+  dayNumber: integer("day_number").notNull(),
+  questionIndex: integer("question_index").notNull(),
+  questionLabel: text("question_label").notNull(),
+  questionType: text("question_type").notNull(), // single_select | multi_select | rating | text
+  response: text("response").notNull(), // plain string; multi_select uses JSON array string
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+});
+
 // Cohort settings - stores program-wide configuration like start date
 export const cohortSettings = pgTable("cohort_settings", {
   id: serial("id").primaryKey(),
@@ -191,6 +204,7 @@ export const insertPracticeResourceSchema = createInsertSchema(practiceResources
 export const insertTrackAModuleSchema = createInsertSchema(trackAModules).omit({ id: true });
 export const insertTrackAContentSchema = createInsertSchema(trackAContent).omit({ id: true });
 export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omit({ id: true, updatedAt: true });
+export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, submittedAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -223,6 +237,9 @@ export type InsertTrackAContent = z.infer<typeof insertTrackAContentSchema>;
 
 export type CohortSetting = typeof cohortSettings.$inferSelect;
 export type InsertCohortSetting = z.infer<typeof insertCohortSettingsSchema>;
+
+export type SurveyResponse = typeof surveyResponses.$inferSelect;
+export type InsertSurveyResponse = z.infer<typeof insertSurveyResponseSchema>;
 
 // Request/Response types
 

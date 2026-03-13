@@ -45,6 +45,7 @@ export function LessonFlow({
   const [quizAnswers, setQuizAnswers] = useState<Record<number, Record<number, string>>>({});
   const [timerDone, setTimerDone] = useState(false);
   const [completedTimerSlides, setCompletedTimerSlides] = useState<Set<number>>(new Set());
+  const [completedSurveySlides, setCompletedSurveySlides] = useState<Set<number>>(new Set());
   const [kcAnswered, setKcAnswered] = useState(false);
   const [slideInteracted, setSlideInteracted] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,6 +141,10 @@ export function LessonFlow({
     setKcAnswered(true);
   }, []);
 
+  const handleSurveySubmitted = useCallback(() => {
+    setCompletedSurveySlides((prev) => new Set(prev).add(currentSlide));
+  }, [currentSlide]);
+
   const handleSlideInteracted = useCallback(() => {
     setSlideInteracted(true);
   }, []);
@@ -216,6 +221,7 @@ export function LessonFlow({
 
   const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(currentSlideData.type) && !slideInteracted;
+  const surveyBlocked = currentSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
@@ -246,6 +252,8 @@ export function LessonFlow({
           : undefined
         }
         onInteracted={handleSlideInteracted}
+        onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
+        surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
       />
 
       {isValidKc && kcAnswered ? null : (
@@ -264,10 +272,10 @@ export function LessonFlow({
             <Button
               variant="default"
               onClick={handleNext}
-              disabled={(currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction}
+              disabled={(currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction || surveyBlocked}
               className={cn(
                 "gap-2",
-                (currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction
+                (currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction || surveyBlocked
                   ? "bg-black/30 text-white/50 cursor-not-allowed"
                   : "bg-black text-white hover:bg-black/90"
               )}
