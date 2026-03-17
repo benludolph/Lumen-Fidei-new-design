@@ -331,7 +331,7 @@ export default function Dashboard() {
             trackASummaries={trackASummaries}
             trackBSummaries={trackBSummaries}
             cohortStartDate={cohortData?.startDate}
-            prayerCompletions={prayerCompletions as any}
+            prayerCompletions={prayerCompletions}
             isDayCompleted={isDayCompleted}
             isPeriodCompleted={isPeriodCompleted}
             onDaySelect={handleDaySelect}

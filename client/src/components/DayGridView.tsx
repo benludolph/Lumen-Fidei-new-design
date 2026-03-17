@@ -29,7 +29,7 @@ function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): s
 interface PrayerCompletionRecord {
   dayNumber: number;
   period: string;
-  completedAt: string;
+  completedAt: string | Date;
 }
 
 interface DayGridViewProps {

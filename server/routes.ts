@@ -4,7 +4,7 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -2204,8 +2204,8 @@ As you move into Week 2, continue these daily practices. They are building a fou
         console.log("Day 0 (Introduction) seeded in Track A content.");
     }
 
-    // Seed prelim modules if needed (preserves admin edits via ON CONFLICT DO NOTHING)
-    const defaultPrelimModules = [
+    // Seed prelim modules using ON CONFLICT DO NOTHING to preserve admin edits
+    await db.insert(prelimModules).values([
       {
         position: 1,
         title: "Welcome to Lumen Fidei",
@@ -2215,7 +2215,7 @@ As you move into Week 2, continue these daily practices. They are building a fou
           { type: "text", content: "Over the next 30 days, you will be guided through Scripture, the Catechism, and daily spiritual practices designed to bring lasting transformation." },
           { type: "text", content: "You are not alone on this journey. You have a mentor, a community, and most importantly, the Lord walking with you." },
           { type: "action", content: "Take a moment to pray: \"Lord, I open my heart to what you want to do in me through this program. I surrender my expectations to you. Come, Holy Spirit. Amen.\"" },
-        ],
+        ] as { type: string; content: string }[],
       },
       {
         position: 2,
@@ -2227,7 +2227,7 @@ As you move into Week 2, continue these daily practices. They are building a fou
           { type: "text", content: "The program is organized into 5 weekly themes: Foundations, The Human Condition, Encountering Jesus, Conversion & Change, and Living the Faith." },
           { type: "text", content: "Your mentor is available to support you throughout the program. Don't hesitate to reach out through the chat feature if you have questions or need encouragement." },
           { type: "action", content: "Identify the best time in your morning to complete your daily lesson. Consistency is key to making lasting change." },
-        ],
+        ] as { type: string; content: string }[],
       },
       {
         position: 3,
@@ -2239,16 +2239,10 @@ As you move into Week 2, continue these daily practices. They are building a fou
           { type: "text", content: "Consistency: Commit to showing up daily, even when you don't feel like it. Transformation happens through faithful, repeated small acts." },
           { type: "text", content: "Honesty: Be honest with God, your mentor, and yourself. Growth requires the courage to see yourself clearly in the light of God's love." },
           { type: "action", content: "Write down one area of your life where you are asking God to bring healing or freedom during this program. Hold it in prayer as you begin." },
-        ],
+        ] as { type: string; content: string }[],
       },
-    ];
-    for (const mod of defaultPrelimModules) {
-      const existing = await storage.getPrelimModule(mod.position);
-      if (!existing) {
-        await storage.upsertPrelimModule(mod);
-        console.log(`Prelim module ${mod.position} seeded.`);
-      }
-    }
+    ]).onConflictDoNothing();
+    console.log("Prelim modules seeded (ON CONFLICT DO NOTHING).");
 
     console.log("Seeding complete.");
 }
