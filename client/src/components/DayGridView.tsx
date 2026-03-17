@@ -133,7 +133,7 @@ function PrelimCard({
       disabled={!isClickable}
       data-testid={`card-prelim-${position}`}
       className={cn(
-        "relative flex items-start justify-center overflow-hidden px-4 py-3 rounded-2xl w-full h-[72px] text-left transition-all duration-200",
+        "relative flex items-start justify-center overflow-hidden px-4 py-3 rounded-2xl w-full h-full text-left transition-all duration-200",
         state === "active" && "bg-white border border-[#fc5f2b] shadow-[0px_8px_24px_0px_rgba(0,0,0,0.10),0px_0px_0px_1px_rgba(0,0,0,0.02)] cursor-pointer",
         state === "completed" && "bg-white border border-emerald-400 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.06)] cursor-pointer",
         state === "locked" && "bg-white opacity-50 cursor-not-allowed shadow-[inset_0px_0px_0px_1px_#ddd]",
@@ -322,16 +322,15 @@ export function DayGridView({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 pb-8 custom-scrollbar">
         <div className="max-w-[640px] mx-auto px-2 sm:px-4">
-          {/* Before You Begin — module cards with dot separators */}
+          {/* Before You Begin — 3 cards in a horizontal row with dot separators */}
           {prelimModulesData && prelimModulesData.length > 0 && (
             <div className="mb-4" ref={prelimSectionRef}>
-              <div className="flex flex-col">
-                {prelimModulesData.map((mod, idx) => {
+              <div className="flex items-center w-full h-[72px]">
+                {prelimModulesData.flatMap((mod, idx) => {
                   const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
                   const isAccessible = !!prevDone && !mod.completed;
-                  return (
-                    <div key={mod.position}>
-                      {idx > 0 && <PrelimDots />}
+                  const card = (
+                    <div key={mod.position} className="flex-1 min-w-0 h-full">
                       <PrelimCard
                         module={mod}
                         isAccessible={isAccessible}
@@ -339,6 +338,7 @@ export function DayGridView({
                       />
                     </div>
                   );
+                  return idx === 0 ? [card] : [<PrelimDots key={`dots-${idx}`} />, card];
                 })}
               </div>
               <div className="mt-4 mb-2 border-t border-[#e5e2dc]" />
