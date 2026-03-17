@@ -4,9 +4,10 @@ interface StickyWeekHeaderProps {
   weekNumber: number;
   weekTheme: string;
   onGuideClick?: () => void;
+  inPrelimSection?: boolean;
 }
 
-export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick }: StickyWeekHeaderProps) {
+export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelimSection }: StickyWeekHeaderProps) {
   return (
     <div
       className="sticky top-0 z-20 bg-[#18181b] rounded-lg p-4 shadow-lg"
@@ -18,7 +19,7 @@ export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick }: Sticky
             Initial 30 Days
           </p>
           <p className="font-['Afacad',sans-serif] font-bold text-white text-[18px] leading-7 truncate">
-            Week {weekNumber}: {weekTheme}
+            {inPrelimSection ? "Getting Started" : `Week ${weekNumber}: ${weekTheme}`}
           </p>
         </div>
         {onGuideClick && (

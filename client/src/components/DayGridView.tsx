@@ -8,7 +8,7 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { Church, BookOpen, CheckCircle2, Lock, Info, Map as MapIcon, Scale, Layers, ExternalLink } from "lucide-react";
+import { Church, BookOpen, CheckCircle2, Lock, Info, Map as MapIcon, Scale, Layers } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -240,8 +240,10 @@ export function DayGridView({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const prelimSectionRef = useRef<HTMLDivElement>(null);
 
   const [activeWeek, setActiveWeek] = useState(() => Math.min(Math.ceil(currentDay / 6), 5) || 1);
+  const [inPrelimSection, setInPrelimSection] = useState(() => !!(prelimModulesData && prelimModulesData.length > 0));
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDayForDialog, setSelectedDayForDialog] = useState<number>(0);
@@ -275,6 +277,20 @@ export function DayGridView({
     return () => observer.disconnect();
   }, [weekGroups.length]);
 
+  // Detect when the prelim section is in view to update the sticky header label
+  useEffect(() => {
+    const container = scrollRef.current;
+    const target = prelimSectionRef.current;
+    if (!container || !target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setInPrelimSection(entry.isIntersecting),
+      { root: container, rootMargin: "0px 0px -40% 0px", threshold: 0 }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
   const handleCardClick = (day: number) => {
     if (isTrackA) {
       onDaySelect(day);
@@ -301,38 +317,14 @@ export function DayGridView({
         weekNumber={activeWeek}
         weekTheme={activeWeekTheme}
         onGuideClick={() => setGuideModalOpen(true)}
+        inPrelimSection={inPrelimSection}
       />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 pb-8 custom-scrollbar">
         <div className="max-w-[640px] mx-auto px-2 sm:px-4">
-          {/* Before You Begin — Figma-accurate dark header + white cards */}
+          {/* Before You Begin — module cards with dot separators */}
           {prelimModulesData && prelimModulesData.length > 0 && (
-            <div className="mb-4">
-              {/* Dark sticky header card */}
-              <div className="bg-[#18181b] rounded-[9px] p-4 mb-4 shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] sticky top-0 z-[2]">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-['Afacad',sans-serif] font-bold text-[14px] text-white/70 leading-6">
-                      Initial 30 Days
-                    </p>
-                    <p className="font-['Afacad',sans-serif] font-bold text-[18px] text-white leading-7">
-                      Before You Begin
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setGuideModalOpen(true)}
-                    data-testid="button-overview-guide"
-                    className="flex items-center gap-1.5 pt-1 text-white/80 hover:text-white transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span className="font-['Afacad',sans-serif] font-bold text-[12px] uppercase tracking-[0.6px]">
-                      Overview &amp; Guide
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Module cards with dot separators */}
+            <div className="mb-4" ref={prelimSectionRef}>
               <div className="flex flex-col">
                 {prelimModulesData.map((mod, idx) => {
                   const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
