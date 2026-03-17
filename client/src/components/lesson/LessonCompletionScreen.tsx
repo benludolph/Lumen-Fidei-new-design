@@ -149,7 +149,7 @@ export function LessonCompletionScreen({
   }, []);
 
   const handleContinueToReveal = useCallback(() => {
-    if (dayNumber === 0) {
+    if (dayNumber <= 0) {
       onContinue();
       return;
     }

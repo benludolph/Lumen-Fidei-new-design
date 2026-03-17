@@ -301,7 +301,13 @@ export default function Dashboard() {
   const handlePrelimComplete = (position: number) => {
     completePrelimMutation.mutate(position, {
       onSettled: () => {
-        setViewMode("grid");
+        const nextPosition = position + 1;
+        const hasNext = prelimModulesData?.some(m => m.position === nextPosition);
+        if (hasNext) {
+          setSelectedPrelimPosition(nextPosition);
+        } else {
+          setViewMode("grid");
+        }
       },
     });
   };
@@ -364,6 +370,7 @@ export default function Dashboard() {
         };
         return (
           <LessonFlow
+            key={`prelim-${selectedPrelimPosition}`}
             content={fakePrelimContent}
             dayNumber={-selectedPrelimPosition}
             onExit={handlePrelimExit}
