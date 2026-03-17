@@ -127,7 +127,7 @@ export function LessonCompletionScreen({
   const [showButton, setShowButton] = useState(false);
   const { user } = useAuth();
 
-  const baseSaint = dayNumber === 0
+  const baseSaint = dayNumber <= 0
     ? ALL_SAINTS[0]
     : (saintId && ALL_SAINTS.find(s => s.id === saintId)) || ALL_SAINTS[(dayNumber - 1) % ALL_SAINTS.length];
 
