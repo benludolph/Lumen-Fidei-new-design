@@ -163,17 +163,24 @@ export default function Dashboard() {
     }
   };
   
+  const { data: prelimModulesData, isLoading: prelimLoading } = useQuery<PrelimModuleWithStatus[]>({
+    queryKey: ["/api/prelim-modules"],
+    enabled: !!user && user.role === 'participant',
+  });
+  const allPrelimsComplete = (prelimModulesData?.length === 3 && prelimModulesData.every(m => m.completed)) ?? false;
+
+  // Only query/redirect Day 0 agreement once prelims are complete
   const { data: day0Data, isLoading: day0Loading, isError: day0Error } = useQuery<{ agreementSigned: boolean }>({
     queryKey: ["/api/day0"],
-    enabled: !!user && user.role === 'participant',
+    enabled: !!user && user.role === 'participant' && allPrelimsComplete,
     retry: 2,
   });
   
   useEffect(() => {
-    if (!day0Loading && day0Data && !day0Data.agreementSigned) {
+    if (allPrelimsComplete && !day0Loading && day0Data && !day0Data.agreementSigned) {
       setLocation("/day0");
     }
-  }, [day0Data, day0Loading, setLocation]);
+  }, [allPrelimsComplete, day0Data, day0Loading, setLocation]);
   
   const { data: cohortData, isLoading: cohortLoading } = useCohortStartDate();
   const currentDay = cohortData?.currentDay || 0;
@@ -198,12 +205,6 @@ export default function Dashboard() {
     enabled: !!isTrackA,
   });
   
-  const { data: prelimModulesData } = useQuery<PrelimModuleWithStatus[]>({
-    queryKey: ["/api/prelim-modules"],
-    enabled: !!user && user.role === 'participant',
-  });
-  const allPrelimsComplete = (prelimModulesData?.length === 3 && prelimModulesData.every(m => m.completed)) ?? false;
-  
   const completePrelimMutation = useMutation({
     mutationFn: (position: number) =>
       apiRequest("POST", `/api/prelim-modules/${position}/complete`),
@@ -216,7 +217,20 @@ export default function Dashboard() {
   
   if (!user || user.role !== 'participant') return null;
   
-  if (day0Loading) {
+  // Show a spinner while we load prelim status for the first time
+  if (prelimLoading) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </Shell>
+    );
+  }
+
+  // Once prelims are done, wait for Day 0 agreement check before rendering program
+  if (allPrelimsComplete && day0Loading) {
     return (
       <Shell>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
@@ -227,7 +241,7 @@ export default function Dashboard() {
     );
   }
   
-  if (day0Error) {
+  if (allPrelimsComplete && day0Error) {
     return (
       <Shell>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
@@ -239,7 +253,8 @@ export default function Dashboard() {
     );
   }
   
-  if (!day0Data?.agreementSigned) {
+  // If prelims are complete but agreement not yet signed, redirect (handled by effect)
+  if (allPrelimsComplete && day0Data && !day0Data.agreementSigned) {
     return null;
   }
 

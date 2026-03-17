@@ -1097,6 +1097,14 @@ export async function registerRoutes(
   
   app.get(api.day0.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    // Day 0 agreement requires all 3 prelim modules completed first
+    if (req.user!.role === 'participant') {
+      const completions = await storage.getUserPrelimCompletions(req.user!.id);
+      if (completions.length < 3) {
+        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
+      }
+    }
     
     const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
     const agreementText = await storage.getCohortSetting("day0_agreement_text");
@@ -1112,6 +1120,14 @@ export async function registerRoutes(
 
   app.post(api.day0.signAgreement.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    // Agreement requires all 3 prelim modules completed first
+    if (req.user!.role === 'participant') {
+      const completions = await storage.getUserPrelimCompletions(req.user!.id);
+      if (completions.length < 3) {
+        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
+      }
+    }
     
     if (req.user!.agreementSignedAt) {
       return res.status(400).json({ message: "Agreement already signed" });
