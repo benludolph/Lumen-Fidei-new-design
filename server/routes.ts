@@ -320,6 +320,12 @@ export async function registerRoutes(
     const day = Number(req.params.day);
     
     if (req.user!.role === 'participant') {
+      // Check prelim completion gate
+      const completions = await storage.getUserPrelimCompletions(req.user!.id);
+      const allPrelimsComplete = completions.length >= 3;
+      if (!allPrelimsComplete) {
+        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
+      }
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
       const currentDay = computeCurrentProgramDay(cohortStartDateStr);
       if (day > currentDay || currentDay === 0) {
@@ -356,6 +362,12 @@ export async function registerRoutes(
     const day = Number(req.params.day);
 
     if (req.user!.role === 'participant') {
+      // Check prelim completion gate (Day 0 also requires all prelims done)
+      const completions = await storage.getUserPrelimCompletions(req.user!.id);
+      const allPrelimsComplete = completions.length >= 3;
+      if (!allPrelimsComplete) {
+        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
+      }
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
       const currentDay = computeCurrentProgramDay(cohortStartDateStr);
       if (day > currentDay || currentDay === 0) {
@@ -570,7 +582,7 @@ export async function registerRoutes(
     
     const answer = await storage.createUserAnswer({
       ...input,
-      answer: stripHtml(input.answer),
+      content: stripHtml(input.content),
       userId: req.user!.id
     });
     
@@ -1267,6 +1279,65 @@ export async function registerRoutes(
     res.json({ message: `Deleted ${count} messages`, count });
   });
 
+  // === Prelim Modules ===
+
+  // GET /api/prelim-modules — returns all 3 modules with user completion status
+  app.get('/api/prelim-modules', requireAuth, async (req, res) => {
+    const modules = await storage.getPrelimModules();
+    const userId = req.user!.id;
+    let completedPositions: number[] = [];
+    if (req.user!.role === 'participant') {
+      const completions = await storage.getUserPrelimCompletions(userId);
+      completedPositions = completions.map(c => c.modulePosition);
+    }
+    const result = modules.map(m => ({
+      ...m,
+      completed: completedPositions.includes(m.position),
+    }));
+    res.json(result);
+  });
+
+  // POST /api/prelim-modules/:position/complete — mark a prelim module as done
+  app.post('/api/prelim-modules/:position/complete', requireAuth, async (req, res) => {
+    if (req.user!.role !== 'participant') {
+      return res.status(403).json({ message: "Only participants can complete prelim modules." });
+    }
+    const position = Number(req.params.position);
+    if (isNaN(position) || position < 1 || position > 3) {
+      return res.status(400).json({ message: "Invalid module position." });
+    }
+    const userId = req.user!.id;
+    // Enforce sequential unlock: must have completed position-1 first
+    if (position > 1) {
+      const completions = await storage.getUserPrelimCompletions(userId);
+      const completedPositions = completions.map(c => c.modulePosition);
+      if (!completedPositions.includes(position - 1)) {
+        return res.status(403).json({ message: "You must complete the previous module first." });
+      }
+    }
+    const completion = await storage.completePrelimModule(userId, position);
+    res.json(completion);
+  });
+
+  // PUT /api/admin/prelim-modules/:position — admin-only update of module content
+  app.put('/api/admin/prelim-modules/:position', requireRole('admin'), async (req, res) => {
+    const position = Number(req.params.position);
+    if (isNaN(position) || position < 1 || position > 3) {
+      return res.status(400).json({ message: "Invalid module position." });
+    }
+    try {
+      const { title, subtitle, slides } = req.body;
+      if (!title || typeof title !== 'string') {
+        return res.status(400).json({ message: "Title is required." });
+      }
+      const module = await storage.upsertPrelimModule({ position, title, subtitle: subtitle || null, slides: slides || null });
+      res.json(module);
+    } catch (error) {
+      console.error("Error updating prelim module:", error);
+      res.status(500).json({ message: "Failed to update module." });
+    }
+  });
+
   // Seed Data
   await seed();
 
@@ -1331,6 +1402,28 @@ async function ensureSchemaColumns() {
         question_type TEXT NOT NULL,
         response TEXT NOT NULL,
         submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
+      )
+    `);
+
+    // Create prelim_modules table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS prelim_modules (
+        id SERIAL PRIMARY KEY,
+        position INTEGER NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        subtitle TEXT,
+        slides JSON
+      )
+    `);
+
+    // Create prelim_completions table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS prelim_completions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        module_position INTEGER NOT NULL,
+        completed_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(user_id, module_position)
       )
     `);
   } catch (e) {
@@ -2085,6 +2178,52 @@ As you move into Week 2, continue these daily practices. They are building a fou
             slides: introSlides,
         });
         console.log("Day 0 (Introduction) seeded in Track A content.");
+    }
+
+    // Seed prelim modules if needed (preserves admin edits via ON CONFLICT DO NOTHING)
+    const defaultPrelimModules = [
+      {
+        position: 1,
+        title: "Welcome to Lumen Fidei",
+        subtitle: "An introduction to your 30-day journey",
+        slides: [
+          { type: "text", content: "Welcome to Lumen Fidei — Light of Faith. This program is a 30-day journey of healing, prayer, and encounter with God." },
+          { type: "text", content: "Over the next 30 days, you will be guided through Scripture, the Catechism, and daily spiritual practices designed to bring lasting transformation." },
+          { type: "text", content: "You are not alone on this journey. You have a mentor, a community, and most importantly, the Lord walking with you." },
+          { type: "action", content: "Take a moment to pray: \"Lord, I open my heart to what you want to do in me through this program. I surrender my expectations to you. Come, Holy Spirit. Amen.\"" },
+        ],
+      },
+      {
+        position: 2,
+        title: "The Program Structure",
+        subtitle: "What to expect over the next 30 days",
+        slides: [
+          { type: "text", content: "The program runs Monday through Saturday for 5 weeks (30 days). Sundays are set aside for Mass and rest." },
+          { type: "text", content: "Each day begins with a morning lesson — a brief slide-based reflection combining Scripture, teaching, and a practical response." },
+          { type: "text", content: "The program is organized into 5 weekly themes: Foundations, The Human Condition, Encountering Jesus, Conversion & Change, and Living the Faith." },
+          { type: "text", content: "Your mentor is available to support you throughout the program. Don't hesitate to reach out through the chat feature if you have questions or need encouragement." },
+          { type: "action", content: "Identify the best time in your morning to complete your daily lesson. Consistency is key to making lasting change." },
+        ],
+      },
+      {
+        position: 3,
+        title: "Preparing Your Heart",
+        subtitle: "Dispositions for a fruitful journey",
+        slides: [
+          { type: "text", content: "Before beginning, it helps to prepare your heart with the right dispositions. This is not just an intellectual program — it is an encounter with the living God." },
+          { type: "text", content: "Openness: Come with an open heart, willing to be challenged and changed. Let go of preconceptions about what this program \"should\" be." },
+          { type: "text", content: "Consistency: Commit to showing up daily, even when you don't feel like it. Transformation happens through faithful, repeated small acts." },
+          { type: "text", content: "Honesty: Be honest with God, your mentor, and yourself. Growth requires the courage to see yourself clearly in the light of God's love." },
+          { type: "action", content: "Write down one area of your life where you are asking God to bring healing or freedom during this program. Hold it in prayer as you begin." },
+        ],
+      },
+    ];
+    for (const mod of defaultPrelimModules) {
+      const existing = await storage.getPrelimModule(mod.position);
+      if (!existing) {
+        await storage.upsertPrelimModule(mod);
+        console.log(`Prelim module ${mod.position} seeded.`);
+      }
     }
 
     console.log("Seeding complete.");

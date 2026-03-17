@@ -18,12 +18,13 @@ import DOMPurify from "dompurify";
 import { CheckCircle2, Sun, Moon, Check, AlertCircle, BookOpen, Minus, Plus, MessageSquare, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { DayGridView } from "@/components/DayGridView";
 import { LessonFlow } from "@/components/lesson/LessonFlow";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
-import type { TrackAModule, TrackAContent } from "@shared/schema";
+import type { TrackAModule, TrackAContent, PrelimModuleWithStatus } from "@shared/schema";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -132,9 +133,10 @@ export default function Dashboard() {
   const [prayerModalOpen, setPrayerModalOpen] = useState<string | null>(null);
   const [examenModalOpen, setExamenModalOpen] = useState(false);
   
-  const [viewMode, setViewMode] = useState<"grid" | "detail">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "detail" | "prelim">("grid");
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "evening">("morning");
+  const [selectedPrelimPosition, setSelectedPrelimPosition] = useState<number>(1);
   
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
     const saved = localStorage.getItem('lumenFidei_fontSize');
@@ -196,6 +198,20 @@ export default function Dashboard() {
     enabled: !!isTrackA,
   });
   
+  const { data: prelimModulesData } = useQuery<PrelimModuleWithStatus[]>({
+    queryKey: ["/api/prelim-modules"],
+    enabled: !!user && user.role === 'participant',
+  });
+  const allPrelimsComplete = (prelimModulesData?.length === 3 && prelimModulesData.every(m => m.completed)) ?? false;
+  
+  const completePrelimMutation = useMutation({
+    mutationFn: (position: number) =>
+      apiRequest("POST", `/api/prelim-modules/${position}/complete`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prelim-modules"] });
+    },
+  });
+  
   const isLoading = isTrackA ? isLoadingA : isLoadingB;
   
   if (!user || user.role !== 'participant') return null;
@@ -251,20 +267,6 @@ export default function Dashboard() {
     );
   }
 
-  if (!cohortLoading && currentDay === 0) {
-    return (
-      <Shell>
-        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
-          <h2 className="font-serif text-2xl font-bold mb-2">Program Not Yet Started</h2>
-          <p className="text-muted-foreground max-w-md">
-            The 30-day program has not begun yet. Please check back when the program starts.
-          </p>
-        </div>
-      </Shell>
-    );
-  }
-
   const handleDaySelect = (day: number, period?: "morning" | "evening") => {
     setSelectedDay(day);
     setSelectedPeriod(period || "morning");
@@ -274,6 +276,23 @@ export default function Dashboard() {
   const handleBackToGrid = () => {
     setViewMode("grid");
     setSelectedDay(0);
+  };
+
+  const handlePrelimSelect = (position: number) => {
+    setSelectedPrelimPosition(position);
+    setViewMode("prelim");
+  };
+
+  const handlePrelimComplete = (position: number) => {
+    completePrelimMutation.mutate(position, {
+      onSettled: () => {
+        setViewMode("grid");
+      },
+    });
+  };
+
+  const handlePrelimExit = () => {
+    setViewMode("grid");
   };
 
   return (
@@ -301,9 +320,42 @@ export default function Dashboard() {
             isDayCompleted={isDayCompleted}
             isPeriodCompleted={isPeriodCompleted}
             onDaySelect={handleDaySelect}
+            prelimModulesData={prelimModulesData}
+            allPrelimsComplete={allPrelimsComplete}
+            onPrelimSelect={handlePrelimSelect}
           />
         </div>
-      ) : isTrackA && viewMode === "detail" ? (
+      ) : viewMode === "prelim" ? (() => {
+        const prelimMod = prelimModulesData?.find(m => m.position === selectedPrelimPosition);
+        if (!prelimMod) return (
+          <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+            <p className="text-muted-foreground">Module not found.</p>
+            <Button variant="outline" onClick={handlePrelimExit}>Back</Button>
+          </div>
+        );
+        const fakePrelimContent: TrackAContent = {
+          id: -selectedPrelimPosition,
+          dayNumber: -selectedPrelimPosition,
+          weekNumber: 0,
+          centralTheme: prelimMod.title,
+          subtitle: prelimMod.subtitle ?? null,
+          slides: (prelimMod.slides ?? []) as { type: string; content: string }[],
+          imageUrl: null,
+          completionMessage: null,
+          saintId: null,
+          saintName: null,
+          saintImage: null,
+          saintQuote: null,
+        };
+        return (
+          <LessonFlow
+            content={fakePrelimContent}
+            dayNumber={-selectedPrelimPosition}
+            onExit={handlePrelimExit}
+            onComplete={() => handlePrelimComplete(selectedPrelimPosition)}
+          />
+        );
+      })() : isTrackA && viewMode === "detail" ? (
         isLoadingA ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />

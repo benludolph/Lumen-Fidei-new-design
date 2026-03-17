@@ -1,6 +1,7 @@
 import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
+  prelimModules, prelimCompletions,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -10,7 +11,9 @@ import {
   type PracticeResource, type InsertPracticeResource,
   type CohortSetting,
   type TrackAContent, type InsertTrackAContent,
-  type TrackAModule, type InsertTrackAModule
+  type TrackAModule, type InsertTrackAModule,
+  type PrelimModule, type InsertPrelimModule,
+  type PrelimCompletion,
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc, isNotNull } from "drizzle-orm";
 
@@ -78,6 +81,13 @@ export interface IStorage {
   // Admin message management
   getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
   deleteMessagesBetweenUsers(userId1: number, userId2: number): Promise<number>;
+
+  // Prelim Modules
+  getPrelimModules(): Promise<PrelimModule[]>;
+  getPrelimModule(position: number): Promise<PrelimModule | undefined>;
+  upsertPrelimModule(module: InsertPrelimModule): Promise<PrelimModule>;
+  getUserPrelimCompletions(userId: number): Promise<PrelimCompletion[]>;
+  completePrelimModule(userId: number, modulePosition: number): Promise<PrelimCompletion>;
 
   // session store
   sessionStore: any;
@@ -402,6 +412,51 @@ export class DatabaseStorage implements IStorage {
     }
     const [newSetting] = await db.insert(cohortSettings).values({ key, value }).returning();
     return newSetting;
+  }
+
+  // Prelim Modules
+  async getPrelimModules(): Promise<PrelimModule[]> {
+    return await db.select().from(prelimModules).orderBy(asc(prelimModules.position));
+  }
+
+  async getPrelimModule(position: number): Promise<PrelimModule | undefined> {
+    const [mod] = await db.select().from(prelimModules).where(eq(prelimModules.position, position));
+    return mod;
+  }
+
+  async upsertPrelimModule(module: InsertPrelimModule): Promise<PrelimModule> {
+    const existing = await this.getPrelimModule(module.position);
+    const setValue = {
+      title: module.title,
+      position: module.position,
+      subtitle: module.subtitle ?? null,
+      slides: (module.slides ?? null) as { type: string; content: string }[] | null,
+    };
+    if (existing) {
+      const [updated] = await db.update(prelimModules)
+        .set(setValue)
+        .where(eq(prelimModules.position, module.position))
+        .returning();
+      return updated;
+    }
+    const [newMod] = await db.insert(prelimModules).values(setValue).returning();
+    return newMod;
+  }
+
+  async getUserPrelimCompletions(userId: number): Promise<PrelimCompletion[]> {
+    return await db.select().from(prelimCompletions)
+      .where(eq(prelimCompletions.userId, userId))
+      .orderBy(asc(prelimCompletions.modulePosition));
+  }
+
+  async completePrelimModule(userId: number, modulePosition: number): Promise<PrelimCompletion> {
+    const existing = await db.select().from(prelimCompletions)
+      .where(and(eq(prelimCompletions.userId, userId), eq(prelimCompletions.modulePosition, modulePosition)));
+    if (existing.length > 0) return existing[0];
+    const [completion] = await db.insert(prelimCompletions)
+      .values({ userId, modulePosition })
+      .returning();
+    return completion;
   }
 }
 

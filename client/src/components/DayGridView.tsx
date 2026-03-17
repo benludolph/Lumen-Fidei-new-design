@@ -7,8 +7,8 @@ import { StickyWeekHeader } from "./StickyWeekHeader";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
-import type { TrackAContent, TrackAModule } from "@shared/schema";
-import { Church, BookOpen } from "lucide-react";
+import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
+import { Church, BookOpen, CheckCircle2, Lock, ChevronRight } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -42,6 +42,9 @@ interface DayGridViewProps {
   isDayCompleted: (day: number) => boolean;
   isPeriodCompleted: (day: number, period: "morning" | "evening") => boolean;
   onDaySelect: (day: number, period?: "morning" | "evening") => void;
+  prelimModulesData?: PrelimModuleWithStatus[];
+  allPrelimsComplete?: boolean;
+  onPrelimSelect?: (position: number) => void;
 }
 
 function getWeekTheme(
@@ -108,6 +111,56 @@ function SundayBanner() {
   );
 }
 
+function PrelimCard({
+  module,
+  isAccessible,
+  onClick,
+}: {
+  module: PrelimModuleWithStatus;
+  isAccessible: boolean;
+  onClick: () => void;
+}) {
+  const { completed, position, title, subtitle } = module;
+  const state = completed ? "completed" : isAccessible ? "active" : "locked";
+
+  return (
+    <button
+      onClick={isAccessible || completed ? onClick : undefined}
+      disabled={!isAccessible && !completed}
+      data-testid={`card-prelim-${position}`}
+      className={cn(
+        "relative flex items-center gap-3 p-4 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden w-full min-h-[72px]",
+        state === "completed" && "bg-gradient-to-r from-[#003725] to-[#004d33] cursor-pointer hover:shadow-md",
+        state === "active" && "bg-gradient-to-r from-[#5c1f00] to-[#8c3010] cursor-pointer hover:shadow-md ring-2 ring-[#F07830]/50",
+        state === "locked" && "opacity-40 cursor-not-allowed bg-zinc-900",
+      )}
+    >
+      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 shrink-0">
+        {state === "completed" ? (
+          <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+        ) : state === "active" ? (
+          <span className="text-white font-bold text-sm">{position}</span>
+        ) : (
+          <Lock className="w-4 h-4 text-white/50" />
+        )}
+      </div>
+      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+        <p className="font-['Afacad',sans-serif] font-semibold text-white text-[15px] leading-5 truncate">
+          {title}
+        </p>
+        {subtitle && (
+          <p className="font-['Afacad',sans-serif] text-white/60 text-[12px] truncate">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {(state === "active" || state === "completed") && (
+        <ChevronRight className="w-4 h-4 text-white/60 shrink-0" />
+      )}
+    </button>
+  );
+}
+
 function Day0Card({ isUnlocked, onClick, imageUrl }: { isUnlocked: boolean; onClick: () => void; imageUrl?: string | null }) {
   return (
     <button
@@ -157,6 +210,9 @@ export function DayGridView({
   isDayCompleted,
   isPeriodCompleted,
   onDaySelect,
+  prelimModulesData,
+  allPrelimsComplete = false,
+  onPrelimSelect,
 }: DayGridViewProps) {
   const { data: trackAModules } = useQuery<TrackAModule[]>({
     queryKey: ["/api/track-a-modules"],
@@ -218,7 +274,7 @@ export function DayGridView({
 
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
 
-  const day0Unlocked = currentDay >= 1;
+  const day0Unlocked = allPrelimsComplete;
 
   return (
     <div className="flex flex-col h-full">
@@ -230,6 +286,30 @@ export function DayGridView({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 pb-8 custom-scrollbar">
         <div className="max-w-[640px] mx-auto px-2 sm:px-4">
+          {/* Before You Begin — 3 sequential prelim modules */}
+          {prelimModulesData && prelimModulesData.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 px-1">
+                Before You Begin
+              </p>
+              <div className="flex flex-col gap-2">
+                {prelimModulesData.map((mod) => {
+                  const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
+                  const isAccessible = !!prevDone && !mod.completed;
+                  return (
+                    <PrelimCard
+                      key={mod.position}
+                      module={mod}
+                      isAccessible={isAccessible}
+                      onClick={() => onPrelimSelect?.(mod.position)}
+                    />
+                  );
+                })}
+              </div>
+              <div className="mt-3 mb-1 border-t border-white/10" />
+            </div>
+          )}
+
           {isTrackA && (
             <div className="mb-3">
               <Day0Card
@@ -257,8 +337,8 @@ export function DayGridView({
                 className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               >
                 {days.map((day) => {
-                  const isLocked = day > currentDay;
-                  const isToday = day === currentDay;
+                  const isLocked = day > currentDay || !allPrelimsComplete;
+                  const isToday = day === currentDay && allPrelimsComplete;
                   const completed = isDayCompleted(day);
                   const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
 

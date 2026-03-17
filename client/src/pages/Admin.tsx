@@ -66,6 +66,9 @@ export default function Admin() {
           <TabsTrigger value="surveys" className="gap-2" data-testid="tab-surveys">
             <BarChart3 className="w-4 h-4" /> Surveys
           </TabsTrigger>
+          <TabsTrigger value="prelim" className="gap-2" data-testid="tab-prelim">
+            <BookOpen className="w-4 h-4" /> Prelim
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -129,6 +132,10 @@ export default function Admin() {
 
         <TabsContent value="surveys">
           <SurveyResultsView />
+        </TabsContent>
+
+        <TabsContent value="prelim">
+          <PrelimContentManagementView />
         </TabsContent>
       </Tabs>
     </Shell>
@@ -3668,6 +3675,325 @@ function SurveyResultsView() {
           {questions.map(q => (
             <QuestionResultCard key={q.index} q={q} totalRespondents={respondentCount} />
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ========================
+// Prelim Modules Editor
+// ========================
+
+type PrelimModuleAdminData = {
+  id: number;
+  position: number;
+  title: string;
+  subtitle: string | null;
+  slides: TrackASlide[] | null;
+};
+
+function PrelimContentManagementView() {
+  const { toast } = useToast();
+  const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [slides, setSlides] = useState<TrackASlide[]>([]);
+  const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
+  const [addSlideType, setAddSlideType] = useState<string>("text");
+
+  const { data: prelimModules, isLoading } = useQuery<PrelimModuleAdminData[]>({
+    queryKey: ['/api/prelim-modules'],
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: { position: number; title: string; subtitle: string | null; slides: TrackASlide[] }) => {
+      const res = await apiRequest("PUT", `/api/admin/prelim-modules/${data.position}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/prelim-modules'] });
+      toast({ title: "Prelim module saved" });
+      setEditMode(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save module", description: error?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
+  const currentModule = prelimModules?.find(m => m.position === selectedPosition);
+
+  const loadModuleIntoState = (mod: PrelimModuleAdminData | undefined) => {
+    if (mod) {
+      setTitle(mod.title);
+      setSubtitle(mod.subtitle || "");
+      setSlides(mod.slides ? [...mod.slides] : []);
+    } else {
+      setTitle("");
+      setSubtitle("");
+      setSlides([]);
+    }
+    setExpandedSlide(null);
+  };
+
+  const handleSave = () => {
+    if (!selectedPosition) return;
+    saveMutation.mutate({ position: selectedPosition, title: title || "Untitled", subtitle: subtitle || null, slides });
+  };
+
+  const addSlide = () => {
+    setSlides(prev => [...prev, { type: addSlideType, content: "" }]);
+    setExpandedSlide(slides.length);
+  };
+
+  const removeSlide = (index: number) => {
+    setSlides(prev => prev.filter((_, i) => i !== index));
+    if (expandedSlide === index) setExpandedSlide(null);
+    else if (expandedSlide !== null && expandedSlide > index) setExpandedSlide(expandedSlide - 1);
+  };
+
+  const moveSlide = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= slides.length) return;
+    setSlides(prev => {
+      const next = [...prev];
+      [next[index], next[newIndex]] = [next[newIndex], next[index]];
+      return next;
+    });
+    if (expandedSlide === index) setExpandedSlide(newIndex);
+    else if (expandedSlide === newIndex) setExpandedSlide(index);
+  };
+
+  const updateSlide = (index: number, field: "type" | "content", value: string) => {
+    setSlides(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+
+  if (isLoading) {
+    return <Card><CardContent className="py-8 text-center">Loading prelim modules...</CardContent></Card>;
+  }
+
+  if (selectedPosition === null) {
+    const defaultModules: PrelimModuleAdminData[] = [
+      { id: 0, position: 1, title: "Welcome to Lumen Fidei", subtitle: null, slides: null },
+      { id: 0, position: 2, title: "The Program Structure", subtitle: null, slides: null },
+      { id: 0, position: 3, title: "Preparing Your Heart", subtitle: null, slides: null },
+    ];
+    const displayModules = (prelimModules && prelimModules.length > 0) ? prelimModules : defaultModules;
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              Pre-Cohort Onboarding Modules
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              These 3 modules must be completed by participants before the main program unlocks. Click a module to edit its content.
+            </p>
+          </CardHeader>
+        </Card>
+        <div className="space-y-3">
+          {displayModules.map(mod => (
+            <Card
+              key={mod.position}
+              className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden"
+              onClick={() => {
+                setSelectedPosition(mod.position);
+                loadModuleIntoState(mod);
+                setEditMode(false);
+              }}
+              data-testid={`card-prelim-admin-${mod.position}`}
+            >
+              <CardContent className="py-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="font-bold text-orange-600 dark:text-orange-400">{mod.position}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium" data-testid={`text-prelim-admin-title-${mod.position}`}>{mod.title}</h4>
+                    {mod.subtitle && <p className="text-xs text-muted-foreground truncate">{mod.subtitle}</p>}
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {mod.slides && mod.slides.length > 0 ? `${mod.slides.length} slide${mod.slides.length !== 1 ? "s" : ""}` : "Empty"}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => setSelectedPosition(null)} className="gap-2" data-testid="button-prelim-back">
+          <ArrowLeft className="w-4 h-4" /> Back to Modules
+        </Button>
+        <Badge variant="outline">Module {selectedPosition}</Badge>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            {currentModule?.title || `Prelim Module ${selectedPosition}`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {editMode ? (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title</label>
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Module title" data-testid="input-prelim-title" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Subtitle</label>
+                <Input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="Brief description (optional)" data-testid="input-prelim-subtitle" />
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">{currentModule?.title}</p>
+                {currentModule?.subtitle && <p className="text-sm text-muted-foreground">{currentModule.subtitle}</p>}
+              </div>
+              <Button size="sm" onClick={() => { loadModuleIntoState(currentModule); setEditMode(true); }} data-testid="button-prelim-edit">
+                <Edit2 className="w-4 h-4 mr-1" /> Edit
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {editMode && (
+        <>
+          <div className="space-y-3">
+            {slides.map((slide, index) => {
+              const isExpanded = expandedSlide === index;
+              return (
+                <Card key={index} data-testid={`card-prelim-slide-${index}`}>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col items-center gap-1 pt-1">
+                        <GripVertical className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <SlideTypeBadge type={slide.type} />
+                          {!isExpanded && (
+                            <span className="text-sm text-muted-foreground truncate">
+                              {slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
+                            </span>
+                          )}
+                        </div>
+                        {isExpanded && (
+                          <div className="space-y-3 mt-3">
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
+                              <Select value={slide.type} onValueChange={(val) => updateSlide(index, "type", val)}>
+                                <SelectTrigger data-testid={`select-prelim-slide-type-${index}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {SLIDE_TYPES.map(t => (
+                                    <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Content</label>
+                              <Textarea
+                                value={slide.content}
+                                onChange={(e) => updateSlide(index, "content", e.target.value)}
+                                placeholder="Slide content..."
+                                rows={4}
+                                data-testid={`input-prelim-slide-content-${index}`}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpandedSlide(isExpanded ? null : index)} data-testid={`button-prelim-expand-${index}`}>
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveSlide(index, "up")} disabled={index === 0} data-testid={`button-prelim-move-up-${index}`}>
+                          <ChevronUp className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveSlide(index, "down")} disabled={index === slides.length - 1} data-testid={`button-prelim-move-down-${index}`}>
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeSlide(index)} data-testid={`button-prelim-remove-${index}`}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <Select value={addSlideType} onValueChange={setAddSlideType}>
+                  <SelectTrigger className="w-48" data-testid="select-prelim-add-slide-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SLIDE_TYPES.map(t => (
+                      <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={addSlide} className="gap-2" data-testid="button-prelim-add-slide">
+                  <Plus className="w-4 h-4" /> Add Slide
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-3 justify-end">
+            <Button variant="outline" onClick={() => { setEditMode(false); setExpandedSlide(null); }} data-testid="button-prelim-cancel">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saveMutation.isPending} className="gap-2" data-testid="button-prelim-save">
+              <Save className="w-4 h-4" />
+              {saveMutation.isPending ? "Saving..." : "Save Module"}
+            </Button>
+          </div>
+        </>
+      )}
+
+      {!editMode && currentModule && (
+        <div className="space-y-3">
+          {(currentModule.slides || []).length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No slides yet. Click Edit to add content.
+              </CardContent>
+            </Card>
+          ) : (
+            (currentModule.slides || []).map((slide, index) => (
+              <Card key={index}>
+                <CardContent className="py-3">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xs font-medium text-muted-foreground pt-1 w-5 shrink-0">{index + 1}</span>
+                    <SlideTypeBadge type={slide.type} />
+                    <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate">
+                      {slide.content || "(empty)"}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       )}
     </div>

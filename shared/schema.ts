@@ -83,6 +83,25 @@ export const trackAContent = pgTable("track_a_content", {
   saintQuote: text("saint_quote"),
 });
 
+// Pre-cohort onboarding modules — 3 sequential modules users complete before the main program
+export const prelimModules = pgTable("prelim_modules", {
+  id: serial("id").primaryKey(),
+  position: integer("position").notNull().unique(), // 1, 2, or 3
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  slides: json("slides").$type<{ type: string; content: string }[]>(),
+});
+
+// Tracks which prelim modules each user has completed
+export const prelimCompletions = pgTable("prelim_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  modulePosition: integer("module_position").notNull(), // 1, 2, or 3
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("user_prelim_unique").on(table.userId, table.modulePosition),
+]);
+
 export const userAnswers = pgTable("user_answers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(), // FK to users
@@ -205,6 +224,8 @@ export const insertTrackAModuleSchema = createInsertSchema(trackAModules).omit({
 export const insertTrackAContentSchema = createInsertSchema(trackAContent).omit({ id: true });
 export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omit({ id: true, updatedAt: true });
 export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, submittedAt: true });
+export const insertPrelimModuleSchema = createInsertSchema(prelimModules).omit({ id: true });
+export const insertPrelimCompletionSchema = createInsertSchema(prelimCompletions).omit({ id: true, completedAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -240,6 +261,15 @@ export type InsertCohortSetting = z.infer<typeof insertCohortSettingsSchema>;
 
 export type SurveyResponse = typeof surveyResponses.$inferSelect;
 export type InsertSurveyResponse = z.infer<typeof insertSurveyResponseSchema>;
+
+export type PrelimModule = typeof prelimModules.$inferSelect;
+export type InsertPrelimModule = z.infer<typeof insertPrelimModuleSchema>;
+
+export type PrelimCompletion = typeof prelimCompletions.$inferSelect;
+export type InsertPrelimCompletion = z.infer<typeof insertPrelimCompletionSchema>;
+
+// Prelim module with user completion status (returned from /api/prelim-modules)
+export type PrelimModuleWithStatus = PrelimModule & { completed: boolean };
 
 // Request/Response types
 
