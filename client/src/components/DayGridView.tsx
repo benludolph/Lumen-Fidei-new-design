@@ -8,7 +8,7 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { Church, BookOpen, CheckCircle2, Lock, ChevronRight, Info } from "lucide-react";
+import { Church, BookOpen, CheckCircle2, Lock, Info, Map as MapIcon, Scale, Layers, ExternalLink } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -111,6 +111,8 @@ function SundayBanner() {
   );
 }
 
+const PRELIM_ICONS = [MapIcon, Scale, Layers];
+
 function PrelimCard({
   module,
   isAccessible,
@@ -122,42 +124,59 @@ function PrelimCard({
 }) {
   const { completed, position, title, subtitle } = module;
   const state = completed ? "completed" : isAccessible ? "active" : "locked";
+  const Icon = PRELIM_ICONS[(position - 1) % PRELIM_ICONS.length];
+  const isClickable = state === "active" || state === "completed";
 
   return (
     <button
-      onClick={isAccessible || completed ? onClick : undefined}
-      disabled={!isAccessible && !completed}
+      onClick={isClickable ? onClick : undefined}
+      disabled={!isClickable}
       data-testid={`card-prelim-${position}`}
       className={cn(
-        "relative flex items-center gap-3 p-4 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden w-full min-h-[72px]",
-        state === "completed" && "bg-gradient-to-r from-[#003725] to-[#004d33] cursor-pointer hover:shadow-md",
-        state === "active" && "bg-gradient-to-r from-[#5c1f00] to-[#8c3010] cursor-pointer hover:shadow-md ring-2 ring-[#F07830]/50",
-        state === "locked" && "opacity-40 cursor-not-allowed bg-zinc-900",
+        "relative flex items-start justify-center overflow-hidden px-4 py-3 rounded-2xl w-full h-[72px] text-left transition-all duration-200",
+        state === "active" && "bg-white border border-[#fc5f2b] shadow-[0px_8px_24px_0px_rgba(0,0,0,0.10),0px_0px_0px_1px_rgba(0,0,0,0.02)] cursor-pointer",
+        state === "completed" && "bg-white border border-emerald-400 shadow-[0px_4px_12px_0px_rgba(0,0,0,0.06)] cursor-pointer",
+        state === "locked" && "bg-white opacity-50 cursor-not-allowed shadow-[inset_0px_0px_0px_1px_#ddd]",
       )}
     >
-      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/10 shrink-0">
-        {state === "completed" ? (
-          <CheckCircle2 className="w-5 h-5 text-emerald-300" />
-        ) : state === "active" ? (
-          <span className="text-white font-bold text-sm">{position}</span>
-        ) : (
-          <Lock className="w-4 h-4 text-white/50" />
-        )}
-      </div>
-      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <p className="font-['Afacad',sans-serif] font-semibold text-white text-[15px] leading-5 truncate">
-          {title}
-        </p>
-        {subtitle && (
-          <p className="font-['Afacad',sans-serif] text-white/60 text-[12px] truncate">
-            {subtitle}
+      <div className="flex flex-1 gap-4 items-center h-full min-w-0">
+        <div className="flex items-center justify-center rounded-[8px] shrink-0 size-12 overflow-hidden">
+          {state === "completed" ? (
+            <div className="flex items-center justify-center size-full rounded-[8px] bg-emerald-50">
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+            </div>
+          ) : state === "active" ? (
+            <div className="flex items-center justify-center size-full rounded-[8px] bg-[rgba(253,192,86,0.15)]">
+              <Icon className="w-6 h-6 text-[#a37029]" />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center size-full rounded-[8px] bg-[#c3c3c3]/40">
+              <Lock className="w-5 h-5 text-[#9a9a9a]" />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col flex-1 min-w-0">
+          <p className="font-['Afacad',sans-serif] font-medium text-[#222] text-[14px] leading-tight truncate">
+            {title}
           </p>
-        )}
+          {subtitle && (
+            <p className="font-['Afacad',sans-serif] text-[#6a6a6a] text-[13px] leading-[18px] truncate mt-0.5">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      {(state === "active" || state === "completed") && (
-        <ChevronRight className="w-4 h-4 text-white/60 shrink-0" />
-      )}
     </button>
+  );
+}
+
+function PrelimDots() {
+  return (
+    <div className="flex gap-[3px] items-center px-4">
+      <div className="bg-[#f0f0f2] rounded-full size-[4px]" />
+      <div className="bg-[#f0f0f2] rounded-full size-[4px]" />
+      <div className="bg-[#f0f0f2] rounded-full size-[4px]" />
+    </div>
   );
 }
 
@@ -286,27 +305,51 @@ export function DayGridView({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto mt-4 pb-8 custom-scrollbar">
         <div className="max-w-[640px] mx-auto px-2 sm:px-4">
-          {/* Before You Begin — 3 sequential prelim modules */}
+          {/* Before You Begin — Figma-accurate dark header + white cards */}
           {prelimModulesData && prelimModulesData.length > 0 && (
             <div className="mb-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 px-1">
-                Before You Begin
-              </p>
-              <div className="flex flex-col gap-2">
-                {prelimModulesData.map((mod) => {
+              {/* Dark sticky header card */}
+              <div className="bg-[#18181b] rounded-[9px] p-4 mb-4 shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] sticky top-0 z-[2]">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-['Afacad',sans-serif] font-bold text-[14px] text-white/70 leading-6">
+                      Initial 30 Days
+                    </p>
+                    <p className="font-['Afacad',sans-serif] font-bold text-[18px] text-white leading-7">
+                      Before You Begin
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setGuideModalOpen(true)}
+                    data-testid="button-overview-guide"
+                    className="flex items-center gap-1.5 pt-1 text-white/80 hover:text-white transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="font-['Afacad',sans-serif] font-bold text-[12px] uppercase tracking-[0.6px]">
+                      Overview &amp; Guide
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Module cards with dot separators */}
+              <div className="flex flex-col">
+                {prelimModulesData.map((mod, idx) => {
                   const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
                   const isAccessible = !!prevDone && !mod.completed;
                   return (
-                    <PrelimCard
-                      key={mod.position}
-                      module={mod}
-                      isAccessible={isAccessible}
-                      onClick={() => onPrelimSelect?.(mod.position)}
-                    />
+                    <div key={mod.position}>
+                      {idx > 0 && <PrelimDots />}
+                      <PrelimCard
+                        module={mod}
+                        isAccessible={isAccessible}
+                        onClick={() => onPrelimSelect?.(mod.position)}
+                      />
+                    </div>
                   );
                 })}
               </div>
-              <div className="mt-3 mb-1 border-t border-white/10" />
+              <div className="mt-4 mb-2 border-t border-[#e5e2dc]" />
             </div>
           )}
 
