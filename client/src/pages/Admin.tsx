@@ -3742,8 +3742,15 @@ function PrelimContentManagementView() {
     saveMutation.mutate({ position: selectedPosition, title: title || "Untitled", subtitle: subtitle || null, slides });
   };
 
+  const getDefaultSlideContent = (type: string): string => {
+    if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
+    if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
+    if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
+    return "";
+  };
+
   const addSlide = () => {
-    setSlides(prev => [...prev, { type: addSlideType, content: "" }]);
+    setSlides(prev => [...prev, { type: addSlideType, content: getDefaultSlideContent(addSlideType) }]);
     setExpandedSlide(slides.length);
   };
 
@@ -3894,7 +3901,15 @@ function PrelimContentManagementView() {
                           <div className="space-y-3 mt-3">
                             <div className="space-y-1">
                               <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
-                              <Select value={slide.type} onValueChange={(val) => updateSlide(index, "type", val)}>
+                              <Select value={slide.type} onValueChange={(val) => {
+                                updateSlide(index, "type", val);
+                                const defaultContent = getDefaultSlideContent(val);
+                                if (defaultContent) {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", defaultContent);
+                                  }
+                                }
+                              }}>
                                 <SelectTrigger data-testid={`select-prelim-slide-type-${index}`}>
                                   <SelectValue />
                                 </SelectTrigger>
@@ -3905,16 +3920,45 @@ function PrelimContentManagementView() {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-1">
-                              <label className="text-xs font-medium text-muted-foreground">Content</label>
-                              <Textarea
-                                value={slide.content}
-                                onChange={(e) => updateSlide(index, "content", e.target.value)}
-                                placeholder="Slide content..."
-                                rows={4}
-                                data-testid={`input-prelim-slide-content-${index}`}
+                            {slide.type === "quiz" ? (
+                              <QuizSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
                               />
-                            </div>
+                            ) : slide.type === "media" ? (
+                              <MediaSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "timer" ? (
+                              <TimerSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "knowledge_check" ? (
+                              <KnowledgeCheckEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "survey" ? (
+                              <SurveySlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Content</label>
+                                <RichTextEditor
+                                  value={slide.content}
+                                  onChange={(val) => updateSlide(index, "content", val)}
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

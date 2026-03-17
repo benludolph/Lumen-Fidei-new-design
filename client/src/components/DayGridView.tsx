@@ -8,7 +8,7 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { Church, BookOpen, CheckCircle2, Lock, ChevronRight } from "lucide-react";
+import { Church, BookOpen, CheckCircle2, Lock, ChevronRight, Info } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -307,6 +307,24 @@ export function DayGridView({
                 })}
               </div>
               <div className="mt-3 mb-1 border-t border-white/10" />
+            </div>
+          )}
+
+          {/* Lock-reason explanation banners */}
+          {!allPrelimsComplete && (
+            <div className="mb-3 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-start gap-2" data-testid="banner-prelims-incomplete">
+              <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                <span className="font-semibold">Complete the intro modules above</span> to unlock the program. Each module must be done in order.
+              </p>
+            </div>
+          )}
+          {allPrelimsComplete && currentDay === 0 && (
+            <div className="mb-3 px-3 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 flex items-start gap-2" data-testid="banner-cohort-not-started">
+              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+                <span className="font-semibold">Your cohort hasn't started yet.</span> Begin with the Introduction below while you wait — your 30-day journey will unlock when it starts.
+              </p>
             </div>
           )}
 

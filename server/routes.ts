@@ -326,10 +326,14 @@ export async function registerRoutes(
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
-      const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      const currentDay = computeCurrentProgramDay(cohortStartDateStr);
-      if (day > currentDay || currentDay === 0) {
-        return res.status(403).json({ message: "This day is locked." });
+      // Day 0 unlocks once prelims are done (regardless of cohort start).
+      // Days 1-30 require prelims done AND cohort started.
+      if (day !== 0) {
+        const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+        const currentDay = computeCurrentProgramDay(cohortStartDateStr);
+        if (currentDay === 0 || day > currentDay) {
+          return res.status(403).json({ message: "DAY_LOCKED", code: "DAY_LOCKED" });
+        }
       }
     }
 
@@ -368,10 +372,14 @@ export async function registerRoutes(
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
-      const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      const currentDay = computeCurrentProgramDay(cohortStartDateStr);
-      if (day > currentDay || currentDay === 0) {
-        return res.status(403).json({ message: "This day is locked." });
+      // Day 0 unlocks once prelims are done (regardless of cohort start).
+      // Days 1-30 require prelims done AND cohort started.
+      if (day !== 0) {
+        const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+        const currentDay = computeCurrentProgramDay(cohortStartDateStr);
+        if (currentDay === 0 || day > currentDay) {
+          return res.status(403).json({ message: "DAY_LOCKED", code: "DAY_LOCKED" });
+        }
       }
     }
 
