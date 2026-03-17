@@ -60,7 +60,7 @@ export function LessonLoadingScreen({
 
         <div className="space-y-2 sm:space-y-3">
           <p className="text-white/60 text-xs sm:text-sm font-medium tracking-widest uppercase">
-            Day {dayNumber}
+            {dayNumber < 0 ? `Module ${Math.abs(dayNumber)}` : dayNumber === 0 ? "Introduction" : `Day ${dayNumber}`}
           </p>
           <h1 className="font-['Afacad',sans-serif] font-semibold text-white text-xl sm:text-2xl md:text-3xl max-w-[280px] sm:max-w-md leading-tight">
             {theme}
