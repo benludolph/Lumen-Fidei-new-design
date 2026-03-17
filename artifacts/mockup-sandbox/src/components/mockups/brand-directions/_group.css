@@ -1,0 +1,14 @@
+:root {
+  --bg: #ffffff;
+  --fg: #0f1117;
+  --fg-muted: #6b7280;
+  --border: #e5e7eb;
+  --radius: 10px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}

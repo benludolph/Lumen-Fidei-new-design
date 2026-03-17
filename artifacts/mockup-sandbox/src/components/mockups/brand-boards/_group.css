@@ -1,0 +1,50 @@
+:root {
+  --orange-50: #FFF7F0;
+  --orange-100: #FFE9D6;
+  --orange-200: #FFD0A8;
+  --orange-300: #FCA974;
+  --orange-400: #FA8F51;
+  --orange-500: #F07830;
+  --orange-600: #E56120;
+  --orange-700: #BE4C14;
+  --orange-800: #8E380E;
+  --orange-900: #5E230A;
+
+  --gold-50: #FFFBF0;
+  --gold-100: #FFF1C4;
+  --gold-200: #FFE475;
+  --gold-300: #FDD44A;
+  --gold-400: #FBCB30;
+  --gold-500: #F5C030;
+  --gold-600: #E0A010;
+  --gold-700: #B87D08;
+  --gold-800: #875B05;
+  --gold-900: #573903;
+
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  --primary: #F07830;
+  --accent: #F5C030;
+  --bg: #FFFFFF;
+  --fg: #111827;
+  --muted: #F3F4F6;
+  --muted-fg: #6B7280;
+  --border: #E5E7EB;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
