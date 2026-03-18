@@ -1813,6 +1813,62 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
 };
 
+function ScenarioStepImageUpload({ stepIndex, editorIndex, currentUrl, onUploaded }: { stepIndex: number; editorIndex: number; currentUrl: string; onUploaded: (url: string) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      onUploaded(url);
+    } catch (err) {
+      console.error("Scenario step image upload error:", err instanceof Error ? err.message : err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [onUploaded]);
+
+  return (
+    <div className="flex items-center gap-2">
+      {currentUrl && (
+        <img
+          src={currentUrl}
+          alt="Step"
+          className="w-10 h-10 rounded-lg object-cover shrink-0 border"
+          data-testid={`img-scenario-step-preview-${editorIndex}-${stepIndex}`}
+        />
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={handleUpload}
+        data-testid={`input-scenario-step-file-${editorIndex}-${stepIndex}`}
+      />
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="gap-2 flex-1"
+        data-testid={`button-scenario-step-upload-${editorIndex}-${stepIndex}`}
+      >
+        <Upload className="w-3 h-3" />
+        {uploading ? "Uploading..." : currentUrl ? "Change Image" : "Upload Image"}
+      </Button>
+    </div>
+  );
+}
+
 function ScenarioSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let parsed: { headline?: string; steps?: { imageUrl?: string; text?: string }[] } = {};
   try { parsed = JSON.parse(content); } catch {}
@@ -1866,11 +1922,11 @@ function ScenarioSlideEditor({ content, onChange, index }: { content: string; on
                 </Button>
               </div>
             </div>
-            <Input
-              value={step.imageUrl}
-              onChange={e => setStep(i, "imageUrl", e.target.value)}
-              placeholder="Image URL (48×48px avatar)"
-              data-testid={`input-scenario-step-image-${index}-${i}`}
+            <ScenarioStepImageUpload
+              stepIndex={i}
+              editorIndex={index}
+              currentUrl={step.imageUrl}
+              onUploaded={(url) => setStep(i, "imageUrl", url)}
             />
             <Textarea
               value={step.text}
