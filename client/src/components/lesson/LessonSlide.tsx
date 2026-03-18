@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } fro
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, ChevronDown } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -468,11 +468,12 @@ function ScenarioSlide({ content, revealedCount }: { content: string; revealedCo
               </div>
             </RevealStep>
             {i < shown.length - 1 && (
-              <div className="flex flex-col items-start ml-5 py-1 gap-[3px]">
+              <div className="flex flex-col items-start ml-5 py-2 gap-[5px]">
                 <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
                 <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
                 <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
-                <ChevronDown className="w-4 h-4 text-zinc-400 -mt-0.5" />
+                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
+                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
               </div>
             )}
           </div>
