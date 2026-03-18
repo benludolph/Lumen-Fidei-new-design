@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2 } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -41,7 +41,8 @@ export type SlideType =
   | "quiz"
   | "quiz_result"
   | "knowledge_check"
-  | "survey";
+  | "survey"
+  | "scenario";
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -326,6 +327,7 @@ interface LessonSlideProps {
   onInteracted?: () => void;
   onSurveySubmitted?: () => void;
   surveyAlreadySubmitted?: boolean;
+  scenarioRevealCount?: number;
 }
 
 export function LessonSlide({
@@ -347,6 +349,7 @@ export function LessonSlide({
   onInteracted,
   onSurveySubmitted,
   surveyAlreadySubmitted,
+  scenarioRevealCount = 1,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -403,9 +406,77 @@ export function LessonSlide({
             onSubmitted={onSurveySubmitted}
             alreadySubmitted={surveyAlreadySubmitted}
           />
+        ) : type === "scenario" ? (
+          <ScenarioSlide content={content} revealedCount={scenarioRevealCount} />
         ) : (
           <TextSlide content={content} />
         )}
+      </div>
+    </div>
+  );
+}
+
+function RevealStep({ children, isNew }: { children: ReactNode; isNew: boolean }) {
+  const [visible, setVisible] = useState(!isNew);
+  useEffect(() => {
+    if (isNew) {
+      const t = setTimeout(() => setVisible(true), 30);
+      return () => clearTimeout(t);
+    }
+  }, [isNew]);
+  return (
+    <div className={cn("transition-all duration-500", visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
+      {children}
+    </div>
+  );
+}
+
+function ScenarioSlide({ content, revealedCount }: { content: string; revealedCount: number }) {
+  let parsed: { headline?: string; steps?: { imageUrl?: string; text?: string }[] } = {};
+  try { parsed = JSON.parse(content); } catch {}
+  const headline = parsed.headline ?? "";
+  const steps = parsed.steps ?? [];
+  const shown = steps.slice(0, Math.max(1, revealedCount));
+
+  return (
+    <div className="flex flex-col gap-8">
+      {headline && (
+        <h1 className="font-['Afacad',sans-serif] font-bold text-[30px] text-black leading-[1.2]">
+          {headline}
+        </h1>
+      )}
+      <div className="flex flex-col">
+        {shown.map((step, i) => (
+          <div key={i}>
+            <RevealStep isNew={i === shown.length - 1 && revealedCount > 1}>
+              <div className="flex gap-3 items-start" data-testid={`scenario-step-${i}`}>
+                {step.imageUrl ? (
+                  <img
+                    src={step.imageUrl}
+                    alt=""
+                    className="w-12 h-12 rounded-xl object-cover shrink-0"
+                    data-testid={`scenario-step-img-${i}`}
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 shrink-0 flex items-center justify-center">
+                    <User className="w-5 h-5 text-zinc-400" />
+                  </div>
+                )}
+                <p className="font-['Afacad',sans-serif] font-medium text-[20px] text-black leading-[1.4] pt-2">
+                  {step.text}
+                </p>
+              </div>
+            </RevealStep>
+            {i < shown.length - 1 && (
+              <div className="flex flex-col items-start ml-5 py-1 gap-[3px]">
+                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
+                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
+                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
+                <ChevronDown className="w-4 h-4 text-zinc-400 -mt-0.5" />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

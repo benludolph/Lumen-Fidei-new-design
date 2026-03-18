@@ -1781,7 +1781,7 @@ type TrackAContentData = {
   saintQuote: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1795,6 +1795,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   knowledge_check: "Knowledge Check",
   quiz: "Quiz",
   survey: "Survey",
+  scenario: "Scenario Stepper",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -1809,7 +1810,84 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   knowledge_check: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
   survey: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
+  scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
 };
+
+function ScenarioSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let parsed: { headline?: string; steps?: { imageUrl?: string; text?: string }[] } = {};
+  try { parsed = JSON.parse(content); } catch {}
+  const headline = parsed.headline ?? "";
+  const steps: { imageUrl: string; text: string }[] = (parsed.steps ?? []).map((s: { imageUrl?: string; text?: string }) => ({ imageUrl: s.imageUrl ?? "", text: s.text ?? "" }));
+
+  const update = (newHeadline: string, newSteps: { imageUrl: string; text: string }[]) => {
+    onChange(JSON.stringify({ headline: newHeadline, steps: newSteps }));
+  };
+
+  const setHeadline = (val: string) => update(val, steps);
+  const setStep = (i: number, field: "imageUrl" | "text", val: string) => {
+    const updated = steps.map((s, idx) => idx === i ? { ...s, [field]: val } : s);
+    update(headline, updated);
+  };
+  const addStep = () => update(headline, [...steps, { imageUrl: "", text: "" }]);
+  const removeStep = (i: number) => update(headline, steps.filter((_, idx) => idx !== i));
+  const moveStep = (i: number, dir: "up" | "down") => {
+    const arr = [...steps];
+    const swap = dir === "up" ? i - 1 : i + 1;
+    [arr[i], arr[swap]] = [arr[swap], arr[i]];
+    update(headline, arr);
+  };
+
+  return (
+    <div className="space-y-3" data-testid={`scenario-editor-${index}`}>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Headline</label>
+        <Input
+          value={headline}
+          onChange={e => setHeadline(e.target.value)}
+          placeholder="Imagine the following scenario"
+          data-testid={`input-scenario-headline-${index}`}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Steps (revealed one at a time)</label>
+        {steps.map((step, i) => (
+          <div key={i} className="border rounded-lg p-3 space-y-2 bg-muted/30" data-testid={`scenario-step-editor-${index}-${i}`}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Step {i + 1}</span>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveStep(i, "up")} disabled={i === 0} data-testid={`button-scenario-step-up-${index}-${i}`}>
+                  <ChevronUp className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveStep(i, "down")} disabled={i === steps.length - 1} data-testid={`button-scenario-step-down-${index}-${i}`}>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => removeStep(i)} data-testid={`button-scenario-step-delete-${index}-${i}`}>
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+            <Input
+              value={step.imageUrl}
+              onChange={e => setStep(i, "imageUrl", e.target.value)}
+              placeholder="Image URL (48×48px avatar)"
+              data-testid={`input-scenario-step-image-${index}-${i}`}
+            />
+            <Textarea
+              value={step.text}
+              onChange={e => setStep(i, "text", e.target.value)}
+              placeholder="Step text..."
+              rows={2}
+              data-testid={`textarea-scenario-step-text-${index}-${i}`}
+            />
+          </div>
+        ))}
+        <Button variant="outline" size="sm" onClick={addStep} className="gap-2 w-full" data-testid={`button-scenario-add-step-${index}`}>
+          <Plus className="w-3 h-3" /> Add Step
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function SlideTypeBadge({ type }: { type: string }) {
   const colorClass = SLIDE_TYPE_COLORS[type] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
@@ -3063,6 +3141,11 @@ function TrackAContentManagementView() {
                                     updateSlide(index, "content", JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" }));
                                   }
                                 }
+                                if (val === "scenario") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] }));
+                                  }
+                                }
                               }}>
                                 <SelectTrigger data-testid={`select-slide-type-${index}`}>
                                   <SelectValue />
@@ -3101,6 +3184,12 @@ function TrackAContentManagementView() {
                               />
                             ) : slide.type === "survey" ? (
                               <SurveySlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "scenario" ? (
+                              <ScenarioSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -3746,6 +3835,7 @@ function PrelimContentManagementView() {
     if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
     if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
+    if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     return "";
   };
 
@@ -3946,6 +4036,12 @@ function PrelimContentManagementView() {
                               />
                             ) : slide.type === "survey" ? (
                               <SurveySlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "scenario" ? (
+                              <ScenarioSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}

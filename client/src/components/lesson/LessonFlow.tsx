@@ -48,6 +48,7 @@ export function LessonFlow({
   const [completedSurveySlides, setCompletedSurveySlides] = useState<Set<number>>(new Set());
   const [kcAnswered, setKcAnswered] = useState(false);
   const [slideInteracted, setSlideInteracted] = useState(false);
+  const [scenarioRevealCount, setScenarioRevealCount] = useState(1);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const slides = useMemo<SlideData[]>(() => {
@@ -103,6 +104,17 @@ export function LessonFlow({
 
   const handleNext = useCallback(() => {
     cancelAutoAdvance();
+    const currentSlideData = slides[currentSlide];
+    if (currentSlideData?.type === "scenario") {
+      try {
+        const parsed = JSON.parse(currentSlideData.content);
+        const total = Array.isArray(parsed.steps) ? parsed.steps.length : 0;
+        if (scenarioRevealCount < total) {
+          setScenarioRevealCount((prev) => prev + 1);
+          return;
+        }
+      } catch {}
+    }
     if (currentSlide >= slides.length - 1) {
       setFlowState("complete");
     } else {
@@ -114,8 +126,9 @@ export function LessonFlow({
       setTimerDone(completedTimerSlides.has(nextSlide));
       setKcAnswered(false);
       setSlideInteracted(false);
+      setScenarioRevealCount(1);
     }
-  }, [currentSlide, slides.length, cancelAutoAdvance, completedTimerSlides]);
+  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount]);
 
   const handlePrev = useCallback(() => {
     cancelAutoAdvance();
@@ -129,6 +142,7 @@ export function LessonFlow({
       setTimerDone(completedTimerSlides.has(prevSlide));
       setKcAnswered(false);
       setSlideInteracted(false);
+      setScenarioRevealCount(1);
     }
   }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides]);
 
@@ -254,6 +268,7 @@ export function LessonFlow({
         onInteracted={handleSlideInteracted}
         onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
         surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
+        scenarioRevealCount={currentSlideData.type === "scenario" ? scenarioRevealCount : undefined}
       />
 
       {isValidKc && kcAnswered ? null : (
