@@ -435,7 +435,7 @@ function ScenarioSlide({ content, revealedCount }: { content: string; revealedCo
   let parsed: { headline?: string; steps?: { imageUrl?: string; text?: string }[] } = {};
   try { parsed = JSON.parse(content); } catch {}
   const headline = parsed.headline ?? "";
-  const steps = parsed.steps ?? [];
+  const steps = Array.isArray(parsed.steps) ? parsed.steps : [];
   const shown = steps.slice(0, Math.max(1, revealedCount));
 
   return (

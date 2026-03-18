@@ -2719,8 +2719,16 @@ function TrackAContentManagementView() {
     setExpandedSlide(null);
   };
 
+  const getTrackADefaultSlideContent = (type: string): string => {
+    if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } });
+    if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
+    if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
+    if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
+    return "";
+  };
+
   const addSlide = () => {
-    setSlides(prev => [...prev, { type: addSlideType, content: "" }]);
+    setSlides(prev => [...prev, { type: addSlideType, content: getTrackADefaultSlideContent(addSlideType) }]);
     setExpandedSlide(slides.length);
   };
 
