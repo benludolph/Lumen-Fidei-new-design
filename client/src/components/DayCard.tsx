@@ -1,35 +1,45 @@
 import { cn } from "@/lib/utils";
 import { Lock, Check, Clock } from "lucide-react";
 
-const MASK19_URL = "/card_mask19.svg";
-const MASK20_URL = "/card_mask20.svg";
-const VECTOR_URL = "/card_vector.svg";
-const VECTOR1_URL = "/card_vector1.svg";
-const LOADER_ICON_URL = "/loader_icon.svg";
+const MASK19 = "/bento_mask19.svg";
+const MASK20 = "/bento_mask20.svg";
+const VECTOR = "/bento_vector.svg";
+const VECTOR1 = "/bento_vector1.svg";
+const LOADER = "/loader_icon.svg";
 
-const VECTOR1_POSITIONS: Array<[string, string]> = [
-  ["46.79%_7.79%_53.21%_91.51%", "-435.521px_-111.684px,_-435.521px_-346.085px"],
-  ["46.79%_9.66%_53.21%_89.64%", "-428.276px_-111.684px,_-428.276px_-346.085px"],
-  ["46.79%_11.53%_53.21%_87.77%", "-421.03px_-111.684px,_-421.03px_-346.085px"],
-  ["46.79%_13.39%_53.21%_85.91%", "-413.785px_-111.684px,_-413.785px_-346.085px"],
-  ["46.79%_15.26%_53.21%_84.04%", "-406.54px_-111.684px,_-406.54px_-346.085px"],
-  ["46.79%_17.13%_53.21%_82.17%", "-399.295px_-111.684px,_-399.295px_-346.085px"],
-  ["46.79%_5.92%_53.21%_93.38%", "-442.766px_-111.684px,_-442.766px_-346.085px"],
-  ["46.79%_4.06%_53.21%_95.24%", "-450.012px_-111.684px,_-450.012px_-346.085px"],
-  ["46.79%_2.19%_53.21%_97.11%", "-457.257px_-111.684px,_-457.257px_-346.085px"],
-  ["46.79%_0.32%_53.21%_98.98%", "-464.502px_-111.684px,_-464.502px_-346.085px"],
-  ["46.79%_-1.55%_53.21%_100.85%", "-471.747px_-111.684px,_-471.747px_-346.085px"],
-  ["46.79%_28.33%_53.21%_70.97%", "-355.823px_-111.684px,_-355.823px_-346.085px"],
-  ["46.79%_30.2%_53.21%_69.1%", "-348.578px_-111.684px,_-348.578px_-346.085px"],
-  ["46.79%_32.07%_53.21%_67.23%", "-341.333px_-111.684px,_-341.333px_-346.085px"],
-  ["46.79%_33.93%_53.21%_65.37%", "-334.087px_-111.684px,_-334.087px_-346.085px"],
-  ["46.79%_35.8%_53.21%_63.5%", "-326.842px_-111.684px,_-326.842px_-346.085px"],
-  ["46.79%_37.67%_53.21%_61.63%", "-319.597px_-111.684px,_-319.597px_-346.085px"],
-  ["46.79%_26.46%_53.21%_72.84%", "-363.069px_-111.684px,_-363.069px_-346.085px"],
-  ["46.79%_24.6%_53.21%_74.7%", "-370.314px_-111.684px,_-370.314px_-346.085px"],
-  ["46.79%_22.73%_53.21%_76.57%", "-377.559px_-111.684px,_-377.559px_-346.085px"],
-  ["46.79%_20.86%_53.21%_78.44%", "-384.804px_-111.684px,_-384.804px_-346.085px"],
-  ["46.79%_18.99%_53.21%_80.31%", "-392.05px_-111.684px,_-392.05px_-346.085px"],
+const MASK_IMAGE = `url('${MASK19}'), url('${MASK20}')`;
+
+const VECTOR_POSITIONS: Array<{ inset: string; maskPos: string }> = [
+  { inset: "21.2% 20.74% 78.8% -20.74%", maskPos: "0.001px -21.119px, 0.001px -169.273px" },
+  { inset: "39.06% 20.36% 60.94% 78.5%", maskPos: "-170.057px -47.111px, -170.057px -195.265px" },
+  { inset: "39.06% 23.39% 60.94% 75.47%", maskPos: "-164.864px -47.111px, -164.864px -195.265px" },
+  { inset: "39.06% 26.42% 60.94% 72.44%", maskPos: "-159.672px -47.111px, -159.672px -195.265px" },
+  { inset: "39.06% 29.45% 60.94% 69.41%", maskPos: "-154.479px -47.111px, -154.479px -195.265px" },
+  { inset: "39.06% 32.48% 60.94% 66.38%", maskPos: "-149.286px -47.111px, -149.286px -195.265px" },
+  { inset: "39.06% 35.51% 60.94% 63.35%", maskPos: "-144.094px -47.111px, -144.094px -195.265px" },
+  { inset: "39.06% 38.54% 60.94% 60.32%", maskPos: "-138.901px -47.111px, -138.901px -195.265px" },
+  { inset: "39.06% 41.57% 60.94% 57.29%", maskPos: "-133.708px -47.111px, -133.709px -195.265px" },
+  { inset: "39.06% 44.6% 60.94% 54.26%", maskPos: "-128.516px -47.111px, -128.516px -195.265px" },
+  { inset: "39.06% 47.63% 60.94% 51.23%", maskPos: "-123.323px -47.111px, -123.324px -195.265px" },
+  { inset: "39.06% 50.66% 60.94% 48.2%", maskPos: "-118.131px -47.111px, -118.131px -195.265px" },
+  { inset: "39.06% 53.69% 60.94% 45.17%", maskPos: "-112.938px -47.111px, -112.938px -195.265px" },
+  { inset: "39.06% 56.72% 60.94% 42.14%", maskPos: "-107.746px -47.111px, -107.746px -195.265px" },
+  { inset: "39.06% 59.75% 60.94% 39.11%", maskPos: "-102.553px -47.111px, -102.553px -195.265px" },
+  { inset: "39.06% 62.78% 60.94% 36.08%", maskPos: "-97.360px -47.111px, -97.360px -195.265px" },
+  { inset: "39.06% 65.81% 60.94% 33.05%", maskPos: "-92.168px -47.111px, -92.168px -195.265px" },
+  { inset: "39.06% 68.85% 60.94% 30.02%", maskPos: "-86.975px -47.111px, -86.975px -195.265px" },
+  { inset: "39.06% 71.88% 60.94% 26.99%", maskPos: "-81.782px -47.111px, -81.783px -195.265px" },
+  { inset: "39.06% 74.91% 60.94% 23.96%", maskPos: "-76.59px -47.111px, -76.59px -195.265px" },
+  { inset: "39.06% 77.94% 60.94% 20.93%", maskPos: "-71.397px -47.111px, -71.397px -195.265px" },
+  { inset: "39.06% 80.97% 60.94% 17.9%", maskPos: "-66.205px -47.111px, -66.205px -195.265px" },
+  { inset: "39.06% 84% 60.94% 14.87%", maskPos: "-61.012px -47.111px, -61.012px -195.265px" },
+  { inset: "56.91% 20.74% 43.09% -20.74%", maskPos: "0.001px -56.866px, 0.001px -205.02px" },
+  { inset: "74.77% 20.36% 25.23% 78.5%", maskPos: "-170.057px -92.622px, -170.057px -240.776px" },
+  { inset: "74.77% 35.51% 25.23% 63.35%", maskPos: "-144.094px -92.622px, -144.094px -240.776px" },
+  { inset: "74.77% 50.66% 25.23% 48.2%", maskPos: "-118.131px -92.622px, -118.131px -240.776px" },
+  { inset: "74.77% 65.81% 25.23% 33.05%", maskPos: "-92.168px -92.622px, -92.168px -240.776px" },
+  { inset: "74.77% 80.97% 25.23% 17.9%", maskPos: "-66.205px -92.622px, -66.205px -240.776px" },
+  { inset: "92.63% 20.74% 7.37% -20.74%", maskPos: "0.001px -92.622px, 0.001px -240.776px" },
 ];
 
 interface DayCardProps {
@@ -71,13 +81,16 @@ function StatusBadge({
 }) {
   return (
     <div
-      className="flex items-center justify-center shrink-0 relative"
       style={{
         width: "23.367px",
         height: "23.367px",
         borderRadius: "3.894px",
         background: "rgba(255,255,255,0.05)",
         boxShadow: "0px 0.974px 1.947px 0px rgba(0,0,0,0.1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
       }}
     >
       {isLocked ? (
@@ -89,11 +102,7 @@ function StatusBadge({
           <Check style={{ width: "10px", height: "10px", color: "rgb(52,211,153)" }} />
         )
       ) : (
-        <img
-          src={LOADER_ICON_URL}
-          alt=""
-          style={{ width: "13px", height: "13px", display: "block" }}
-        />
+        <img src={LOADER} alt="" style={{ width: "13px", height: "13px", display: "block" }} />
       )}
     </div>
   );
@@ -107,9 +116,6 @@ export function DayCard({
   isCompletedOutOfOrder,
   isToday,
   isLocked,
-  morningCompleted,
-  eveningCompleted,
-  isTrackB,
   backgroundImage,
   cohortStartDate,
   onClick,
@@ -118,12 +124,6 @@ export function DayCard({
     isLocked && cohortStartDate
       ? getUnlockDateLabel(cohortStartDate, dayNumber)
       : undefined;
-
-  const maskStyle = {
-    maskImage: `url('${MASK19_URL}'), url('${MASK20_URL}')`,
-    maskSize: "100% 100%",
-    maskPosition: "-181.564px 22.453px, -181.564px -211.948px",
-  };
 
   return (
     <button
@@ -149,125 +149,115 @@ export function DayCard({
           aria-hidden="true"
           style={{
             position: "absolute",
-            right: "-79.49px",
-            top: "-58.49px",
-            width: "463px",
-            height: "209px",
+            right: "-1.44px",
+            top: "-25.23px",
+            width: "128.517px",
             maxWidth: "736px",
             pointerEvents: "none",
             overflow: "clip",
             backgroundClip: "padding-box",
             borderColor: "transparent",
             borderStyle: "solid",
-            borderWidth: "0",
+            borderWidth: 0,
           }}
         >
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "182px",
-              width: "388px",
+              alignItems: "flex-start",
+              maxWidth: "inherit",
               overflow: "clip",
               position: "relative",
-              flexShrink: 0,
+              width: "100%",
             }}
           >
             <div
               style={{
-                height: "198px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "145.555px",
+                width: "171.356px",
                 overflow: "clip",
                 position: "relative",
                 flexShrink: 0,
-                width: "100%",
               }}
             >
               <div
                 style={{
-                  position: "absolute",
-                  left: "26.06%",
-                  right: "-55.41%",
-                  top: "-41.5px",
-                  aspectRatio: "1024/1024",
-                  ...maskStyle,
+                  height: "145.555px",
+                  overflow: "clip",
+                  position: "relative",
+                  flexShrink: 0,
+                  width: "100%",
                 }}
               >
                 <div
-                  aria-hidden="true"
-                  style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+                  style={{
+                    position: "absolute",
+                    left: "3.88%",
+                    right: "0.66%",
+                    top: "-0.4px",
+                    aspectRatio: "1024/1024",
+                    maskImage: MASK_IMAGE,
+                    maskSize: "100% 100%",
+                    maskPosition: "-42.189px 10.14px, -42.189px -138.014px",
+                  }}
                 >
-                  <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+                  <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
                     <img
                       alt=""
                       style={{
                         position: "absolute",
-                        left: "-0.14%",
                         maxWidth: "none",
+                        objectFit: "cover",
                         width: "100%",
                         height: "100%",
-                        top: 0,
                       }}
                       src={backgroundImage}
                     />
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      backgroundImage:
-                        "linear-gradient(267.9904458480522deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  inset: "13.13% -1.55% -16.16% 39.69%",
-                }}
-              >
-                <div
-                  className="opacity-10"
-                  style={{
-                    position: "absolute",
-                    inset: "28.47% -1.31% 71.53% 39.69%",
-                    maskImage: `url('${MASK19_URL}'), url('${MASK20_URL}')`,
-                    maskSize: "100% 100%",
-                    maskPosition: "-234.465px -75.418px, -234.465px -309.819px",
-                  }}
-                >
-                  <div style={{ position: "absolute", inset: "-0.34px 0" }}>
-                    <img alt="" style={{ display: "block", maxWidth: "none", width: "100%", height: "100%" }} src={VECTOR_URL} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundImage: "linear-gradient(267.9904459701475deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)",
+                      }}
+                    />
                   </div>
                 </div>
 
-                {VECTOR1_POSITIONS.map(([inset, maskPos], i) => (
-                  <div
-                    key={i}
-                    className="opacity-10"
-                    style={{
-                      position: "absolute",
-                      inset: inset.replace(/_/g, " "),
-                      maskImage: `url('${MASK19_URL}'), url('${MASK20_URL}')`,
-                      maskSize: "100% 100%",
-                      maskPosition: maskPos.replace(/_/g, " "),
-                    }}
-                  >
-                    <div style={{ position: "absolute", inset: "-0.34px 0" }}>
-                      <img alt="" style={{ display: "block", maxWidth: "none", width: "100%", height: "100%" }} src={VECTOR1_URL} />
+                <div style={{ position: "absolute", inset: "6.24% 20.36% -6.69% -20.74%", display: "contents" }}>
+                  {VECTOR_POSITIONS.map((v, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        inset: v.inset,
+                        opacity: 0.1,
+                        maskImage: MASK_IMAGE,
+                        maskSize: "100% 100%",
+                        maskPosition: v.maskPos,
+                      }}
+                    >
+                      <div style={{ position: "absolute", inset: "-0.24px 0" }}>
+                        <img
+                          alt=""
+                          style={{ display: "block", maxWidth: "none", width: "100%", height: "100%" }}
+                          src={i === 0 || i === 23 || i === 29 ? VECTOR : VECTOR1}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="relative" style={{ zIndex: 10 }}>
+      <div style={{ position: "relative", zIndex: 10 }}>
         <StatusBadge
           isLocked={isLocked}
           isCompleted={isCompleted}
@@ -276,8 +266,15 @@ export function DayCard({
       </div>
 
       <div
-        className="relative flex flex-col items-start w-full"
-        style={{ zIndex: 10, gap: "7.789px" }}
+        style={{
+          position: "relative",
+          zIndex: 10,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          width: "100%",
+          gap: "7.789px",
+        }}
       >
         <div style={{ maxWidth: "175.25px" }}>
           <p
@@ -288,12 +285,13 @@ export function DayCard({
               letterSpacing: "-0.1402px",
               lineHeight: "15.539px",
               margin: 0,
+              whiteSpace: "normal",
             }}
           >
             {title}
           </p>
         </div>
-        <div className="flex items-center justify-between w-full">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
           <p
             style={{
               fontFamily: "'Afacad', sans-serif",
