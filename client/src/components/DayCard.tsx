@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Lock, Check, ArrowRight, Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Lock, Check, Clock } from "lucide-react";
 
 interface DayCardProps {
   dayNumber: number;
@@ -30,6 +29,44 @@ function getUnlockDateLabel(cohortStartDate: string, dayNumber: number): string 
   return `This lesson unlocks on ${months[unlock.getMonth()]} ${unlock.getDate()}`;
 }
 
+function StatusBadge({
+  isLocked,
+  isCompleted,
+  isCompletedOutOfOrder,
+}: {
+  isLocked: boolean;
+  isCompleted: boolean;
+  isCompletedOutOfOrder?: boolean;
+}) {
+  return (
+    <div
+      className="flex items-center justify-center shrink-0"
+      style={{
+        width: "28px",
+        height: "28px",
+        borderRadius: "5px",
+        background: "rgba(0,0,0,0.72)",
+        border: "0.5px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      {isLocked ? (
+        <Lock className="w-3.5 h-3.5 text-white/35" />
+      ) : isCompleted ? (
+        isCompletedOutOfOrder ? (
+          <Clock className="w-3.5 h-3.5 text-amber-400" />
+        ) : (
+          <Check className="w-3.5 h-3.5 text-emerald-400" />
+        )
+      ) : (
+        <div
+          className="rounded-full border border-white/30"
+          style={{ width: "8px", height: "8px" }}
+        />
+      )}
+    </div>
+  );
+}
+
 export function DayCard({
   dayNumber,
   title,
@@ -45,12 +82,10 @@ export function DayCard({
   cohortStartDate,
   onClick,
 }: DayCardProps) {
-  const isPast = !isToday && !isLocked;
-  const showGrayscale = !isToday && !isCompleted;
-
-  const tooltipTitle = isLocked && cohortStartDate
-    ? getUnlockDateLabel(cohortStartDate, dayNumber)
-    : undefined;
+  const tooltipTitle =
+    isLocked && cohortStartDate
+      ? getUnlockDateLabel(cohortStartDate, dayNumber)
+      : undefined;
 
   return (
     <button
@@ -59,82 +94,79 @@ export function DayCard({
       title={tooltipTitle}
       data-testid={`card-day-${dayNumber}`}
       className={cn(
-        "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[120px]",
-        isLocked && "opacity-40 cursor-not-allowed",
-        !isLocked && !isCompleted && "hover:shadow-md hover:scale-[1.01] cursor-pointer",
-        isCompleted && "cursor-pointer hover:shadow-md",
+        "relative flex flex-col justify-between text-left w-full transition-opacity duration-200",
+        isLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-90",
       )}
+      style={{
+        background: "#0f1011",
+        border: "0.487px solid rgba(255,255,255,0.05)",
+        borderRadius: "5.842px",
+        padding: "12.17px 12.17px 14.118px 12.17px",
+        minHeight: "126px",
+        overflow: "clip",
+      }}
     >
       {backgroundImage && (
         <img
           src={backgroundImage}
           alt=""
-          className={cn(
-            "absolute inset-0 w-full h-full object-cover rounded-lg transition-all duration-300",
-            showGrayscale && "grayscale",
-          )}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            right: "-79.49px",
+            top: "-58.49px",
+            width: "463px",
+            height: "209px",
+            objectFit: "cover",
+            pointerEvents: "none",
+          }}
         />
       )}
 
-      <div
-        className={cn(
-          "absolute inset-0 rounded-lg transition-colors duration-300",
-          backgroundImage && "bg-black/40",
-          backgroundImage && isCompleted && !isLocked && "group-hover:bg-black/0",
-          !backgroundImage && isToday && "bg-[#003725]",
-          !backgroundImage && isCompleted && !isToday && "bg-[#003725]/90",
-          !backgroundImage && isPast && !isCompleted && "bg-zinc-800",
-          !backgroundImage && isLocked && "bg-zinc-900",
-        )}
-      />
+      {backgroundImage && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to right, #0f1011 35%, rgba(15,16,17,0.65) 60%, rgba(15,16,17,0) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
 
-      <div className="relative z-10 flex flex-col gap-1 flex-1 min-w-0">
-        <p className="font-['Afacad',sans-serif] font-semibold text-white text-[16px] leading-7 line-clamp-2 drop-shadow-sm">
-          Day {dayNumber}. {title}
-        </p>
-        {subtitle && (
-          <p className="font-['Afacad',sans-serif] text-white/70 text-[13px] leading-5 truncate drop-shadow-sm">
-            {subtitle}
-          </p>
-        )}
-        {isTrackB && !isLocked && (
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-1">
-              <Sun className={cn("w-3 h-3", morningCompleted ? "text-green-400" : "text-white/40")} />
-              <span className={cn("text-[11px]", morningCompleted ? "text-green-400" : "text-white/40")}>AM</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Moon className={cn("w-3 h-3", eveningCompleted ? "text-green-400" : "text-white/40")} />
-              <span className={cn("text-[11px]", eveningCompleted ? "text-green-400" : "text-white/40")}>PM</span>
-            </div>
-          </div>
-        )}
+      <div className="relative z-10">
+        <StatusBadge
+          isLocked={isLocked}
+          isCompleted={isCompleted}
+          isCompletedOutOfOrder={isCompletedOutOfOrder}
+        />
       </div>
 
-      <div className="relative z-10 shrink-0">
-        {isLocked ? (
-          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-white/10">
-            <Lock className="w-4 h-4 text-white/50" />
-          </div>
-        ) : isCompleted ? (
-          <div className={cn(
-            "flex items-center justify-center w-9 h-9 rounded-md shadow-sm",
-            isCompletedOutOfOrder ? "bg-yellow-500" : "bg-green-500"
-          )}>
-            <Check className="w-5 h-5 text-white" />
-          </div>
-        ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="gap-1.5 h-9 text-sm font-medium pointer-events-none"
-            tabIndex={-1}
-            data-testid={`button-start-day-${dayNumber}`}
-          >
-            Start
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        )}
+      <div className="relative z-10 flex flex-col gap-0 min-w-0" style={{ maxWidth: "55%" }}>
+        <p
+          className="text-white line-clamp-2"
+          style={{
+            fontFamily: "'IT Cathdra Demo', sans-serif",
+            fontSize: "18px",
+            lineHeight: "28px",
+          }}
+        >
+          {title}
+        </p>
+        <p
+          className="text-[#d0d6e0] truncate"
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontWeight: 400,
+            fontSize: "12px",
+            letterSpacing: "2.4px",
+            lineHeight: "24px",
+          }}
+        >
+          DAY {dayNumber}
+        </p>
       </div>
     </button>
   );
