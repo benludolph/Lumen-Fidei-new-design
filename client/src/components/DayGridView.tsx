@@ -106,112 +106,45 @@ const PRELIM_ICONS = [MapIcon, Scale];
 function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWithStatus; isAccessible: boolean; onClick: () => void }) {
   const { completed, position, title, subtitle, imageUrl } = module;
   const available = completed || isAccessible;
-  const isLocked = !available;
   const Icon = PRELIM_ICONS[(position - 1) % PRELIM_ICONS.length];
 
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!wrapperRef.current) return;
-    const rect = wrapperRef.current.getBoundingClientRect();
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-  }, []);
-
-  const wrapperBg = isLocked && isHovering
-    ? `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 38%, transparent 65%)`
-    : isHovering
-    ? "rgba(255,255,255,0.12)"
-    : "rgba(255,255,255,0.05)";
-
   return (
-    <div
-      ref={wrapperRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => { setIsHovering(false); setMousePos({ x: 0, y: 0 }); }}
-      style={{
-        position: "relative",
-        borderRadius: "5.842px",
-        padding: "0.487px",
-        background: wrapperBg,
-        transition: isHovering && isLocked ? "none" : "background 0.2s ease",
-        width: "100%",
-        cursor: available ? "pointer" : "default",
-      }}
+    <button
+      onClick={available ? onClick : undefined}
+      disabled={!available}
+      data-testid={`card-prelim-${position}`}
+      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "12.17px", paddingLeft: "12.17px", paddingRight: "12.17px", paddingBottom: "14.118px", minHeight: "126px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
+      onMouseEnter={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
+      onMouseLeave={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
     >
-      <button
-        onClick={available ? onClick : undefined}
-        disabled={!available}
-        data-testid={`card-prelim-${position}`}
-        style={{
-          position: "relative",
-          textAlign: "left",
-          overflow: "hidden",
-          width: "100%",
-          background: "#0f1011",
-          border: "none",
-          borderRadius: "5.355px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          paddingTop: "12.17px",
-          paddingLeft: "12.17px",
-          paddingRight: "12.17px",
-          paddingBottom: "14.118px",
-          minHeight: "126px",
-          transition: "transform 0.15s ease",
-          transform: available && isHovering ? "translateY(-2px)" : "none",
-          opacity: available ? 1 : 0.45,
-          cursor: available ? "pointer" : "default",
-          pointerEvents: isLocked ? "none" : "auto",
-        }}
-      >
-        {/* Spotlight inner glow — locked only */}
-        {isLocked && isHovering && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-              background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.035) 0%, transparent 50%)`,
-            }}
-          />
+      {imageUrl && (
+        <>
+          <img src={imageUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
+        </>
+      )}
+      <div style={{ position: "relative", zIndex: 1, width: "23.367px", height: "23.367px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {completed ? (
+          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CheckCircle2 style={{ width: "12px", height: "12px", color: "white" }} />
+          </div>
+        ) : isAccessible ? (
+          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "rgba(240,120,48,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon style={{ width: "11px", height: "11px", color: "#F07830" }} />
+          </div>
+        ) : (
+          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
+          </div>
         )}
-
-        {imageUrl && (
-          <>
-            <img src={imageUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
-          </>
+      </div>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+        <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "16px", lineHeight: "15.5px", letterSpacing: "-0.14px", color: "white", fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
+        {subtitle && (
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "13px", letterSpacing: "0px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
         )}
-
-        <div style={{ position: "relative", zIndex: 1, width: "23.367px", height: "23.367px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          {completed ? (
-            <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <CheckCircle2 style={{ width: "12px", height: "12px", color: "white" }} />
-            </div>
-          ) : isAccessible ? (
-            <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "rgba(240,120,48,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon style={{ width: "11px", height: "11px", color: "#F07830" }} />
-            </div>
-          ) : (
-            <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
-            </div>
-          )}
-        </div>
-
-        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-          <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "16px", lineHeight: "15.5px", letterSpacing: "-0.14px", color: "white", fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
-          {subtitle && (
-            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "13px", letterSpacing: "0px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
-          )}
-        </div>
-      </button>
-    </div>
+      </div>
+    </button>
   );
 }
 
