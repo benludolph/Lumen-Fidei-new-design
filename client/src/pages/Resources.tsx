@@ -1,149 +1,250 @@
-import { Shell } from "@/components/layout/Shell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, BookOpen, Cross, Loader2 } from "lucide-react";
+import { BookOpen, Scroll, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import type { PracticeResource } from "@shared/schema";
 
-function PrayerCard({ resource }: { resource: PracticeResource }) {
-  const [isOpen, setIsOpen] = useState(false);
+function formatInlineStyles(text: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  let remaining = text;
+  let key = 0;
 
-  const formatInlineStyles = (text: string) => {
-    const parts: (string | JSX.Element)[] = [];
-    let remaining = text;
-    let key = 0;
-    
-    while (remaining.length > 0) {
-      const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
-      const italicMatch = remaining.match(/\*([^*]+)\*/);
-      
-      if (boldMatch && boldMatch.index !== undefined && 
-          (!italicMatch || italicMatch.index === undefined || boldMatch.index <= italicMatch.index)) {
-        if (boldMatch.index > 0) {
-          parts.push(remaining.slice(0, boldMatch.index));
-        }
-        parts.push(<strong key={key++} className="font-semibold">{boldMatch[1]}</strong>);
-        remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
-      } else if (italicMatch && italicMatch.index !== undefined) {
-        if (italicMatch.index > 0) {
-          parts.push(remaining.slice(0, italicMatch.index));
-        }
-        parts.push(<em key={key++} className="italic">{italicMatch[1]}</em>);
-        remaining = remaining.slice(italicMatch.index + italicMatch[0].length);
-      } else {
-        parts.push(remaining);
-        break;
-      }
+  while (remaining.length > 0) {
+    const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
+    const italicMatch = remaining.match(/\*([^*]+)\*/);
+
+    if (
+      boldMatch &&
+      boldMatch.index !== undefined &&
+      (!italicMatch || italicMatch.index === undefined || boldMatch.index <= italicMatch.index)
+    ) {
+      if (boldMatch.index > 0) parts.push(remaining.slice(0, boldMatch.index));
+      parts.push(
+        <strong key={key++} style={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+          {boldMatch[1]}
+        </strong>
+      );
+      remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
+    } else if (italicMatch && italicMatch.index !== undefined) {
+      if (italicMatch.index > 0) parts.push(remaining.slice(0, italicMatch.index));
+      parts.push(
+        <em key={key++} style={{ fontStyle: "italic", color: "rgba(255,255,255,0.7)" }}>
+          {italicMatch[1]}
+        </em>
+      );
+      remaining = remaining.slice(italicMatch.index + italicMatch[0].length);
+    } else {
+      parts.push(remaining);
+      break;
     }
-    return parts;
-  };
+  }
+  return parts;
+}
 
-  const formatContent = (content: string) => {
-    const lines = content.split('\n');
-    const result: JSX.Element[] = [];
-    let i = 0;
-    
-    while (i < lines.length) {
-      const line = lines[i];
-      
-      // Check for numbered list (consecutive lines starting with numbers)
-      if (/^\d+\.\s/.test(line)) {
-        const listItems: string[] = [];
-        while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
-          listItems.push(lines[i].replace(/^\d+\.\s/, ''));
-          i++;
-        }
-        result.push(
-          <ol key={result.length} className="list-decimal list-inside my-2 space-y-1 ml-2">
-            {listItems.map((item, idx) => (
-              <li key={idx}>{formatInlineStyles(item)}</li>
-            ))}
-          </ol>
-        );
-        continue;
-      }
-      
-      // Header line (starts and ends with **)
-      if (line.startsWith('**') && line.endsWith('**')) {
-        result.push(
-          <h3 key={result.length} className="font-serif font-bold text-lg mt-4 mb-2 text-foreground">
-            {line.replace(/\*\*/g, '')}
-          </h3>
-        );
+function formatContent(content: string): JSX.Element[] {
+  const lines = content.split("\n");
+  const result: JSX.Element[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (/^\d+\.\s/.test(line)) {
+      const listItems: string[] = [];
+      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+        listItems.push(lines[i].replace(/^\d+\.\s/, ""));
         i++;
-        continue;
       }
-      
-      // Standalone italic line (starts and ends with single *)
-      if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**') && line.length > 2) {
-        const inner = line.slice(1, -1);
-        if (!inner.includes('*')) {
-          result.push(
-            <p key={result.length} className="italic text-muted-foreground my-2">
-              {inner}
-            </p>
-          );
-          i++;
-          continue;
-        }
-      }
-      
-      // Horizontal rule
-      if (line.startsWith('---')) {
-        result.push(<hr key={result.length} className="my-4 border-border" />);
-        i++;
-        continue;
-      }
-      
-      // Empty line
-      if (line.trim() === '') {
-        result.push(<div key={result.length} className="h-2" />);
-        i++;
-        continue;
-      }
-      
-      // Regular paragraph with inline formatting
-      result.push(<p key={result.length} className="my-1">{formatInlineStyles(line)}</p>);
+      result.push(
+        <ol key={result.length} style={{ listStyleType: "decimal", paddingLeft: "16px", margin: "8px 0" }}>
+          {listItems.map((item, idx) => (
+            <li key={idx} style={{ marginBottom: "4px", color: "rgba(255,255,255,0.75)", fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "1.6" }}>
+              {formatInlineStyles(item)}
+            </li>
+          ))}
+        </ol>
+      );
+      continue;
+    }
+
+    if (line.startsWith("**") && line.endsWith("**")) {
+      result.push(
+        <h3 key={result.length} style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: "15px", color: "white", margin: "12px 0 4px" }}>
+          {line.replace(/\*\*/g, "")}
+        </h3>
+      );
       i++;
+      continue;
     }
-    
-    return result;
-  };
+
+    if (line.startsWith("*") && line.endsWith("*") && !line.startsWith("**") && line.length > 2) {
+      const inner = line.slice(1, -1);
+      if (!inner.includes("*")) {
+        result.push(
+          <p key={result.length} style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", color: "rgba(255,255,255,0.5)", fontStyle: "italic", margin: "6px 0" }}>
+            {inner}
+          </p>
+        );
+        i++;
+        continue;
+      }
+    }
+
+    if (line.startsWith("---")) {
+      result.push(<hr key={result.length} style={{ border: "none", borderTop: "0.5px solid rgba(255,255,255,0.08)", margin: "12px 0" }} />);
+      i++;
+      continue;
+    }
+
+    if (line.trim() === "") {
+      result.push(<div key={result.length} style={{ height: "6px" }} />);
+      i++;
+      continue;
+    }
+
+    result.push(
+      <p key={result.length} style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: "1.65", margin: "3px 0" }}>
+        {formatInlineStyles(line)}
+      </p>
+    );
+    i++;
+  }
+
+  return result;
+}
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
+      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)" }} />
+      <span style={{
+        fontFamily: "'Afacad', sans-serif",
+        fontWeight: 400,
+        fontSize: "12px",
+        color: "#d0d6e0",
+        letterSpacing: "2.4px",
+        textTransform: "uppercase",
+        lineHeight: "24px",
+        whiteSpace: "nowrap",
+      }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)" }} />
+    </div>
+  );
+}
+
+function ResourceCard({ resource }: { resource: PracticeResource }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const Icon = resource.type === "prayer" ? BookOpen : Scroll;
 
   return (
-    <Card className="overflow-hidden" data-testid={`card-prayer-${resource.id}`}>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <Button 
-            variant="ghost" 
-            className="w-full h-auto p-4 justify-between rounded-t-lg rounded-b-none"
-            data-testid={`button-toggle-${resource.id}`}
-          >
-            <div className="flex items-center gap-3">
-              <Cross className="w-5 h-5 text-primary flex-shrink-0" />
-              <span className="font-serif text-lg font-semibold text-left">{resource.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {resource.duration && (
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  {resource.duration}
-                </span>
-              )}
-              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </div>
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0 pb-6 text-foreground leading-relaxed">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              {formatContent(resource.content)}
-            </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
+    <div
+      data-testid={`card-resource-${resource.id}`}
+      style={{
+        background: "#0f1011",
+        border: `0.487px solid ${isOpen ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)"}`,
+        borderRadius: "5.842px",
+        overflow: "hidden",
+        transition: "border-color 0.15s ease",
+        cursor: "pointer",
+      }}
+      onMouseEnter={(e) => {
+        if (!isOpen) (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)";
+      }}
+      onMouseLeave={(e) => {
+        if (!isOpen) (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.05)";
+      }}
+    >
+      {/* Card header — always visible */}
+      <button
+        onClick={() => setIsOpen((o) => !o)}
+        data-testid={`button-toggle-resource-${resource.id}`}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          width: "100%",
+          minHeight: "126px",
+          paddingTop: "12.17px",
+          paddingLeft: "12.17px",
+          paddingRight: "12.17px",
+          paddingBottom: "14.118px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        {/* Top row: icon + chevron */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div style={{
+            width: "23.367px",
+            height: "23.367px",
+            borderRadius: "3.894px",
+            background: "rgba(255,255,255,0.05)",
+            boxShadow: "0px 0.974px 1.947px 0px rgba(0,0,0,0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <Icon style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
+            {isOpen
+              ? <ChevronUp style={{ width: "14px", height: "14px" }} />
+              : <ChevronDown style={{ width: "14px", height: "14px" }} />
+            }
+          </div>
+        </div>
+
+        {/* Bottom: title + subtitle */}
+        <div style={{ width: "100%" }}>
+          <p style={{
+            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+            fontWeight: 500,
+            fontSize: "16px",
+            color: "#f7f8f8",
+            letterSpacing: "-0.1402px",
+            lineHeight: "15.539px",
+            marginBottom: "7.789px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}>
+            {resource.name}
+          </p>
+          <p style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontWeight: 400,
+            fontSize: "10px",
+            color: "#8a8f98",
+            lineHeight: "10.223px",
+          }}>
+            {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
+          </p>
+        </div>
+      </button>
+
+      {/* Expanded content */}
+      {isOpen && (
+        <div style={{
+          padding: "16px 12.17px 18px",
+          borderTop: "0.5px solid rgba(255,255,255,0.07)",
+        }}>
+          {formatContent(resource.content)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BentoGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+      {children}
+    </div>
   );
 }
 
@@ -152,28 +253,78 @@ export default function Resources() {
     queryKey: ["/api/practice-resources"],
   });
 
+  const prayers = resources?.filter((r) => r.type === "prayer") ?? [];
+  const practices = resources?.filter((r) => r.type === "practice") ?? [];
+
   return (
-    <Shell>
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-primary tracking-tight">Prayers &amp; Resources</h1>
-        <p className="text-muted-foreground mt-1">Helpful prayers and guides for your spiritual journey</p>
-      </div>
+    <DashboardLayout>
+      <div
+        className="px-4 sm:px-0"
+        style={{
+          maxWidth: "608px",
+          margin: "0 auto",
+          paddingTop: "32px",
+          paddingBottom: "64px",
+        }}
+      >
+        {/* Page title */}
+        <h1 style={{
+          fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+          fontWeight: 500,
+          fontSize: "42px",
+          color: "white",
+          textAlign: "center",
+          lineHeight: "28px",
+          marginBottom: "48px",
+        }}>
+          Resources
+        </h1>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4 max-w-3xl">
-          {resources?.map((resource) => (
-            <PrayerCard key={resource.id} resource={resource} />
-          ))}
-        </div>
-      )}
+        {isLoading ? (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "64px" }}>
+            <div
+              className="animate-spin"
+              style={{
+                width: "24px",
+                height: "24px",
+                border: "2px solid rgba(255,255,255,0.1)",
+                borderTopColor: "rgba(255,255,255,0.5)",
+                borderRadius: "50%",
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
+            {prayers.length > 0 && (
+              <div>
+                <SectionDivider label="Prayers" />
+                <BentoGrid>
+                  {prayers.map((r) => (
+                    <ResourceCard key={r.id} resource={r} />
+                  ))}
+                </BentoGrid>
+              </div>
+            )}
 
-      <div className="mt-12 text-center text-muted-foreground text-sm">
-        <p>Tap any prayer title to expand and view the full text.</p>
+            {practices.length > 0 && (
+              <div>
+                <SectionDivider label="Practices" />
+                <BentoGrid>
+                  {practices.map((r) => (
+                    <ResourceCard key={r.id} resource={r} />
+                  ))}
+                </BentoGrid>
+              </div>
+            )}
+
+            {!isLoading && prayers.length === 0 && practices.length === 0 && (
+              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "14px", color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
+                No resources available yet.
+              </p>
+            )}
+          </div>
+        )}
       </div>
-    </Shell>
+    </DashboardLayout>
   );
 }
