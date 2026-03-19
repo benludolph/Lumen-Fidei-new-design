@@ -431,6 +431,7 @@ export class DatabaseStorage implements IStorage {
       position: module.position,
       subtitle: module.subtitle ?? null,
       slides: (module.slides ?? null) as { type: string; content: string }[] | null,
+      imageUrl: module.imageUrl ?? null,
     };
     if (existing) {
       const [updated] = await db.update(prelimModules)
