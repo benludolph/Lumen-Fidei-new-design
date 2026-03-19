@@ -4,7 +4,7 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, practiceResources, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -1577,168 +1577,286 @@ async function seed() {
         });
     }
 
-    // Seed practice resources if needed
-    const existingResources = await storage.getAllPracticeResources();
-    if (existingResources.length === 0) {
-        console.log("Seeding practice resources...");
-        
-        // Prayer Against Retaliation
-        await storage.createPracticeResource({
-            name: "Prayer Against Retaliation",
-            type: "prayer",
-            content: `In the Name of Jesus Christ our Lord and Savior, by the intercession of the Immaculate Virgin Mary, Mother of Jesus, of Blessed Michael the Archangel, of the Blessed Apostles Peter and Paul, and all the Saints, and by the authority residing in my holy ministry, I invoke the blessing of God the Father Almighty, upon all my family members, relatives, friends, and acquaintances.
+    // Force-reset practice resources to the canonical set on every startup
+    // (admin management of resources is removed; this ensures prod/staging always match)
+    {
+        console.log("Force-resetting practice resources to canonical set...");
+        await db.delete(practiceResources);
+
+        const canonicalResources = [
+            {
+                name: "The Rosary",
+                type: "practice" as const,
+                duration: "15-20 minutes",
+                order: 1,
+                subtitle: "The greatest weapon of our faith",
+                imageUrl: "/caravaggio-rosary.webp",
+                content: `**How to Pray the Rosary**
+
+The Rosary is a powerful meditation on the life of Christ through the eyes of Mary. Follow these steps:
+
+**Step 1: Make the Sign of the Cross**
+In the name of the Father, and of the Son, and of the Holy Spirit. Amen.
+
+**Step 2: Pray the Apostles' Creed** (holding the Crucifix)
+I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead.
+
+I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.
+
+**Step 3: Pray the Our Father** (first large bead)
+Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.
+
+**Step 4: Pray Three Hail Marys** (for Faith, Hope, and Charity)
+Hail Mary, full of grace, the Lord is with you; blessed are you among women, and blessed is the fruit of your womb, Jesus. Holy Mary, Mother of God, pray for us sinners now and at the hour of our death. Amen.
+
+**Step 5: Pray the Glory Be**
+Glory be to the Father, and to the Son, and to the Holy Spirit, as it was in the beginning, is now, and ever shall be, world without end. Amen.
+
+**Step 6: Announce the First Mystery, then pray the Our Father**
+
+**Step 7: Pray Ten Hail Marys** while meditating on the Mystery
+
+**Step 8: Pray the Glory Be**
+Optional: Pray the Fatima Prayer - "O my Jesus, forgive us our sins, save us from the fires of hell, lead all souls to Heaven, especially those most in need of Thy mercy."
+
+**Step 9: Announce the Next Mystery** and repeat Steps 6-8 for all five decades
+
+**Step 10: Closing Prayers**
+
+*Hail Holy Queen:*
+Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To you do we cry, poor banished children of Eve. To you do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, your eyes of mercy toward us, and after this exile, show unto us the blessed fruit of your womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, that we may be made worthy of the promises of Christ. Amen.
+
+**Step 11: Make the Sign of the Cross**
+
+---
+
+**Which Mysteries to Pray Each Day:**
+
+**Monday & Saturday - Joyful Mysteries**
+1. The Annunciation
+2. The Visitation
+3. The Nativity
+4. The Presentation in the Temple
+5. The Finding of Jesus in the Temple
+
+**Tuesday & Friday - Sorrowful Mysteries**
+1. The Agony in the Garden
+2. The Scourging at the Pillar
+3. The Crowning with Thorns
+4. The Carrying of the Cross
+5. The Crucifixion
+
+**Wednesday & Sunday - Glorious Mysteries**
+1. The Resurrection
+2. The Ascension
+3. The Descent of the Holy Spirit
+4. The Assumption of Mary
+5. The Coronation of Mary
+
+**Thursday - Luminous Mysteries**
+1. The Baptism of Jesus
+2. The Wedding at Cana
+3. The Proclamation of the Kingdom
+4. The Transfiguration
+5. The Institution of the Eucharist`,
+            },
+            {
+                name: "Examination of Conscience",
+                type: "practice" as const,
+                duration: "10-15 minutes",
+                order: 2,
+                content: `**Examination of Conscience**
+
+In the Sacrament of Penance the Faithful who confess their sins to a Priest, are sorry for those sins and have a purpose of amendment, receive from God, through the absolution given by that Priest, forgiveness of sins they have committed after Baptism, and at the same time they are reconciled with the Church, which by sinning they wounded.
+
+**Act of Contrition:**
+O my God, I am heartily sorry for having offended Thee, and I detest all my sins because I dread the loss of Heaven and fear the pains of hell, but most of all, because they offend Thee, my God, who art all good and worthy of all my love. I firmly intend with the help of Thy grace to confess my sins, to do penance and to amend my life. Amen.
+
+---
+
+**I. "I am the Lord, thy God, thou shalt not have strange gods before Me."**
+
+Have I sinned against Religion by seriously believing in New Age, Scientology, Astrology, Horoscopes, Fortune-telling, Superstition or engaging in the Occult? Did I endanger my Catholic Faith or cause scandal by associating with anti-Catholic groups? Have fame, fortune, money, career, pleasure, etc. replaced God as my highest priority? Have I neglected my daily prayers?
+
+**II. "Thou shalt not take the name of the Lord thy God in vain."**
+
+Have I committed blasphemy by using the name of God and Jesus Christ to swear rather than to praise? Have I committed sacrilege by showing disrespect to holy objects (crucifix, rosary) or contempt for religious persons or for sacred places? Have I committed sacrilege by going to Holy Communion in the state of mortal sin without first going to confession?
+
+**III. "Remember to keep holy the Sabbath day."**
+
+Did I miss Mass on any Sunday or Holyday of Obligation? Have I shown disrespect by leaving Mass early, not paying attention or not joining in the prayers? Did I do unnecessary work on Sunday which could have been done the day before? Have I been stingy in my support for the Church?
+
+**IV. "Honor thy Father and Mother."**
+
+*Parents:* Have I set a bad example for my children by casually missing Mass, neglecting prayer, or ignoring my responsibility to provide a Catholic education? Do I show little or no interest in my children's faith? Have I showed disrespect for those in authority?
+
+*Children:* Have I been disobedient and/or disrespectful to my parents or guardians? Did I neglect to help them with household chores? Have I caused them unnecessary worry and anxiety?
+
+**V. "Thou shalt not kill."**
+
+Did I consent, recommend, advise, approve, support or have an abortion? Did I actively or passively cooperate with an act of euthanasia? Have I committed an act of violence or abuse (physical, sexual, emotional or verbal)? Have I endangered the lives of others by reckless driving?
+
+**VI. "Thou shalt not commit adultery."**
+**IX. "Thou shalt not covet thy neighbor's wife."**
+
+Did I have any sex before or outside of marriage? Do I view pornographic material? Have I committed the sins of masturbation and/or artificial contraception? Have I not avoided the occasions of sin which would tempt me to be unfaithful to my spouse or to my own chastity? Do I encourage and entertain impure thoughts and desires?
+
+**VII. "Thou shalt not steal."**
+**X. "Thou shalt not covet thy neighbor's goods."**
+
+Have I stolen any object, committed any shoplifting or cheated anyone of their money? Did I knowingly deceive someone in business or commit fraud? Have I shown disrespect for other people's property? Am I greedy or envious of another's goods?
+
+**VIII. "Thou shalt not bear false witness against thy neighbor."**
+
+Have I told a lie in order to deceive someone? Have I told the truth with the purpose and intention of ruining someone's reputation (sin of detraction)? Have I told a lie or spread rumors which may ruin someone's reputation (sin of calumny or slander)? Did I commit perjury? Am I a busybody spreading gossip and secrets about others?`,
+            },
+            {
+                name: "Divine Mercy Chaplet",
+                type: "prayer" as const,
+                duration: "10-15 minutes",
+                order: 3,
+                content: `**The Divine Mercy Chaplet**
+
+*Using rosary beads*
+
+**Opening Prayers (optional)**
+
+You expired, Jesus, but the source of life gushed forth for souls, and the ocean of mercy opened up for the whole world. O Fount of Life, unfathomable Divine Mercy, envelop the whole world and empty yourself out upon us.
+
+*Repeat three times:*
+O Blood and Water, which gushed forth from the Heart of Jesus as a fountain of Mercy for us, I trust in you!
+
+**Our Father**
+Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.
+
+**Hail Mary**
+Hail, Mary, full of grace, the Lord is with you; blessed are you among women, and blessed is the fruit of your womb, Jesus. Holy Mary, Mother of God, pray for us sinners now and at the hour of our death. Amen.
+
+**The Apostles' Creed**
+I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead.
+
+I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.
+
+---
+
+**For each of the five decades:**
+
+*On each "Our Father" bead of the rosary, pray:*
+Eternal Father, I offer you the Body and Blood, soul and divinity of your dearly beloved Son, our Lord Jesus Christ, in atonement for our sins and those of the whole world.
+
+*On each of the 10 "Hail Mary" beads, pray:*
+For the sake of his sorrowful Passion, have mercy on us and on the whole world.
+
+---
+
+**Conclusion**
+
+*Repeat three times:*
+Holy God, Holy Mighty One, Holy Immortal One, have mercy on us and on the whole world.
+
+**Closing Prayer (optional)**
+Eternal God, in whom mercy is endless and the treasury of compassion inexhaustible, look kindly upon us and increase your mercy in us, that in difficult moments we might not despair nor become despondent, but with great confidence submit ourselves to your holy will, which is Love and Mercy itself. Amen.`,
+            },
+            {
+                name: "Examen – St. Ignatius",
+                type: "practice" as const,
+                duration: "10-15 minutes",
+                order: 3,
+                content: `The Examen is a practice of prayerful reflection on the events of the day to detect God's presence and discern His direction. St. Ignatius recommended it as the most important prayer of the day.
+
+  **How to Pray the Examen:**
+
+  1. **Become Aware of God's Presence** (1-2 minutes)
+     Begin by placing yourself in God's presence. Thank Him for this day and ask for the grace to see it through His eyes.
+
+  2. **Review the Day with Gratitude** (2-3 minutes)
+     Walk through your day from start to finish. Note the moments for which you are most grateful. Where did you feel most alive? What brought you joy?
+
+  3. **Pay Attention to Your Emotions** (2-3 minutes)
+     As you review the day, notice your emotions. What feelings surface? Where did you feel peace? Where did you feel troubled? God often speaks through our emotions.
+
+  4. **Choose One Feature and Pray** (2-3 minutes)
+     Select one moment that stands out—whether positive or negative. Pray about it. If it was a moment of consolation, thank God. If it was a moment of difficulty, ask for insight and healing.
+
+  5. **Look Toward Tomorrow** (1-2 minutes)
+     Ask God for guidance for tomorrow. What do you anticipate? What do you need from God? Conclude with the Our Father.
+
+  The Examen should take about 10-15 minutes. Practice it at the same time each day, ideally in the evening.`,
+            },
+            {
+                name: "Retaliation Prayer",
+                type: "prayer" as const,
+                order: 4,
+                content: `**Prayer Against Retaliation**
+
+In the Name of Jesus Christ our Lord and Savior, by the intercession of the Immaculate Virgin Mary, Mother of Jesus, of Blessed Michael the Archangel, of the Blessed Apostles Peter and Paul, and all the Saints, and by the authority residing in my holy ministry, I invoke the blessing of God the Father Almighty, upon all my family members, relatives, friends, and acquaintances.
 
 Lord Jesus, Thou art Almighty and there is none greater. Thou art all powerful, all knowing, and with the authority vested in me, I invoke the sevenfold gifts of the Holy Spirit: wisdom, understanding, counsel, fortitude, knowledge, piety, and fear of the Lord, as a binding and protective Shield for us against all evil that may attempt to retaliate against us, whether physical, emotional, psychological, or spiritual.
 
 Lord, fill us with Your Holy Spirit and protect us from every evil force that may try to cause us harm because of this ministry of liberation. I ask this in Jesus' name. Amen.`,
-            order: 1
-        });
-        
-        // Miracle Prayer
-        await storage.createPracticeResource({
-            name: "Miracle Prayer",
-            type: "prayer",
-            content: `Lord Jesus, I come before You, just as I am, I am sorry for my sins, I repent of my sins, please forgive me. In Your Name, I forgive all others for what they have done against me. I renounce Satan, the evil spirits and all their works. I give You my entire self, Lord Jesus, I accept You as my Lord, God and Savior. Heal me, change me, strengthen me in body, soul and spirit.
+            },
+            {
+                name: "Lectio Divina",
+                type: "practice" as const,
+                duration: "10 minutes",
+                order: 4,
+                content: `Lectio Divina ("Divine Reading") is an ancient practice of praying with Scripture that allows God's Word to penetrate your heart. The method has four movements:
 
-Come Lord Jesus, cover me with Your Precious Blood, and fill me with Your Holy Spirit, I love You Lord Jesus, I praise You Jesus, I thank You Jesus, I shall follow You every day of my life. Amen.
+  **1. LECTIO (Reading) - 2 minutes**
+  Read the Scripture passage slowly, attentively, perhaps out loud. Pay attention to any word or phrase that catches your attention. Read it again if needed.
+
+  **2. MEDITATIO (Meditation) - 3 minutes**
+  Reflect on the word or phrase that stood out. Why might the Holy Spirit be drawing you to this? What does it mean for your life right now? Let the word sink into your heart.
+
+  **3. ORATIO (Prayer) - 3 minutes**
+  Respond to God in prayer. This may be a prayer of thanksgiving, petition, intercession, or praise. Speak to God from your heart about what you have encountered in His Word.
+
+  **4. CONTEMPLATIO (Contemplation) - 2 minutes**
+  Rest in God's presence. Let go of words and thoughts. Simply be with God, allowing His love to fill you. If distractions come, gently return to the word or phrase from your reading.
+
+  **Tips for Practice:**
+  - Find a quiet place where you won't be interrupted
+  - Have a Bible and journal nearby
+  - Use today's Morning Scripture as your text
+  - Do not rush—allow silence between movements
+  - Trust that God is present and speaking to you`,
+            },
+            {
+                name: "Miracle Prayer",
+                type: "prayer" as const,
+                order: 5,
+                content: `**Miracle Prayer**
+
+Lord Jesus, I come before You, just as I am. I am sorry for my sins, I repent of my sins, please forgive me. In Your Name, I forgive all others for what they have done against me. I renounce Satan, the evil spirits and all their works. I give You my entire self, Lord Jesus. I accept You as my Lord, God and Savior. Heal me, change me, strengthen me in body, soul and spirit.
+
+Come Lord Jesus, cover me with Your Precious Blood, and fill me with Your Holy Spirit. I love You Lord Jesus, I praise You Jesus, I thank You Jesus, I shall follow You every day of my life. Amen.
 
 Mary, my mother, Queen of Peace, all the Angels and Saints, please help me. Amen.`,
-            order: 2
-        });
-        
-        // Examen - St Ignatius
-        await storage.createPracticeResource({
-            name: "Examen – St Ignatius",
-            type: "practice",
-            content: `The Examen is a practice of prayerful reflection on the events of the day to detect God's presence and discern His direction. St. Ignatius recommended it as the most important prayer of the day.
+            },
+            {
+                name: "Short Form Deliverance Prayer",
+                type: "prayer" as const,
+                order: 6,
+                content: `**Short Form Deliverance Prayer**
 
-**How to Pray the Examen:**
+In the name of the Lord Jesus Christ, by the power of His Cross, His Blood and His resurrection, I command you Satan, the spirits, powers and forces of darkness, the nether world, and the evil forces of nature to depart now.
 
-1. **Become Aware of God's Presence** (1-2 minutes)
-   Begin by placing yourself in God's presence. Thank Him for this day and ask for the grace to see it through His eyes.
+I take authority over all curses, hexes, demonic activity, and spells directed against me, my relationships, ministry, air space, finances, and the work of my hands; and I break them by the power and authority of our Lord Jesus Christ.
 
-2. **Review the Day with Gratitude** (2-3 minutes)
-   Walk through your day from start to finish. Note the moments for which you are most grateful. Where did you feel most alive? What brought you joy?
+I bind all demonic interactions, interplay and communications between spirits sent against me, and I command them directly to Jesus Christ for Him to deal with as He wills.
 
-3. **Pay Attention to Your Emotions** (2-3 minutes)
-   As you review the day, notice your emotions. What feelings surface? Where did you feel peace? Where did you feel troubled? God often speaks through our emotions.
+I ask forgiveness for, and denounce all negative inner vows that I have made with the enemy, and I ask that Jesus Christ release me from these vows and from any bondage they have held in me.
 
-4. **Choose One Feature and Pray** (2-3 minutes)
-   Select one moment that stands out—whether positive or negative. Pray about it. If it was a moment of consolation, thank God. If it was a moment of difficulty, ask for insight and healing.
+I ask Jesus, the Son of the living God, to pour His shed Blood over every aspect of my life for my protection. I pray all these things in the precious name of my Lord and Savior, Jesus Christ.
 
-5. **Look Toward Tomorrow** (1-2 minutes)
-   Ask God for guidance for tomorrow. What do you anticipate? What do you need from God? Conclude with the Our Father.
+Amen.`,
+            },
+        ];
 
-The Examen should take about 10-15 minutes. Practice it at the same time each day, ideally in the evening.`,
-            duration: "10-15 minutes",
-            order: 3
-        });
-        
-        // Lectio Divina
-        await storage.createPracticeResource({
-            name: "Lectio Divina – 10 Minutes",
-            type: "practice",
-            content: `Lectio Divina ("Divine Reading") is an ancient practice of praying with Scripture that allows God's Word to penetrate your heart. The method has four movements:
-
-**1. LECTIO (Reading) - 2 minutes**
-Read the Scripture passage slowly, attentively, perhaps out loud. Pay attention to any word or phrase that catches your attention. Read it again if needed.
-
-**2. MEDITATIO (Meditation) - 3 minutes**
-Reflect on the word or phrase that stood out. Why might the Holy Spirit be drawing you to this? What does it mean for your life right now? Let the word sink into your heart.
-
-**3. ORATIO (Prayer) - 3 minutes**
-Respond to God in prayer. This may be a prayer of thanksgiving, petition, intercession, or praise. Speak to God from your heart about what you have encountered in His Word.
-
-**4. CONTEMPLATIO (Contemplation) - 2 minutes**
-Rest in God's presence. Let go of words and thoughts. Simply be with God, allowing His love to fill you. If distractions come, gently return to the word or phrase from your reading.
-
-**Tips for Practice:**
-- Find a quiet place where you won't be interrupted
-- Have a Bible and journal nearby
-- Use today's Morning Scripture as your text
-- Don't rush—allow silence between movements
-- Trust that God is present and speaking to you`,
-            duration: "10 minutes",
-            order: 4
-        });
-        
-        // Silence practice
-        await storage.createPracticeResource({
-            name: "Silence – 5 Minutes",
-            type: "practice",
-            content: `The practice of silence is a simple but powerful way to become aware of God's presence and open yourself to His voice. In our noisy world, silence is a gift we offer God.
-
-**How to Practice:**
-
-1. **Prepare** - Sit comfortably in a quiet place. Close your eyes or fix your gaze on a candle, crucifix, or icon.
-
-2. **Breathe** - Take several slow, deep breaths. With each exhale, release any tension, worry, or distraction.
-
-3. **Be Present** - Simply be with God. You don't need to say anything. God knows what's in your heart.
-
-4. **Return Gently** - When thoughts arise (and they will), don't fight them. Acknowledge them and gently return your attention to God's presence.
-
-5. **Close with Gratitude** - When the time is complete, thank God for this time together.
-
-**Remember:** The goal is not to empty your mind, but to fill your heart with awareness of God. Silence creates space for God to work in ways words cannot.`,
-            duration: "5 minutes",
-            order: 5
-        });
-        
-        // Rosary practice
-        await storage.createPracticeResource({
-            name: "Rosary – OP + 1 Decade",
-            type: "practice",
-            content: `The Rosary is a powerful meditation on the life of Christ through the eyes of Mary. "OP + 1 Decade" means the Opening Prayers plus one Decade.
-
-**Opening Prayers (OP):**
-
-1. **Sign of the Cross**
-   In the name of the Father, and of the Son, and of the Holy Spirit. Amen.
-
-2. **Apostles' Creed** (on the Crucifix)
-   I believe in God, the Father almighty, Creator of heaven and earth...
-
-3. **Our Father** (first large bead)
-   Our Father, who art in heaven, hallowed be Thy name...
-
-4. **Three Hail Marys** (three small beads)
-   For faith, hope, and charity. Hail Mary, full of grace...
-
-5. **Glory Be**
-   Glory be to the Father, and to the Son, and to the Holy Spirit...
-
-**One Decade:**
-
-1. Announce the Mystery (Joyful, Luminous, Sorrowful, or Glorious depending on the day)
-2. Pray the Our Father
-3. Pray 10 Hail Marys while meditating on the Mystery
-4. Pray the Glory Be
-5. Optional: Fatima Prayer - "O my Jesus, forgive us our sins..."
-
-**The Mysteries by Day:**
-- Monday & Saturday: Joyful Mysteries
-- Tuesday & Friday: Sorrowful Mysteries
-- Wednesday & Sunday: Glorious Mysteries
-- Thursday: Luminous Mysteries`,
-            duration: "5-7 minutes",
-            order: 6,
-            imageUrl: "/caravaggio-rosary.webp",
-            subtitle: "The greatest weapon of our faith",
-        });
-    }
-
-    // Backfill: ensure The Rosary always has the Caravaggio image and subtitle
-    // even when the DB was seeded before this task was implemented
-    {
-        const rosary = existingResources.find(r => r.name === "The Rosary" || r.name.includes("Rosary"));
-        if (rosary && (!rosary.imageUrl || !rosary.subtitle)) {
-            await storage.updatePracticeResourceById(rosary.id, {
-                imageUrl: rosary.imageUrl ?? "/caravaggio-rosary.webp",
-                subtitle: rosary.subtitle ?? "The greatest weapon of our faith",
-            });
-            console.log("Backfilled Rosary imageUrl and subtitle.");
+        for (const resource of canonicalResources) {
+            await storage.createPracticeResource(resource);
         }
+        console.log(`Practice resources reset: ${canonicalResources.length} resources loaded.`);
     }
 
     // Only seed daily content if none exists (preserves admin edits)
