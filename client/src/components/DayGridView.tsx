@@ -5,7 +5,7 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { CheckCircle2, Map as MapIcon, Scale, Layers, BookOpen } from "lucide-react";
+import { CheckCircle2, Map as MapIcon, Scale, Layers, BookOpen, Lock } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -14,17 +14,7 @@ import trackAImg4 from "@assets/image_1771985210712.png";
 import trackAImg5 from "@assets/image_1771985228368.png";
 import trackAImg6 from "@assets/image_1771985236426.png";
 
-const TRACK_A_FALLBACK_IMAGES = [
-  trackAImg1, trackAImg2, trackAImg3,
-  trackAImg4, trackAImg5, trackAImg6,
-];
-
-function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
-  if (!trackASummaries) return undefined;
-  const content = trackASummaries.find(c => c.dayNumber === dayNumber);
-  if (content?.imageUrl) return content.imageUrl;
-  return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];
-}
+const FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
 
 interface PrayerCompletionRecord {
   dayNumber: number;
@@ -47,64 +37,47 @@ interface DayGridViewProps {
   onPrelimSelect?: (position: number) => void;
 }
 
-function getWeekTheme(
-  weekNumber: number,
-  isTrackA: boolean,
-  trackASummaries?: TrackAContent[],
-  trackBSummaries?: ContentSummary[],
-  modules?: TrackAModule[],
-): string {
+function getWeekTheme(weekNumber: number, isTrackA: boolean, trackBSummaries?: ContentSummary[], modules?: TrackAModule[]): string {
   if (isTrackA) {
     const mod = modules?.find(m => m.weekNumber === weekNumber);
     if (mod) return mod.subtitle || mod.title;
-    return `Week ${weekNumber}`;
-  }
-  if (trackBSummaries) {
-    const firstDay = trackBSummaries.find(c => c.weekNumber === weekNumber);
-    return firstDay?.weekTitle || `Week ${weekNumber}`;
+  } else if (trackBSummaries) {
+    const day = trackBSummaries.find(c => c.weekNumber === weekNumber);
+    if (day?.weekTitle) return day.weekTitle;
   }
   return `Week ${weekNumber}`;
 }
 
-function getDayTitle(
-  day: number,
-  isTrackA: boolean,
-  trackASummaries?: TrackAContent[],
-  trackBSummaries?: ContentSummary[],
-): string {
+function getDayTitle(day: number, isTrackA: boolean, trackASummaries?: TrackAContent[], trackBSummaries?: ContentSummary[]): string {
   if (isTrackA && trackASummaries) {
-    const content = trackASummaries.find(c => c.dayNumber === day);
-    return content?.centralTheme || "Daily Activity";
+    return trackASummaries.find(c => c.dayNumber === day)?.centralTheme || "Daily Activity";
   }
   if (trackBSummaries) {
-    const content = trackBSummaries.find(c => c.dayNumber === day);
-    return content?.title || `Day ${day}`;
+    return trackBSummaries.find(c => c.dayNumber === day)?.title || `Day ${day}`;
   }
   return `Day ${day}`;
 }
 
-function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
-  const weeks: { week: number; days: number[] }[] = [];
-  for (let w = 1; w <= 5; w++) {
-    const weekDays = days.filter(d => Math.ceil(d / 6) === w);
-    if (weekDays.length > 0) weeks.push({ week: w, days: weekDays });
-  }
-  return weeks;
+function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
+  const content = trackASummaries?.find(c => c.dayNumber === dayNumber);
+  if (content?.imageUrl) return content.imageUrl;
+  return FALLBACK_IMAGES[(dayNumber - 1) % FALLBACK_IMAGES.length];
 }
 
-/** Horizontal divider — [line] [label] [line] */
+function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
+  const result: { week: number; days: number[] }[] = [];
+  for (let w = 1; w <= 5; w++) {
+    const weekDays = days.filter(d => Math.ceil(d / 6) === w);
+    if (weekDays.length > 0) result.push({ week: w, days: weekDays });
+  }
+  return result;
+}
+
 function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", margin: "20px 0" }}>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
-      <span style={{
-        flexShrink: 0,
-        fontFamily: "'Afacad', sans-serif",
-        fontSize: "12px",
-        letterSpacing: "0.14em",
-        color: "rgba(255,255,255,0.35)",
-        textTransform: "uppercase",
-      }}>
+      <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "12px", letterSpacing: "0.14em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", flexShrink: 0 }}>
         {label}
       </span>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
@@ -112,300 +85,122 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-/** 608px × 88px section header card */
 function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <div style={{
-      width: "100%",
-      height: "88px",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#0f1011",
-      border: "0.487px solid rgba(255,255,255,0.07)",
-      borderRadius: "5.842px",
-      marginBottom: "16px",
-    }}>
-      <p style={{
-        fontFamily: "'Afacad', sans-serif",
-        fontSize: "10px",
-        letterSpacing: "0.13em",
-        color: "rgba(255,255,255,0.35)",
-        textTransform: "uppercase",
-        marginBottom: "4px",
-      }}>
+    <div style={{ width: "100%", height: "88px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", marginBottom: "16px" }}>
+      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", letterSpacing: "0.13em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: "4px" }}>
         {eyebrow}
       </p>
-      <p style={{
-        fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-        fontSize: "28px",
-        fontWeight: 500,
-        color: "white",
-        textAlign: "center",
-        padding: "0 24px",
-        lineHeight: 1.2,
-      }}>
+      <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "28px", fontWeight: 500, color: "white", textAlign: "center", padding: "0 24px", lineHeight: 1.2 }}>
         {title}
       </p>
     </div>
   );
 }
 
-/** Sunday rest banner */
-function SundayBanner() {
+function TwoColGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div data-testid="banner-sunday" style={{
-      width: "100%",
-      height: "44px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "rgba(255,255,255,0.03)",
-      border: "0.487px solid rgba(255,255,255,0.07)",
-      borderRadius: "5.842px",
-      margin: "12px 0",
-      fontFamily: "'Afacad', sans-serif",
-      fontSize: "12px",
-      letterSpacing: "0.1em",
-      color: "rgba(255,255,255,0.4)",
-      textTransform: "uppercase",
-    }}>
-      ✦ Sunday — Rest &amp; Mass ✦
+    <div style={{ display: "grid", gridTemplateColumns: "296px 296px", gap: "16px", width: "608px", maxWidth: "100%" }}>
+      {children}
     </div>
   );
 }
 
-/** Fixed 296px × 296px two-column grid */
-function TwoColGrid({ children }: { children: React.ReactNode }) {
+function SundayBanner() {
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "296px 296px",
-      gap: "16px",
-      width: "608px",
-      maxWidth: "100%",
-    }}>
-      {children}
+    <div data-testid="banner-sunday" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", margin: "12px 0", fontFamily: "'Afacad', sans-serif", fontSize: "12px", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
+      ✦ Sunday — Rest &amp; Mass ✦
     </div>
   );
 }
 
 const PRELIM_ICONS = [MapIcon, Scale, Layers];
 
-/** Pre-module card — same shape as DayCard */
-function PrelimCard({
-  module,
-  isAccessible,
-  onClick,
-}: {
-  module: PrelimModuleWithStatus;
-  isAccessible: boolean;
-  onClick: () => void;
-}) {
+function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWithStatus; isAccessible: boolean; onClick: () => void }) {
   const { completed, position, title, subtitle } = module;
-  const state = completed ? "completed" : isAccessible ? "active" : "locked";
+  const available = completed || isAccessible;
   const Icon = PRELIM_ICONS[(position - 1) % PRELIM_ICONS.length];
-  const isClickable = state === "active" || state === "completed";
 
   return (
     <button
-      onClick={isClickable ? onClick : undefined}
-      disabled={!isClickable}
+      onClick={available ? onClick : undefined}
+      disabled={!available}
       data-testid={`card-prelim-${position}`}
-      style={{
-        position: "relative",
-        textAlign: "left",
-        overflow: "hidden",
-        width: "100%",
-        height: "126px",
-        background: "#0f1011",
-        border: "0.487px solid rgba(255,255,255,0.05)",
-        borderRadius: "5.842px",
-        paddingTop: "12.17px",
-        paddingBottom: "14.118px",
-        paddingLeft: "12.17px",
-        paddingRight: "12.17px",
-        transition: "transform 0.15s ease, border-color 0.15s ease",
-        opacity: isClickable ? 1 : 0.4,
-        cursor: isClickable ? "pointer" : "not-allowed",
-      }}
-      onMouseEnter={(e) => {
-        if (isClickable) {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.transform = "translateY(-2px)";
-          el.style.borderColor = "rgba(255,255,255,0.12)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (isClickable) {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.transform = "";
-          el.style.borderColor = "rgba(255,255,255,0.05)";
-        }
-      }}
+      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", height: "126px", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", paddingTop: "12.17px", paddingBottom: "14.118px", paddingLeft: "12.17px", paddingRight: "12.17px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
+      onMouseEnter={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
+      onMouseLeave={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
     >
       <div style={{ position: "absolute", left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {state === "completed" ? (
+        {completed ? (
           <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CheckCircle2 style={{ width: "12px", height: "12px", color: "white" }} />
           </div>
-        ) : state === "active" ? (
+        ) : isAccessible ? (
           <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "rgba(240,120,48,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Icon style={{ width: "11px", height: "11px", color: "#F07830" }} />
           </div>
         ) : (
-          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)" }} />
+          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
+          </div>
         )}
       </div>
-
       <div style={{ position: "absolute", left: "12.17px", top: "77.094px", width: "175.25px", maxWidth: "calc(100% - 24px)" }}>
-        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {title}
-        </p>
+        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</p>
         {subtitle && (
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {subtitle}
-          </p>
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
         )}
       </div>
     </button>
   );
 }
 
-/** Day 0 / Introduction — full-width card using DayCard component */
-function Day0Card({
-  isUnlocked,
-  onClick,
-  imageUrl,
-}: {
-  isUnlocked: boolean;
-  onClick: () => void;
-  imageUrl?: string | null;
-}) {
+function Day0FullCard({ isUnlocked, onClick, imageUrl }: { isUnlocked: boolean; onClick: () => void; imageUrl?: string | null }) {
   return (
     <button
       onClick={isUnlocked ? onClick : undefined}
       disabled={!isUnlocked}
       data-testid="card-day-0"
-      style={{
-        position: "relative",
-        textAlign: "left",
-        overflow: "hidden",
-        width: "100%",
-        height: "126px",
-        background: "#0f1011",
-        border: "0.487px solid rgba(255,255,255,0.05)",
-        borderRadius: "5.842px",
-        paddingTop: "12.17px",
-        paddingBottom: "14.118px",
-        paddingLeft: "12.17px",
-        paddingRight: "12.17px",
-        transition: "transform 0.15s ease, border-color 0.15s ease",
-        opacity: isUnlocked ? 1 : 0.4,
-        cursor: isUnlocked ? "pointer" : "not-allowed",
-        marginBottom: "16px",
-      }}
-      onMouseEnter={(e) => {
-        if (isUnlocked) {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.transform = "translateY(-2px)";
-          el.style.borderColor = "rgba(255,255,255,0.12)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (isUnlocked) {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.transform = "";
-          el.style.borderColor = "rgba(255,255,255,0.05)";
-        }
-      }}
+      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", height: "126px", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", paddingTop: "12.17px", paddingBottom: "14.118px", paddingLeft: "12.17px", paddingRight: "12.17px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: isUnlocked ? 1 : 0.4, cursor: isUnlocked ? "pointer" : "not-allowed", marginBottom: "16px" }}
+      onMouseEnter={(e) => { if (isUnlocked) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
+      onMouseLeave={(e) => { if (isUnlocked) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
     >
       {imageUrl && (
         <>
-          <img
-            src={imageUrl}
-            alt=""
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
-          />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,16,17,0.95) 0%, rgba(15,16,17,0.5) 50%, rgba(15,16,17,0.1) 100%)", pointerEvents: "none" }} />
+          <img src={imageUrl} alt="" style={{ position: "absolute", left: "224px", top: "-58px", width: "463px", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
         </>
       )}
-
       <div style={{ position: "absolute", left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px", borderRadius: "50%", background: "rgba(240,120,48,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <BookOpen style={{ width: "11px", height: "11px", color: "#F07830" }} />
       </div>
-
       <div style={{ position: "absolute", left: "12.17px", top: "77.094px", width: "340px", maxWidth: "calc(100% - 24px)" }}>
-        <p data-testid="text-day0-title" style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500 }}>
-          Introduction — Goal of 30 Days
-        </p>
-        <p data-testid="text-day0-subtitle" style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)" }}>
-          Begin your journey
-        </p>
+        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500 }}>Introduction — Goal of 30 Days</p>
+        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)" }}>Begin your journey</p>
       </div>
     </button>
   );
 }
 
-/** Sticky week banner — shows current week title, updates on scroll */
-function StickyWeekBanner({ weekNumber, title, eyebrow, onGuideClick }: {
-  weekNumber: number;
-  title: string;
-  eyebrow: string;
-  onGuideClick: () => void;
-}) {
+function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: number; title: string; onGuideClick: () => void }) {
   return (
     <div
       className="sticky top-0 z-20"
-      style={{
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        background: "rgba(11,11,11,0.85)",
-        borderBottom: "0.487px solid rgba(255,255,255,0.08)",
-        padding: "10px 0",
-        marginLeft: "-16px",
-        marginRight: "-16px",
-        paddingLeft: "16px",
-        paddingRight: "16px",
-      }}
+      style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(9,9,9,0.88)", borderBottom: "0.487px solid rgba(255,255,255,0.08)", padding: "10px 16px", marginLeft: "-16px", marginRight: "-16px" }}
     >
       <div style={{ maxWidth: "608px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
-          <p style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "10px",
-            letterSpacing: "0.13em",
-            color: "rgba(255,255,255,0.35)",
-            textTransform: "uppercase",
-            marginBottom: "2px",
-          }}>
-            {eyebrow}
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", letterSpacing: "0.13em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: "2px" }}>
+            Week {weekNumber} of 5
           </p>
-          <p style={{
-            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-            fontSize: "18px",
-            fontWeight: 500,
-            color: "white",
-            lineHeight: 1.2,
-          }}>
+          <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "18px", fontWeight: 500, color: "white", lineHeight: 1.2 }}>
             {title}
           </p>
         </div>
         <button
-          onClick={onGuideClick}
-          style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "11px",
-            color: "rgba(255,255,255,0.4)",
-            background: "none",
-            border: "0.487px solid rgba(255,255,255,0.12)",
-            borderRadius: "4px",
-            padding: "4px 10px",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
           data-testid="button-week-guide"
+          onClick={onGuideClick}
+          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", background: "none", border: "0.487px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "4px 10px", cursor: "pointer", whiteSpace: "nowrap" }}
         >
           Overview &amp; Guide
         </button>
@@ -435,7 +230,7 @@ export function DayGridView({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedDayForDialog, setSelectedDayForDialog] = useState<number>(0);
+  const [selectedDayForDialog, setSelectedDayForDialog] = useState(0);
   const [guideModalOpen, setGuideModalOpen] = useState(false);
   const [activeWeek, setActiveWeek] = useState(1);
 
@@ -455,16 +250,16 @@ export function DayGridView({
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            const weekNum = Number(entry.target.getAttribute("data-week"));
-            if (weekNum) setActiveWeek(weekNum);
+            const w = Number(entry.target.getAttribute("data-week"));
+            if (w) setActiveWeek(w);
           }
         }
       },
       { root: container, rootMargin: "-20% 0px -60% 0px", threshold: 0 },
     );
-    weekRefs.current.forEach((el) => observer.observe(el));
+    weekRefs.current.forEach(el => observer.observe(el));
     return () => observer.disconnect();
-  }, [weekGroups.length]);
+  }, []);
 
   const handleCardClick = (day: number) => {
     if (isTrackA) {
@@ -480,39 +275,25 @@ export function DayGridView({
     onDaySelect(selectedDayForDialog, period);
   };
 
-  const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
-  const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackASummaries, trackBSummaries, trackAModules);
-  const week1Theme = getWeekTheme(1, isTrackA, trackASummaries, trackBSummaries, trackAModules);
+  const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackBSummaries, trackAModules);
+  const week1Theme = getWeekTheme(1, isTrackA, trackBSummaries, trackAModules);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", position: "relative" }} className="custom-scrollbar">
-
-        {/* 608px centered column */}
         <div style={{ maxWidth: "608px", margin: "0 auto", padding: "0 16px" }}>
 
-          {/* Sticky banner — shows current week title, updates as you scroll */}
-          <StickyWeekBanner
-            weekNumber={activeWeek}
-            title={activeWeekTheme}
-            eyebrow={`Week ${activeWeek} of 5`}
-            onGuideClick={() => setGuideModalOpen(true)}
-          />
+          <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
 
           <div style={{ paddingTop: "24px" }}>
-
-            {/* Top section header card — "INITIAL 30 DAYS" + Week 1 theme */}
             <SectionHeaderCard eyebrow="Initial 30 Days" title={week1Theme} />
 
-            {/* PRE-MODULES */}
             {prelimModulesData && prelimModulesData.length > 0 && (
               <>
                 <SectionDivider label="Pre-Modules" />
                 <TwoColGrid>
                   {prelimModulesData.map((mod) => {
-                    const prevDone =
-                      mod.position === 1 ||
-                      prelimModulesData.find((m) => m.position === mod.position - 1)?.completed;
+                    const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
                     return (
                       <PrelimCard
                         key={mod.position}
@@ -526,42 +307,31 @@ export function DayGridView({
               </>
             )}
 
-            {/* WEEK SECTIONS */}
             {weekGroups.map(({ week, days }, groupIdx) => {
-              const weekTheme = getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries, trackAModules);
+              const weekTheme = getWeekTheme(week, isTrackA, trackBSummaries, trackAModules);
 
               return (
                 <div key={week} ref={(el) => setWeekRef(week, el)} data-week={week}>
-
-                  {/* Sunday banner between weeks */}
                   {groupIdx > 0 && <SundayBanner />}
 
-                  {/* Per-week divider + section header (weeks 2-5) */}
-                  {groupIdx > 0 && (
-                    <>
-                      <SectionDivider label={`Week ${week}`} />
-                      <SectionHeaderCard eyebrow={`Week ${week}`} title={weekTheme} />
-                    </>
-                  )}
+                  <SectionDivider label={`Week ${week}`} />
+                  {groupIdx > 0 && <SectionHeaderCard eyebrow={`Week ${week}`} title={weekTheme} />}
 
-                  {/* Week 1 / Track A: Day 0 full-width intro card */}
                   {groupIdx === 0 && isTrackA && (
-                    <Day0Card
+                    <Day0FullCard
                       isUnlocked={allPrelimsComplete}
                       onClick={() => onDaySelect(0)}
-                      imageUrl={trackASummaries?.find((c) => c.dayNumber === 0)?.imageUrl}
+                      imageUrl={trackASummaries?.find(c => c.dayNumber === 0)?.imageUrl}
                     />
                   )}
 
-                  {/* Day cards — 2-column grid */}
                   <TwoColGrid>
                     {days.map((day) => {
                       const isLocked = day > currentDay || !allPrelimsComplete;
                       const isToday = day === currentDay && allPrelimsComplete;
                       const completed = isDayCompleted(day);
                       const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
-                      const trackADay = isTrackA ? trackASummaries?.find((c) => c.dayNumber === day) : undefined;
-                      const subtitle = trackADay?.subtitle ?? undefined;
+                      const subtitle = isTrackA ? trackASummaries?.find(c => c.dayNumber === day)?.subtitle ?? undefined : undefined;
 
                       let completedLate = false;
                       if (isTrackA && completed && cohortStartDate && prayerCompletions) {
@@ -569,13 +339,11 @@ export function DayGridView({
                         if (record) {
                           const start = new Date(cohortStartDate + "T00:00:00");
                           const programDayIndex = day - 1;
-                          const fullWeeks = Math.floor(programDayIndex / 6);
-                          const remainder = programDayIndex % 6;
-                          const expectedDate = new Date(start);
-                          expectedDate.setDate(start.getDate() + fullWeeks * 7 + remainder);
-                          const fmt = (d: Date) =>
-                            d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-                          if (fmt(new Date(record.completedAt)) > fmt(expectedDate)) completedLate = true;
+                          const offset = Math.floor(programDayIndex / 6) * 7 + (programDayIndex % 6);
+                          const expected = new Date(start);
+                          expected.setDate(start.getDate() + offset);
+                          const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+                          if (fmt(new Date(record.completedAt as string)) > fmt(expected)) completedLate = true;
                         }
                       }
 
@@ -619,7 +387,7 @@ export function DayGridView({
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           dayNumber={selectedDayForDialog}
-          dayTitle={dialogDayTitle}
+          dayTitle={getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries)}
           morningCompleted={isPeriodCompleted(selectedDayForDialog, "morning")}
           eveningCompleted={isPeriodCompleted(selectedDayForDialog, "evening")}
           onSelect={handlePeriodSelect}
