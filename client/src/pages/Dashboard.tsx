@@ -167,7 +167,7 @@ export default function Dashboard() {
     queryKey: ["/api/prelim-modules"],
     enabled: !!user && user.role === 'participant',
   });
-  const allPrelimsComplete = (prelimModulesData?.length === 3 && prelimModulesData.every(m => m.completed)) ?? false;
+  const allPrelimsComplete = !!(prelimModulesData?.length && prelimModulesData.every(m => m.completed));
 
   // Only query/redirect Day 0 agreement once prelims are complete
   const { data: day0Data, isLoading: day0Loading, isError: day0Error } = useQuery<{ agreementSigned: boolean }>({
