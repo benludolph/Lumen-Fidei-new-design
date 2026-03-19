@@ -5,7 +5,6 @@ import { useContentSummaries } from "@/hooks/use-content-summaries";
 import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
 import { useUserPrayerCompletions, useMarkPrayerComplete, useUnmarkPrayerComplete } from "@/hooks/use-prayer-completions";
 import { useCohortStartDate } from "@/hooks/use-cohort";
-import { Shell } from "@/components/layout/Shell";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
