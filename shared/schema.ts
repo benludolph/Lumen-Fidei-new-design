@@ -48,6 +48,8 @@ export const practiceResources = pgTable("practice_resources", {
   content: text("content").notNull(), // Full text or instructions
   duration: text("duration"), // e.g., "10 minutes" for practices
   order: integer("order").default(0), // Display order within category
+  imageUrl: text("image_url"), // Optional hero image URL for the detail page
+  audioUrl: text("audio_url"), // Optional audio file URL for the detail page
 });
 
 // Track-specific requirements by week

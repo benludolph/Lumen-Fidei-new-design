@@ -309,6 +309,11 @@ export class DatabaseStorage implements IStorage {
     return resource;
   }
 
+  async getPracticeResourceById(id: number): Promise<PracticeResource | undefined> {
+    const [resource] = await db.select().from(practiceResources).where(eq(practiceResources.id, id));
+    return resource;
+  }
+
   async createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource> {
     const [newResource] = await db.insert(practiceResources).values(resource).returning();
     return newResource;

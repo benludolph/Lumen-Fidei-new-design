@@ -709,6 +709,15 @@ export async function registerRoutes(
     res.json(resource);
   });
 
+  app.get("/api/practice-resources/id/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
+    const resource = await storage.getPracticeResourceById(id);
+    if (!resource) return res.status(404).json({ message: "Practice resource not found" });
+    res.json(resource);
+  });
+
   // === Prayer Completions ===
   
   app.get(api.prayerCompletions.list.path, async (req, res) => {

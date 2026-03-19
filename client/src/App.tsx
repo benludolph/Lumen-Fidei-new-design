@@ -14,6 +14,7 @@ import MenteeDetails from "@/pages/MenteeDetails";
 import Messages from "@/pages/Messages";
 import Admin from "@/pages/Admin";
 import Resources from "@/pages/Resources";
+import ResourceDetail from "@/pages/ResourceDetail";
 import Collections from "@/pages/Collections";
 
 // Protected Route Wrapper
@@ -84,6 +85,10 @@ function Router() {
 
       <Route path="/admin">
         <ProtectedRoute component={Admin} allowedRoles={['admin']} />
+      </Route>
+
+      <Route path="/resources/:id">
+        <ProtectedRoute component={ResourceDetail} />
       </Route>
 
       <Route path="/resources">
