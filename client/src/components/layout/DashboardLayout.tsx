@@ -1,5 +1,7 @@
 import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Menu, X } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,25 +19,37 @@ function CandleIcon() {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location] = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [drawerOpen]);
+
+  const closeDrawer = () => setDrawerOpen(false);
 
   return (
     <div className="relative min-h-screen bg-[#0b0b0b] overflow-x-hidden">
-      {/* Cathedral background — fixed full viewport */}
+      {/* Cathedral background — desktop only */}
       <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        className="hidden sm:block fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/dashboard_bg_cathedral.png')" }}
       />
 
-      {/* Side-fade overlay: collapses edges to black, keeps 608px center visible */}
+      {/* Side-fade overlay — desktop only */}
       <div
-        className="fixed inset-0 pointer-events-none"
+        className="hidden sm:block fixed inset-0 pointer-events-none"
         style={{
           background:
             "linear-gradient(90deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
         }}
       />
 
-      {/* Navbar — Figma exact */}
+      {/* Navbar */}
       <nav
         className="fixed top-0 left-0 right-0 z-50"
         style={{
@@ -47,7 +61,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Top gradient strip — 0.5px height from #08090a to transparent */}
+        {/* Top gradient strip */}
         <div
           style={{
             position: "absolute",
@@ -60,15 +74,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           }}
         />
 
-        {/* Navbar inner row */}
+        {/* Navbar inner row — responsive padding */}
         <div
-          className="flex items-center justify-between h-full"
-          style={{
-            paddingLeft: "107px",
-            paddingRight: "115px",
-          }}
+          className="flex items-center justify-between h-full px-4 sm:px-[107px]"
         >
-          {/* Logo: candle SVG + "LUMEN FIDEI" text, gap 8px */}
+          {/* Logo */}
           <Link href="/dashboard">
             <div className="flex items-center cursor-pointer select-none" style={{ gap: "8px" }}>
               <CandleIcon />
@@ -86,14 +96,92 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </Link>
 
-          {/* Nav links: Messages, Resources, Collection — white, 14px */}
-          <div className="flex items-center">
+          {/* Desktop nav links */}
+          <div className="hidden sm:flex items-center">
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
             <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            data-testid="button-hamburger-menu"
+            className="sm:hidden flex items-center justify-center text-white/80 hover:text-white transition-colors"
+            style={{ width: "40px", height: "40px" }}
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu size={22} />
+          </button>
         </div>
       </nav>
+
+      {/* Mobile drawer backdrop */}
+      {drawerOpen && (
+        <div
+          className="sm:hidden fixed inset-0 z-[60] bg-black/60"
+          onClick={closeDrawer}
+        />
+      )}
+
+      {/* Mobile right-side drawer */}
+      <div
+        className="sm:hidden fixed top-0 right-0 bottom-0 z-[70] flex flex-col"
+        style={{
+          width: "260px",
+          background: "#0f1011",
+          borderLeft: "0.5px solid rgba(255,255,255,0.08)",
+          transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      >
+        {/* Drawer header */}
+        <div
+          className="flex items-center justify-between"
+          style={{
+            height: "72px",
+            padding: "0 20px",
+            borderBottom: "0.5px solid rgba(255,255,255,0.08)",
+            flexShrink: 0,
+          }}
+        >
+          <div className="flex items-center" style={{ gap: "8px" }}>
+            <CandleIcon />
+            <span
+              className="text-white uppercase"
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "14px",
+                fontWeight: 500,
+                letterSpacing: "0.08em",
+              }}
+            >
+              Lumen Fidei
+            </span>
+          </div>
+          <button
+            data-testid="button-close-drawer"
+            className="text-white/60 hover:text-white transition-colors"
+            onClick={closeDrawer}
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Drawer nav links */}
+        <nav className="flex flex-col" style={{ padding: "12px 0" }}>
+          <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>
+            Messages
+          </DrawerLink>
+          <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>
+            Resources
+          </DrawerLink>
+          <DrawerLink href="/collections" active={location === "/collections"} onClick={closeDrawer}>
+            Collection
+          </DrawerLink>
+        </nav>
+      </div>
 
       {/* Page content */}
       <div className="relative z-10 pt-[72px] min-h-screen">
@@ -122,6 +210,41 @@ function NavLink({
           height: "32px",
           padding: "0 12px",
           transition: "color 0.15s",
+        }}
+      >
+        {children}
+      </span>
+    </Link>
+  );
+}
+
+function DrawerLink({
+  href,
+  active,
+  onClick,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link href={href}>
+      <span
+        data-testid={`drawer-link-${String(children).toLowerCase()}`}
+        onClick={onClick}
+        className={cn(
+          "flex items-center cursor-pointer transition-colors",
+          active ? "text-white" : "text-white/60 hover:text-white"
+        )}
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "16px",
+          fontWeight: active ? 500 : 400,
+          padding: "14px 20px",
+          borderLeft: active ? "2px solid #F07830" : "2px solid transparent",
+          transition: "color 0.15s, border-color 0.15s",
         }}
       >
         {children}

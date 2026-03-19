@@ -87,7 +87,7 @@ function SectionDivider({ label }: { label: string }) {
 
 function TwoColGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "296px 296px", gap: "16px", width: "608px", maxWidth: "100%" }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
       {children}
     </div>
   );
@@ -280,7 +280,7 @@ export function DayGridView({
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "12px", position: "relative" }} className="custom-scrollbar">
-        <div style={{ maxWidth: "608px", margin: "0 auto" }}>
+        <div className="px-4 sm:px-0" style={{ maxWidth: "608px", margin: "0 auto" }}>
 
           <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
 
