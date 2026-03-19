@@ -311,12 +311,12 @@ export default function ResourceDetail() {
                 alt={resource.name}
                 style={{
                   position: "absolute",
-                  top: "90px",
+                  top: 0,
                   left: 0,
                   width: "100%",
-                  height: "542px",
+                  height: "100%",
                   objectFit: "cover",
-                  objectPosition: "center",
+                  objectPosition: "center top",
                 }}
               />
               {/* Top edge fade */}
@@ -369,14 +369,14 @@ export default function ResourceDetail() {
                   .join(" · ")}
               </p>
 
-              {/* Resource title — 80.2px Ivy Ora Display as per Figma node 2978-3065 */}
+              {/* Resource title — Figma specifies 80.2px; scales down fluidly on narrow screens */}
               <h1
                 data-testid="resource-title"
                 style={{
                   fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
                   fontWeight: 500,
-                  fontSize: "80.2px",
-                  lineHeight: "80.75px",
+                  fontSize: "clamp(36px, 6vw + 10px, 80.2px)",
+                  lineHeight: "1.01",
                   color: "white",
                   margin: 0,
                 }}
