@@ -2,47 +2,63 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useAllUsers } from "@/hooks/use-users";
 import { useMessages, useSendMessage } from "@/hooks/use-chat";
-import { Shell } from "@/components/layout/Shell";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Send, User as UserIcon, ArrowLeft, Plus, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Send, ArrowLeft, Plus, Search, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+function InitialsAvatar({ name, size = 36 }: { name: string; size?: number }) {
+  const initials = name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "rgba(240,120,48,0.15)",
+        border: "1px solid rgba(240,120,48,0.3)",
+        color: "#F07830",
+        fontFamily: "'Afacad', sans-serif",
+        fontSize: size * 0.33,
+        fontWeight: 600,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        userSelect: "none",
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
 
 export default function Messages() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [location, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(location.split('?')[1]);
-  // Support both 'user' (general) and 'mentorId' (from Dashboard mentor prompts) query params
-  const initialUserId = searchParams.get('user') || searchParams.get('mentorId');
-  
-  // Track if user has explicitly navigated back from a conversation (to prevent URL param re-applying)
+  const searchParams = new URLSearchParams(location.split("?")[1]);
+  const initialUserId = searchParams.get("user") || searchParams.get("mentorId");
+
   const hasNavigatedBackRef = useRef(false);
 
-  // API returns filtered list based on user's role
   const { data: contacts } = useUsers();
-  // For admins/mentors ONLY: get all users for adding new conversations
-  // Participants should NEVER fetch all users
-  const canAddContacts = user?.role === 'admin' || user?.role === 'mentor';
+  const canAddContacts = user?.role === "admin" || user?.role === "mentor";
   const { data: allUsers } = useAllUsers(canAddContacts);
 
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Sync selected contact with URL parameter or default to first contact
   useEffect(() => {
-    // Don't re-apply URL param if user explicitly clicked back
-    if (hasNavigatedBackRef.current) {
-      return;
-    }
+    if (hasNavigatedBackRef.current) return;
     if (initialUserId) {
       setSelectedContactId(Number(initialUserId));
     } else if (contacts && contacts.length > 0 && !selectedContactId) {
@@ -50,188 +66,409 @@ export default function Messages() {
     }
   }, [initialUserId, contacts, selectedContactId]);
 
-  // Mark messages as read when visiting the Messages page
   useEffect(() => {
     if (user) {
-      apiRequest("POST", "/api/messages/mark-read").then(() => {
-        queryClient.invalidateQueries({ queryKey: ["/api/messages/unread/count"] });
-      }).catch(() => {
-        // Silently fail - not critical
-      });
+      apiRequest("POST", "/api/messages/mark-read")
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/messages/unread/count"] });
+        })
+        .catch(() => {});
     }
   }, [user]);
 
-  // For mobile: show either contacts list or chat, not both
   const showChat = isMobile ? selectedContactId !== null : true;
   const showContacts = isMobile ? selectedContactId === null : true;
 
-  // Filter users for new chat dialog (exclude only self, allow searching all users)
-  const availableUsers = allUsers?.filter(u => 
-    u.id !== user?.id && 
-    (u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     u.email.toLowerCase().includes(searchQuery.toLowerCase()))
-  ) || [];
+  const availableUsers =
+    allUsers?.filter(
+      (u) =>
+        u.id !== user?.id &&
+        (u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchQuery.toLowerCase()))
+    ) || [];
 
   const handleSelectNewContact = (userId: number) => {
-    hasNavigatedBackRef.current = false; // Reset so future URL navigations work
+    hasNavigatedBackRef.current = false;
     setSelectedContactId(userId);
     setShowNewChatDialog(false);
     setSearchQuery("");
   };
 
   const handleBackToContacts = () => {
-    // Mark that user has explicitly navigated back (prevents useEffect from re-applying URL param)
     hasNavigatedBackRef.current = true;
     setSelectedContactId(null);
-    // Clear URL parameters
-    if (location.includes('?')) {
-      setLocation('/messages');
+    if (location.includes("?")) {
+      setLocation("/messages");
     }
   };
 
   return (
-    <Shell>
-      <div className={cn(
-        "bg-white dark:bg-card rounded-xl shadow-sm border border-border overflow-hidden",
-        isMobile ? "h-[calc(100dvh-6rem)]" : "h-[calc(100dvh-4rem)] grid grid-cols-12"
-      )}>
-        {/* Contacts List - Hidden on mobile when chat is open */}
+    <DashboardLayout>
+      <div
+        style={{
+          display: "flex",
+          height: "calc(100vh - 72px)",
+          backgroundColor: "#0b0b0b",
+          overflow: "hidden",
+        }}
+      >
+        {/* ── Left panel: contacts ─────────────────────────── */}
         {showContacts && (
-          <div className={cn(
-            "border-r border-border bg-stone-50 dark:bg-muted/30 flex flex-col",
-            isMobile ? "h-full" : "col-span-4"
-          )}>
-            <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between gap-2 shrink-0">
-              <h2 className="font-serif font-bold text-base sm:text-lg">Messages</h2>
+          <div
+            style={{
+              width: isMobile ? "100%" : "300px",
+              minWidth: isMobile ? undefined : "260px",
+              display: "flex",
+              flexDirection: "column",
+              borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.02)",
+              flexShrink: 0,
+            }}
+          >
+            {/* Panel header */}
+            <div
+              style={{
+                height: "56px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0 16px",
+                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "18px",
+                  fontWeight: 600,
+                  color: "white",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                Messages
+              </span>
+
               {canAddContacts && (
                 <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
                   <DialogTrigger asChild>
-                    <Button size="icon" variant="ghost" data-testid="button-new-chat">
-                      <Plus className="w-4 h-4" />
-                    </Button>
+                    <button
+                      data-testid="button-new-chat"
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "6px",
+                        background: "rgba(240,120,48,0.1)",
+                        border: "1px solid rgba(240,120,48,0.25)",
+                        color: "#F07830",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background =
+                          "rgba(240,120,48,0.2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background =
+                          "rgba(240,120,48,0.1)";
+                      }}
+                    >
+                      <Plus size={14} />
+                    </button>
                   </DialogTrigger>
-                  <DialogContent className="w-[95vw] max-w-md">
+
+                  {/* New chat dialog — dark themed */}
+                  <DialogContent
+                    style={{
+                      background: "#141516",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "10px",
+                      color: "white",
+                      maxWidth: "420px",
+                      width: "95vw",
+                    }}
+                  >
                     <DialogHeader>
-                      <DialogTitle>Start New Conversation</DialogTitle>
+                      <DialogTitle
+                        style={{
+                          fontFamily: "'Afacad', sans-serif",
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "white",
+                        }}
+                      >
+                        Start New Conversation
+                      </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
+
+                    <div style={{ marginTop: "12px" }}>
+                      {/* Search input */}
+                      <div style={{ position: "relative", marginBottom: "12px" }}>
+                        <Search
+                          size={14}
+                          style={{
+                            position: "absolute",
+                            left: "10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            color: "rgba(255,255,255,0.4)",
+                            pointerEvents: "none",
+                          }}
+                        />
+                        <input
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Search users..."
-                          className="pl-9"
+                          placeholder="Search users…"
                           data-testid="input-search-users"
+                          style={{
+                            width: "100%",
+                            paddingLeft: "32px",
+                            paddingRight: "12px",
+                            paddingTop: "8px",
+                            paddingBottom: "8px",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "6px",
+                            color: "white",
+                            fontFamily: "'Afacad', sans-serif",
+                            fontSize: "14px",
+                            outline: "none",
+                            boxSizing: "border-box",
+                          }}
                         />
                       </div>
-                      <ScrollArea className="h-[300px]">
-                        <div className="space-y-1">
-                          {availableUsers.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              {searchQuery ? "No users found" : "No new users to message"}
-                            </p>
-                          ) : (
-                            availableUsers.map((u) => (
-                              <button
-                                key={u.id}
-                                onClick={() => handleSelectNewContact(u.id)}
-                                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors text-left"
-                                data-testid={`new-contact-${u.id}`}
-                              >
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                    {u.name.charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <p className="font-medium text-sm">{u.name}</p>
-                                  <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
-                                </div>
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </ScrollArea>
+
+                      {/* User list */}
+                      <div
+                        style={{
+                          maxHeight: "280px",
+                          overflowY: "auto",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "2px",
+                        }}
+                      >
+                        {availableUsers.length === 0 ? (
+                          <p
+                            style={{
+                              fontFamily: "'Afacad', sans-serif",
+                              fontSize: "14px",
+                              color: "rgba(255,255,255,0.4)",
+                              textAlign: "center",
+                              padding: "24px 0",
+                            }}
+                          >
+                            {searchQuery ? "No users found" : "No new users to message"}
+                          </p>
+                        ) : (
+                          availableUsers.map((u) => (
+                            <button
+                              key={u.id}
+                              onClick={() => handleSelectNewContact(u.id)}
+                              data-testid={`new-contact-${u.id}`}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                                padding: "8px 10px",
+                                borderRadius: "6px",
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                textAlign: "left",
+                                transition: "background 0.15s",
+                                width: "100%",
+                              }}
+                              onMouseEnter={(e) => {
+                                (e.currentTarget as HTMLButtonElement).style.background =
+                                  "rgba(255,255,255,0.05)";
+                              }}
+                              onMouseLeave={(e) => {
+                                (e.currentTarget as HTMLButtonElement).style.background = "none";
+                              }}
+                            >
+                              <InitialsAvatar name={u.name} size={32} />
+                              <div>
+                                <p
+                                  style={{
+                                    fontFamily: "'Afacad', sans-serif",
+                                    fontSize: "14px",
+                                    fontWeight: 500,
+                                    color: "white",
+                                    margin: 0,
+                                  }}
+                                >
+                                  {u.name}
+                                </p>
+                                <p
+                                  style={{
+                                    fontFamily: "'Afacad', sans-serif",
+                                    fontSize: "12px",
+                                    color: "rgba(255,255,255,0.4)",
+                                    margin: 0,
+                                    textTransform: "capitalize",
+                                  }}
+                                >
+                                  {u.role}
+                                </p>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
               )}
             </div>
-            <ScrollArea className="flex-1">
-              <div className="space-y-1 p-2">
-                {contacts?.map((contact) => (
+
+            {/* Contact list */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+              {contacts?.length === 0 && (
+                <p
+                  style={{
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "14px",
+                    color: "rgba(255,255,255,0.3)",
+                    textAlign: "center",
+                    padding: "32px 16px",
+                  }}
+                >
+                  No contacts available.
+                </p>
+              )}
+
+              {contacts?.map((contact) => {
+                const isSelected = selectedContactId === contact.id;
+                return (
                   <button
                     key={contact.id}
                     onClick={() => {
-                      hasNavigatedBackRef.current = false; // Reset so future URL navigations work
+                      hasNavigatedBackRef.current = false;
                       setSelectedContactId(contact.id);
                     }}
-                    className={cn(
-                      "w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left",
-                      selectedContactId === contact.id ? "bg-white dark:bg-background shadow-sm ring-1 ring-border" : "hover:bg-white/50 dark:hover:bg-background/50"
-                    )}
                     data-testid={`contact-${contact.id}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      width: "100%",
+                      padding: "10px 10px 10px 8px",
+                      borderRadius: "6px",
+                      background: isSelected ? "rgba(255,255,255,0.06)" : "none",
+                      border: "none",
+                      borderLeft: isSelected
+                        ? "2px solid #F07830"
+                        : "2px solid transparent",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "background 0.15s, border-color 0.15s",
+                      marginBottom: "2px",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected)
+                        (e.currentTarget as HTMLButtonElement).style.background =
+                          "rgba(255,255,255,0.03)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected)
+                        (e.currentTarget as HTMLButtonElement).style.background = "none";
+                    }}
                   >
-                    <Avatar className="h-9 w-9 sm:h-10 sm:w-10">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {contact.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">{contact.name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{contact.role}</p>
+                    <InitialsAvatar name={contact.name} size={36} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p
+                        style={{
+                          fontFamily: "'Afacad', sans-serif",
+                          fontSize: "14px",
+                          fontWeight: 500,
+                          color: "white",
+                          margin: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {contact.name}
+                      </p>
+                      <p
+                        style={{
+                          fontFamily: "'Afacad', sans-serif",
+                          fontSize: "12px",
+                          color: "rgba(255,255,255,0.4)",
+                          margin: 0,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {contact.role}
+                      </p>
                     </div>
                   </button>
-                ))}
-                
-                {contacts?.length === 0 && (
-                  <div className="p-4 text-center text-muted-foreground text-sm">
-                    No contacts available.
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {/* Chat Area */}
+        {/* ── Right panel: chat ─────────────────────────────── */}
         {showChat && (
-          <div className={cn(
-            "flex flex-col bg-white dark:bg-card min-h-0",
-            isMobile ? "h-full" : "col-span-8"
-          )}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              minWidth: 0,
+              background: "#0b0b0b",
+            }}
+          >
             {selectedContactId ? (
-              <ChatWindow 
-                currentUserId={user!.id} 
-                otherUserId={selectedContactId} 
-                otherUserName={contacts?.find(c => c.id === selectedContactId)?.name || 
-                              allUsers?.find(u => u.id === selectedContactId)?.name || 
-                              "Unknown"} 
+              <ChatWindow
+                currentUserId={user!.id}
+                otherUserId={selectedContactId}
+                otherUserName={
+                  contacts?.find((c) => c.id === selectedContactId)?.name ||
+                  allUsers?.find((u) => u.id === selectedContactId)?.name ||
+                  "Unknown"
+                }
                 isMobile={isMobile}
                 onBack={handleBackToContacts}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4 text-center">
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "14px",
+                  color: "rgba(255,255,255,0.3)",
+                  padding: "24px",
+                  textAlign: "center",
+                }}
+              >
                 Select a conversation to start messaging
               </div>
             )}
           </div>
         )}
       </div>
-    </Shell>
+    </DashboardLayout>
   );
 }
 
-function ChatWindow({ 
-  currentUserId, 
-  otherUserId, 
+function ChatWindow({
+  currentUserId,
+  otherUserId,
   otherUserName,
   isMobile,
-  onBack
-}: { 
-  currentUserId: number; 
-  otherUserId: number; 
+  onBack,
+}: {
+  currentUserId: number;
+  otherUserId: number;
   otherUserName: string;
   isMobile: boolean;
   onBack: () => void;
@@ -241,90 +478,207 @@ function ChatWindow({
   const [content, setContent] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) return;
-    
-    sendMessage(
-      { receiverId: otherUserId, content },
-      { onSuccess: () => setContent("") }
-    );
+    sendMessage({ receiverId: otherUserId, content }, { onSuccess: () => setContent("") });
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header - Fixed */}
-      <div className="p-3 sm:p-4 border-b border-border flex items-center gap-2 sm:gap-3 shrink-0 bg-white dark:bg-card">
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Chat header — glass blur */}
+      <div
+        style={{
+          height: "56px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "0 16px",
+          backdropFilter: "blur(5px)",
+          WebkitBackdropFilter: "blur(5px)",
+          background: "rgba(0,0,0,0.35)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          flexShrink: 0,
+        }}
+      >
         {isMobile && (
-          <Button size="icon" variant="ghost" onClick={onBack} data-testid="button-back-to-contacts">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
+          <button
+            data-testid="button-back-to-contacts"
+            onClick={onBack}
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "6px",
+              background: "none",
+              border: "none",
+              color: "rgba(255,255,255,0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
+              transition: "color 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "white";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)";
+            }}
+          >
+            <ArrowLeft size={16} />
+          </button>
         )}
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary/10 text-primary">{otherUserName.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <span className="font-medium text-sm sm:text-base">{otherUserName}</span>
-      </div>
-      
-      {/* Messages - Scrollable container */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full overflow-y-auto p-3 sm:p-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Loading messages...
-            </div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4 flex flex-col min-h-full">
-              {messages?.length === 0 && (
-                <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                  No messages yet. Start the conversation!
-                </div>
-              )}
-              {messages?.map((msg) => {
-                const isMe = msg.senderId === currentUserId;
-                return (
-                  <div 
-                    key={msg.id} 
-                    className={cn(
-                      "max-w-[80%] sm:max-w-[75%] px-3 sm:px-4 py-2 rounded-2xl text-sm break-words overflow-hidden",
-                      isMe 
-                        ? "bg-primary text-primary-foreground self-end rounded-br-none" 
-                        : "bg-secondary text-secondary-foreground self-start rounded-bl-none"
-                    )}
-                    style={{ overflowWrap: "break-word", wordBreak: "break-word" }}
-                    data-testid={`message-${msg.id}`}
-                  >
-                    {msg.content}
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
+        <InitialsAvatar name={otherUserName} size={30} />
+        <span
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "15px",
+            fontWeight: 500,
+            color: "white",
+          }}
+        >
+          {otherUserName}
+        </span>
       </div>
 
-      {/* Input - Fixed at bottom */}
-      <div className="p-3 sm:p-4 border-t border-border bg-stone-50 dark:bg-muted/30 shrink-0">
-        <form onSubmit={handleSend} className="flex gap-2">
-          <Input 
+      {/* Messages scroll area */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px" }}>
+        {isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "14px",
+              color: "rgba(255,255,255,0.3)",
+            }}
+          >
+            Loading messages…
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              minHeight: "100%",
+            }}
+          >
+            {messages?.length === 0 && (
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "14px",
+                  color: "rgba(255,255,255,0.3)",
+                  paddingTop: "40px",
+                }}
+              >
+                No messages yet. Start the conversation!
+              </div>
+            )}
+
+            {messages?.map((msg) => {
+              const isMe = msg.senderId === currentUserId;
+              return (
+                <div
+                  key={msg.id}
+                  data-testid={`message-${msg.id}`}
+                  style={{
+                    alignSelf: isMe ? "flex-end" : "flex-start",
+                    maxWidth: "72%",
+                    padding: "9px 14px",
+                    borderRadius: isMe ? "14px 14px 3px 14px" : "14px 14px 14px 3px",
+                    background: isMe ? "#F07830" : "rgba(255,255,255,0.07)",
+                    color: isMe ? "white" : "rgba(255,255,255,0.85)",
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "14px",
+                    lineHeight: "1.45",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                  }}
+                >
+                  {msg.content}
+                </div>
+              );
+            })}
+
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Input bar */}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: "12px 16px",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          background: "rgba(255,255,255,0.02)",
+        }}
+      >
+        <form
+          onSubmit={handleSend}
+          style={{ display: "flex", gap: "8px", alignItems: "center" }}
+        >
+          <input
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Type a message..."
-            className="bg-white dark:bg-background text-sm"
+            placeholder="Type a message…"
             data-testid="input-message"
+            style={{
+              flex: 1,
+              padding: "9px 14px",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "8px",
+              color: "white",
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "14px",
+              outline: "none",
+              transition: "border-color 0.15s",
+            }}
+            onFocus={(e) => {
+              (e.currentTarget as HTMLInputElement).style.borderColor =
+                "rgba(240,120,48,0.4)";
+            }}
+            onBlur={(e) => {
+              (e.currentTarget as HTMLInputElement).style.borderColor =
+                "rgba(255,255,255,0.08)";
+            }}
           />
-          <Button type="submit" size="icon" disabled={isPending || !content.trim()} data-testid="button-send-message">
-            <Send className="w-4 h-4" />
-          </Button>
+          <button
+            type="submit"
+            disabled={isPending || !content.trim()}
+            data-testid="button-send-message"
+            style={{
+              width: "38px",
+              height: "38px",
+              borderRadius: "8px",
+              background:
+                isPending || !content.trim() ? "rgba(240,120,48,0.3)" : "#F07830",
+              border: "none",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: isPending || !content.trim() ? "not-allowed" : "pointer",
+              flexShrink: 0,
+              transition: "background 0.15s",
+            }}
+          >
+            <Send size={15} />
+          </button>
         </form>
       </div>
     </div>
