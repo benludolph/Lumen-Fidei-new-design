@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -25,6 +26,15 @@ import examenImg from "@assets/Examen_1773942790214.webp";
 import miraclePrayerImg from "@assets/Miracle_Prayer_1773942790214.webp";
 import penitentImg from "@assets/Penitent_1773942790215.webp";
 
+import retaliationHoverImg from "@assets/Retaliation_hover_1773947410450.webp";
+import catechismHoverImg from "@assets/Catechism_hover_1773947410450.webp";
+import divineMercyHoverImg from "@assets/Divine_Mercy_hover_1773947410450.webp";
+import rosaryHoverImg from "@assets/Rosary_hover_1773947410450.webp";
+import lectioHoverImg from "@assets/Lectio_hover_1773947410450.webp";
+import examenHoverImg from "@assets/Examen_hover_1773947410450.webp";
+import miraclePrayerHoverImg from "@assets/Miracle_hover_1773947410449.webp";
+import penitentHoverImg from "@assets/Penitent_hover_1773947410450.webp";
+
 const IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "retaliation", img: retaliationImg },
   { match: "catechism", img: catechismImg },
@@ -35,6 +45,18 @@ const IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "examen", img: examenImg },
   { match: "miracle prayer", img: miraclePrayerImg },
   { match: "penitent", img: penitentImg },
+];
+
+const HOVER_IMAGE_MAP: Array<{ match: string; img: string }> = [
+  { match: "retaliation", img: retaliationHoverImg },
+  { match: "catechism", img: catechismHoverImg },
+  { match: "baltimore", img: catechismHoverImg },
+  { match: "divine mercy", img: divineMercyHoverImg },
+  { match: "rosary", img: rosaryHoverImg },
+  { match: "lectio", img: lectioHoverImg },
+  { match: "examen", img: examenHoverImg },
+  { match: "miracle prayer", img: miraclePrayerHoverImg },
+  { match: "penitent", img: penitentHoverImg },
 ];
 
 const ICON_MAP: Array<{ match: string; icon: LucideIcon }> = [
@@ -52,6 +74,12 @@ const ICON_MAP: Array<{ match: string; icon: LucideIcon }> = [
 function getResourceImage(name: string): string | undefined {
   const lower = name.toLowerCase();
   const entry = IMAGE_MAP.find((m) => lower.includes(m.match));
+  return entry?.img;
+}
+
+function getResourceHoverImage(name: string): string | undefined {
+  const lower = name.toLowerCase();
+  const entry = HOVER_IMAGE_MAP.find((m) => lower.includes(m.match));
   return entry?.img;
 }
 
@@ -83,8 +111,10 @@ function SectionDivider({ label }: { label: string }) {
 }
 
 function ResourceCard({ resource }: { resource: PracticeResource }) {
+  const [hovered, setHovered] = useState(false);
   const Icon = getResourceIcon(resource.name);
   const bgImage = getResourceImage(resource.name);
+  const hoverImage = getResourceHoverImage(resource.name);
 
   return (
     <Link href={`/resources/${resource.id}`}>
@@ -92,10 +122,8 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
         data-testid={`card-resource-${resource.id}`}
         style={{
           position: "relative",
-          background: bgImage
-            ? `url(${bgImage}) center/cover no-repeat #0f1011`
-            : "#0f1011",
-          border: "0.487px solid rgba(255,255,255,0.05)",
+          backgroundColor: "#0f1011",
+          border: `0.487px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)"}`,
           borderRadius: "5.842px",
           overflow: "hidden",
           cursor: "pointer",
@@ -107,26 +135,49 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           paddingLeft: "12.17px",
           paddingRight: "12.17px",
           paddingBottom: "14.118px",
-          transition: "border-color 0.15s ease",
+          transition: "border-color 0.2s ease-out",
         }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.05)";
-        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
+        {/* Default image */}
+        {bgImage && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+        )}
+        {/* Dark overlay on default */}
         {bgImage && (
           <div style={{
             position: "absolute",
             inset: 0,
             background: "rgba(0,0,0,0.18)",
             pointerEvents: "none",
-            zIndex: 0,
+            zIndex: 1,
+          }} />
+        )}
+        {/* Hover image — dissolves in at 200ms ease-out */}
+        {hoverImage && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${hoverImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: hovered ? 1 : 0,
+            transition: "opacity 0.2s ease-out",
+            pointerEvents: "none",
+            zIndex: 2,
           }} />
         )}
 
-        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
           <div style={{
             width: "23.367px",
             height: "23.367px",
@@ -142,7 +193,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 3 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
               fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
@@ -182,6 +233,7 @@ function ExternalCard({
   description,
   href,
   bgImage,
+  hoverBgImage,
   iconName,
   colSpan = 1,
 }: {
@@ -189,9 +241,11 @@ function ExternalCard({
   description: string;
   href: string;
   bgImage?: string;
+  hoverBgImage?: string;
   iconName?: string;
   colSpan?: number;
 }) {
+  const [hovered, setHovered] = useState(false);
   const Icon = iconName ? getResourceIcon(iconName) : ExternalLink;
 
   return (
@@ -205,10 +259,8 @@ function ExternalCard({
       <div
         style={{
           position: "relative",
-          background: bgImage
-            ? `url(${bgImage}) center/cover no-repeat #0f1011`
-            : "#0f1011",
-          border: "0.487px solid rgba(255,255,255,0.05)",
+          backgroundColor: "#0f1011",
+          border: `0.487px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)"}`,
           borderRadius: "5.842px",
           overflow: "hidden",
           cursor: "pointer",
@@ -220,26 +272,49 @@ function ExternalCard({
           paddingLeft: "12.17px",
           paddingRight: "12.17px",
           paddingBottom: "14.118px",
-          transition: "border-color 0.15s ease",
+          transition: "border-color 0.2s ease-out",
         }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.05)";
-        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
+        {/* Default image */}
+        {bgImage && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+        )}
+        {/* Dark overlay on default */}
         {bgImage && (
           <div style={{
             position: "absolute",
             inset: 0,
             background: "rgba(0,0,0,0.25)",
             pointerEvents: "none",
-            zIndex: 0,
+            zIndex: 1,
+          }} />
+        )}
+        {/* Hover image — dissolves in at 200ms ease-out */}
+        {hoverBgImage && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url(${hoverBgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: hovered ? 1 : 0,
+            transition: "opacity 0.2s ease-out",
+            pointerEvents: "none",
+            zIndex: 2,
           }} />
         )}
 
-        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
           <div style={{
             width: "23.367px",
             height: "23.367px",
@@ -255,7 +330,7 @@ function ExternalCard({
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 3 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
               fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
@@ -401,6 +476,7 @@ export default function Resources() {
                   description="Classic Catholic reference"
                   href="https://www.catechism.cc/catechisms/Baltimore_Catechism.pdf"
                   bgImage={catechismImg}
+                  hoverBgImage={catechismHoverImg}
                   iconName="catechism"
                   colSpan={1}
                 />
@@ -409,6 +485,7 @@ export default function Resources() {
                   description="Marian devotion community"
                   href="https://penitentsoldiersofmary.org/"
                   bgImage={penitentImg}
+                  hoverBgImage={penitentHoverImg}
                   iconName="penitent"
                   colSpan={2}
                 />
