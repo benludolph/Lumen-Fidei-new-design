@@ -415,14 +415,13 @@ export default function ResourceDetail() {
             />
           </div>
 
-          {/* Below-card content area: two-column on desktop when audio exists */}
+          {/* Below-card content area: single-column on mobile, two-column on sm+ when audio exists */}
           <div
+            className="flex flex-col sm:flex-row"
             style={{
               maxWidth: "960px",
               width: "100%",
               marginTop: "30px",
-              display: "flex",
-              flexDirection: "row",
               gap: "30px",
               alignItems: "flex-start",
             }}
