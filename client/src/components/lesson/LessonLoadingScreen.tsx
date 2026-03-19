@@ -59,10 +59,10 @@ export function LessonLoadingScreen({
         </div>
 
         <div className="space-y-2 sm:space-y-3">
-          <p className="text-white/60 text-xs sm:text-sm font-medium tracking-widest uppercase">
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontWeight: 400, fontSize: "14px", letterSpacing: "0.2em", color: "rgba(255,255,255,0.6)", textTransform: "uppercase" }}>
             {dayNumber < 0 ? `Module ${Math.abs(dayNumber)}` : dayNumber === 0 ? "Introduction" : `Day ${dayNumber}`}
           </p>
-          <h1 className="font-['Afacad',sans-serif] font-semibold text-white text-xl sm:text-2xl md:text-3xl max-w-[280px] sm:max-w-md leading-tight">
+          <h1 style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: "48px", color: "white", lineHeight: 1.1 }} className="max-w-[340px] sm:max-w-lg">
             {theme}
           </h1>
         </div>
