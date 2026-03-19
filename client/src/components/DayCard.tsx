@@ -48,7 +48,6 @@ export function DayCard({
   cohortStartDate,
   onClick,
 }: DayCardProps) {
-  const isFull = variant === "full";
   const tooltipTitle = isLocked && cohortStartDate
     ? getUnlockDateLabel(cohortStartDate, dayNumber)
     : undefined;
@@ -68,6 +67,10 @@ export function DayCard({
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.05)",
         borderRadius: "5.842px",
+        paddingTop: "12.17px",
+        paddingBottom: "14.118px",
+        paddingLeft: "12.17px",
+        paddingRight: "12.17px",
         transition: "transform 0.15s ease, border-color 0.15s ease",
         opacity: isLocked ? 0.4 : 1,
         cursor: isLocked ? "not-allowed" : "pointer",
@@ -87,28 +90,30 @@ export function DayCard({
         }
       }}
     >
-      {/* Background image */}
+      {/* Full-span background image — covers the entire card */}
       {backgroundImage && (
         <>
           <img
             src={backgroundImage}
             alt=""
-            className={cn(
-              "absolute object-cover pointer-events-none",
-              isLocked && "grayscale opacity-60",
-            )}
-            style={
-              isFull
-                ? { left: "224px", top: "-58px", width: "463px", height: "auto", minHeight: "242px" }
-                : { right: "-0.94px", top: "-25.23px", width: "128.517px", height: "auto", minHeight: "177px" }
-            }
-          />
-          {/* Exact Figma gradient overlay */}
-          <div
-            className="absolute inset-0 pointer-events-none"
+            className={cn(isLocked && "grayscale")}
             style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Bottom scrim — makes text readable over any image */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
               background:
-                "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)",
+                "linear-gradient(to top, rgba(15,16,17,0.95) 0%, rgba(15,16,17,0.6) 50%, rgba(15,16,17,0.15) 100%)",
+              pointerEvents: "none",
             }}
           />
         </>
@@ -116,97 +121,130 @@ export function DayCard({
 
       {/* State icon — Figma: left:12.17px, top:12.17px, 23.367×23.367 */}
       <div
-        className="absolute flex items-center justify-center"
-        style={{ left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px" }}
+        style={{
+          position: "absolute",
+          left: "12.17px",
+          top: "12.17px",
+          width: "23.367px",
+          height: "23.367px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         {isLocked ? (
           <div
-            className="rounded-full border border-[rgba(255,255,255,0.12)] flex items-center justify-center"
-            style={{ width: "23.367px", height: "23.367px" }}
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Lock className="w-[10px] h-[10px] text-white/30" />
+            <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
           </div>
         ) : isCompleted ? (
           <div
-            className={cn(
-              "flex items-center justify-center rounded-full",
-              isCompletedOutOfOrder ? "bg-yellow-500" : "bg-[#22c55e]",
-            )}
-            style={{ width: "23.367px", height: "23.367px" }}
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              borderRadius: "50%",
+              background: isCompletedOutOfOrder ? "#eab308" : "#22c55e",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Check className="w-[11px] h-[11px] text-white" strokeWidth={2.5} />
+            <Check style={{ width: "11px", height: "11px", color: "white", strokeWidth: 2.5 }} />
           </div>
         ) : isToday ? (
           <div
-            className="flex items-center justify-center rounded-full bg-[#F07830]"
-            style={{ width: "23.367px", height: "23.367px" }}
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              borderRadius: "50%",
+              background: "#F07830",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <span
-              className="text-white font-bold"
-              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "8px", lineHeight: 1 }}
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "8px",
+                lineHeight: 1,
+                color: "white",
+                fontWeight: 700,
+              }}
             >
               NOW
             </span>
           </div>
         ) : (
           <div
-            className="rounded-full border border-[rgba(255,255,255,0.12)]"
-            style={{ width: "23.367px", height: "23.367px" }}
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
           />
         )}
       </div>
 
       {/* Text block — Figma: left:12.17px, top:77.094px */}
       <div
-        className="absolute"
         style={{
+          position: "absolute",
           left: "12.17px",
           top: "77.094px",
-          maxWidth: isFull ? "340px" : "175.25px",
+          width: variant === "full" ? "340px" : "175.25px",
+          maxWidth: "calc(100% - 24px)",
         }}
       >
         <p
-          className="text-white leading-[16px] font-medium truncate"
-          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px" }}
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "13px",
+            lineHeight: "16px",
+            color: "white",
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
         >
           {title}
         </p>
         {subtitle && (
           <p
-            className="text-[rgba(255,255,255,0.45)] truncate"
             style={{
               fontFamily: "'Afacad', sans-serif",
               fontSize: "10px",
               lineHeight: "11px",
               marginTop: "23.788px",
+              color: "rgba(255,255,255,0.45)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {subtitle}
           </p>
         )}
         {isTrackB && !isLocked && (
-          <div className="flex items-center gap-2 mt-[4px]">
-            <div className="flex items-center gap-0.5">
-              <Sun
-                className={cn("w-[10px] h-[10px]", morningCompleted ? "text-[#22c55e]" : "text-white/30")}
-              />
-              <span
-                className={cn("text-[10px]", morningCompleted ? "text-[#22c55e]" : "text-white/30")}
-                style={{ fontFamily: "'Afacad', sans-serif" }}
-              >
-                AM
-              </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+              <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>AM</span>
             </div>
-            <div className="flex items-center gap-0.5">
-              <Moon
-                className={cn("w-[10px] h-[10px]", eveningCompleted ? "text-[#22c55e]" : "text-white/30")}
-              />
-              <span
-                className={cn("text-[10px]", eveningCompleted ? "text-[#22c55e]" : "text-white/30")}
-                style={{ fontFamily: "'Afacad', sans-serif" }}
-              >
-                PM
-              </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+              <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>PM</span>
             </div>
           </div>
         )}
