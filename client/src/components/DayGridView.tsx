@@ -5,7 +5,7 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { CheckCircle2, Map as MapIcon, Scale, Layers, BookOpen, Lock } from "lucide-react";
+import { CheckCircle2, Map as MapIcon, Scale, Layers, Lock } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -155,32 +155,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
   );
 }
 
-function Day0FullCard({ isUnlocked, onClick, imageUrl }: { isUnlocked: boolean; onClick: () => void; imageUrl?: string | null }) {
-  return (
-    <button
-      onClick={isUnlocked ? onClick : undefined}
-      disabled={!isUnlocked}
-      data-testid="card-day-0"
-      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", height: "126px", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", paddingTop: "12.17px", paddingBottom: "14.118px", paddingLeft: "12.17px", paddingRight: "12.17px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: isUnlocked ? 1 : 0.4, cursor: isUnlocked ? "pointer" : "not-allowed", marginBottom: "16px" }}
-      onMouseEnter={(e) => { if (isUnlocked) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
-      onMouseLeave={(e) => { if (isUnlocked) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
-    >
-      {imageUrl && (
-        <>
-          <img src={imageUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
-        </>
-      )}
-      <div style={{ position: "absolute", left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px", borderRadius: "50%", background: "rgba(240,120,48,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <BookOpen style={{ width: "11px", height: "11px", color: "#F07830" }} />
-      </div>
-      <div style={{ position: "absolute", left: "12.17px", top: "77.094px", width: "340px", maxWidth: "calc(100% - 24px)" }}>
-        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500 }}>Introduction — Goal of 30 Days</p>
-        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)" }}>Begin your journey</p>
-      </div>
-    </button>
-  );
-}
+
 
 function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: number; title: string; onGuideClick: () => void }) {
   return (
@@ -315,14 +290,22 @@ export function DayGridView({
                   {groupIdx > 0 && <SundayBanner />}
 
                   <SectionDivider label={`Week ${week}`} />
-                  {groupIdx > 0 && <SectionHeaderCard eyebrow={`Week ${week}`} title={weekTheme} />}
 
                   {groupIdx === 0 && isTrackA && (
-                    <Day0FullCard
-                      isUnlocked={allPrelimsComplete}
-                      onClick={() => onDaySelect(0)}
-                      imageUrl={trackASummaries?.find(c => c.dayNumber === 0)?.imageUrl}
-                    />
+                    <div style={{ gridColumn: "1 / -1", marginBottom: "16px" }}>
+                      <DayCard
+                        variant="full"
+                        dayNumber={0}
+                        title="Introduction — Goal of 30 Days"
+                        subtitle="Begin your journey"
+                        isCompleted={false}
+                        isToday={false}
+                        isLocked={!allPrelimsComplete}
+                        backgroundImage={trackASummaries?.find(c => c.dayNumber === 0)?.imageUrl ?? undefined}
+                        cohortStartDate={cohortStartDate}
+                        onClick={() => onDaySelect(0)}
+                      />
+                    </div>
                   )}
 
                   <TwoColGrid>
