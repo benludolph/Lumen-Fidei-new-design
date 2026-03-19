@@ -147,7 +147,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
 
 function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: number; title: string; onGuideClick: () => void }) {
   return (
-    <div className="sticky z-20" style={{ top: "32px" }}>
+    <div className="sticky z-20" style={{ top: "12px" }}>
       <div
         style={{
           background: "#191a1b",
@@ -279,7 +279,7 @@ export function DayGridView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "32px", position: "relative" }} className="custom-scrollbar">
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "12px", position: "relative" }} className="custom-scrollbar">
         <div style={{ maxWidth: "608px", margin: "0 auto" }}>
 
           <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
