@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 import augustineImg from "@assets/Augustine_1773958855879.webp";
@@ -76,7 +76,7 @@ function HoloCard({ saint }: { saint: Saint }) {
     }
 
     if (rainbowRef.current) {
-      rainbowRef.current.style.opacity = "1";
+      rainbowRef.current.style.opacity = "0.15";
       const hueShift = px * 120;
       rainbowRef.current.style.background = `linear-gradient(${125 + cx * 30}deg, hsl(${200 + hueShift},100%,70%) 0%, hsl(${240 + hueShift},90%,65%) 25%, hsl(${280 + hueShift},85%,60%) 50%, hsl(${200 + hueShift},80%,70%) 75%, hsl(${220 + hueShift},90%,65%) 100%)`;
     }
@@ -94,7 +94,7 @@ function HoloCard({ saint }: { saint: Saint }) {
 
   const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     isHovering.current = true;
-    if (rainbowRef.current) rainbowRef.current.style.opacity = "0.18";
+    if (rainbowRef.current) rainbowRef.current.style.opacity = "0.15";
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
     applyEffect(e.clientX, e.clientY, rect);
@@ -105,21 +105,27 @@ function HoloCard({ saint }: { saint: Saint }) {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     if (cardRef.current) {
-      cardRef.current.style.transition = "transform 0.5s cubic-bezier(0.23,1,0.32,1)";
+      cardRef.current.style.transition = "transform 0.4s ease";
       cardRef.current.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)";
     }
     if (overlayRef.current) {
-      overlayRef.current.style.transition = "opacity 0.5s ease";
+      overlayRef.current.style.transition = "opacity 0.4s ease";
       overlayRef.current.style.opacity = "0";
     }
     if (sheenRef.current) {
-      sheenRef.current.style.transition = "opacity 0.5s ease";
+      sheenRef.current.style.transition = "opacity 0.4s ease";
       sheenRef.current.style.opacity = "0";
     }
     if (rainbowRef.current) {
-      rainbowRef.current.style.transition = "opacity 0.5s ease";
+      rainbowRef.current.style.transition = "opacity 0.4s ease";
       rainbowRef.current.style.opacity = "0";
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return (
