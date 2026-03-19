@@ -3844,6 +3844,7 @@ type PrelimModuleAdminData = {
   title: string;
   subtitle: string | null;
   slides: TrackASlide[] | null;
+  imageUrl: string | null;
 };
 
 function PrelimContentManagementView() {
@@ -3852,6 +3853,7 @@ function PrelimContentManagementView() {
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
@@ -3861,7 +3863,7 @@ function PrelimContentManagementView() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data: { position: number; title: string; subtitle: string | null; slides: TrackASlide[] }) => {
+    mutationFn: async (data: { position: number; title: string; subtitle: string | null; slides: TrackASlide[]; imageUrl: string | null }) => {
       const res = await apiRequest("PUT", `/api/admin/prelim-modules/${data.position}`, data);
       return res.json();
     },
@@ -3881,10 +3883,12 @@ function PrelimContentManagementView() {
     if (mod) {
       setTitle(mod.title);
       setSubtitle(mod.subtitle || "");
+      setImageUrl(mod.imageUrl || null);
       setSlides(mod.slides ? [...mod.slides] : []);
     } else {
       setTitle("");
       setSubtitle("");
+      setImageUrl(null);
       setSlides([]);
     }
     setExpandedSlide(null);
@@ -3892,7 +3896,7 @@ function PrelimContentManagementView() {
 
   const handleSave = () => {
     if (!selectedPosition) return;
-    saveMutation.mutate({ position: selectedPosition, title: title || "Untitled", subtitle: subtitle || null, slides });
+    saveMutation.mutate({ position: selectedPosition, title: title || "Untitled", subtitle: subtitle || null, slides, imageUrl });
   };
 
   const getDefaultSlideContent = (type: string): string => {
@@ -3936,9 +3940,8 @@ function PrelimContentManagementView() {
 
   if (selectedPosition === null) {
     const defaultModules: PrelimModuleAdminData[] = [
-      { id: 0, position: 1, title: "Welcome to Lumen Fidei", subtitle: null, slides: null },
-      { id: 0, position: 2, title: "The Program Structure", subtitle: null, slides: null },
-      { id: 0, position: 3, title: "Preparing Your Heart", subtitle: null, slides: null },
+      { id: 0, position: 1, title: "Welcome to Lumen Fidei", subtitle: null, slides: null, imageUrl: null },
+      { id: 0, position: 2, title: "The Program Structure", subtitle: null, slides: null, imageUrl: null },
     ];
     const displayModules = (prelimModules && prelimModules.length > 0) ? prelimModules : defaultModules;
     return (
@@ -3950,7 +3953,7 @@ function PrelimContentManagementView() {
               Pre-Cohort Onboarding Modules
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              These 3 modules must be completed by participants before the main program unlocks. Click a module to edit its content.
+              These 2 modules must be completed by participants before the main program unlocks. Click a module to edit its content and upload a card image.
             </p>
           </CardHeader>
         </Card>
@@ -4014,12 +4017,22 @@ function PrelimContentManagementView() {
                 <label className="text-sm font-medium">Subtitle</label>
                 <Input value={subtitle} onChange={e => setSubtitle(e.target.value)} placeholder="Brief description (optional)" data-testid="input-prelim-subtitle" />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Card Background Image</label>
+                <p className="text-xs text-muted-foreground">Full-span image shown on the dashboard card. Covers the entire card.</p>
+                <ModuleImageUpload currentUrl={imageUrl} onUploaded={setImageUrl} />
+              </div>
             </>
           ) : (
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
                 <p className="font-medium">{currentModule?.title}</p>
                 {currentModule?.subtitle && <p className="text-sm text-muted-foreground">{currentModule.subtitle}</p>}
+                {currentModule?.imageUrl && (
+                  <div className="mt-3">
+                    <img src={currentModule.imageUrl} alt="" className="h-20 w-auto rounded object-cover border border-border" />
+                  </div>
+                )}
               </div>
               <Button size="sm" onClick={() => { loadModuleIntoState(currentModule); setEditMode(true); }} data-testid="button-prelim-edit">
                 <Edit2 className="w-4 h-4 mr-1" /> Edit
