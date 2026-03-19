@@ -10,6 +10,7 @@ import {
   Church,
   Shield,
   ArrowRight,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
@@ -101,7 +102,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          minHeight: "126px",
+          height: "126px",
           paddingTop: "12.17px",
           paddingLeft: "12.17px",
           paddingRight: "12.17px",
@@ -125,7 +126,6 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           }} />
         )}
 
-        {/* Top: icon */}
         <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 1 }}>
           <div style={{
             width: "23.367px",
@@ -142,7 +142,6 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           </div>
         </div>
 
-        {/* Bottom: title + subtitle + arrow */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 1 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
@@ -169,7 +168,6 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
               {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
             </p>
           </div>
-          {/* Arrow — bottom-right, signals navigation */}
           <div style={{ color: "rgba(255,255,255,0.35)", marginLeft: "8px", flexShrink: 0 }}>
             <ArrowRight style={{ width: "14px", height: "14px" }} />
           </div>
@@ -179,26 +177,130 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
   );
 }
 
-function ResourceGrid({ children }: { children: React.ReactNode }) {
+function ExternalCard({
+  name,
+  description,
+  href,
+  bgImage,
+  iconName,
+  colSpan = 1,
+}: {
+  name: string;
+  description: string;
+  href: string;
+  bgImage?: string;
+  iconName?: string;
+  colSpan?: number;
+}) {
+  const Icon = iconName ? getResourceIcon(iconName) : ExternalLink;
+
   return (
-    <div
-      className="resource-grid"
-      style={{ gap: "16px", width: "100%" }}
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-testid={`card-external-${name.toLowerCase().replace(/\s+/g, "-")}`}
+      style={{ gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined, textDecoration: "none" }}
     >
-      <style>{`
-        .resource-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-        }
-        @media (min-width: 640px) {
-          .resource-grid {
-            grid-template-columns: 199.59fr 188.20fr 188.20fr;
-          }
-        }
-      `}</style>
-      {children}
-    </div>
+      <div
+        style={{
+          position: "relative",
+          background: bgImage
+            ? `url(${bgImage}) center/cover no-repeat #0f1011`
+            : "#0f1011",
+          border: "0.487px solid rgba(255,255,255,0.05)",
+          borderRadius: "5.842px",
+          overflow: "hidden",
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          height: "126px",
+          paddingTop: "12.17px",
+          paddingLeft: "12.17px",
+          paddingRight: "12.17px",
+          paddingBottom: "14.118px",
+          transition: "border-color 0.15s ease",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.05)";
+        }}
+      >
+        {bgImage && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,0.25)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+        )}
+
+        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 1 }}>
+          <div style={{
+            width: "23.367px",
+            height: "23.367px",
+            borderRadius: "3.894px",
+            background: "rgba(255,255,255,0.05)",
+            boxShadow: "0px 0.974px 1.947px 0px rgba(0,0,0,0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <Icon style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+              fontWeight: 500,
+              fontSize: "16px",
+              color: "#f7f8f8",
+              letterSpacing: "-0.1402px",
+              lineHeight: "15.539px",
+              marginBottom: "7.789px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}>
+              {name}
+            </p>
+            <p style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontWeight: 400,
+              fontSize: "10px",
+              color: "#8a8f98",
+              lineHeight: "10.223px",
+            }}>
+              {description}
+            </p>
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.35)", marginLeft: "8px", flexShrink: 0 }}>
+            <ExternalLink style={{ width: "14px", height: "14px" }} />
+          </div>
+        </div>
+      </div>
+    </a>
   );
+}
+
+const PRAYER_NAMES = [
+  "retaliation",
+  "miracle prayer",
+  "examen",
+  "lectio",
+  "rosary",
+  "divine mercy",
+];
+
+function matchesPrayer(name: string, match: string) {
+  return name.toLowerCase().includes(match);
 }
 
 export default function Resources() {
@@ -206,8 +308,9 @@ export default function Resources() {
     queryKey: ["/api/practice-resources"],
   });
 
-  const prayers = resources?.filter((r) => r.type === "prayer") ?? [];
-  const practices = resources?.filter((r) => r.type === "practice") ?? [];
+  const prayerCards: (PracticeResource | null)[] = PRAYER_NAMES.map((match) =>
+    resources?.find((r) => matchesPrayer(r.name, match)) ?? null
+  );
 
   return (
     <DashboardLayout>
@@ -220,7 +323,6 @@ export default function Resources() {
           paddingBottom: "64px",
         }}
       >
-        {/* Page title */}
         <h1 style={{
           fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
           fontWeight: 500,
@@ -248,33 +350,70 @@ export default function Resources() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
-            {prayers.length > 0 && (
-              <div>
-                <SectionDivider label="PRAYERS" />
-                <ResourceGrid>
-                  {prayers.map((r) => (
-                    <ResourceCard key={r.id} resource={r} />
-                  ))}
-                </ResourceGrid>
+            {/* PRAYERS — 3 equal columns, exactly 6 cards in 2 rows */}
+            <div>
+              <SectionDivider label="PRAYERS" />
+              <div
+                className="resource-grid-equal"
+                style={{ gap: "8px", width: "100%" }}
+              >
+                <style>{`
+                  .resource-grid-equal {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                  }
+                  @media (min-width: 640px) {
+                    .resource-grid-equal {
+                      grid-template-columns: repeat(3, 1fr);
+                    }
+                  }
+                `}</style>
+                {prayerCards.map((resource, i) =>
+                  resource ? (
+                    <ResourceCard key={resource.id} resource={resource} />
+                  ) : (
+                    <div key={i} style={{ height: "126px", border: "0.487px solid rgba(255,255,255,0.03)", borderRadius: "5.842px", backgroundColor: "#0a0a0a" }} />
+                  )
+                )}
               </div>
-            )}
+            </div>
 
-            {practices.length > 0 && (
-              <div>
-                <SectionDivider label="ADDITIONAL SUPPORT" />
-                <ResourceGrid>
-                  {practices.map((r) => (
-                    <ResourceCard key={r.id} resource={r} />
-                  ))}
-                </ResourceGrid>
+            {/* ADDITIONAL RESOURCES — catechism (1 col) + penitent (2 cols) */}
+            <div>
+              <SectionDivider label="ADDITIONAL RESOURCES" />
+              <div
+                className="resource-grid-additional"
+                style={{ gap: "8px", width: "100%" }}
+              >
+                <style>{`
+                  .resource-grid-additional {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                  }
+                  @media (min-width: 640px) {
+                    .resource-grid-additional {
+                      grid-template-columns: repeat(3, 1fr);
+                    }
+                  }
+                `}</style>
+                <ExternalCard
+                  name="Baltimore Catechism"
+                  description="Classic Catholic reference"
+                  href="https://www.catechism.cc/catechisms/Baltimore_Catechism.pdf"
+                  bgImage={catechismImg}
+                  iconName="catechism"
+                  colSpan={1}
+                />
+                <ExternalCard
+                  name="Penitent Soldiers of Mary"
+                  description="Marian devotion community"
+                  href="https://penitentsoldiersofmary.org/"
+                  bgImage={penitentImg}
+                  iconName="penitent"
+                  colSpan={2}
+                />
               </div>
-            )}
-
-            {!isLoading && prayers.length === 0 && practices.length === 0 && (
-              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "14px", color: "rgba(255,255,255,0.4)", textAlign: "center" }}>
-                No resources available yet.
-              </p>
-            )}
+            </div>
           </div>
         )}
       </div>
