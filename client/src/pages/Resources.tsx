@@ -1,8 +1,64 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Church, ArrowRight } from "lucide-react";
+import {
+  FoldVertical,
+  Regex,
+  Loader,
+  Lightbulb,
+  Lasso,
+  Heart,
+  Church,
+  Shield,
+  ArrowRight,
+} from "lucide-react";
 import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
+import type { LucideIcon } from "lucide-react";
+
+import retaliationImg from "@assets/Retaliation_1773942790197.webp";
+import catechismImg from "@assets/Catechism_1773942790213.webp";
+import divineMercyImg from "@assets/Divine_Mercy_1773942790214.webp";
+import rosaryImg from "@assets/Rosary_1773942790214.webp";
+import lectioImg from "@assets/Lectio_1773942790214.webp";
+import examenImg from "@assets/Examen_1773942790214.webp";
+import miraclePrayerImg from "@assets/Miracle_Prayer_1773942790214.webp";
+import penitentImg from "@assets/Penitent_1773942790215.webp";
+
+const IMAGE_MAP: Array<{ match: string; img: string }> = [
+  { match: "retaliation", img: retaliationImg },
+  { match: "catechism", img: catechismImg },
+  { match: "baltimore", img: catechismImg },
+  { match: "divine mercy", img: divineMercyImg },
+  { match: "rosary", img: rosaryImg },
+  { match: "lectio", img: lectioImg },
+  { match: "examen", img: examenImg },
+  { match: "miracle prayer", img: miraclePrayerImg },
+  { match: "penitent", img: penitentImg },
+];
+
+const ICON_MAP: Array<{ match: string; icon: LucideIcon }> = [
+  { match: "retaliation", icon: FoldVertical },
+  { match: "miracle prayer", icon: Regex },
+  { match: "examen", icon: Loader },
+  { match: "lectio", icon: Lightbulb },
+  { match: "rosary", icon: Lasso },
+  { match: "divine mercy", icon: Heart },
+  { match: "catechism", icon: Church },
+  { match: "baltimore", icon: Church },
+  { match: "penitent", icon: Shield },
+];
+
+function getResourceImage(name: string): string | undefined {
+  const lower = name.toLowerCase();
+  const entry = IMAGE_MAP.find((m) => lower.includes(m.match));
+  return entry?.img;
+}
+
+function getResourceIcon(name: string): LucideIcon {
+  const lower = name.toLowerCase();
+  const entry = ICON_MAP.find((m) => lower.includes(m.match));
+  return entry?.icon ?? Church;
+}
 
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -26,14 +82,18 @@ function SectionDivider({ label }: { label: string }) {
 }
 
 function ResourceCard({ resource }: { resource: PracticeResource }) {
-  const Icon = resource.type === "prayer" ? BookOpen : Church;
+  const Icon = getResourceIcon(resource.name);
+  const bgImage = getResourceImage(resource.name);
 
   return (
     <Link href={`/resources/${resource.id}`}>
       <div
         data-testid={`card-resource-${resource.id}`}
         style={{
-          background: "#0f1011",
+          position: "relative",
+          background: bgImage
+            ? `url(${bgImage}) center/cover no-repeat #0f1011`
+            : "#0f1011",
           border: "0.487px solid rgba(255,255,255,0.05)",
           borderRadius: "5.842px",
           overflow: "hidden",
@@ -55,8 +115,18 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.05)";
         }}
       >
+        {bgImage && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,0.18)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }} />
+        )}
+
         {/* Top: icon */}
-        <div style={{ display: "flex", alignItems: "flex-start" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 1 }}>
           <div style={{
             width: "23.367px",
             height: "23.367px",
@@ -73,7 +143,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
         </div>
 
         {/* Bottom: title + subtitle + arrow */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 1 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
               fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
@@ -109,9 +179,23 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
   );
 }
 
-function BentoGrid({ children }: { children: React.ReactNode }) {
+function ResourceGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+    <div
+      className="resource-grid"
+      style={{ gap: "16px", width: "100%" }}
+    >
+      <style>{`
+        .resource-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+        @media (min-width: 640px) {
+          .resource-grid {
+            grid-template-columns: 199.59fr 188.20fr 188.20fr;
+          }
+        }
+      `}</style>
       {children}
     </div>
   );
@@ -166,23 +250,23 @@ export default function Resources() {
           <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
             {prayers.length > 0 && (
               <div>
-                <SectionDivider label="Prayers" />
-                <BentoGrid>
+                <SectionDivider label="PRAYERS" />
+                <ResourceGrid>
                   {prayers.map((r) => (
                     <ResourceCard key={r.id} resource={r} />
                   ))}
-                </BentoGrid>
+                </ResourceGrid>
               </div>
             )}
 
             {practices.length > 0 && (
               <div>
-                <SectionDivider label="Practices" />
-                <BentoGrid>
+                <SectionDivider label="ADDITIONAL SUPPORT" />
+                <ResourceGrid>
                   {practices.map((r) => (
                     <ResourceCard key={r.id} resource={r} />
                   ))}
-                </BentoGrid>
+                </ResourceGrid>
               </div>
             )}
 
