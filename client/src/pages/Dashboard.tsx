@@ -6,6 +6,7 @@ import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
 import { useUserPrayerCompletions, useMarkPrayerComplete, useUnmarkPrayerComplete } from "@/hooks/use-prayer-completions";
 import { useCohortStartDate } from "@/hooks/use-cohort";
 import { Shell } from "@/components/layout/Shell";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -310,21 +311,20 @@ export default function Dashboard() {
     setViewMode("grid");
   };
 
-  return (
-    <Shell>
-      <Dialog open={prayerModalOpen !== null} onOpenChange={() => setPrayerModalOpen(null)}>
-        <DialogContent className="w-[95vw] max-w-lg h-[90vh] sm:h-auto sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="font-serif text-lg sm:text-xl">{prayerModalOpen}</DialogTitle>
-          </DialogHeader>
-          <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
-            {prayerModalOpen && PRAYER_TEXTS[prayerModalOpen as keyof typeof PRAYER_TEXTS]}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {viewMode === "grid" ? (
-        <div className="h-[calc(100vh-6rem)]">
+  if (viewMode === "grid") {
+    return (
+      <DashboardLayout>
+        <Dialog open={prayerModalOpen !== null} onOpenChange={() => setPrayerModalOpen(null)}>
+          <DialogContent className="w-[95vw] max-w-lg h-[90vh] sm:h-auto sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="font-serif text-lg sm:text-xl">{prayerModalOpen}</DialogTitle>
+            </DialogHeader>
+            <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
+              {prayerModalOpen && PRAYER_TEXTS[prayerModalOpen as keyof typeof PRAYER_TEXTS]}
+            </div>
+          </DialogContent>
+        </Dialog>
+        <div className="h-[calc(100vh-72px)]">
           <DayGridView
             currentDay={currentDay}
             isTrackA={isTrackA}
@@ -340,7 +340,13 @@ export default function Dashboard() {
             onPrelimSelect={handlePrelimSelect}
           />
         </div>
-      ) : viewMode === "prelim" ? (() => {
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <Shell>
+      {viewMode === "prelim" ? (() => {
         const prelimMod = prelimModulesData?.find(m => m.position === selectedPrelimPosition);
         if (!prelimMod) return (
           <div className="flex flex-col items-center justify-center h-[60vh] gap-4">

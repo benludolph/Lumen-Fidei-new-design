@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Lock, Check, ArrowRight, Sun, Moon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Lock, Check, Sun, Moon } from "lucide-react";
 
 interface DayCardProps {
   dayNumber: number;
@@ -15,6 +14,7 @@ interface DayCardProps {
   isTrackB?: boolean;
   backgroundImage?: string;
   cohortStartDate?: string | null;
+  fullWidth?: boolean;
   onClick: () => void;
 }
 
@@ -27,7 +27,7 @@ function getUnlockDateLabel(cohortStartDate: string, dayNumber: number): string 
   const unlock = new Date(start);
   unlock.setDate(start.getDate() + calendarDaysOffset);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `This lesson unlocks on ${months[unlock.getMonth()]} ${unlock.getDate()}`;
+  return `Unlocks ${months[unlock.getMonth()]} ${unlock.getDate()}`;
 }
 
 export function DayCard({
@@ -43,11 +43,9 @@ export function DayCard({
   isTrackB,
   backgroundImage,
   cohortStartDate,
+  fullWidth = false,
   onClick,
 }: DayCardProps) {
-  const isPast = !isToday && !isLocked;
-  const showGrayscale = !isToday && !isCompleted;
-
   const tooltipTitle = isLocked && cohortStartDate
     ? getUnlockDateLabel(cohortStartDate, dayNumber)
     : undefined;
@@ -59,81 +57,116 @@ export function DayCard({
       title={tooltipTitle}
       data-testid={`card-day-${dayNumber}`}
       className={cn(
-        "relative flex items-center gap-3 p-5 rounded-lg shadow-sm text-left transition-all duration-200 overflow-hidden group w-full min-h-[120px]",
-        isLocked && "opacity-40 cursor-not-allowed",
-        !isLocked && !isCompleted && "hover:shadow-md hover:scale-[1.01] cursor-pointer",
-        isCompleted && "cursor-pointer hover:shadow-md",
+        "relative text-left transition-all duration-200 overflow-hidden group w-full",
+        isLocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:brightness-110",
       )}
+      style={{
+        height: "126px",
+        background: "#0f1011",
+        border: "0.487px solid rgba(255,255,255,0.05)",
+        borderRadius: "5.842px",
+      }}
     >
+      {/* Background image — overflows top-right (2-col) or offsets left (full-width) */}
       {backgroundImage && (
-        <img
-          src={backgroundImage}
-          alt=""
-          className={cn(
-            "absolute inset-0 w-full h-full object-cover rounded-lg transition-all duration-300",
-            showGrayscale && "grayscale",
-          )}
-        />
+        <>
+          <img
+            src={backgroundImage}
+            alt=""
+            className={cn(
+              "absolute object-cover transition-all duration-300 pointer-events-none",
+              isLocked && "grayscale opacity-60",
+            )}
+            style={
+              fullWidth
+                ? { left: "224px", top: "-58px", width: "463px", height: "auto", minHeight: "242px" }
+                : { right: "-0.94px", top: "-25.23px", width: "128.517px", height: "auto", minHeight: "177px" }
+            }
+          />
+          {/* Gradient overlay so text is readable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: fullWidth
+                ? "linear-gradient(267.99deg, rgba(15,16,17,0) 30%, rgb(15,16,17) 65%)"
+                : "linear-gradient(267.99deg, rgba(15,16,17,0) 20%, rgb(15,16,17) 75%)",
+            }}
+          />
+        </>
       )}
 
+      {/* State icon — top-left, Figma spec: left:12.17px, top:12.17px, 23.367×23.367 */}
       <div
-        className={cn(
-          "absolute inset-0 rounded-lg transition-colors duration-300",
-          backgroundImage && "bg-black/40",
-          backgroundImage && isCompleted && !isLocked && "group-hover:bg-black/0",
-          !backgroundImage && isToday && "bg-[#003725]",
-          !backgroundImage && isCompleted && !isToday && "bg-[#003725]/90",
-          !backgroundImage && isPast && !isCompleted && "bg-zinc-800",
-          !backgroundImage && isLocked && "bg-zinc-900",
+        className="absolute flex items-center justify-center"
+        style={{ left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px" }}
+      >
+        {isLocked ? (
+          <Lock className="w-3.5 h-3.5 text-white/30" />
+        ) : isCompleted ? (
+          <div
+            className={cn(
+              "flex items-center justify-center rounded-full",
+              isCompletedOutOfOrder ? "bg-yellow-500" : "bg-[#22c55e]"
+            )}
+            style={{ width: "23.367px", height: "23.367px" }}
+          >
+            <Check className="w-3 h-3 text-white" strokeWidth={2.5} />
+          </div>
+        ) : isToday ? (
+          <div
+            className="flex items-center justify-center rounded-full bg-[#F07830]"
+            style={{ width: "23.367px", height: "23.367px" }}
+          >
+            <span className="text-white text-[9px] font-bold" style={{ fontFamily: "'Afacad', sans-serif" }}>
+              NOW
+            </span>
+          </div>
+        ) : (
+          <div
+            className="rounded-full border border-[rgba(255,255,255,0.12)]"
+            style={{ width: "23.367px", height: "23.367px" }}
+          />
         )}
-      />
+      </div>
 
-      <div className="relative z-10 flex flex-col gap-1 flex-1 min-w-0">
-        <p className="font-['Afacad',sans-serif] font-semibold text-white text-[16px] leading-7 line-clamp-2 drop-shadow-sm">
-          Day {dayNumber}. {title}
+      {/* Text block — bottom-left, Figma: left:12.17px, top:77.094px */}
+      <div
+        className="absolute"
+        style={{ left: "12.17px", top: "77.094px", maxWidth: fullWidth ? "340px" : "175.25px" }}
+      >
+        <p
+          className="text-white text-[13px] leading-[16px] font-medium truncate"
+          style={{ fontFamily: "'Afacad', sans-serif" }}
+        >
+          Day {dayNumber} · {title}
         </p>
         {subtitle && (
-          <p className="font-['Afacad',sans-serif] text-white/70 text-[13px] leading-5 truncate drop-shadow-sm">
+          <p
+            className="text-[rgba(255,255,255,0.45)] text-[11px] leading-[14px] truncate mt-[3px]"
+            style={{ fontFamily: "'Afacad', sans-serif" }}
+          >
             {subtitle}
           </p>
         )}
         {isTrackB && !isLocked && (
           <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-1">
-              <Sun className={cn("w-3 h-3", morningCompleted ? "text-green-400" : "text-white/40")} />
-              <span className={cn("text-[11px]", morningCompleted ? "text-green-400" : "text-white/40")}>AM</span>
+            <div className="flex items-center gap-0.5">
+              <Sun className={cn("w-2.5 h-2.5", morningCompleted ? "text-[#22c55e]" : "text-white/30")} />
+              <span className={cn("text-[10px]", morningCompleted ? "text-[#22c55e]" : "text-white/30")}
+                style={{ fontFamily: "'Afacad', sans-serif" }}
+              >
+                AM
+              </span>
             </div>
-            <div className="flex items-center gap-1">
-              <Moon className={cn("w-3 h-3", eveningCompleted ? "text-green-400" : "text-white/40")} />
-              <span className={cn("text-[11px]", eveningCompleted ? "text-green-400" : "text-white/40")}>PM</span>
+            <div className="flex items-center gap-0.5">
+              <Moon className={cn("w-2.5 h-2.5", eveningCompleted ? "text-[#22c55e]" : "text-white/30")} />
+              <span className={cn("text-[10px]", eveningCompleted ? "text-[#22c55e]" : "text-white/30")}
+                style={{ fontFamily: "'Afacad', sans-serif" }}
+              >
+                PM
+              </span>
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="relative z-10 shrink-0">
-        {isLocked ? (
-          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-white/10">
-            <Lock className="w-4 h-4 text-white/50" />
-          </div>
-        ) : isCompleted ? (
-          <div className={cn(
-            "flex items-center justify-center w-9 h-9 rounded-md shadow-sm",
-            isCompletedOutOfOrder ? "bg-yellow-500" : "bg-green-500"
-          )}>
-            <Check className="w-5 h-5 text-white" />
-          </div>
-        ) : (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="gap-1.5 h-9 text-sm font-medium pointer-events-none"
-            tabIndex={-1}
-            data-testid={`button-start-day-${dayNumber}`}
-          >
-            Start
-            <ArrowRight className="w-4 h-4" />
-          </Button>
         )}
       </div>
     </button>

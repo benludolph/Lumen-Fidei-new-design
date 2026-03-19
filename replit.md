@@ -37,10 +37,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Dashboard Architecture
 - **Grid + Detail Pattern**: Dashboard uses a two-mode view:
-  - **Grid mode** (default): 2-column card grid showing all 30 days grouped by week, with a sticky dark header showing current week theme. Days show as active (green), completed (green + check), or locked (dimmed + lock icon). Responsive: 1-column on mobile.
-  - **Detail mode (Track B)**: Clicking a day card opens the full content view with morning/evening tabs. "Back to Overview" button returns to grid.
+  - **Grid mode** (default): Uses `DashboardLayout` — dark gothic cathedral aesthetic with full-page background image (`/dashboard_bg_cathedral.png`), side gradients fading the image to black, and a fixed 72px frosted-glass navbar. 608px centered content column with 2-column card grid (1-column on mobile, <640px). Week section headers with Ivy Ora Display font. Cards: `#0f1011` bg, 0.487px border, 5.842px radius, 126px tall, with images overflowing top-right.
+  - **Detail mode (Track B)**: Clicking a day card opens the full content view (wrapped in standard `Shell`) with morning/evening tabs. "Back to Overview" button returns to grid.
   - **Lesson flow (Track A)**: Clicking a day card launches a Duolingo-style multi-screen lesson flow (see below).
-- **Key Components**: `DayCard`, `DayGridView`, `StickyWeekHeader`, `WeekSection`, `PeriodSelectionDialog`, `OverviewGuideModal` (all in `client/src/components/`)
+- **Key Components**: `DayCard`, `DayGridView`, `DashboardLayout`, `PeriodSelectionDialog`, `OverviewGuideModal` (all in `client/src/components/`)
+- **Fonts**: Afacad (variable weight, body), Ivy Ora Display Medium (section headers on dashboard). Both loaded via `@font-face` in `index.css`, served from `client/public/fonts/`.
 - **Sunday Banners**: Sundays are NOT numbered program days. Static "Sunday — Go to Mass" banners with Church icons appear between week groups in the grid (purely visual, no DB content, no completion tracking). Days 1-30 are all real content days (6 per week × 5 weeks).
 - **Week Themes**: Track A uses dynamic module data from `trackAModules` table (fetched via `/api/track-a-modules`). Each module has a title, subtitle, and optional custom imageUrl. Falls back to rotating default images if no custom image is set.
 - **Track A Modules**: `trackAModules` table stores week-level metadata (weekNumber, title, subtitle, imageUrl). Admin can edit module titles/subtitles and upload custom images via the module management UI.
