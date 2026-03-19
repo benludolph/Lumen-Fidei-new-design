@@ -106,9 +106,7 @@ export function DayCard({
             style={{
               position: "absolute",
               inset: 0,
-              background: isFull
-                ? "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)"
-                : "linear-gradient(to top, rgba(15,16,17,0.97) 0%, rgba(15,16,17,0.55) 55%, rgba(15,16,17,0.1) 100%)",
+              background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)",
               pointerEvents: "none",
             }}
           />

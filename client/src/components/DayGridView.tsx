@@ -87,7 +87,7 @@ function SectionDivider({ label }: { label: string }) {
 
 function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <div style={{ width: "100%", height: "88px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", marginBottom: "16px" }}>
+    <div style={{ width: "100%", height: "88px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", marginBottom: "16px" }}>
       <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", letterSpacing: "0.13em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: "4px" }}>
         {eyebrow}
       </p>
@@ -167,7 +167,7 @@ function Day0FullCard({ isUnlocked, onClick, imageUrl }: { isUnlocked: boolean; 
     >
       {imageUrl && (
         <>
-          <img src={imageUrl} alt="" style={{ position: "absolute", left: "224px", top: "-58px", width: "463px", pointerEvents: "none" }} />
+          <img src={imageUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
         </>
       )}
@@ -186,7 +186,7 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
   return (
     <div
       className="sticky top-0 z-20"
-      style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(9,9,9,0.88)", borderBottom: "0.487px solid rgba(255,255,255,0.08)", padding: "10px 16px", marginLeft: "-16px", marginRight: "-16px" }}
+      style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(9,9,9,0.88)", borderBottom: "0.487px solid rgba(255,255,255,0.08)", padding: "10px 16px" }}
     >
       <div style={{ maxWidth: "608px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
@@ -281,7 +281,7 @@ export function DayGridView({
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", position: "relative" }} className="custom-scrollbar">
-        <div style={{ maxWidth: "608px", margin: "0 auto", padding: "0 16px" }}>
+        <div style={{ maxWidth: "608px", margin: "0 auto" }}>
 
           <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
 
