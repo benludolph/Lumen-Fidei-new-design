@@ -1,7 +1,8 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "wouter";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Play, Pause, Clock } from "lucide-react";
+import { useState, useRef } from "react";
 import type { PracticeResource } from "@shared/schema";
 import { formatContent } from "@/lib/formatContent";
 
@@ -15,8 +16,6 @@ function Breadcrumb({ name }: { name: string }) {
         height: "60px",
         display: "flex",
         alignItems: "center",
-        paddingLeft: "20px",
-        paddingRight: "20px",
         backdropFilter: "blur(5px)",
         WebkitBackdropFilter: "blur(5px)",
         background: "rgba(0,0,0,0.35)",
@@ -24,7 +23,10 @@ function Breadcrumb({ name }: { name: string }) {
         boxShadow: "0px 25px 50px 0px rgba(0,0,0,0.25), 0px 5px 25px 0px rgba(0,0,0,0.5)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div
+        className="px-4 sm:px-[107px]"
+        style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px" }}
+      >
         <Link href="/resources">
           <span
             data-testid="breadcrumb-resources"
@@ -82,6 +84,131 @@ function Spinner() {
   );
 }
 
+function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUrl: string; duration?: string | null }) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const toggle = () => {
+    const el = audioRef.current;
+    if (!el) return;
+    if (playing) {
+      el.pause();
+      setPlaying(false);
+    } else {
+      el.play();
+      setPlaying(true);
+    }
+  };
+
+  return (
+    <div
+      data-testid="audio-card"
+      style={{
+        position: "sticky",
+        top: "148px",
+        backgroundColor: "black",
+        borderRadius: "11px",
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "inset 0px 2px 0px 0px rgba(255,255,255,0.1)",
+        overflow: "hidden",
+        cursor: "pointer",
+        flexShrink: 0,
+      }}
+      onClick={toggle}
+    >
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        onEnded={() => setPlaying(false)}
+        style={{ display: "none" }}
+      />
+
+      {/* Thumbnail — 320:180 aspect ratio */}
+      <div style={{ position: "relative", aspectRatio: "320 / 180", overflow: "hidden" }}>
+        <img
+          src={imageUrl}
+          alt="Listen to audio"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center",
+          }}
+        />
+        {/* Bottom fade on thumbnail */}
+        <div style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "80px",
+          background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5))",
+          pointerEvents: "none",
+        }} />
+        {/* Play / Pause button */}
+        <div
+          data-testid="button-play-pause-audio"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "62px",
+            height: "62px",
+            borderRadius: "999px",
+            backgroundColor: "rgba(0,0,0,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {playing
+            ? <Pause style={{ width: "28px", height: "28px", color: "white" }} />
+            : <Play style={{ width: "28px", height: "28px", color: "white", marginLeft: "2px" }} />}
+        </div>
+        {/* Border on thumbnail */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          pointerEvents: "none",
+        }} />
+      </div>
+
+      {/* Info row */}
+      <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <span style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontWeight: 600,
+          fontSize: "15.6px",
+          lineHeight: "24px",
+          color: "white",
+          letterSpacing: "-0.1px",
+        }}>
+          Listen to Audio
+        </span>
+
+        {duration && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Clock style={{ width: "14px", height: "14px", color: "white", flexShrink: 0 }} />
+            <span style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontWeight: 500,
+              fontSize: "13.5px",
+              lineHeight: "16.8px",
+              color: "rgba(255,255,255,0.6)",
+            }}>
+              {duration}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ResourceDetail() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -121,6 +248,7 @@ export default function ResourceDetail() {
   }
 
   const heroImage = resource.imageUrl ?? "/dashboard_bg_cathedral.png";
+  const hasAudio = !!resource.audioUrl;
 
   return (
     <DashboardLayout>
@@ -136,7 +264,6 @@ export default function ResourceDetail() {
           minHeight: "685px",
         }}
       >
-        {/* Inner body padding — matches Figma pt-40 pb-50 px-20 */}
         <div
           style={{
             display: "flex",
@@ -149,11 +276,9 @@ export default function ResourceDetail() {
             width: "100%",
           }}
         >
-          {/* Card — max-w-960, bg-black, 1px border rgba(255,255,255,0.05), rounded-8, overflow-clip */}
-          {/* pt-[379.94px] creates space for the absolute hero image at top */}
+          {/* Hero card — max-w-960, bg-black, border rgba(255,255,255,0.05), rounded-8 */}
           <div
             data-testid="hero-card-resource"
-            className="resource-card"
             style={{
               position: "relative",
               backgroundColor: "black",
@@ -168,7 +293,7 @@ export default function ResourceDetail() {
               flexDirection: "column",
             }}
           >
-            {/* === Hero image — absolutely positioned in top of card === */}
+            {/* Hero image — absolutely positioned at top of card */}
             <div
               aria-hidden="true"
               style={{
@@ -216,7 +341,7 @@ export default function ResourceDetail() {
               }} />
             </div>
 
-            {/* === Card text content — below the image space === */}
+            {/* Card text content — below the image space */}
             <div
               className="px-5 sm:px-10"
               style={{
@@ -244,51 +369,100 @@ export default function ResourceDetail() {
                   .join(" · ")}
               </p>
 
-              {/* Resource title in Ivy Ora Display */}
-              <h1 style={{
-                fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-                fontWeight: 500,
-                fontSize: "36px",
-                color: "white",
-                lineHeight: "1.15",
-                margin: 0,
-              }}>
+              {/* Resource title — 80.2px Ivy Ora Display as per Figma node 2978-3065 */}
+              <h1
+                data-testid="resource-title"
+                style={{
+                  fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+                  fontWeight: 500,
+                  fontSize: "80.2px",
+                  lineHeight: "80.75px",
+                  color: "white",
+                  margin: 0,
+                }}
+              >
                 {resource.name}
               </h1>
 
-              {/* Optional audio player */}
-              {resource.audioUrl && (
-                <audio
-                  data-testid="audio-player"
-                  controls
-                  src={resource.audioUrl}
+              {/* Subtitle — Afacad Regular 22.5px, 60% white */}
+              {resource.subtitle && (
+                <p
+                  data-testid="resource-subtitle"
                   style={{
-                    width: "100%",
-                    height: "40px",
-                    borderRadius: "6px",
-                    outline: "none",
-                    marginTop: "6px",
-                    accentColor: "#F07830",
+                    fontFamily: "'Afacad', sans-serif",
+                    fontWeight: 400,
+                    fontSize: "22.5px",
+                    lineHeight: "31.2px",
+                    color: "rgba(255,255,255,0.6)",
+                    margin: 0,
                   }}
-                />
+                >
+                  {resource.subtitle}
+                </p>
               )}
-
-              {/* Divider */}
-              <div style={{
-                height: "0.5px",
-                background: "rgba(255,255,255,0.08)",
-                width: "100%",
-                marginTop: "18px",
-                marginBottom: "6px",
-                flexShrink: 0,
-              }} />
-
-              {/* Formatted prayer / practice content */}
-              <div data-testid="resource-content" style={{ width: "100%" }}>
-                {formatContent(resource.content)}
-              </div>
             </div>
+
+            {/* Inner shadow overlay — Figma node 2978-3065 inset 0px 1px 0px 0px rgba(255,255,255,0.1) */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
+                borderRadius: "inherit",
+                boxShadow: "inset 0px 1px 0px 0px rgba(255,255,255,0.1)",
+              }}
+            />
           </div>
+
+          {/* Below-card content area: two-column on desktop when audio exists */}
+          <div
+            style={{
+              maxWidth: "960px",
+              width: "100%",
+              marginTop: "30px",
+              display: "flex",
+              flexDirection: "row",
+              gap: "30px",
+              alignItems: "flex-start",
+            }}
+          >
+            {/* Left column — formatted content */}
+            <div
+              data-testid="resource-content"
+              style={{ flex: 1, minWidth: 0 }}
+            >
+              {formatContent(resource.content)}
+            </div>
+
+            {/* Right column — sticky audio card (only shown when audioUrl exists) */}
+            {hasAudio && (
+              <div
+                className="hidden sm:block"
+                style={{ width: "300px", flexShrink: 0 }}
+              >
+                <AudioCard
+                  imageUrl={heroImage}
+                  audioUrl={resource.audioUrl!}
+                  duration={resource.duration}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Mobile audio player — full-width below content when audioUrl exists */}
+          {hasAudio && (
+            <div
+              className="sm:hidden"
+              style={{ maxWidth: "960px", width: "100%", marginTop: "20px" }}
+            >
+              <AudioCard
+                imageUrl={heroImage}
+                audioUrl={resource.audioUrl!}
+                duration={resource.duration}
+              />
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

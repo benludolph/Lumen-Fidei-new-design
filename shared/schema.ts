@@ -48,6 +48,7 @@ export const practiceResources = pgTable("practice_resources", {
   content: text("content").notNull(), // Full text or instructions
   duration: text("duration"), // e.g., "10 minutes" for practices
   order: integer("order").default(0), // Display order within category
+  subtitle: text("subtitle"), // Optional subtitle shown below the title (e.g. "The greatest weapon of our faith")
   imageUrl: text("image_url"), // Optional hero image URL for the detail page
   audioUrl: text("audio_url"), // Optional audio file URL for the detail page
 });
