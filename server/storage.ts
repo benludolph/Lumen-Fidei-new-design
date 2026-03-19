@@ -62,8 +62,10 @@ export interface IStorage {
   // Practice Resources
   getAllPracticeResources(): Promise<PracticeResource[]>;
   getPracticeResourceByName(name: string): Promise<PracticeResource | undefined>;
+  getPracticeResourceById(id: number): Promise<PracticeResource | undefined>;
   createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
   upsertPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource>;
+  updatePracticeResourceById(id: number, data: Partial<InsertPracticeResource>): Promise<PracticeResource | undefined>;
   
   // Track A Modules
   getTrackAModules(): Promise<TrackAModule[]>;
@@ -312,6 +314,14 @@ export class DatabaseStorage implements IStorage {
   async getPracticeResourceById(id: number): Promise<PracticeResource | undefined> {
     const [resource] = await db.select().from(practiceResources).where(eq(practiceResources.id, id));
     return resource;
+  }
+
+  async updatePracticeResourceById(id: number, data: Partial<InsertPracticeResource>): Promise<PracticeResource | undefined> {
+    const [updated] = await db.update(practiceResources)
+      .set(data)
+      .where(eq(practiceResources.id, id))
+      .returning();
+    return updated;
   }
 
   async createPracticeResource(resource: InsertPracticeResource): Promise<PracticeResource> {

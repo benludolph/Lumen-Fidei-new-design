@@ -69,6 +69,9 @@ export default function Admin() {
           <TabsTrigger value="prelim" className="gap-2" data-testid="tab-prelim">
             <BookOpen className="w-4 h-4" /> Prelim
           </TabsTrigger>
+          <TabsTrigger value="resources" className="gap-2" data-testid="tab-resources">
+            <Volume2 className="w-4 h-4" /> Resources
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -136,6 +139,10 @@ export default function Admin() {
 
         <TabsContent value="prelim">
           <PrelimContentManagementView />
+        </TabsContent>
+
+        <TabsContent value="resources">
+          <PracticeResourcesManagementView />
         </TabsContent>
       </Tabs>
     </Shell>
@@ -4211,6 +4218,163 @@ function PrelimContentManagementView() {
               </Card>
             ))
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================
+// Practice Resources Management
+// =============================================
+
+function PracticeResourcesManagementView() {
+  const { toast } = useToast();
+  const { data: resources, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/practice-resources"],
+  });
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const openEdit = (resource: any) => {
+    setEditingId(resource.id);
+    setImageUrl(resource.imageUrl ?? "");
+    setAudioUrl(resource.audioUrl ?? "");
+  };
+
+  const closeEdit = () => {
+    setEditingId(null);
+    setImageUrl("");
+    setAudioUrl("");
+  };
+
+  const handleSave = async (id: number) => {
+    setIsSaving(true);
+    try {
+      await apiRequest("PUT", `/api/practice-resources/${id}`, {
+        imageUrl: imageUrl.trim() || null,
+        audioUrl: audioUrl.trim() || null,
+      });
+      await queryClient.invalidateQueries({ queryKey: ["/api/practice-resources"] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/practice-resources/${id}`] });
+      toast({ title: "Saved", description: "Resource updated successfully." });
+      closeEdit();
+    } catch {
+      toast({ title: "Error", description: "Failed to save resource.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold">Practice Resources</h2>
+        <p className="text-sm text-muted-foreground">Set hero image and audio URLs for each resource.</p>
+      </div>
+
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground py-8 text-center">Loading…</p>
+      ) : (
+        <div className="space-y-3">
+          {(resources ?? []).map((resource: any) => (
+            <Card key={resource.id} data-testid={`admin-resource-card-${resource.id}`}>
+              <CardContent className="py-4">
+                {editingId === resource.id ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{resource.type}</Badge>
+                      <span className="font-medium text-sm">{resource.name}</span>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3" /> Image URL
+                      </label>
+                      <Input
+                        data-testid={`input-image-url-${resource.id}`}
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <Volume2 className="w-3 h-3" /> Audio URL
+                      </label>
+                      <Input
+                        data-testid={`input-audio-url-${resource.id}`}
+                        value={audioUrl}
+                        onChange={(e) => setAudioUrl(e.target.value)}
+                        placeholder="https://example.com/audio.mp3"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        data-testid={`button-save-resource-${resource.id}`}
+                        size="sm"
+                        onClick={() => handleSave(resource.id)}
+                        disabled={isSaving}
+                      >
+                        <Save className="w-3 h-3 mr-1" /> Save
+                      </Button>
+                      <Button
+                        data-testid={`button-cancel-resource-${resource.id}`}
+                        size="sm"
+                        variant="ghost"
+                        onClick={closeEdit}
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline">{resource.type}</Badge>
+                        <span className="font-medium text-sm">{resource.name}</span>
+                        {resource.duration && (
+                          <span className="text-xs text-muted-foreground">{resource.duration}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" />
+                          {resource.imageUrl ? (
+                            <span className="truncate max-w-xs">{resource.imageUrl}</span>
+                          ) : (
+                            <span className="italic opacity-60">No image set (default used)</span>
+                          )}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Volume2 className="w-3 h-3" />
+                          {resource.audioUrl ? (
+                            <span className="truncate max-w-xs">{resource.audioUrl}</span>
+                          ) : (
+                            <span className="italic opacity-60">No audio</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      data-testid={`button-edit-resource-${resource.id}`}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEdit(resource)}
+                    >
+                      <Edit2 className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
     </div>

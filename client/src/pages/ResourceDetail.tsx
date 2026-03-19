@@ -87,7 +87,7 @@ export default function ResourceDetail() {
   const id = params.id;
 
   const { data: resource, isLoading, isError } = useQuery<PracticeResource>({
-    queryKey: [`/api/practice-resources/id/${id}`],
+    queryKey: [`/api/practice-resources/${id}`],
     enabled: !!id,
   });
 
