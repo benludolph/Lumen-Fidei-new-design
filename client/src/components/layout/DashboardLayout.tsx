@@ -2,7 +2,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -31,13 +30,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="relative min-h-screen bg-[#0b0b0b] overflow-x-hidden">
-      {/* Cathedral background image — full viewport */}
+      {/* Cathedral background — full viewport */}
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/dashboard_bg_cathedral.png')" }}
       />
 
-      {/* Side-fade overlay: collapses edges to black, keeps center clear */}
+      {/* Side-fade: collapses edges to solid black, keeps 608px center visible */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -46,13 +45,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         }}
       />
 
-      {/* Navbar */}
+      {/* Navbar — Figma exact: h:72, pl:107px, pr:115px, blur(10px) */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
         style={{
           height: "72px",
-          paddingLeft: "clamp(16px, 6vw, 107px)",
-          paddingRight: "clamp(16px, 6vw, 115px)",
+          paddingLeft: "107px",
+          paddingRight: "115px",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
           background:
@@ -60,49 +59,48 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Logo */}
+        {/* Logo wordmark */}
         <Link href="/dashboard">
-          <div className="flex items-center gap-2 cursor-pointer select-none">
+          <div className="flex items-center gap-[9px] cursor-pointer select-none">
             <CandleIcon />
             <span
-              className="text-white uppercase tracking-[0.08em] text-[13px] font-medium"
-              style={{ fontFamily: "'Afacad', sans-serif" }}
+              className="text-white uppercase"
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "13px",
+                fontWeight: 500,
+                letterSpacing: "0.08em",
+              }}
             >
               Lumen Fidei
             </span>
           </div>
         </Link>
 
-        {/* Nav links — Figma: Messages, Resources, Collection */}
-        <div className="flex items-center gap-6 sm:gap-8">
+        {/* Nav links — Figma: Messages, Resources, Collection only */}
+        <div className="flex items-center" style={{ gap: "32px" }}>
           <NavLink href="/messages" active={location === "/messages"}>
-            <span className="flex items-center gap-1">
-              Messages
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="ml-1 h-4 min-w-4 px-1 text-[10px]"
-                  data-testid="badge-unread-messages"
-                >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </Badge>
-              )}
-            </span>
+            Messages
+            {unreadCount > 0 && (
+              <span
+                className="ml-1.5 inline-flex items-center justify-center rounded-full bg-[#F07830] text-white"
+                style={{ minWidth: "16px", height: "16px", fontSize: "10px", padding: "0 4px" }}
+                data-testid="badge-unread-messages"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </NavLink>
-          <span className="hidden sm:flex">
-            <NavLink href="/resources" active={location === "/resources"}>
-              Resources
-            </NavLink>
-          </span>
-          <span className="hidden sm:flex">
-            <NavLink href="/collections" active={location === "/collections"}>
-              Collection
-            </NavLink>
-          </span>
+          <NavLink href="/resources" active={location === "/resources"}>
+            Resources
+          </NavLink>
+          <NavLink href="/collections" active={location === "/collections"}>
+            Collection
+          </NavLink>
         </div>
       </nav>
 
-      {/* Page content */}
+      {/* Page content — padded by navbar height */}
       <div className="relative z-10 pt-[72px] min-h-screen">
         {children}
       </div>
@@ -123,12 +121,15 @@ function NavLink({
     <Link href={href}>
       <span
         className={cn(
-          "flex items-center transition-colors text-[13px] cursor-pointer",
-          active
-            ? "text-white"
-            : "text-[rgba(255,255,255,0.45)] hover:text-white",
+          "flex items-center cursor-pointer transition-colors duration-150",
+          active ? "text-white" : "text-[rgba(255,255,255,0.45)] hover:text-white",
         )}
-        style={{ fontFamily: "'Afacad', sans-serif" }}
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "13px",
+          height: "32px",
+          padding: "0 12px",
+        }}
       >
         {children}
       </span>

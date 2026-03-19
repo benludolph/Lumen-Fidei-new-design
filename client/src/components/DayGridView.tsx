@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
 import { DayCard } from "./DayCard";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
@@ -92,11 +91,14 @@ function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
   return weeks;
 }
 
-/** ─── LABEL ─── divider */
+/**
+ * Horizontal divider with centered label.
+ * Figma: 1px rgba(255,255,255,0.12) lines + 10px Afacad uppercase label.
+ */
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 w-full my-5">
-      <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
+    <div className="flex items-center gap-3 w-full" style={{ margin: "20px 0" }}>
+      <div className="flex-1" style={{ height: "1px", background: "rgba(255,255,255,0.12)" }} />
       <span
         className="shrink-0 uppercase"
         style={{
@@ -108,21 +110,24 @@ function SectionDivider({ label }: { label: string }) {
       >
         {label}
       </span>
-      <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
+      <div className="flex-1" style={{ height: "1px", background: "rgba(255,255,255,0.12)" }} />
     </div>
   );
 }
 
-/** Section header card — "INITIAL 30 DAYS" / "WEEK N" + Ivy Ora large title */
+/**
+ * Section header card — 88px tall, Afacad eyebrow + Ivy Ora Display 28px title.
+ */
 function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div
-      className="w-full flex flex-col items-center justify-center mb-4"
+      className="w-full flex flex-col items-center justify-center"
       style={{
         height: "88px",
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.07)",
         borderRadius: "5.842px",
+        marginBottom: "16px",
       }}
     >
       <p
@@ -138,12 +143,11 @@ function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string 
         {eyebrow}
       </p>
       <p
-        className="text-white text-center px-6 leading-tight"
+        className="text-white text-center leading-tight px-6"
         style={{
           fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
           fontSize: "28px",
           fontWeight: 500,
-          maxWidth: "480px",
         }}
       >
         {title}
@@ -152,30 +156,46 @@ function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string 
   );
 }
 
-/** Sunday rest row */
+/** Sunday rest row between weeks */
 function SundayBanner() {
   return (
     <div
       data-testid="banner-sunday"
-      className="w-full flex items-center justify-center gap-3 my-3"
+      className="w-full flex items-center justify-center"
       style={{
         height: "44px",
         background: "rgba(255,255,255,0.03)",
         border: "0.487px solid rgba(255,255,255,0.07)",
         borderRadius: "5.842px",
+        margin: "12px 0",
+        fontFamily: "'Afacad', sans-serif",
+        fontSize: "12px",
+        letterSpacing: "0.1em",
+        color: "rgba(255,255,255,0.4)",
+        textTransform: "uppercase",
       }}
     >
-      <span
-        style={{
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "12px",
-          letterSpacing: "0.1em",
-          color: "rgba(255,255,255,0.4)",
-          textTransform: "uppercase",
-        }}
-      >
-        ✦ Sunday — Rest &amp; Mass ✦
-      </span>
+      ✦ Sunday — Rest &amp; Mass ✦
+    </div>
+  );
+}
+
+/**
+ * Two-column grid — exactly 296px × 2 with 16px gap on desktop.
+ * Collapses to 1 column on small screens.
+ */
+function TwoColGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(2, 296px)",
+        gap: "16px",
+        width: "608px",
+        maxWidth: "100%",
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -202,11 +222,12 @@ function PrelimCard({
       onClick={isClickable ? onClick : undefined}
       disabled={!isClickable}
       data-testid={`card-prelim-${position}`}
-      className={cn(
-        "relative text-left overflow-hidden w-full",
-        !isClickable ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
-      )}
+      className={isClickable ? "cursor-pointer" : "cursor-not-allowed opacity-40"}
       style={{
+        position: "relative",
+        textAlign: "left",
+        overflow: "hidden",
+        width: "100%",
         height: "126px",
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.05)",
@@ -215,68 +236,107 @@ function PrelimCard({
       }}
       onMouseEnter={(e) => {
         if (isClickable) {
-          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.transform = "translateY(-2px)";
+          el.style.borderColor = "rgba(255,255,255,0.12)";
         }
       }}
       onMouseLeave={(e) => {
         if (isClickable) {
-          (e.currentTarget as HTMLButtonElement).style.transform = "";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.transform = "";
+          el.style.borderColor = "rgba(255,255,255,0.05)";
         }
       }}
     >
-      {/* State icon */}
+      {/* State icon — Figma: left:12.17, top:12.17, 23.367×23.367 */}
       <div
-        className="absolute flex items-center justify-center"
-        style={{ left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px" }}
+        style={{
+          position: "absolute",
+          left: "12.17px",
+          top: "12.17px",
+          width: "23.367px",
+          height: "23.367px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+        }}
       >
         {state === "completed" ? (
           <div
-            className="flex items-center justify-center rounded-full bg-[#22c55e]"
-            style={{ width: "23.367px", height: "23.367px" }}
-          >
-            <CheckCircle2 className="w-[12px] h-[12px] text-white" />
-          </div>
-        ) : state === "active" ? (
-          <div
-            className="flex items-center justify-center rounded-full"
             style={{
               width: "23.367px",
               height: "23.367px",
-              background: "rgba(240,120,48,0.15)",
+              borderRadius: "50%",
+              background: "#22c55e",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Icon className="w-[11px] h-[11px] text-[#F07830]" />
+            <CheckCircle2 style={{ width: "12px", height: "12px", color: "white" }} />
+          </div>
+        ) : state === "active" ? (
+          <div
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              borderRadius: "50%",
+              background: "rgba(240,120,48,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon style={{ width: "11px", height: "11px", color: "#F07830" }} />
           </div>
         ) : (
           <div
-            className="rounded-full border border-[rgba(255,255,255,0.12)]"
-            style={{ width: "23.367px", height: "23.367px" }}
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
           />
         )}
       </div>
 
-      {/* Text block */}
+      {/* Text block — Figma: left:12.17, top:77.094 */}
       <div
-        className="absolute"
-        style={{ left: "12.17px", top: "77.094px", maxWidth: "175.25px" }}
+        style={{
+          position: "absolute",
+          left: "12.17px",
+          top: "77.094px",
+          maxWidth: "175.25px",
+        }}
       >
         <p
-          className="text-white font-medium truncate"
-          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px" }}
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "13px",
+            lineHeight: "16px",
+            color: "white",
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
         >
           {title}
         </p>
         {subtitle && (
           <p
-            className="truncate"
             style={{
               fontFamily: "'Afacad', sans-serif",
               fontSize: "11px",
               lineHeight: "14px",
               marginTop: "3px",
               color: "rgba(255,255,255,0.45)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {subtitle}
@@ -287,7 +347,10 @@ function PrelimCard({
   );
 }
 
-/** Day 0 / Introduction card — full variant (608px wide) */
+/**
+ * Day 0 / Introduction card — full variant (608px wide).
+ * Figma: same card spec as DayCard with variant="full".
+ */
 function Day0Card({
   isUnlocked,
   onClick,
@@ -302,11 +365,12 @@ function Day0Card({
       onClick={isUnlocked ? onClick : undefined}
       disabled={!isUnlocked}
       data-testid="card-day-0"
-      className={cn(
-        "relative text-left overflow-hidden w-full",
-        !isUnlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
-      )}
+      className={isUnlocked ? "cursor-pointer" : "cursor-not-allowed opacity-40"}
       style={{
+        position: "relative",
+        textAlign: "left",
+        overflow: "hidden",
+        width: "100%",
         height: "126px",
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.05)",
@@ -315,14 +379,16 @@ function Day0Card({
       }}
       onMouseEnter={(e) => {
         if (isUnlocked) {
-          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.transform = "translateY(-2px)";
+          el.style.borderColor = "rgba(255,255,255,0.12)";
         }
       }}
       onMouseLeave={(e) => {
         if (isUnlocked) {
-          (e.currentTarget as HTMLButtonElement).style.transform = "";
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.transform = "";
+          el.style.borderColor = "rgba(255,255,255,0.05)";
         }
       }}
     >
@@ -331,14 +397,24 @@ function Day0Card({
           <img
             src={imageUrl}
             alt=""
-            className="absolute object-cover pointer-events-none"
-            style={{ left: "224px", top: "-58px", width: "463px", height: "auto", minHeight: "242px" }}
+            style={{
+              position: "absolute",
+              left: "224px",
+              top: "-58px",
+              width: "463px",
+              height: "auto",
+              minHeight: "242px",
+              objectFit: "cover",
+              pointerEvents: "none",
+            }}
           />
           <div
-            className="absolute inset-0 pointer-events-none"
             style={{
+              position: "absolute",
+              inset: 0,
               background:
                 "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)",
+              pointerEvents: "none",
             }}
           />
         </>
@@ -346,27 +422,40 @@ function Day0Card({
 
       {/* Icon */}
       <div
-        className="absolute flex items-center justify-center rounded-full"
         style={{
+          position: "absolute",
           left: "12.17px",
           top: "12.17px",
           width: "23.367px",
           height: "23.367px",
+          borderRadius: "50%",
           background: "rgba(240,120,48,0.15)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <BookOpen className="w-[11px] h-[11px] text-[#F07830]" />
+        <BookOpen style={{ width: "11px", height: "11px", color: "#F07830" }} />
       </div>
 
       {/* Text */}
       <div
-        className="absolute"
-        style={{ left: "12.17px", top: "77.094px", maxWidth: "340px" }}
+        style={{
+          position: "absolute",
+          left: "12.17px",
+          top: "77.094px",
+          maxWidth: "340px",
+        }}
       >
         <p
           data-testid="text-day0-title"
-          className="text-white font-medium"
-          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px" }}
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "13px",
+            lineHeight: "16px",
+            color: "white",
+            fontWeight: 500,
+          }}
         >
           Introduction — Goal of 30 Days
         </p>
@@ -454,29 +543,26 @@ export function DayGridView({
   };
 
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
-  const day0Unlocked = allPrelimsComplete;
   const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackASummaries, trackBSummaries, trackAModules);
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-16 custom-scrollbar">
-        {/* 608px centered content column */}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px" }} className="custom-scrollbar">
+
+        {/* 608px centered column */}
         <div
-          className="mx-auto px-4 sm:px-0"
-          style={{ maxWidth: "608px" }}
+          style={{
+            maxWidth: "608px",
+            margin: "0 auto",
+            padding: "32px 16px",
+          }}
         >
 
-          {/* Before You Begin — pre-modules */}
+          {/* ── PRE-MODULES section ── */}
           {prelimModulesData && prelimModulesData.length > 0 && (
-            <div className="mt-8">
+            <div>
               <SectionDivider label="Before You Begin" />
-              {/* Fixed 296×296 grid, collapses to 1-col on mobile */}
-              <div
-                className="grid grid-cols-1 gap-4"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(296px, 100%), 1fr))",
-                }}
-              >
+              <TwoColGrid>
                 {prelimModulesData.map((mod) => {
                   const prevDone =
                     mod.position === 1 ||
@@ -491,107 +577,105 @@ export function DayGridView({
                     />
                   );
                 })}
-              </div>
+              </TwoColGrid>
+
+              {/* Lock explanation when prelims not complete */}
+              {!allPrelimsComplete && (
+                <div
+                  data-testid="banner-prelims-incomplete"
+                  style={{
+                    marginTop: "12px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    padding: "10px 12px",
+                    background: "rgba(240,120,48,0.08)",
+                    border: "0.487px solid rgba(240,120,48,0.25)",
+                    borderRadius: "5.842px",
+                  }}
+                >
+                  <Lock style={{ width: "14px", height: "14px", color: "#F07830", marginTop: "2px", flexShrink: 0 }} />
+                  <p
+                    style={{
+                      fontFamily: "'Afacad', sans-serif",
+                      fontSize: "12px",
+                      color: "rgba(255,255,255,0.5)",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    <span style={{ color: "#F07830", fontWeight: 500 }}>
+                      Complete the intro modules above
+                    </span>{" "}
+                    to unlock the 30-day program. Each must be done in order.
+                  </p>
+                </div>
+              )}
+
+              {allPrelimsComplete && currentDay === 0 && (
+                <div
+                  data-testid="banner-cohort-not-started"
+                  style={{
+                    marginTop: "12px",
+                    padding: "10px 12px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "0.487px solid rgba(255,255,255,0.1)",
+                    borderRadius: "5.842px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: "'Afacad', sans-serif",
+                      fontSize: "12px",
+                      color: "rgba(255,255,255,0.45)",
+                      lineHeight: "1.5",
+                    }}
+                  >
+                    <span style={{ color: "white", fontWeight: 500 }}>
+                      Your cohort hasn't started yet.
+                    </span>{" "}
+                    Begin with the Introduction while you wait.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Lock-reason banners */}
-          {!allPrelimsComplete && (
-            <div
-              className="mt-3 px-3 py-2.5 flex items-start gap-2"
-              style={{
-                background: "rgba(240,120,48,0.08)",
-                border: "0.487px solid rgba(240,120,48,0.25)",
-                borderRadius: "5.842px",
-              }}
-              data-testid="banner-prelims-incomplete"
-            >
-              <Lock className="w-3.5 h-3.5 text-[#F07830] mt-0.5 shrink-0" />
-              <p
-                style={{
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "12px",
-                  color: "rgba(255,255,255,0.5)",
-                  lineHeight: "1.5",
-                }}
-              >
-                <span style={{ color: "#F07830", fontWeight: 500 }}>
-                  Complete the intro modules above
-                </span>{" "}
-                to unlock the 30-day program. Each must be done in order.
-              </p>
-            </div>
-          )}
-
-          {allPrelimsComplete && currentDay === 0 && (
-            <div
-              className="mt-3 px-3 py-2.5 flex items-start gap-2"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "0.487px solid rgba(255,255,255,0.1)",
-                borderRadius: "5.842px",
-              }}
-              data-testid="banner-cohort-not-started"
-            >
-              <p
-                style={{
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "12px",
-                  color: "rgba(255,255,255,0.45)",
-                  lineHeight: "1.5",
-                }}
-              >
-                <span style={{ color: "white", fontWeight: 500 }}>
-                  Your cohort hasn't started yet.
-                </span>{" "}
-                Begin with the Introduction while you wait.
-              </p>
-            </div>
-          )}
-
-          {/* Weeks */}
+          {/* ── WEEK sections ── */}
           {weekGroups.map(({ week, days }, groupIdx) => {
             const weekTheme = getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries, trackAModules);
 
             return (
               <div key={week} ref={(el) => setWeekRef(week, el)} data-week={week}>
 
-                {/* Sunday banner between weeks */}
+                {/* Sunday rest between weeks */}
                 {groupIdx > 0 && <SundayBanner />}
 
-                {/* Section header card */}
+                {/* Section header */}
                 <SectionHeaderCard
                   eyebrow={groupIdx === 0 ? "Initial 30 Days" : `Week ${week}`}
                   title={weekTheme}
                 />
 
-                {/* Day 0 full-width intro card — Week 1, Track A only */}
+                {/* Day 0 full-width intro — first week, Track A */}
                 {groupIdx === 0 && isTrackA && (
-                  <div className="mb-4">
+                  <div style={{ marginBottom: "16px" }}>
                     <Day0Card
-                      isUnlocked={day0Unlocked}
+                      isUnlocked={allPrelimsComplete}
                       onClick={() => onDaySelect(0)}
                       imageUrl={trackASummaries?.find((c) => c.dayNumber === 0)?.imageUrl}
                     />
                   </div>
                 )}
 
-                {/* Day cards — 2-column fixed 296px grid (collapses on mobile) */}
-                <div
-                  className="mb-4"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(min(296px, 100%), 1fr))",
-                    gap: "16px",
-                  }}
-                >
+                {/* Day cards — fixed 296×296 two-column grid */}
+                <TwoColGrid>
                   {days.map((day) => {
                     const isLocked = day > currentDay || !allPrelimsComplete;
                     const isToday = day === currentDay && allPrelimsComplete;
                     const completed = isDayCompleted(day);
                     const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
                     const trackADay = isTrackA ? trackASummaries?.find((c) => c.dayNumber === day) : undefined;
-                    const subtitle = trackADay?.subtitle || undefined;
+                    const subtitle = trackADay?.subtitle ?? undefined;
 
                     let completedLate = false;
                     if (isTrackA && completed && cohortStartDate && prayerCompletions) {
@@ -637,7 +721,10 @@ export function DayGridView({
                       />
                     );
                   })}
-                </div>
+                </TwoColGrid>
+
+                {/* Spacing after week grid */}
+                <div style={{ height: "16px" }} />
               </div>
             );
           })}

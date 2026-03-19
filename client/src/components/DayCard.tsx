@@ -165,7 +165,7 @@ export function DayCard({
           className="text-white leading-[16px] font-medium truncate"
           style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px" }}
         >
-          Day {dayNumber} · {title}
+          {title}
         </p>
         {subtitle && (
           <p

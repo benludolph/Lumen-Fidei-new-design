@@ -345,7 +345,7 @@ export default function Dashboard() {
   }
 
   return (
-    <Shell>
+    <DashboardLayout>
       {viewMode === "prelim" ? (() => {
         const prelimMod = prelimModulesData?.find(m => m.position === selectedPrelimPosition);
         if (!prelimMod) return (
@@ -663,7 +663,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </Shell>
+    </DashboardLayout>
   );
 }
 
