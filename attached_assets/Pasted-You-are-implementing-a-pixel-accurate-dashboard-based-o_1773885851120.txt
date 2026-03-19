@@ -1,0 +1,123 @@
+You are implementing a pixel-accurate dashboard based on a Figma design.
+
+Reference Figma:
+
+* File: IK5Zyk1DeAgN17PUPhzOWo
+* Use the dashboard screen as the single source of truth
+
+This is NOT a redesign. This is a strict translation.
+
+---
+
+CORE RULES (CRITICAL)
+
+1. Do NOT interpret or redesign anything.
+2. Do NOT simplify layout or spacing.
+3. Do NOT round values (keep decimals like 0.49px).
+4. Do NOT introduce new colors, gradients, or effects.
+5. Do NOT use mask-image, SVG clipping, or complex Figma layer structures.
+6. Ignore Figma grouping/masks — only extract visual results.
+
+---
+
+IMPLEMENTATION STRATEGY (FOLLOW EXACTLY)
+
+Step 1 — Layout only (no images, no hover)
+
+* Build the dashboard structure:
+
+  * sticky top navbar (no sidebar)
+  * centered content container
+  * section headers (Initial 30 Days, Pre-Modules, Week 1, etc.)
+  * grid layout for cards
+
+* Use exact spacing from Figma:
+
+  * margins
+  * padding
+  * gaps
+  * alignment
+
+Do NOT add styling beyond background, spacing, and borders.
+
+---
+
+Step 2 — Card Component (single reusable component)
+
+Create ONE reusable card component.
+
+Card requirements:
+
+* Background: #0f1011
+* Border: 0.49px solid rgba(255,255,255,0.05)
+* Border radius: exact value from Figma
+* Padding: exact from Figma
+* No mask-image
+* No nested Figma export structure
+
+Structure:
+
+* container (relative)
+* image (positioned consistently across all cards)
+* optional gradient overlay (only if visible in Figma)
+* content block (title + subtitle)
+* icon (top-left)
+
+The component must be reusable with props:
+
+* title
+* subtitle
+* image
+* state (locked / completed / available)
+
+---
+
+Step 3 — Grid (Bento Layout)
+
+* Use CSS grid
+* Exact gap values from Figma
+* First card spans full width
+* Remaining cards in 2-column layout
+
+Do NOT approximate spacing.
+
+---
+
+Step 4 — Background
+
+* Apply the large background image behind the dashboard
+* Add a dark overlay so content remains readable
+* Background must NOT affect layout spacing
+
+---
+
+Step 5 — Hover States (only after layout is correct)
+
+Hover must be subtle and consistent across all cards:
+
+* border color increases in opacity
+* optional slight translateY (-2px)
+
+Do NOT:
+
+* add glow
+* add blur
+* change layout or size
+
+---
+
+FINAL VALIDATION
+
+Before finishing:
+
+* Compare spacing, borders, and layout against Figma
+* Ensure no extra effects were added
+* Ensure all cards are structurally identical
+* Ensure only image/content changes between cards
+
+---
+
+Important:
+If something in Figma is unclear, default to the simplest implementation that visually matches the result.
+
+Do NOT recreate Figma’s internal layer complexity.
