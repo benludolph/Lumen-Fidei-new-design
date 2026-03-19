@@ -1,219 +1,274 @@
-import { useState } from "react";
-import { Shell } from "@/components/layout/Shell";
-import { useAuth } from "@/hooks/use-auth";
-import { getCollectedSaints, CollectedSaint } from "@/lib/saintCollection";
-import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lock, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import type { TrackAContent } from "@shared/schema";
+import { useRef, useCallback } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
-interface DisplaySaint {
-  dayNumber: number;
+import augustineImg from "@assets/Augustine_1773958855879.webp";
+import benedictImg from "@assets/Benedict_1773958855880.webp";
+import catherineImg from "@assets/Catherine_of_Siena_1773958855880.webp";
+import francisImg from "@assets/Francis_1773958855880.webp";
+import francisBorgiaImg from "@assets/Francis_Borgia_1773958855880.webp";
+import gemmaImg from "@assets/Gemma_Galgani_1773958855880.webp";
+import johnCrossImg from "@assets/John_of_the_Cross_1773958855880.png";
+import johnVianImg from "@assets/John_Vianney_1773958855880.webp";
+import josephImg from "@assets/Joseph_1773958855880.webp";
+import maxImg from "@assets/Maximilian_Kolbe_1773958855880.webp";
+import padreImg from "@assets/Padre_Pio_1773958855880.webp";
+import jpiiImg from "@assets/Pope_JOhn_Paul_II_1773958855880.webp";
+import teresaCalcImg from "@assets/Teresa_of_Calcutta_1773958855880.webp";
+import teresaAvilaImg from "@assets/Teresa_1773958855880.webp";
+import thereseImg from "@assets/Therese_of_Liseux_1773958855881.webp";
+
+interface Saint {
+  id: string;
   name: string;
   image: string;
-  quote: string;
-  isCollected: boolean;
 }
 
-function SaintCardDetail({ saint, onClose }: { saint: DisplaySaint; onClose: () => void }) {
+const SAINTS: Saint[] = [
+  { id: "augustine", name: "St. Augustine of Hippo", image: augustineImg },
+  { id: "benedict", name: "St. Benedict", image: benedictImg },
+  { id: "catherine", name: "St. Catherine of Siena", image: catherineImg },
+  { id: "francis", name: "St. Francis of Assisi", image: francisImg },
+  { id: "francis-borgia", name: "St. Francis Borgia", image: francisBorgiaImg },
+  { id: "gemma", name: "St. Gemma Galgani", image: gemmaImg },
+  { id: "john-cross", name: "St. John of the Cross", image: johnCrossImg },
+  { id: "john-vian", name: "St. John Vianney", image: johnVianImg },
+  { id: "joseph", name: "St. Joseph", image: josephImg },
+  { id: "maximilian", name: "St. Maximilian Kolbe", image: maxImg },
+  { id: "padre-pio", name: "Padre Pio", image: padreImg },
+  { id: "jpii", name: "Pope John Paul II", image: jpiiImg },
+  { id: "teresa-calcutta", name: "St. Teresa of Calcutta", image: teresaCalcImg },
+  { id: "teresa-avila", name: "St. Teresa of Ávila", image: teresaAvilaImg },
+  { id: "therese", name: "St. Thérèse of Lisieux", image: thereseImg },
+];
+
+function HoloCard({ saint }: { saint: Saint }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const sheenRef = useRef<HTMLDivElement>(null);
+  const rainbowRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const isHovering = useRef(false);
+
+  const applyEffect = useCallback((mx: number, my: number, rect: DOMRect) => {
+    const px = (mx - rect.left) / rect.width;
+    const py = (my - rect.top) / rect.height;
+    const cx = px - 0.5;
+    const cy = py - 0.5;
+
+    const rotateX = cy * -14;
+    const rotateY = cx * 14;
+
+    if (cardRef.current) {
+      cardRef.current.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.04,1.04,1.04)`;
+      cardRef.current.style.transition = "none";
+    }
+
+    if (overlayRef.current) {
+      overlayRef.current.style.background = `radial-gradient(circle at ${px * 100}% ${py * 100}%, rgba(255,255,255,0.18) 0%, rgba(120,180,255,0.08) 30%, transparent 65%)`;
+      overlayRef.current.style.opacity = "1";
+    }
+
+    if (sheenRef.current) {
+      const angle = 120;
+      const pos = (px * 100 + py * 100) / 2;
+      sheenRef.current.style.background = `linear-gradient(${angle}deg, transparent ${pos - 25}%, rgba(255,255,255,0.12) ${pos}%, rgba(255,255,255,0.08) ${pos + 5}%, transparent ${pos + 30}%)`;
+      sheenRef.current.style.opacity = "1";
+    }
+
+    if (rainbowRef.current) {
+      rainbowRef.current.style.opacity = "1";
+      const hueShift = px * 120;
+      rainbowRef.current.style.background = `linear-gradient(${125 + cx * 30}deg, hsl(${200 + hueShift},100%,70%) 0%, hsl(${240 + hueShift},90%,65%) 25%, hsl(${280 + hueShift},85%,60%) 50%, hsl(${200 + hueShift},80%,70%) 75%, hsl(${220 + hueShift},90%,65%) 100%)`;
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isHovering.current) return;
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mx = e.clientX;
+    const my = e.clientY;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => applyEffect(mx, my, rect));
+  }, [applyEffect]);
+
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    isHovering.current = true;
+    if (rainbowRef.current) rainbowRef.current.style.opacity = "0.18";
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    applyEffect(e.clientX, e.clientY, rect);
+  }, [applyEffect]);
+
+  const handleMouseLeave = useCallback(() => {
+    isHovering.current = false;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    if (cardRef.current) {
+      cardRef.current.style.transition = "transform 0.5s cubic-bezier(0.23,1,0.32,1)";
+      cardRef.current.style.transform = "perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1,1,1)";
+    }
+    if (overlayRef.current) {
+      overlayRef.current.style.transition = "opacity 0.5s ease";
+      overlayRef.current.style.opacity = "0";
+    }
+    if (sheenRef.current) {
+      sheenRef.current.style.transition = "opacity 0.5s ease";
+      sheenRef.current.style.opacity = "0";
+    }
+    if (rainbowRef.current) {
+      rainbowRef.current.style.transition = "opacity 0.5s ease";
+      rainbowRef.current.style.opacity = "0";
+    }
+  }, []);
+
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
+    <div
+      style={{ perspective: "800px", cursor: "pointer" }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      data-testid={`card-saint-${saint.id}`}
     >
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <motion.div
-        className="relative z-10 flex flex-col items-center max-w-[320px] mx-4"
-        initial={{ scale: 0.85, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.85, opacity: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+      <div
+        ref={cardRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "2/3",
+          borderRadius: "5.84px",
+          overflow: "hidden",
+          border: "0.487px solid rgba(255,255,255,0.05)",
+          transformStyle: "preserve-3d",
+          willChange: "transform",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4)",
+        }}
       >
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute -top-12 right-0 text-white/60 hover:text-white hover:bg-white/10"
-          onClick={onClose}
-          data-testid="button-close-saint-detail"
-        >
-          <X className="w-5 h-5" />
-        </Button>
+        <img
+          src={saint.image}
+          alt={saint.name}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+          draggable={false}
+        />
 
         <div
-          className="rounded-lg overflow-hidden"
+          ref={overlayRef}
           style={{
-            boxShadow: "0 8px 40px rgba(212,175,55,0.3), 0 20px 60px rgba(0,0,0,0.5)",
+            position: "absolute",
+            inset: 0,
+            opacity: 0,
+            pointerEvents: "none",
+            mixBlendMode: "screen",
+            zIndex: 1,
           }}
-        >
-          <img
-            src={saint.image}
-            alt={saint.name}
-            className="w-[200px] h-[296px] object-cover"
-            data-testid={`saint-detail-image-${saint.dayNumber}`}
-          />
-        </div>
+        />
 
-        <p
-          className="font-['Afacad',sans-serif] text-[#d4af37]/70 text-[13px] font-semibold tracking-[3px] uppercase mt-5 mb-1"
-        >
-          COLLECTED
-        </p>
+        <div
+          ref={sheenRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: 0,
+            pointerEvents: "none",
+            mixBlendMode: "screen",
+            zIndex: 2,
+          }}
+        />
 
-        <h2 className="font-['Afacad',sans-serif] font-bold text-white text-[22px] leading-tight text-center mb-3">
-          {saint.name}
-        </h2>
+        <div
+          ref={rainbowRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: 0,
+            pointerEvents: "none",
+            mixBlendMode: "color-dodge",
+            zIndex: 3,
+            background:
+              "linear-gradient(125deg, hsl(200,100%,70%) 0%, hsl(240,90%,65%) 25%, hsl(280,85%,60%) 50%, hsl(200,80%,70%) 75%, hsl(220,90%,65%) 100%)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
-        <p className="font-['Afacad',sans-serif] text-white/60 text-[15px] leading-[22px] text-center italic px-2">
-          "{saint.quote}"
-        </p>
-      </motion.div>
-    </motion.div>
+function SaintsDivider() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        marginBottom: "32px",
+      }}
+    >
+      <div
+        style={{
+          flex: 1,
+          height: "1px",
+          background: "rgba(255,255,255,0.1)",
+        }}
+      />
+      <span
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "12px",
+          fontWeight: 600,
+          letterSpacing: "4px",
+          color: "rgba(255,255,255,0.35)",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+        }}
+      >
+        SAINTS
+      </span>
+      <div
+        style={{
+          flex: 1,
+          height: "1px",
+          background: "rgba(255,255,255,0.1)",
+        }}
+      />
+    </div>
   );
 }
 
 export default function Collections() {
-  const { user } = useAuth();
-  const [selectedSaint, setSelectedSaint] = useState<DisplaySaint | null>(null);
-
-  const { data: trackAContent } = useQuery<TrackAContent[]>({
-    queryKey: ["/api/track-a-content"],
-  });
-
-  const collected = user ? getCollectedSaints(user.id) : [];
-
-  const saints: DisplaySaint[] = [];
-  if (trackAContent) {
-    for (const content of trackAContent) {
-      if (content.dayNumber === 0) continue;
-      if (!content.saintName && !content.saintImage) continue;
-
-      const collectedEntry = collected.find(c => c.dayNumber === content.dayNumber);
-      saints.push({
-        dayNumber: content.dayNumber,
-        name: collectedEntry?.name || content.saintName || "",
-        image: collectedEntry?.image || content.saintImage || "",
-        quote: collectedEntry?.quote || content.saintQuote || "",
-        isCollected: !!collectedEntry,
-      });
-    }
-  }
-
-  if (collected.length > 0 && saints.length === 0) {
-    for (const c of collected) {
-      saints.push({
-        dayNumber: c.dayNumber,
-        name: c.name,
-        image: c.image,
-        quote: c.quote,
-        isCollected: true,
-      });
-    }
-  }
-
-  saints.sort((a, b) => a.dayNumber - b.dayNumber);
-
-  const collectedCount = saints.filter(s => s.isCollected).length;
-  const totalCount = saints.length || 30;
-
   return (
-    <Shell>
-      <div className="max-w-2xl mx-auto" data-testid="collections-page">
-        <div className="mb-8">
-          <h1 className="font-['Afacad',sans-serif] font-bold text-[28px] text-foreground">
-            Saint Collection
-          </h1>
-          <p className="font-['Afacad',sans-serif] text-muted-foreground text-[15px] mt-1">
-            Complete lessons to unlock saint cards
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <div className="h-2 flex-1 bg-secondary rounded-full overflow-hidden">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ backgroundColor: "#d4af37" }}
-                initial={{ width: 0 }}
-                animate={{ width: `${(collectedCount / totalCount) * 100}%` }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-              />
-            </div>
-            <span className="font-['Afacad',sans-serif] text-sm font-medium text-muted-foreground whitespace-nowrap" data-testid="text-collection-count">
-              {collectedCount}/{totalCount}
-            </span>
-          </div>
+    <DashboardLayout>
+      <div
+        data-testid="collections-page"
+        className="px-5 sm:px-[107px] pt-12 pb-20 min-h-[calc(100vh-72px)]"
+      >
+        <h1
+          style={{
+            fontFamily: "'Ivy Ora Display', serif",
+            fontSize: "28px",
+            fontWeight: 400,
+            color: "white",
+            marginBottom: "40px",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Collection
+        </h1>
+
+        <SaintsDivider />
+
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+          {SAINTS.map((saint) => (
+            <HoloCard key={saint.id} saint={saint} />
+          ))}
         </div>
-
-        {saints.length === 0 ? (
-          <p className="font-['Afacad',sans-serif] text-muted-foreground text-center py-12">
-            Saints will appear here as your admin adds them to the program.
-          </p>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
-            {saints.map((saint) => (
-              <motion.div
-                key={saint.dayNumber}
-                className="relative cursor-pointer group"
-                whileHover={saint.isCollected ? { scale: 1.03 } : undefined}
-                whileTap={saint.isCollected ? { scale: 0.97 } : undefined}
-                onClick={() => saint.isCollected && setSelectedSaint(saint)}
-                data-testid={`card-saint-day-${saint.dayNumber}`}
-              >
-                <div
-                  className="rounded-lg overflow-hidden aspect-[152/225]"
-                  style={{
-                    boxShadow: saint.isCollected
-                      ? "0 4px 16px rgba(212,175,55,0.15), 0 2px 8px rgba(0,0,0,0.2)"
-                      : "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  {saint.image ? (
-                    <img
-                      src={saint.image}
-                      alt={saint.isCollected ? saint.name : "Locked"}
-                      className={`w-full h-full object-cover transition-all duration-300 ${
-                        saint.isCollected
-                          ? "brightness-100 saturate-100"
-                          : "brightness-[0.3] saturate-0 blur-[1px]"
-                      }`}
-                    />
-                  ) : (
-                    <div className={`w-full h-full bg-muted flex items-center justify-center ${
-                      !saint.isCollected ? "brightness-[0.3]" : ""
-                    }`}>
-                      <Lock className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                  )}
-                  {!saint.isCollected && saint.image && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center border border-white/10">
-                        <Lock className="w-4 h-4 text-white/40" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <p
-                  className={`font-['Afacad',sans-serif] text-[12px] sm:text-[13px] mt-1.5 text-center leading-tight truncate ${
-                    saint.isCollected ? "text-foreground font-medium" : "text-muted-foreground/50"
-                  }`}
-                >
-                  {saint.isCollected ? saint.name.replace("St. ", "") : "???"}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        )}
       </div>
-
-      <AnimatePresence>
-        {selectedSaint && (
-          <SaintCardDetail
-            saint={selectedSaint}
-            onClose={() => setSelectedSaint(null)}
-          />
-        )}
-      </AnimatePresence>
-    </Shell>
+    </DashboardLayout>
   );
 }
