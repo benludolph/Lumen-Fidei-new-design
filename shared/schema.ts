@@ -86,10 +86,11 @@ export const trackAContent = pgTable("track_a_content", {
 // Pre-cohort onboarding modules — 3 sequential modules users complete before the main program
 export const prelimModules = pgTable("prelim_modules", {
   id: serial("id").primaryKey(),
-  position: integer("position").notNull().unique(), // 1, 2, or 3
+  position: integer("position").notNull().unique(), // 1 or 2
   title: text("title").notNull(),
   subtitle: text("subtitle"),
   slides: json("slides").$type<{ type: string; content: string }[]>(),
+  imageUrl: text("image_url"),
 });
 
 // Tracks which prelim modules each user has completed

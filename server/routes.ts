@@ -322,7 +322,7 @@ export async function registerRoutes(
     if (req.user!.role === 'participant') {
       // Check prelim completion gate
       const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      const allPrelimsComplete = completions.length >= 3;
+      const allPrelimsComplete = completions.length >= 2;
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
@@ -368,7 +368,7 @@ export async function registerRoutes(
     if (req.user!.role === 'participant') {
       // Check prelim completion gate (Day 0 also requires all prelims done)
       const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      const allPrelimsComplete = completions.length >= 3;
+      const allPrelimsComplete = completions.length >= 2;
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
@@ -1101,7 +1101,7 @@ export async function registerRoutes(
     // Day 0 agreement requires all 3 prelim modules completed first
     if (req.user!.role === 'participant') {
       const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      if (completions.length < 3) {
+      if (completions.length < 2) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
     }
@@ -1124,7 +1124,7 @@ export async function registerRoutes(
     // Agreement requires all 3 prelim modules completed first
     if (req.user!.role === 'participant') {
       const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      if (completions.length < 3) {
+      if (completions.length < 2) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
     }
@@ -1327,7 +1327,7 @@ export async function registerRoutes(
       return res.status(403).json({ message: "Only participants can complete prelim modules." });
     }
     const position = Number(req.params.position);
-    if (isNaN(position) || position < 1 || position > 3) {
+    if (isNaN(position) || position < 1 || position > 2) {
       return res.status(400).json({ message: "Invalid module position." });
     }
     const userId = req.user!.id;
@@ -1346,15 +1346,15 @@ export async function registerRoutes(
   // PUT /api/admin/prelim-modules/:position — admin-only update of module content
   app.put('/api/admin/prelim-modules/:position', requireRole('admin'), async (req, res) => {
     const position = Number(req.params.position);
-    if (isNaN(position) || position < 1 || position > 3) {
+    if (isNaN(position) || position < 1 || position > 2) {
       return res.status(400).json({ message: "Invalid module position." });
     }
     try {
-      const { title, subtitle, slides } = req.body;
+      const { title, subtitle, slides, imageUrl } = req.body;
       if (!title || typeof title !== 'string') {
         return res.status(400).json({ message: "Title is required." });
       }
-      const module = await storage.upsertPrelimModule({ position, title, subtitle: subtitle || null, slides: slides || null });
+      const module = await storage.upsertPrelimModule({ position, title, subtitle: subtitle || null, slides: slides || null, imageUrl: imageUrl || null });
       res.json(module);
     } catch (error) {
       console.error("Error updating prelim module:", error);
@@ -2227,18 +2227,6 @@ As you move into Week 2, continue these daily practices. They are building a fou
           { type: "text", content: "The program is organized into 5 weekly themes: Foundations, The Human Condition, Encountering Jesus, Conversion & Change, and Living the Faith." },
           { type: "text", content: "Your mentor is available to support you throughout the program. Don't hesitate to reach out through the chat feature if you have questions or need encouragement." },
           { type: "action", content: "Identify the best time in your morning to complete your daily lesson. Consistency is key to making lasting change." },
-        ] as { type: string; content: string }[],
-      },
-      {
-        position: 3,
-        title: "Preparing Your Heart",
-        subtitle: "Dispositions for a fruitful journey",
-        slides: [
-          { type: "text", content: "Before beginning, it helps to prepare your heart with the right dispositions. This is not just an intellectual program — it is an encounter with the living God." },
-          { type: "text", content: "Openness: Come with an open heart, willing to be challenged and changed. Let go of preconceptions about what this program \"should\" be." },
-          { type: "text", content: "Consistency: Commit to showing up daily, even when you don't feel like it. Transformation happens through faithful, repeated small acts." },
-          { type: "text", content: "Honesty: Be honest with God, your mentor, and yourself. Growth requires the courage to see yourself clearly in the light of God's love." },
-          { type: "action", content: "Write down one area of your life where you are asking God to bring healing or freedom during this program. Hold it in prayer as you begin." },
         ] as { type: string; content: string }[],
       },
     ]).onConflictDoNothing();

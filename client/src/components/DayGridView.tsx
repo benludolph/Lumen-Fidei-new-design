@@ -5,7 +5,7 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { CheckCircle2, Map as MapIcon, Scale, Layers, Lock } from "lucide-react";
+import { CheckCircle2, Map as MapIcon, Scale, Lock } from "lucide-react";
 
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -85,19 +85,6 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <div style={{ width: "100%", height: "88px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", marginBottom: "16px" }}>
-      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", letterSpacing: "0.13em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: "4px" }}>
-        {eyebrow}
-      </p>
-      <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "28px", fontWeight: 500, color: "white", textAlign: "center", padding: "0 24px", lineHeight: 1.2 }}>
-        {title}
-      </p>
-    </div>
-  );
-}
-
 function TwoColGrid({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "296px 296px", gap: "16px", width: "608px", maxWidth: "100%" }}>
@@ -114,10 +101,10 @@ function SundayBanner() {
   );
 }
 
-const PRELIM_ICONS = [MapIcon, Scale, Layers];
+const PRELIM_ICONS = [MapIcon, Scale];
 
 function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWithStatus; isAccessible: boolean; onClick: () => void }) {
-  const { completed, position, title, subtitle } = module;
+  const { completed, position, title, subtitle, imageUrl } = module;
   const available = completed || isAccessible;
   const Icon = PRELIM_ICONS[(position - 1) % PRELIM_ICONS.length];
 
@@ -126,11 +113,17 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
       onClick={available ? onClick : undefined}
       disabled={!available}
       data-testid={`card-prelim-${position}`}
-      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", height: "126px", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", paddingTop: "12.17px", paddingBottom: "14.118px", paddingLeft: "12.17px", paddingRight: "12.17px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
+      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "12.17px", paddingLeft: "12.17px", paddingRight: "12.17px", paddingBottom: "14.118px", minHeight: "126px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
       onMouseEnter={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
       onMouseLeave={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
     >
-      <div style={{ position: "absolute", left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {imageUrl && (
+        <>
+          <img src={imageUrl} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
+        </>
+      )}
+      <div style={{ position: "relative", zIndex: 1, width: "23.367px", height: "23.367px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         {completed ? (
           <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CheckCircle2 style={{ width: "12px", height: "12px", color: "white" }} />
@@ -145,10 +138,10 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
           </div>
         )}
       </div>
-      <div style={{ position: "absolute", left: "12.17px", top: "77.094px", width: "175.25px", maxWidth: "calc(100% - 24px)" }}>
-        <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</p>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+        <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "16px", lineHeight: "15.5px", letterSpacing: "-0.14px", color: "white", fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
         {subtitle && (
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "13px", letterSpacing: "0px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
         )}
       </div>
     </button>
@@ -251,7 +244,6 @@ export function DayGridView({
   };
 
   const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackBSummaries, trackAModules);
-  const week1Theme = getWeekTheme(1, isTrackA, trackBSummaries, trackAModules);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -261,8 +253,6 @@ export function DayGridView({
           <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
 
           <div style={{ paddingTop: "24px" }}>
-            <SectionHeaderCard eyebrow="Initial 30 Days" title={week1Theme} />
-
             {prelimModulesData && prelimModulesData.length > 0 && (
               <>
                 <SectionDivider label="Pre-Modules" />
