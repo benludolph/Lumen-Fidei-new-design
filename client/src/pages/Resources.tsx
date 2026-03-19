@@ -1,6 +1,6 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Scroll, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Church, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import type { PracticeResource } from "@shared/schema";
 
@@ -116,7 +116,7 @@ function formatContent(content: string): JSX.Element[] {
 function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
-      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)" }} />
+      <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
       <span style={{
         fontFamily: "'Afacad', sans-serif",
         fontWeight: 400,
@@ -129,14 +129,14 @@ function SectionDivider({ label }: { label: string }) {
       }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)" }} />
+      <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(180,188,208,0.15))" }} />
     </div>
   );
 }
 
 function ResourceCard({ resource }: { resource: PracticeResource }) {
   const [isOpen, setIsOpen] = useState(false);
-  const Icon = resource.type === "prayer" ? BookOpen : Scroll;
+  const Icon = resource.type === "prayer" ? BookOpen : Church;
 
   return (
     <div
@@ -176,8 +176,8 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           textAlign: "left",
         }}
       >
-        {/* Top row: icon + chevron */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        {/* Top row: icon only */}
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
           <div style={{
             width: "23.367px",
             height: "23.367px",
@@ -191,39 +191,42 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           }}>
             <Icon style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
           </div>
-          <div style={{ color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
+        </div>
+
+        {/* Bottom: title + subtitle + chevron (bottom-right) */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+              fontWeight: 500,
+              fontSize: "16px",
+              color: "#f7f8f8",
+              letterSpacing: "-0.1402px",
+              lineHeight: "15.539px",
+              marginBottom: "7.789px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}>
+              {resource.name}
+            </p>
+            <p style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontWeight: 400,
+              fontSize: "10px",
+              color: "#8a8f98",
+              lineHeight: "10.223px",
+            }}>
+              {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
+            </p>
+          </div>
+          {/* Chevron — bottom-right */}
+          <div style={{ color: "rgba(255,255,255,0.35)", marginLeft: "8px", flexShrink: 0 }}>
             {isOpen
               ? <ChevronUp style={{ width: "14px", height: "14px" }} />
               : <ChevronDown style={{ width: "14px", height: "14px" }} />
             }
           </div>
-        </div>
-
-        {/* Bottom: title + subtitle */}
-        <div style={{ width: "100%" }}>
-          <p style={{
-            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-            fontWeight: 500,
-            fontSize: "16px",
-            color: "#f7f8f8",
-            letterSpacing: "-0.1402px",
-            lineHeight: "15.539px",
-            marginBottom: "7.789px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}>
-            {resource.name}
-          </p>
-          <p style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontWeight: 400,
-            fontSize: "10px",
-            color: "#8a8f98",
-            lineHeight: "10.223px",
-          }}>
-            {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
-          </p>
         </div>
       </button>
 
