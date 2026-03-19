@@ -1,5 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,37 +19,29 @@ function CandleIcon() {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/messages", label: "Messages" },
+    { href: "/resources", label: "Resources" },
+    { href: "/collections", label: "Collection" },
+  ];
 
   return (
     <div className="relative min-h-screen bg-[#0b0b0b] overflow-x-hidden">
-      {/* Cathedral background — fixed full viewport */}
-      <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/dashboard_bg_cathedral.png')" }}
-      />
 
-      {/* Side-fade overlay: collapses edges to black, keeps 608px center visible */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
-        }}
-      />
-
-      {/* Navbar — Figma exact */}
+      {/* Navbar */}
       <nav
         className="fixed top-0 left-0 right-0 z-50"
         style={{
           height: "72px",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
-          background:
-            "linear-gradient(to bottom, rgba(11,11,11,0.8) 0%, rgba(11,11,11,0.76) 100%)",
+          background: "linear-gradient(to bottom, rgba(11,11,11,0.8) 0%, rgba(11,11,11,0.76) 100%)",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Top gradient strip — 0.5px height from #08090a to transparent */}
+        {/* Top gradient strip */}
         <div
           style={{
             position: "absolute",
@@ -60,15 +54,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           }}
         />
 
-        {/* Navbar inner row */}
-        <div
-          className="flex items-center justify-between h-full"
-          style={{
-            paddingLeft: "107px",
-            paddingRight: "115px",
-          }}
-        >
-          {/* Logo: candle SVG + "LUMEN FIDEI" text, gap 8px */}
+        {/* Navbar inner row — 16px padding on mobile, Figma padding on desktop */}
+        <div className="flex items-center justify-between h-full px-4 md:pl-[107px] md:pr-[115px]">
+          {/* Logo */}
           <Link href="/dashboard">
             <div className="flex items-center cursor-pointer select-none" style={{ gap: "8px" }}>
               <CandleIcon />
@@ -86,14 +74,67 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </Link>
 
-          {/* Nav links: Messages, Resources, Collection — white, 14px */}
-          <div className="flex items-center">
-            <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
-            <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
-            <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
+          {/* Desktop nav links */}
+          <div className="hidden md:flex items-center">
+            {navLinks.map(({ href, label }) => (
+              <NavLink key={href} href={href} active={location === href}>
+                {label}
+              </NavLink>
+            ))}
           </div>
+
+          {/* Hamburger button — mobile only */}
+          <button
+            className="md:hidden flex items-center justify-center w-10 h-10 text-white/70 hover:text-white transition-colors"
+            onClick={() => setMobileMenuOpen((o) => !o)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            data-testid="button-mobile-menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile menu drawer */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 md:hidden"
+            style={{ top: "72px", background: "rgba(0,0,0,0.5)" }}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Drawer panel */}
+          <div
+            className="fixed left-0 right-0 z-40 md:hidden"
+            style={{
+              top: "72px",
+              background: "#0f1011",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div className="flex flex-col py-2">
+              {navLinks.map(({ href, label }) => (
+                <Link key={href} href={href}>
+                  <span
+                    className={cn(
+                      "flex items-center px-5 py-3 cursor-pointer transition-colors",
+                      location === href
+                        ? "text-white"
+                        : "text-white/60 hover:text-white"
+                    )}
+                    style={{ fontFamily: "'Afacad', sans-serif", fontSize: "16px" }}
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid={`link-mobile-${label.toLowerCase()}`}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Page content */}
       <div className="relative z-10 pt-[72px] min-h-screen">
