@@ -86,6 +86,7 @@ export interface IStorage {
   getPrelimModules(): Promise<PrelimModule[]>;
   getPrelimModule(position: number): Promise<PrelimModule | undefined>;
   upsertPrelimModule(module: InsertPrelimModule): Promise<PrelimModule>;
+  deletePrelimModule(position: number): Promise<void>;
   getUserPrelimCompletions(userId: number): Promise<PrelimCompletion[]>;
   completePrelimModule(userId: number, modulePosition: number): Promise<PrelimCompletion>;
 
@@ -442,6 +443,10 @@ export class DatabaseStorage implements IStorage {
     }
     const [newMod] = await db.insert(prelimModules).values(setValue).returning();
     return newMod;
+  }
+
+  async deletePrelimModule(position: number): Promise<void> {
+    await db.delete(prelimModules).where(eq(prelimModules.position, position));
   }
 
   async getUserPrelimCompletions(userId: number): Promise<PrelimCompletion[]> {

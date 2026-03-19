@@ -6,7 +6,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, type User } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
 import { dailyContentData, practiceResourcesData } from "./content-data";
@@ -1098,7 +1098,7 @@ export async function registerRoutes(
   app.get(api.day0.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Day 0 agreement requires all 3 prelim modules completed first
+    // Day 0 agreement requires all 2 prelim modules completed first
     if (req.user!.role === 'participant') {
       const completions = await storage.getUserPrelimCompletions(req.user!.id);
       if (completions.length < 2) {
@@ -1121,7 +1121,7 @@ export async function registerRoutes(
   app.post(api.day0.signAgreement.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Agreement requires all 3 prelim modules completed first
+    // Agreement requires all 2 prelim modules completed first
     if (req.user!.role === 'participant') {
       const completions = await storage.getUserPrelimCompletions(req.user!.id);
       if (completions.length < 2) {
@@ -1362,6 +1362,21 @@ export async function registerRoutes(
     }
   });
 
+  // DELETE /api/admin/prelim-modules/:position — admin-only removal of a module
+  app.delete('/api/admin/prelim-modules/:position', requireRole('admin'), async (req, res) => {
+    const position = Number(req.params.position);
+    if (isNaN(position) || position < 1) {
+      return res.status(400).json({ message: "Invalid module position." });
+    }
+    try {
+      await storage.deletePrelimModule(position);
+      res.json({ message: "Module deleted." });
+    } catch (error) {
+      console.error("Error deleting prelim module:", error);
+      res.status(500).json({ message: "Failed to delete module." });
+    }
+  });
+
   // Seed Data
   await seed();
 
@@ -1458,6 +1473,10 @@ async function ensureSchemaColumns() {
 async function seed() {
     await ensureSchemaColumns();
     await migrateFilesystemImages();
+
+    // Remove any prelim modules beyond position 2 (enforce exactly 2 modules)
+    await db.delete(prelimModules).where(gt(prelimModules.position, 2));
+
     // Seed users if needed
     const users = await storage.getAllUsers();
     if (users.length === 0) {

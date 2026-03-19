@@ -97,7 +97,7 @@ export const prelimModules = pgTable("prelim_modules", {
 export const prelimCompletions = pgTable("prelim_completions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  modulePosition: integer("module_position").notNull(), // 1, 2, or 3
+  modulePosition: integer("module_position").notNull(), // 1 or 2
   completedAt: timestamp("completed_at").defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("user_prelim_unique").on(table.userId, table.modulePosition),
