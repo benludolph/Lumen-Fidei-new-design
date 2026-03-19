@@ -1722,8 +1722,23 @@ Rest in God's presence. Let go of words and thoughts. Simply be with God, allowi
 - Wednesday & Sunday: Glorious Mysteries
 - Thursday: Luminous Mysteries`,
             duration: "5-7 minutes",
-            order: 6
+            order: 6,
+            imageUrl: "/caravaggio-rosary.webp",
+            subtitle: "The greatest weapon of our faith",
         });
+    }
+
+    // Backfill: ensure The Rosary always has the Caravaggio image and subtitle
+    // even when the DB was seeded before this task was implemented
+    {
+        const rosary = existingResources.find(r => r.name === "The Rosary" || r.name.includes("Rosary"));
+        if (rosary && (!rosary.imageUrl || !rosary.subtitle)) {
+            await storage.updatePracticeResourceById(rosary.id, {
+                imageUrl: rosary.imageUrl ?? "/caravaggio-rosary.webp",
+                subtitle: rosary.subtitle ?? "The greatest weapon of our faith",
+            });
+            console.log("Backfilled Rosary imageUrl and subtitle.");
+        }
     }
 
     // Only seed daily content if none exists (preserves admin edits)
