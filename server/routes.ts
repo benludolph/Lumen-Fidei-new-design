@@ -703,7 +703,7 @@ export async function registerRoutes(
 
   app.get(api.practiceResources.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const identifier = decodeURIComponent(String(req.params.name));
+    const identifier = decodeURIComponent(String(req.params.idOrName ?? req.params.name));
     const numericId = parseInt(identifier, 10);
     const resource = (!isNaN(numericId) && String(numericId) === identifier)
       ? await storage.getPracticeResourceById(numericId)

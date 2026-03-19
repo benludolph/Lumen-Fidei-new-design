@@ -12,7 +12,7 @@ function Breadcrumb({ name }: { name: string }) {
         position: "sticky",
         top: "72px",
         zIndex: 40,
-        height: "52px",
+        height: "60px",
         display: "flex",
         alignItems: "center",
         paddingLeft: "20px",

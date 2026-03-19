@@ -166,7 +166,7 @@ export const api = {
     },
     get: {
       method: 'GET' as const,
-      path: '/api/practice-resources/:name',
+      path: '/api/practice-resources/:idOrName',
       responses: {
         200: z.custom<typeof practiceResources.$inferSelect>(),
         404: errorSchemas.notFound,
