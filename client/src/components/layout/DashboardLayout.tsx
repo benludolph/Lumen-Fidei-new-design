@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +26,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         style={{ backgroundImage: "url('/dashboard_bg_cathedral.png')" }}
       />
 
-      {/* Side-fade overlay — collapses edges to black, keeps 608px center visible */}
+      {/* Side-fade overlay: collapses edges to black, keeps 608px center visible */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -36,13 +35,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         }}
       />
 
-      {/* Navbar */}
+      {/* Navbar — Figma exact */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
+        className="fixed top-0 left-0 right-0 z-50"
         style={{
           height: "72px",
-          paddingLeft: "107px",
-          paddingRight: "115px",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
           background:
@@ -50,29 +47,51 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Logo */}
-        <Link href="/dashboard">
-          <div className="flex items-center cursor-pointer select-none" style={{ gap: "9px" }}>
-            <CandleIcon />
-            <span
-              className="text-white uppercase"
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "13px",
-                fontWeight: 500,
-                letterSpacing: "0.08em",
-              }}
-            >
-              Lumen Fidei
-            </span>
-          </div>
-        </Link>
+        {/* Top gradient strip — 0.5px height from #08090a to transparent */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "0.5px",
+            background: "linear-gradient(to bottom, #08090a, transparent)",
+            pointerEvents: "none",
+          }}
+        />
 
-        {/* Nav links — Figma: Messages, Resources, Collection */}
-        <div className="flex items-center" style={{ gap: "0px" }}>
-          <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
-          <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
-          <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
+        {/* Navbar inner row */}
+        <div
+          className="flex items-center justify-between h-full"
+          style={{
+            paddingLeft: "107px",
+            paddingRight: "115px",
+          }}
+        >
+          {/* Logo: candle SVG + "LUMEN FIDEI" text, gap 8px */}
+          <Link href="/dashboard">
+            <div className="flex items-center cursor-pointer select-none" style={{ gap: "8px" }}>
+              <CandleIcon />
+              <span
+                className="text-white uppercase"
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  letterSpacing: "0.08em",
+                }}
+              >
+                Lumen Fidei
+              </span>
+            </div>
+          </Link>
+
+          {/* Nav links: Messages, Resources, Collection — white, 14px */}
+          <div className="flex items-center">
+            <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
+            <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
+            <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
+          </div>
         </div>
       </nav>
 
@@ -96,15 +115,13 @@ function NavLink({
   return (
     <Link href={href}>
       <span
-        className={cn(
-          "flex items-center cursor-pointer transition-colors duration-150",
-          active ? "text-white" : "text-[rgba(255,255,255,0.45)] hover:text-white",
-        )}
+        className={cn("flex items-center cursor-pointer", active ? "text-white" : "text-white/70 hover:text-white")}
         style={{
           fontFamily: "'Afacad', sans-serif",
-          fontSize: "13px",
+          fontSize: "14px",
           height: "32px",
           padding: "0 12px",
+          transition: "color 0.15s",
         }}
       >
         {children}

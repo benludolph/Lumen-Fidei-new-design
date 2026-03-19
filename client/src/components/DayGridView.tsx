@@ -84,134 +84,99 @@ function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
   const weeks: { week: number; days: number[] }[] = [];
   for (let w = 1; w <= 5; w++) {
     const weekDays = days.filter(d => Math.ceil(d / 6) === w);
-    if (weekDays.length > 0) {
-      weeks.push({ week: w, days: weekDays });
-    }
+    if (weekDays.length > 0) weeks.push({ week: w, days: weekDays });
   }
   return weeks;
 }
 
-/**
- * Horizontal divider — 1px rgba(255,255,255,0.12) lines + 10px Afacad label.
- */
+/** Horizontal divider: [line] [text] [line] — Figma exact */
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        width: "100%",
-        margin: "20px 0",
-      }}
-    >
-      <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.12)" }} />
-      <span
-        style={{
-          flexShrink: 0,
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "10px",
-          letterSpacing: "0.14em",
-          color: "rgba(255,255,255,0.35)",
-          textTransform: "uppercase",
-        }}
-      >
+    <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", margin: "20px 0" }}>
+      <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
+      <span style={{ flexShrink: 0, fontFamily: "'Afacad', sans-serif", fontSize: "12px", letterSpacing: "0.14em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.12)" }} />
+      <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
     </div>
   );
 }
 
-/**
- * Section header card — 88px, Afacad eyebrow 10px + Ivy Ora Display 28px title.
- */
+/** 608px × 88px section header card — Afacad eyebrow + Ivy Ora Display 28px title */
 function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "88px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#0f1011",
-        border: "0.487px solid rgba(255,255,255,0.07)",
-        borderRadius: "5.842px",
-        marginBottom: "16px",
-      }}
-    >
-      <p
-        style={{
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "10px",
-          letterSpacing: "0.13em",
-          color: "rgba(255,255,255,0.35)",
-          textTransform: "uppercase",
-          marginBottom: "4px",
-        }}
-      >
+    <div style={{
+      width: "100%",
+      height: "88px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "#0f1011",
+      border: "0.487px solid rgba(255,255,255,0.07)",
+      borderRadius: "5.842px",
+      marginBottom: "16px",
+    }}>
+      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", letterSpacing: "0.13em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: "4px" }}>
         {eyebrow}
       </p>
-      <p
-        style={{
-          fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-          fontSize: "28px",
-          fontWeight: 500,
-          color: "white",
-          textAlign: "center",
-          padding: "0 24px",
-          lineHeight: 1.2,
-        }}
-      >
+      <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "28px", fontWeight: 500, color: "white", textAlign: "center", padding: "0 24px", lineHeight: 1.2 }}>
         {title}
       </p>
     </div>
   );
 }
 
-/**
- * Two-column grid — exactly repeat(2, 296px) with 16px gap.
- */
+/** Sunday rest banner — between week groups */
+function SundayBanner() {
+  return (
+    <div data-testid="banner-sunday" style={{
+      width: "100%",
+      height: "44px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "rgba(255,255,255,0.03)",
+      border: "0.487px solid rgba(255,255,255,0.07)",
+      borderRadius: "5.842px",
+      margin: "12px 0",
+      fontFamily: "'Afacad', sans-serif",
+      fontSize: "12px",
+      letterSpacing: "0.1em",
+      color: "rgba(255,255,255,0.4)",
+      textTransform: "uppercase",
+    }}>
+      ✦ Sunday — Rest &amp; Mass ✦
+    </div>
+  );
+}
+
+/** Fixed 296px × 296px two-column grid */
 function TwoColGrid({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(2, 296px)",
-        gap: "16px",
-        width: "608px",
-        maxWidth: "100%",
-      }}
-    >
+    <div style={{ display: "grid", gridTemplateColumns: "296px 296px", gap: "16px", width: "608px", maxWidth: "100%" }}>
       {children}
     </div>
   );
 }
 
-const PRELIM_ICONS = [MapIcon, Scale, Layers];
-
-/** Pre-module card */
-function PrelimCard({
-  module,
-  isAccessible,
+/** Reusable card shell — matches Figma card spec exactly */
+function CardShell({
+  isClickable = true,
   onClick,
+  testId,
+  children,
 }: {
-  module: PrelimModuleWithStatus;
-  isAccessible: boolean;
-  onClick: () => void;
+  isClickable?: boolean;
+  onClick?: () => void;
+  testId?: string;
+  children: React.ReactNode;
 }) {
-  const { completed, position, title, subtitle } = module;
-  const state = completed ? "completed" : isAccessible ? "active" : "locked";
-  const Icon = PRELIM_ICONS[(position - 1) % PRELIM_ICONS.length];
-  const isClickable = state === "active" || state === "completed";
-
   return (
     <button
       onClick={isClickable ? onClick : undefined}
       disabled={!isClickable}
-      data-testid={`card-prelim-${position}`}
+      data-testid={testId}
       style={{
         position: "relative",
         textAlign: "left",
@@ -221,8 +186,11 @@ function PrelimCard({
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.05)",
         borderRadius: "5.842px",
+        paddingTop: "12.17px",
+        paddingBottom: "14.118px",
+        paddingLeft: "12.17px",
+        paddingRight: "12.17px",
         transition: "transform 0.15s ease, border-color 0.15s ease",
-        opacity: isClickable ? 1 : 0.4,
         cursor: isClickable ? "pointer" : "not-allowed",
       }}
       onMouseEnter={(e) => {
@@ -240,19 +208,31 @@ function PrelimCard({
         }
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: "12.17px",
-          top: "12.17px",
-          width: "23.367px",
-          height: "23.367px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "50%",
-        }}
-      >
+      {children}
+    </button>
+  );
+}
+
+const PRELIM_ICONS = [MapIcon, Scale, Layers];
+
+function PrelimCard({
+  module,
+  isAccessible,
+  onClick,
+}: {
+  module: PrelimModuleWithStatus;
+  isAccessible: boolean;
+  onClick: () => void;
+}) {
+  const { completed, position, title, subtitle } = module;
+  const state = completed ? "completed" : isAccessible ? "active" : "locked";
+  const Icon = PRELIM_ICONS[(position - 1) % PRELIM_ICONS.length];
+  const isClickable = state === "active" || state === "completed";
+
+  return (
+    <CardShell isClickable={isClickable} onClick={onClick} testId={`card-prelim-${position}`}>
+      {/* State icon — absolute positioned per Figma (overrides padding) */}
+      <div style={{ position: "absolute", left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {state === "completed" ? (
           <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CheckCircle2 style={{ width: "12px", height: "12px", color: "white" }} />
@@ -266,23 +246,22 @@ function PrelimCard({
         )}
       </div>
 
-      <div style={{ position: "absolute", left: "12.17px", top: "77.094px", maxWidth: "175.25px" }}>
+      {/* Text block — absolute positioned per Figma */}
+      <div style={{ position: "absolute", left: "12.17px", top: "77.094px", width: "175.25px" }}>
         <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {title}
         </p>
         {subtitle && (
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", lineHeight: "14px", marginTop: "3px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {subtitle}
           </p>
         )}
       </div>
-    </button>
+    </CardShell>
   );
 }
 
-/**
- * Day 0 / Introduction card — full-width (608px), same card spec as DayCard variant="full".
- */
+/** Day 0 / Introduction — full-width card */
 function Day0Card({
   isUnlocked,
   onClick,
@@ -293,46 +272,10 @@ function Day0Card({
   imageUrl?: string | null;
 }) {
   return (
-    <button
-      onClick={isUnlocked ? onClick : undefined}
-      disabled={!isUnlocked}
-      data-testid="card-day-0"
-      style={{
-        position: "relative",
-        textAlign: "left",
-        overflow: "hidden",
-        width: "100%",
-        height: "126px",
-        background: "#0f1011",
-        border: "0.487px solid rgba(255,255,255,0.05)",
-        borderRadius: "5.842px",
-        transition: "transform 0.15s ease, border-color 0.15s ease",
-        opacity: isUnlocked ? 1 : 0.4,
-        cursor: isUnlocked ? "pointer" : "not-allowed",
-        marginBottom: "16px",
-      }}
-      onMouseEnter={(e) => {
-        if (isUnlocked) {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.transform = "translateY(-2px)";
-          el.style.borderColor = "rgba(255,255,255,0.12)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (isUnlocked) {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.transform = "";
-          el.style.borderColor = "rgba(255,255,255,0.05)";
-        }
-      }}
-    >
+    <CardShell isClickable={isUnlocked} onClick={onClick} testId="card-day-0">
       {imageUrl && (
         <>
-          <img
-            src={imageUrl}
-            alt=""
-            style={{ position: "absolute", left: "224px", top: "-58px", width: "463px", height: "auto", minHeight: "242px", objectFit: "cover", pointerEvents: "none" }}
-          />
+          <img src={imageUrl} alt="" style={{ position: "absolute", left: "224px", top: "-58px", width: "463px", height: "auto", minHeight: "242px", objectFit: "cover", pointerEvents: "none" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
         </>
       )}
@@ -341,15 +284,15 @@ function Day0Card({
         <BookOpen style={{ width: "11px", height: "11px", color: "#F07830" }} />
       </div>
 
-      <div style={{ position: "absolute", left: "12.17px", top: "77.094px", maxWidth: "340px" }}>
+      <div style={{ position: "absolute", left: "12.17px", top: "77.094px", width: "340px" }}>
         <p data-testid="text-day0-title" style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px", color: "white", fontWeight: 500 }}>
           Introduction — Goal of 30 Days
         </p>
-        <p data-testid="text-day0-subtitle" style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", lineHeight: "14px", marginTop: "3px", color: "rgba(255,255,255,0.45)" }}>
+        <p data-testid="text-day0-subtitle" style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "11px", marginTop: "23.788px", color: "rgba(255,255,255,0.45)" }}>
           Begin your journey
         </p>
       </div>
-    </button>
+    </CardShell>
   );
 }
 
@@ -421,15 +364,21 @@ export function DayGridView({
 
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
   const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackASummaries, trackBSummaries, trackAModules);
+  const week1Theme = getWeekTheme(1, isTrackA, trackASummaries, trackBSummaries, trackAModules);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px" }} className="custom-scrollbar">
-
         {/* 608px centered column */}
         <div style={{ maxWidth: "608px", margin: "0 auto", padding: "32px 16px" }}>
 
-          {/* ── PRE-MODULES ── */}
+          {/* ── Top section header: "INITIAL 30 DAYS" + Week 1 title ── */}
+          <SectionHeaderCard
+            eyebrow="Initial 30 Days"
+            title={week1Theme}
+          />
+
+          {/* ── PRE-MODULES divider + grid ── */}
           {prelimModulesData && prelimModulesData.length > 0 && (
             <>
               <SectionDivider label="Pre-Modules" />
@@ -451,32 +400,37 @@ export function DayGridView({
             </>
           )}
 
-          {/* ── WEEK sections ── */}
+          {/* ── WEEK sections: divider + full-width intro + 2-col day cards ── */}
           {weekGroups.map(({ week, days }, groupIdx) => {
             const weekTheme = getWeekTheme(week, isTrackA, trackASummaries, trackBSummaries, trackAModules);
 
             return (
               <div key={week} ref={(el) => setWeekRef(week, el)} data-week={week}>
 
-                {/* Per-week divider */}
-                <SectionDivider label={groupIdx === 0 ? "Initial 30 Days" : `Week ${week}`} />
+                {/* Sunday banner between weeks */}
+                {groupIdx > 0 && <SundayBanner />}
 
-                {/* Section header card */}
-                <SectionHeaderCard
-                  eyebrow={groupIdx === 0 ? "Week 1" : `Week ${week}`}
-                  title={weekTheme}
-                />
-
-                {/* Full-width intro card — first week, Track A */}
-                {groupIdx === 0 && isTrackA && (
-                  <Day0Card
-                    isUnlocked={allPrelimsComplete}
-                    onClick={() => onDaySelect(0)}
-                    imageUrl={trackASummaries?.find((c) => c.dayNumber === 0)?.imageUrl}
-                  />
+                {/* Per-week divider (skip for week 1 — covered by top header) */}
+                {groupIdx > 0 && (
+                  <>
+                    <SectionDivider label={`Week ${week}`} />
+                    {/* Per-week section header card */}
+                    <SectionHeaderCard eyebrow={`Week ${week}`} title={weekTheme} />
+                  </>
                 )}
 
-                {/* Day cards — fixed 296×296 two-column grid */}
+                {/* Full-width intro card — Track A week 1 = Day 0 */}
+                {groupIdx === 0 && isTrackA && (
+                  <div style={{ marginBottom: "16px" }}>
+                    <Day0Card
+                      isUnlocked={allPrelimsComplete}
+                      onClick={() => onDaySelect(0)}
+                      imageUrl={trackASummaries?.find((c) => c.dayNumber === 0)?.imageUrl}
+                    />
+                  </div>
+                )}
+
+                {/* 2-col day card grid */}
                 <TwoColGrid>
                   {days.map((day) => {
                     const isLocked = day > currentDay || !allPrelimsComplete;
@@ -488,9 +442,7 @@ export function DayGridView({
 
                     let completedLate = false;
                     if (isTrackA && completed && cohortStartDate && prayerCompletions) {
-                      const record = prayerCompletions.find(
-                        (c) => c.dayNumber === day && c.period === "morning",
-                      );
+                      const record = prayerCompletions.find(c => c.dayNumber === day && c.period === "morning");
                       if (record) {
                         const start = new Date(cohortStartDate + "T00:00:00");
                         const programDayIndex = day - 1;

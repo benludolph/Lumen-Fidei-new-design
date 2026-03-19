@@ -173,11 +173,12 @@ export function DayCard({
         </p>
         {subtitle && (
           <p
-            className="text-[rgba(255,255,255,0.45)] leading-[14px] truncate"
+            className="text-[rgba(255,255,255,0.45)] truncate"
             style={{
               fontFamily: "'Afacad', sans-serif",
-              fontSize: "11px",
-              marginTop: "3px",
+              fontSize: "10px",
+              lineHeight: "11px",
+              marginTop: "23.788px",
             }}
           >
             {subtitle}
