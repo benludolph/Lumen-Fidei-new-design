@@ -1,5 +1,4 @@
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -18,25 +17,17 @@ function CandleIcon() {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user } = useAuth();
   const [location] = useLocation();
-
-  const { data: unreadData } = useQuery<{ count: number }>({
-    queryKey: ["/api/messages/unread/count"],
-    refetchInterval: 30000,
-    enabled: !!user,
-  });
-  const unreadCount = unreadData?.count ?? 0;
 
   return (
     <div className="relative min-h-screen bg-[#0b0b0b] overflow-x-hidden">
-      {/* Cathedral background — full viewport */}
+      {/* Cathedral background — fixed full viewport */}
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/dashboard_bg_cathedral.png')" }}
       />
 
-      {/* Side-fade: collapses edges to solid black, keeps 608px center visible */}
+      {/* Side-fade overlay — collapses edges to black, keeps 608px center visible */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -45,7 +36,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         }}
       />
 
-      {/* Navbar — Figma exact: h:72, pl:107px, pr:115px, blur(10px) */}
+      {/* Navbar */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between"
         style={{
@@ -59,9 +50,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        {/* Logo wordmark */}
+        {/* Logo */}
         <Link href="/dashboard">
-          <div className="flex items-center gap-[9px] cursor-pointer select-none">
+          <div className="flex items-center cursor-pointer select-none" style={{ gap: "9px" }}>
             <CandleIcon />
             <span
               className="text-white uppercase"
@@ -77,30 +68,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </Link>
 
-        {/* Nav links — Figma: Messages, Resources, Collection only */}
-        <div className="flex items-center" style={{ gap: "32px" }}>
-          <NavLink href="/messages" active={location === "/messages"}>
-            Messages
-            {unreadCount > 0 && (
-              <span
-                className="ml-1.5 inline-flex items-center justify-center rounded-full bg-[#F07830] text-white"
-                style={{ minWidth: "16px", height: "16px", fontSize: "10px", padding: "0 4px" }}
-                data-testid="badge-unread-messages"
-              >
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </NavLink>
-          <NavLink href="/resources" active={location === "/resources"}>
-            Resources
-          </NavLink>
-          <NavLink href="/collections" active={location === "/collections"}>
-            Collection
-          </NavLink>
+        {/* Nav links — Figma: Messages, Resources, Collection */}
+        <div className="flex items-center" style={{ gap: "0px" }}>
+          <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
+          <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
+          <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
         </div>
       </nav>
 
-      {/* Page content — padded by navbar height */}
+      {/* Page content */}
       <div className="relative z-10 pt-[72px] min-h-screen">
         {children}
       </div>

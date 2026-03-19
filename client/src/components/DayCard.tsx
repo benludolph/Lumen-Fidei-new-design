@@ -59,28 +59,32 @@ export function DayCard({
       disabled={isLocked}
       title={tooltipTitle}
       data-testid={`card-day-${dayNumber}`}
-      className={cn(
-        "relative text-left transition-all duration-200 overflow-hidden group w-full",
-        isLocked
-          ? "opacity-40 cursor-not-allowed"
-          : "cursor-pointer hover:-translate-y-0.5",
-      )}
       style={{
+        position: "relative",
+        textAlign: "left",
+        overflow: "hidden",
+        width: "100%",
         height: "126px",
         background: "#0f1011",
-        border: isLocked
-          ? "0.487px solid rgba(255,255,255,0.05)"
-          : "0.487px solid rgba(255,255,255,0.05)",
+        border: "0.487px solid rgba(255,255,255,0.05)",
         borderRadius: "5.842px",
         transition: "transform 0.15s ease, border-color 0.15s ease",
+        opacity: isLocked ? 0.4 : 1,
+        cursor: isLocked ? "not-allowed" : "pointer",
       }}
       onMouseEnter={(e) => {
         if (!isLocked) {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.transform = "translateY(-2px)";
+          el.style.borderColor = "rgba(255,255,255,0.12)";
         }
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
+        if (!isLocked) {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.transform = "";
+          el.style.borderColor = "rgba(255,255,255,0.05)";
+        }
       }}
     >
       {/* Background image */}
