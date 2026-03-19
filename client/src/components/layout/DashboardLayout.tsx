@@ -103,7 +103,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <img
                 src={logoImg}
                 alt="Lumen Fidei"
-                style={{ height: "32px", width: "auto", objectFit: "contain" }}
+                style={{ height: "16px", width: "auto", objectFit: "contain" }}
               />
             </div>
           </Link>
@@ -250,7 +250,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <img
             src={logoImg}
             alt="Lumen Fidei"
-            style={{ height: "28px", width: "auto", objectFit: "contain" }}
+            style={{ height: "14px", width: "auto", objectFit: "contain" }}
           />
           <button
             data-testid="button-close-drawer"
