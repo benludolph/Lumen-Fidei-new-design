@@ -252,16 +252,17 @@ export default function Collections() {
     <DashboardLayout>
       <div
         data-testid="collections-page"
-        className="px-5 sm:px-[107px] pt-12 pb-20 min-h-[calc(100vh-72px)]"
+        className="px-5 sm:px-[107px] pt-8 pb-20 min-h-[calc(100vh-72px)]"
       >
         <h1
           style={{
-            fontFamily: "'Ivy Ora Display', serif",
-            fontSize: "28px",
-            fontWeight: 400,
+            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+            fontWeight: 500,
+            fontSize: "42px",
             color: "white",
-            marginBottom: "40px",
-            letterSpacing: "-0.01em",
+            textAlign: "center",
+            lineHeight: "1.1",
+            marginBottom: "48px",
           }}
         >
           Collection
