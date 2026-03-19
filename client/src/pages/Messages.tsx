@@ -121,7 +121,7 @@ export default function Messages() {
               display: "flex",
               flexDirection: "column",
               borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.02)",
+              background: "rgba(255,255,255,0.03)",
               flexShrink: 0,
             }}
           >
@@ -158,22 +158,24 @@ export default function Messages() {
                         width: "28px",
                         height: "28px",
                         borderRadius: "6px",
-                        background: "rgba(240,120,48,0.1)",
-                        border: "1px solid rgba(240,120,48,0.25)",
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.10)",
                         color: "#F07830",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         cursor: "pointer",
-                        transition: "background 0.15s",
+                        transition: "background 0.15s, border-color 0.15s",
                       }}
                       onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(240,120,48,0.2)";
+                        const btn = e.currentTarget as HTMLButtonElement;
+                        btn.style.background = "rgba(240,120,48,0.12)";
+                        btn.style.borderColor = "rgba(240,120,48,0.3)";
                       }}
                       onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(240,120,48,0.1)";
+                        const btn = e.currentTarget as HTMLButtonElement;
+                        btn.style.background = "rgba(255,255,255,0.06)";
+                        btn.style.borderColor = "rgba(255,255,255,0.10)";
                       }}
                     >
                       <Plus size={14} />
@@ -624,7 +626,7 @@ function ChatWindow({
           flexShrink: 0,
           padding: "12px 16px",
           borderTop: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(255,255,255,0.02)",
+          background: "rgba(255,255,255,0.03)",
         }}
       >
         <form
