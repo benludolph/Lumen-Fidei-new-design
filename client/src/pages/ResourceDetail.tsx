@@ -341,10 +341,12 @@ export default function ResourceDetail() {
               }} />
             </div>
 
-            {/* Card text content — below the image space */}
+            {/* Card text content — position: relative + z-index: 1 ensures it paints above the absolute hero image */}
             <div
               className="px-5 sm:px-10"
               style={{
+                position: "relative",
+                zIndex: 1,
                 display: "flex",
                 flexDirection: "column",
                 gap: "9.25px",
