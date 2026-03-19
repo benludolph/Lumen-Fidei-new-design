@@ -221,36 +221,36 @@ export default function Dashboard() {
   // Show a spinner while we load prelim status for the first time
   if (prelimLoading) {
     return (
-      <Shell>
+      <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
+          <p className="text-white/50" style={{ fontFamily: "'Afacad', sans-serif" }}>Loading...</p>
         </div>
-      </Shell>
+      </DashboardLayout>
     );
   }
 
   // Once prelims are done, wait for Day 0 agreement check before rendering program
   if (allPrelimsComplete && day0Loading) {
     return (
-      <Shell>
+      <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
+          <p className="text-white/50" style={{ fontFamily: "'Afacad', sans-serif" }}>Loading...</p>
         </div>
-      </Shell>
+      </DashboardLayout>
     );
   }
   
   if (allPrelimsComplete && day0Error) {
     return (
-      <Shell>
+      <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-          <h2 className="text-xl font-medium mb-2">Unable to Load</h2>
-          <p className="text-muted-foreground">Please refresh the page or try again later.</p>
+          <AlertCircle className="w-12 h-12 text-white/60 mb-4" />
+          <h2 className="text-xl font-medium mb-2 text-white">Unable to Load</h2>
+          <p className="text-white/50">Please refresh the page or try again later.</p>
         </div>
-      </Shell>
+      </DashboardLayout>
     );
   }
   
@@ -274,12 +274,12 @@ export default function Dashboard() {
 
   if (cohortLoading) {
     return (
-      <Shell>
+      <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-muted-foreground">Loading program...</p>
+          <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
+          <p className="text-white/50" style={{ fontFamily: "'Afacad', sans-serif" }}>Loading program...</p>
         </div>
-      </Shell>
+      </DashboardLayout>
     );
   }
 

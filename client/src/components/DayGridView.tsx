@@ -92,30 +92,29 @@ function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
   return weeks;
 }
 
-/** Centered divider: ─── LABEL ─── */
+/** ─── LABEL ─── divider */
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 w-full my-4">
-      <div className="flex-1 h-px bg-[rgba(255,255,255,0.12)]" />
+    <div className="flex items-center gap-3 w-full my-5">
+      <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
       <span
-        className="text-[rgba(255,255,255,0.35)] uppercase tracking-[0.14em] text-[10px] shrink-0"
-        style={{ fontFamily: "'Afacad', sans-serif" }}
+        className="shrink-0 uppercase"
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "10px",
+          letterSpacing: "0.14em",
+          color: "rgba(255,255,255,0.35)",
+        }}
       >
         {label}
       </span>
-      <div className="flex-1 h-px bg-[rgba(255,255,255,0.12)]" />
+      <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
     </div>
   );
 }
 
-/** Week/section header card — shows "WEEK N" + theme title */
-function WeekHeaderCard({
-  weekNumber,
-  theme,
-}: {
-  weekNumber: number;
-  theme: string;
-}) {
+/** Section header card — "INITIAL 30 DAYS" / "WEEK N" + Ivy Ora large title */
+function SectionHeaderCard({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div
       className="w-full flex flex-col items-center justify-center mb-4"
@@ -127,27 +126,33 @@ function WeekHeaderCard({
       }}
     >
       <p
-        className="uppercase tracking-[0.13em] text-[rgba(255,255,255,0.35)] text-[10px] mb-1"
-        style={{ fontFamily: "'Afacad', sans-serif" }}
+        className="uppercase"
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "10px",
+          letterSpacing: "0.13em",
+          color: "rgba(255,255,255,0.35)",
+          marginBottom: "4px",
+        }}
       >
-        Week {weekNumber}
+        {eyebrow}
       </p>
       <p
         className="text-white text-center px-6 leading-tight"
         style={{
           fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-          fontSize: "20px",
+          fontSize: "28px",
           fontWeight: 500,
-          maxWidth: "420px",
+          maxWidth: "480px",
         }}
       >
-        {theme}
+        {title}
       </p>
     </div>
   );
 }
 
-/** Sunday rest banner */
+/** Sunday rest row */
 function SundayBanner() {
   return (
     <div
@@ -161,8 +166,13 @@ function SundayBanner() {
       }}
     >
       <span
-        className="text-[rgba(255,255,255,0.4)] text-[12px] tracking-[0.1em] uppercase"
-        style={{ fontFamily: "'Afacad', sans-serif" }}
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "12px",
+          letterSpacing: "0.1em",
+          color: "rgba(255,255,255,0.4)",
+          textTransform: "uppercase",
+        }}
       >
         ✦ Sunday — Rest &amp; Mass ✦
       </span>
@@ -172,6 +182,7 @@ function SundayBanner() {
 
 const PRELIM_ICONS = [MapIcon, Scale, Layers];
 
+/** Pre-module card — same card spec as DayCard */
 function PrelimCard({
   module,
   isAccessible,
@@ -192,14 +203,27 @@ function PrelimCard({
       disabled={!isClickable}
       data-testid={`card-prelim-${position}`}
       className={cn(
-        "relative text-left transition-all duration-200 overflow-hidden group w-full",
-        !isClickable ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:brightness-110",
+        "relative text-left overflow-hidden w-full",
+        !isClickable ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
       )}
       style={{
         height: "126px",
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.05)",
         borderRadius: "5.842px",
+        transition: "transform 0.15s ease, border-color 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (isClickable) {
+          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (isClickable) {
+          (e.currentTarget as HTMLButtonElement).style.transform = "";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
+        }
       }}
     >
       {/* State icon */}
@@ -212,14 +236,18 @@ function PrelimCard({
             className="flex items-center justify-center rounded-full bg-[#22c55e]"
             style={{ width: "23.367px", height: "23.367px" }}
           >
-            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+            <CheckCircle2 className="w-[12px] h-[12px] text-white" />
           </div>
         ) : state === "active" ? (
           <div
-            className="flex items-center justify-center rounded-full bg-[rgba(240,120,48,0.15)]"
-            style={{ width: "23.367px", height: "23.367px" }}
+            className="flex items-center justify-center rounded-full"
+            style={{
+              width: "23.367px",
+              height: "23.367px",
+              background: "rgba(240,120,48,0.15)",
+            }}
           >
-            <Icon className="w-3 h-3 text-[#F07830]" />
+            <Icon className="w-[11px] h-[11px] text-[#F07830]" />
           </div>
         ) : (
           <div
@@ -235,32 +263,31 @@ function PrelimCard({
         style={{ left: "12.17px", top: "77.094px", maxWidth: "175.25px" }}
       >
         <p
-          className="text-white text-[13px] leading-[16px] font-medium truncate"
-          style={{ fontFamily: "'Afacad', sans-serif" }}
+          className="text-white font-medium truncate"
+          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px" }}
         >
           {title}
         </p>
         {subtitle && (
           <p
-            className="text-[rgba(255,255,255,0.45)] text-[11px] leading-[14px] truncate mt-[3px]"
-            style={{ fontFamily: "'Afacad', sans-serif" }}
+            className="truncate"
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "11px",
+              lineHeight: "14px",
+              marginTop: "3px",
+              color: "rgba(255,255,255,0.45)",
+            }}
           >
             {subtitle}
           </p>
         )}
       </div>
-
-      {/* Locked icon top-right */}
-      {state === "locked" && (
-        <div className="absolute top-3 right-3">
-          <Lock className="w-3 h-3 text-white/20" />
-        </div>
-      )}
     </button>
   );
 }
 
-/** Day 0 / Introduction full-width card */
+/** Day 0 / Introduction card — full variant (608px wide) */
 function Day0Card({
   isUnlocked,
   onClick,
@@ -276,14 +303,27 @@ function Day0Card({
       disabled={!isUnlocked}
       data-testid="card-day-0"
       className={cn(
-        "relative text-left transition-all duration-200 overflow-hidden w-full",
-        !isUnlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:brightness-110",
+        "relative text-left overflow-hidden w-full",
+        !isUnlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
       )}
       style={{
         height: "126px",
         background: "#0f1011",
         border: "0.487px solid rgba(255,255,255,0.05)",
         borderRadius: "5.842px",
+        transition: "transform 0.15s ease, border-color 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (isUnlocked) {
+          (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (isUnlocked) {
+          (e.currentTarget as HTMLButtonElement).style.transform = "";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
+        }
       }}
     >
       {imageUrl && (
@@ -297,7 +337,8 @@ function Day0Card({
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "linear-gradient(267.99deg, rgba(15,16,17,0) 30%, rgb(15,16,17) 65%)",
+              background:
+                "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)",
             }}
           />
         </>
@@ -305,10 +346,16 @@ function Day0Card({
 
       {/* Icon */}
       <div
-        className="absolute flex items-center justify-center rounded-full bg-[rgba(240,120,48,0.15)]"
-        style={{ left: "12.17px", top: "12.17px", width: "23.367px", height: "23.367px" }}
+        className="absolute flex items-center justify-center rounded-full"
+        style={{
+          left: "12.17px",
+          top: "12.17px",
+          width: "23.367px",
+          height: "23.367px",
+          background: "rgba(240,120,48,0.15)",
+        }}
       >
-        <BookOpen className="w-3 h-3 text-[#F07830]" />
+        <BookOpen className="w-[11px] h-[11px] text-[#F07830]" />
       </div>
 
       {/* Text */}
@@ -318,15 +365,20 @@ function Day0Card({
       >
         <p
           data-testid="text-day0-title"
-          className="text-white text-[13px] leading-[16px] font-medium"
-          style={{ fontFamily: "'Afacad', sans-serif" }}
+          className="text-white font-medium"
+          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", lineHeight: "16px" }}
         >
           Introduction — Goal of 30 Days
         </p>
         <p
           data-testid="text-day0-subtitle"
-          className="text-[rgba(255,255,255,0.45)] text-[11px] leading-[14px] mt-[3px]"
-          style={{ fontFamily: "'Afacad', sans-serif" }}
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "11px",
+            lineHeight: "14px",
+            marginTop: "3px",
+            color: "rgba(255,255,255,0.45)",
+          }}
         >
           Begin your journey
         </p>
@@ -403,20 +455,28 @@ export function DayGridView({
 
   const dialogDayTitle = getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries);
   const day0Unlocked = allPrelimsComplete;
-
   const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackASummaries, trackBSummaries, trackAModules);
 
   return (
     <div className="flex flex-col h-full">
       <div ref={scrollRef} className="flex-1 overflow-y-auto pb-16 custom-scrollbar">
         {/* 608px centered content column */}
-        <div className="mx-auto px-4" style={{ maxWidth: "608px" }}>
+        <div
+          className="mx-auto px-4 sm:px-0"
+          style={{ maxWidth: "608px" }}
+        >
 
           {/* Before You Begin — pre-modules */}
           {prelimModulesData && prelimModulesData.length > 0 && (
             <div className="mt-8">
               <SectionDivider label="Before You Begin" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Fixed 296×296 grid, collapses to 1-col on mobile */}
+              <div
+                className="grid grid-cols-1 gap-4"
+                style={{
+                  gridTemplateColumns: "repeat(auto-fit, minmax(min(296px, 100%), 1fr))",
+                }}
+              >
                 {prelimModulesData.map((mod) => {
                   const prevDone =
                     mod.position === 1 ||
@@ -438,7 +498,7 @@ export function DayGridView({
           {/* Lock-reason banners */}
           {!allPrelimsComplete && (
             <div
-              className="mt-3 px-3 py-2.5 rounded-lg flex items-start gap-2"
+              className="mt-3 px-3 py-2.5 flex items-start gap-2"
               style={{
                 background: "rgba(240,120,48,0.08)",
                 border: "0.487px solid rgba(240,120,48,0.25)",
@@ -448,10 +508,16 @@ export function DayGridView({
             >
               <Lock className="w-3.5 h-3.5 text-[#F07830] mt-0.5 shrink-0" />
               <p
-                className="text-[rgba(255,255,255,0.5)] text-[12px] leading-relaxed"
-                style={{ fontFamily: "'Afacad', sans-serif" }}
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "12px",
+                  color: "rgba(255,255,255,0.5)",
+                  lineHeight: "1.5",
+                }}
               >
-                <span className="text-[#F07830] font-medium">Complete the intro modules above</span>{" "}
+                <span style={{ color: "#F07830", fontWeight: 500 }}>
+                  Complete the intro modules above
+                </span>{" "}
                 to unlock the 30-day program. Each must be done in order.
               </p>
             </div>
@@ -459,7 +525,7 @@ export function DayGridView({
 
           {allPrelimsComplete && currentDay === 0 && (
             <div
-              className="mt-3 px-3 py-2.5 rounded-lg flex items-start gap-2"
+              className="mt-3 px-3 py-2.5 flex items-start gap-2"
               style={{
                 background: "rgba(255,255,255,0.04)",
                 border: "0.487px solid rgba(255,255,255,0.1)",
@@ -468,10 +534,16 @@ export function DayGridView({
               data-testid="banner-cohort-not-started"
             >
               <p
-                className="text-[rgba(255,255,255,0.45)] text-[12px] leading-relaxed"
-                style={{ fontFamily: "'Afacad', sans-serif" }}
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "12px",
+                  color: "rgba(255,255,255,0.45)",
+                  lineHeight: "1.5",
+                }}
               >
-                <span className="text-white font-medium">Your cohort hasn't started yet.</span>{" "}
+                <span style={{ color: "white", fontWeight: 500 }}>
+                  Your cohort hasn't started yet.
+                </span>{" "}
                 Begin with the Introduction while you wait.
               </p>
             </div>
@@ -483,47 +555,17 @@ export function DayGridView({
 
             return (
               <div key={week} ref={(el) => setWeekRef(week, el)} data-week={week}>
-                {/* Divider between weeks */}
+
+                {/* Sunday banner between weeks */}
                 {groupIdx > 0 && <SundayBanner />}
 
-                {/* Section header or divider */}
-                {groupIdx === 0 ? (
-                  <div className="mt-8">
-                    <div
-                      className="w-full flex flex-col items-center justify-center mb-4"
-                      style={{
-                        height: "88px",
-                        background: "#0f1011",
-                        border: "0.487px solid rgba(255,255,255,0.07)",
-                        borderRadius: "5.842px",
-                      }}
-                    >
-                      <p
-                        className="uppercase tracking-[0.13em] text-[rgba(255,255,255,0.35)] text-[10px] mb-1"
-                        style={{ fontFamily: "'Afacad', sans-serif" }}
-                      >
-                        Initial 30 Days
-                      </p>
-                      <p
-                        className="text-white text-center px-6 leading-tight"
-                        style={{
-                          fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-                          fontSize: "20px",
-                          fontWeight: 500,
-                          maxWidth: "420px",
-                        }}
-                      >
-                        {weekTheme}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-2">
-                    <WeekHeaderCard weekNumber={week} theme={weekTheme} />
-                  </div>
-                )}
+                {/* Section header card */}
+                <SectionHeaderCard
+                  eyebrow={groupIdx === 0 ? "Initial 30 Days" : `Week ${week}`}
+                  title={weekTheme}
+                />
 
-                {/* Day 0 full-width card — only in Week 1 for Track A */}
+                {/* Day 0 full-width intro card — Week 1, Track A only */}
                 {groupIdx === 0 && isTrackA && (
                   <div className="mb-4">
                     <Day0Card
@@ -534,8 +576,15 @@ export function DayGridView({
                   </div>
                 )}
 
-                {/* Day cards — 2-column grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                {/* Day cards — 2-column fixed 296px grid (collapses on mobile) */}
+                <div
+                  className="mb-4"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(296px, 100%), 1fr))",
+                    gap: "16px",
+                  }}
+                >
                   {days.map((day) => {
                     const isLocked = day > currentDay || !allPrelimsComplete;
                     const isToday = day === currentDay && allPrelimsComplete;
@@ -558,16 +607,20 @@ export function DayGridView({
                         const expectedDate = new Date(start);
                         expectedDate.setDate(start.getDate() + calendarOffset);
                         const fmt = (d: Date) =>
-                          d.getFullYear() + "-" +
-                          String(d.getMonth() + 1).padStart(2, "0") + "-" +
+                          d.getFullYear() +
+                          "-" +
+                          String(d.getMonth() + 1).padStart(2, "0") +
+                          "-" +
                           String(d.getDate()).padStart(2, "0");
-                        if (fmt(new Date(record.completedAt)) > fmt(expectedDate)) completedLate = true;
+                        if (fmt(new Date(record.completedAt)) > fmt(expectedDate))
+                          completedLate = true;
                       }
                     }
 
                     return (
                       <DayCard
                         key={day}
+                        variant="half"
                         dayNumber={day}
                         title={title}
                         subtitle={subtitle}
