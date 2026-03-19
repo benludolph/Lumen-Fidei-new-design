@@ -110,6 +110,8 @@ export default function Messages() {
           height: "calc(100vh - 72px)",
           backgroundColor: "#0b0b0b",
           overflow: "hidden",
+          paddingLeft: isMobile ? "0" : "107px",
+          paddingRight: isMobile ? "0" : "107px",
         }}
       >
         {/* ── Left panel: contacts ─────────────────────────── */}
@@ -601,8 +603,8 @@ function ChatWindow({
                     maxWidth: "72%",
                     padding: "9px 14px",
                     borderRadius: isMe ? "14px 14px 3px 14px" : "14px 14px 14px 3px",
-                    background: isMe ? "#F07830" : "rgba(255,255,255,0.07)",
-                    color: isMe ? "white" : "rgba(255,255,255,0.85)",
+                    background: isMe ? "#484D55" : "#292929",
+                    color: "rgba(255,255,255,0.9)",
                     fontFamily: "'Afacad', sans-serif",
                     fontSize: "14px",
                     lineHeight: "1.45",
