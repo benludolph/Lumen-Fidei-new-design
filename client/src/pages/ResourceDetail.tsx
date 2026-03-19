@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "wouter";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import type { PracticeResource } from "@shared/schema";
 import { formatContent } from "@/lib/formatContent";
 
@@ -19,8 +19,8 @@ function Breadcrumb({ name }: { name: string }) {
         paddingRight: "20px",
         backdropFilter: "blur(5px)",
         WebkitBackdropFilter: "blur(5px)",
-        background: "rgba(11,11,11,0.7)",
-        borderBottom: "0.5px solid rgba(255,255,255,0.06)",
+        background: "rgba(0,0,0,0.35)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
         boxShadow: "0px 25px 50px 0px rgba(0,0,0,0.25), 0px 5px 25px 0px rgba(0,0,0,0.5)",
       }}
     >
@@ -31,31 +31,31 @@ function Breadcrumb({ name }: { name: string }) {
             style={{
               fontFamily: "'Afacad', sans-serif",
               fontSize: "15px",
+              lineHeight: "15px",
               color: "rgba(255,255,255,0.6)",
-              opacity: 0.6,
               cursor: "pointer",
               whiteSpace: "nowrap",
-              transition: "opacity 0.15s",
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLSpanElement).style.opacity = "1")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLSpanElement).style.opacity = "0.6")}
           >
             Resources
           </span>
         </Link>
-        <ChevronRight
-          style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.5)", flexShrink: 0 }}
-        />
+
+        <div style={{ width: "12px", height: "12px", opacity: 0.5, flexShrink: 0 }}>
+          <ChevronRight style={{ width: "12px", height: "12px", color: "white" }} />
+        </div>
+
         <span
           data-testid="breadcrumb-current"
           style={{
             fontFamily: "'Afacad', sans-serif",
             fontSize: "15px",
+            lineHeight: "15px",
             color: "rgba(255,255,255,0.6)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            maxWidth: "240px",
+            maxWidth: "300px",
           }}
         >
           {name}
@@ -65,9 +65,9 @@ function Breadcrumb({ name }: { name: string }) {
   );
 }
 
-function DarkSpinner() {
+function Spinner() {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "80px" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "100px" }}>
       <div
         className="animate-spin"
         style={{
@@ -95,7 +95,9 @@ export default function ResourceDetail() {
     return (
       <DashboardLayout>
         <Breadcrumb name="…" />
-        <DarkSpinner />
+        <div style={{ backgroundColor: "black", minHeight: "685px" }}>
+          <Spinner />
+        </div>
       </DashboardLayout>
     );
   }
@@ -104,16 +106,13 @@ export default function ResourceDetail() {
     return (
       <DashboardLayout>
         <Breadcrumb name="Not found" />
-        <div style={{ maxWidth: "608px", margin: "0 auto", padding: "60px 20px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "16px", color: "rgba(255,255,255,0.4)", marginBottom: "24px" }}>
+        <div style={{ backgroundColor: "black", minHeight: "685px", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "80px" }}>
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "16px", color: "rgba(255,255,255,0.4)", marginBottom: "20px" }}>
             This resource could not be found.
           </p>
           <Link href="/resources">
-            <span
-              data-testid="link-back-resources"
-              style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Afacad', sans-serif", fontSize: "14px", color: "#F07830", cursor: "pointer" }}
-            >
-              <ArrowLeft style={{ width: "14px", height: "14px" }} /> Back to Resources
+            <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "14px", color: "#F07830", cursor: "pointer" }}>
+              ← Back to Resources
             </span>
           </Link>
         </div>
@@ -121,106 +120,144 @@ export default function ResourceDetail() {
     );
   }
 
-  const heroImageSrc = resource.imageUrl ?? "/dashboard_bg_cathedral.png";
+  const heroImage = resource.imageUrl ?? "/dashboard_bg_cathedral.png";
 
   return (
     <DashboardLayout>
       <Breadcrumb name={resource.name} />
 
-      {/* Content column */}
+      {/* Body — black bg fills below navbar */}
       <div
         style={{
-          maxWidth: "960px",
-          margin: "0 auto",
-          paddingTop: "40px",
-          paddingBottom: "50px",
-          paddingLeft: "20px",
-          paddingRight: "20px",
+          backgroundColor: "black",
           display: "flex",
           flexDirection: "column",
-          gap: "30px",
+          alignItems: "center",
+          minHeight: "685px",
         }}
       >
-        {/* Hero card */}
+        {/* Inner body padding — matches Figma pt-40 pb-50 px-20 */}
         <div
-          data-testid="hero-card-resource"
           style={{
-            background: "black",
-            border: "0.5px solid rgba(255,255,255,0.05)",
-            borderRadius: "8px",
-            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            paddingTop: "40px",
+            paddingBottom: "50px",
+            paddingLeft: "20px",
+            paddingRight: "20px",
+            width: "100%",
           }}
         >
-          {/* Hero image section */}
-          <div style={{ position: "relative", height: "360px", overflow: "hidden" }}>
-            {/* Background image */}
-            <img
-              src={heroImageSrc}
-              alt={resource.name}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center",
-              }}
-            />
-            {/* Side-fade gradient — left */}
+          {/* Card — max-w-960, bg-black, 1px border rgba(255,255,255,0.05), rounded-8, overflow-clip */}
+          {/* pt-[379.94px] creates space for the absolute hero image at top */}
+          <div
+            data-testid="hero-card-resource"
+            className="resource-card"
+            style={{
+              position: "relative",
+              backgroundColor: "black",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: "8px",
+              overflow: "clip",
+              paddingTop: "379.94px",
+              maxWidth: "960px",
+              width: "100%",
+              display: "flex",
+              alignItems: "flex-end",
+              flexDirection: "column",
+            }}
+          >
+            {/* === Hero image — absolutely positioned in top of card === */}
             <div
+              aria-hidden="true"
               style={{
                 position: "absolute",
-                inset: 0,
-                background: "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.55) 100%)",
+                top: 0,
+                left: "-3px",
+                right: "-3px",
+                height: "470px",
+                overflow: "hidden",
+                backgroundColor: "black",
+              }}
+            >
+              <img
+                src={heroImage}
+                alt={resource.name}
+                style={{
+                  position: "absolute",
+                  top: "90px",
+                  left: 0,
+                  width: "100%",
+                  height: "542px",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                }}
+              />
+              {/* Top edge fade */}
+              <div style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "99px",
+                background: "linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)",
                 pointerEvents: "none",
-              }}
-            />
-            {/* Bottom-fade gradient */}
-            <div
-              style={{
+              }} />
+              {/* Bottom fade — dissolves into black card bg */}
+              <div style={{
                 position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: "200px",
+                height: "335px",
                 background: "linear-gradient(to bottom, transparent, black)",
                 pointerEvents: "none",
+              }} />
+            </div>
+
+            {/* === Card text content — below the image space === */}
+            <div
+              className="px-5 sm:px-10"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "9.25px",
+                alignItems: "flex-start",
+                width: "100%",
+                paddingBottom: "40px",
               }}
-            />
-          </div>
+            >
+              {/* Duration / type badge */}
+              <p style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontWeight: 400,
+                fontSize: "12px",
+                color: "#d0d6e0",
+                letterSpacing: "2.4px",
+                textTransform: "uppercase",
+                lineHeight: "1",
+                margin: 0,
+              }}>
+                {[resource.duration, resource.type === "prayer" ? "Prayer" : "Practice"]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
 
-          {/* Card content below image */}
-          <div style={{ padding: "32px 40px 40px" }}>
-            {/* Type badge */}
-            <span style={{
-              display: "inline-block",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "11px",
-              fontWeight: 400,
-              color: "#d0d6e0",
-              letterSpacing: "2px",
-              textTransform: "uppercase",
-              marginBottom: "12px",
-            }}>
-              {resource.type === "prayer" ? "Prayer" : "Practice"}
-              {resource.duration && ` · ${resource.duration}`}
-            </span>
+              {/* Resource title in Ivy Ora Display */}
+              <h1 style={{
+                fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+                fontWeight: 500,
+                fontSize: "36px",
+                color: "white",
+                lineHeight: "1.15",
+                margin: 0,
+              }}>
+                {resource.name}
+              </h1>
 
-            {/* Title */}
-            <h1 style={{
-              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-              fontWeight: 500,
-              fontSize: "32px",
-              color: "white",
-              lineHeight: "1.2",
-              marginBottom: "24px",
-            }}>
-              {resource.name}
-            </h1>
-
-            {/* Audio player */}
-            {resource.audioUrl && (
-              <div style={{ marginBottom: "32px" }}>
+              {/* Optional audio player */}
+              {resource.audioUrl && (
                 <audio
                   data-testid="audio-player"
                   controls
@@ -230,43 +267,28 @@ export default function ResourceDetail() {
                     height: "40px",
                     borderRadius: "6px",
                     outline: "none",
+                    marginTop: "6px",
                     accentColor: "#F07830",
                   }}
                 />
+              )}
+
+              {/* Divider */}
+              <div style={{
+                height: "0.5px",
+                background: "rgba(255,255,255,0.08)",
+                width: "100%",
+                marginTop: "18px",
+                marginBottom: "6px",
+                flexShrink: 0,
+              }} />
+
+              {/* Formatted prayer / practice content */}
+              <div data-testid="resource-content" style={{ width: "100%" }}>
+                {formatContent(resource.content)}
               </div>
-            )}
-
-            {/* Divider */}
-            <div style={{ height: "0.5px", background: "rgba(255,255,255,0.08)", marginBottom: "28px" }} />
-
-            {/* Formatted content */}
-            <div data-testid="resource-content">
-              {formatContent(resource.content)}
             </div>
           </div>
-        </div>
-
-        {/* Back link */}
-        <div>
-          <Link href="/resources">
-            <span
-              data-testid="link-back-bottom"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "14px",
-                color: "rgba(255,255,255,0.4)",
-                cursor: "pointer",
-                transition: "color 0.15s",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLSpanElement).style.color = "rgba(255,255,255,0.7)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLSpanElement).style.color = "rgba(255,255,255,0.4)")}
-            >
-              <ArrowLeft style={{ width: "14px", height: "14px" }} /> Back to Resources
-            </span>
-          </Link>
         </div>
       </div>
     </DashboardLayout>
