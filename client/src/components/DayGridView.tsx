@@ -147,23 +147,60 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
 
 function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: number; title: string; onGuideClick: () => void }) {
   return (
-    <div
-      className="sticky top-0 z-20"
-      style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(9,9,9,0.88)", borderBottom: "0.487px solid rgba(255,255,255,0.08)", padding: "10px 16px" }}
-    >
-      <div style={{ maxWidth: "608px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div>
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", letterSpacing: "0.13em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: "2px" }}>
+    <div className="sticky z-20" style={{ top: "32px" }}>
+      <div
+        style={{
+          background: "#191a1b",
+          border: "0.5px solid rgba(255,255,255,0.05)",
+          borderRadius: "8px",
+          boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.25), 0px 4px 6px 0px rgba(0,0,0,0.12)",
+          padding: "16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Left: week label + title */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <p style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "12px",
+            fontWeight: 400,
+            letterSpacing: "2.4px",
+            color: "#d0d6e0",
+            textTransform: "uppercase",
+            lineHeight: "24px",
+          }}>
             Week {weekNumber} of 5
           </p>
-          <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "18px", fontWeight: 500, color: "white", lineHeight: 1.2 }}>
+          <p style={{
+            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+            fontSize: "18px",
+            fontWeight: 500,
+            color: "white",
+            lineHeight: "28px",
+          }}>
             {title}
           </p>
         </div>
+
+        {/* Right: Overview & Guide button */}
         <button
           data-testid="button-week-guide"
           onClick={onGuideClick}
-          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", background: "none", border: "0.487px solid rgba(255,255,255,0.12)", borderRadius: "4px", padding: "4px 10px", cursor: "pointer", whiteSpace: "nowrap" }}
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "10px",
+            fontWeight: 400,
+            color: "white",
+            background: "rgba(255,255,255,0.03)",
+            border: "0.5px solid rgba(255,255,255,0.06)",
+            borderRadius: "4px",
+            padding: "8px",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
         >
           Overview &amp; Guide
         </button>
@@ -242,7 +279,7 @@ export function DayGridView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", position: "relative" }} className="custom-scrollbar">
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "32px", position: "relative" }} className="custom-scrollbar">
         <div style={{ maxWidth: "608px", margin: "0 auto" }}>
 
           <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
