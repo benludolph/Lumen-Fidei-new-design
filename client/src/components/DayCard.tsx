@@ -67,7 +67,7 @@ export function DayCard({
         borderRadius: "5.842px",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
         paddingTop: "12.17px",
         paddingLeft: "12.17px",
         paddingRight: "12.17px",
@@ -115,31 +115,29 @@ export function DayCard({
         </>
       )}
 
-      {/* State icon — top-right, Figma spec: square box with 5% fill */}
-      {!isLocked && (
-        <div
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            zIndex: 2,
-            width: "23.367px",
-            height: "23.367px",
-            borderRadius: "4px",
-            background: isCompleted ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          {isCompleted ? (
-            <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
-          ) : (
-            <Loader style={{ width: "13px", height: "13px", color: "#ffffff", strokeWidth: 1.8 }} />
-          )}
-        </div>
-      )}
+      {/* State icon — top-left, Figma spec: square box with 5% fill */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          width: "23.367px",
+          height: "23.367px",
+          borderRadius: "4px",
+          background: isLocked ? "transparent" : isCompleted ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        {isLocked ? (
+          <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
+        ) : isCompleted ? (
+          <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
+        ) : (
+          <Loader style={{ width: "13px", height: "13px", color: "#ffffff", strokeWidth: 1.8 }} />
+        )}
+      </div>
 
       {/* Text block — bottom of card, hugs title + subtitle with 8px gap */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>

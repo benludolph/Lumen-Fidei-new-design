@@ -113,7 +113,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
       onClick={available ? onClick : undefined}
       disabled={!available}
       data-testid={`card-prelim-${position}`}
-      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingTop: "12.17px", paddingLeft: "12.17px", paddingRight: "12.17px", paddingBottom: "14.118px", minHeight: "126px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
+      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "12.17px", paddingLeft: "12.17px", paddingRight: "12.17px", paddingBottom: "14.118px", minHeight: "126px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
       onMouseEnter={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
       onMouseLeave={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
     >
@@ -123,16 +123,16 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
         </>
       )}
-      {/* State icon — top-right, Figma spec: square box with 5% fill */}
-      {available && (
-        <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 2, width: "23.367px", height: "23.367px", borderRadius: "4px", background: completed ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          {completed ? (
-            <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
-          ) : (
-            <Loader style={{ width: "13px", height: "13px", color: "#ffffff", strokeWidth: 1.8 }} />
-          )}
-        </div>
-      )}
+      {/* State icon — top-left, Figma spec: square box with 5% fill */}
+      <div style={{ position: "relative", zIndex: 1, width: "23.367px", height: "23.367px", borderRadius: "4px", background: !available ? "transparent" : completed ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {!available ? (
+          <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
+        ) : completed ? (
+          <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
+        ) : (
+          <Loader style={{ width: "13px", height: "13px", color: "#ffffff", strokeWidth: 1.8 }} />
+        )}
+      </div>
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
         <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "16px", lineHeight: "15.5px", letterSpacing: "-0.14px", color: "white", fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
         {subtitle && (
