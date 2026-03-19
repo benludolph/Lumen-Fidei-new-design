@@ -111,22 +111,26 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  const btnRef = useRef<HTMLButtonElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!btnRef.current) return;
-    const rect = btnRef.current.getBoundingClientRect();
+    if (!wrapperRef.current) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
     setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }, []);
 
   const wrapperBg = isLocked && isHovering
-    ? `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.04) 40%, transparent 68%)`
+    ? `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 38%, transparent 65%)`
     : isHovering
     ? "rgba(255,255,255,0.12)"
     : "rgba(255,255,255,0.05)";
 
   return (
     <div
+      ref={wrapperRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => { setIsHovering(false); setMousePos({ x: 0, y: 0 }); }}
       style={{
         position: "relative",
         borderRadius: "5.842px",
@@ -134,27 +138,13 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
         background: wrapperBg,
         transition: isHovering && isLocked ? "none" : "background 0.2s ease",
         width: "100%",
+        cursor: available ? "pointer" : "default",
       }}
     >
       <button
-        ref={btnRef}
         onClick={available ? onClick : undefined}
         disabled={!available}
         data-testid={`card-prelim-${position}`}
-        onMouseMove={isLocked ? handleMouseMove : undefined}
-        onMouseEnter={(e) => {
-          setIsHovering(true);
-          if (available) {
-            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          setIsHovering(false);
-          setMousePos({ x: 0, y: 0 });
-          if (available) {
-            (e.currentTarget as HTMLButtonElement).style.transform = "";
-          }
-        }}
         style={{
           position: "relative",
           textAlign: "left",
@@ -172,8 +162,10 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
           paddingBottom: "14.118px",
           minHeight: "126px",
           transition: "transform 0.15s ease",
+          transform: available && isHovering ? "translateY(-2px)" : "none",
           opacity: available ? 1 : 0.45,
           cursor: available ? "pointer" : "default",
+          pointerEvents: isLocked ? "none" : "auto",
         }}
       >
         {/* Spotlight inner glow — locked only */}
@@ -184,7 +176,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
               inset: 0,
               pointerEvents: "none",
               zIndex: 0,
-              background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.032) 0%, transparent 52%)`,
+              background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.035) 0%, transparent 50%)`,
             }}
           />
         )}

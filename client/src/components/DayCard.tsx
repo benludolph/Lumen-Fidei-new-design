@@ -50,26 +50,31 @@ export function DayCard({
 }: DayCardProps) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
-  const btnRef = useRef<HTMLButtonElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const tooltipTitle = isLocked && cohortStartDate
     ? getUnlockDateLabel(cohortStartDate, dayNumber)
     : undefined;
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!btnRef.current) return;
-    const rect = btnRef.current.getBoundingClientRect();
+    if (!wrapperRef.current) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
     setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }, []);
 
   const wrapperBg = isLocked && isHovering
-    ? `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.04) 40%, transparent 68%)`
+    ? `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 38%, transparent 65%)`
     : isHovering
     ? "rgba(255,255,255,0.12)"
     : "rgba(255,255,255,0.05)";
 
   return (
     <div
+      ref={wrapperRef}
+      title={tooltipTitle}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => { setIsHovering(false); setMousePos({ x: 0, y: 0 }); }}
       style={{
         position: "relative",
         borderRadius: "5.842px",
@@ -77,28 +82,13 @@ export function DayCard({
         background: wrapperBg,
         transition: isHovering && isLocked ? "none" : "background 0.2s ease",
         width: "100%",
+        cursor: isLocked ? "default" : "pointer",
       }}
     >
       <button
-        ref={btnRef}
         onClick={isLocked ? undefined : onClick}
         disabled={isLocked}
-        title={tooltipTitle}
         data-testid={`card-day-${dayNumber}`}
-        onMouseMove={isLocked ? handleMouseMove : undefined}
-        onMouseEnter={(e) => {
-          setIsHovering(true);
-          if (!isLocked) {
-            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          setIsHovering(false);
-          setMousePos({ x: 0, y: 0 });
-          if (!isLocked) {
-            (e.currentTarget as HTMLButtonElement).style.transform = "";
-          }
-        }}
         style={{
           position: "relative",
           textAlign: "left",
@@ -116,8 +106,10 @@ export function DayCard({
           paddingBottom: "14.118px",
           minHeight: "126px",
           transition: "transform 0.15s ease",
+          transform: !isLocked && isHovering ? "translateY(-2px)" : "none",
           opacity: isLocked ? 0.45 : 1,
           cursor: isLocked ? "default" : "pointer",
+          pointerEvents: isLocked ? "none" : "auto",
         }}
       >
         {/* Spotlight inner glow — locked only */}
@@ -128,7 +120,7 @@ export function DayCard({
               inset: 0,
               pointerEvents: "none",
               zIndex: 0,
-              background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.032) 0%, transparent 52%)`,
+              background: `radial-gradient(circle at ${mousePos.x}px ${mousePos.y}px, rgba(255,255,255,0.035) 0%, transparent 50%)`,
             }}
           />
         )}
