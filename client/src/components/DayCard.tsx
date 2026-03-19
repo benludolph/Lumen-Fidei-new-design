@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Lock, Check, Sun, Moon } from "lucide-react";
+import { Lock, Loader, CircleCheck, Sun, Moon } from "lucide-react";
 
 export type DayCardVariant = "full" | "half";
 
@@ -67,7 +67,7 @@ export function DayCard({
         borderRadius: "5.842px",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "flex-end",
         paddingTop: "12.17px",
         paddingLeft: "12.17px",
         paddingRight: "12.17px",
@@ -115,35 +115,31 @@ export function DayCard({
         </>
       )}
 
-      {/* State icon — top-left: 23.367×23.367px */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          width: "23.367px",
-          height: "23.367px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        {isLocked ? (
-          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
-          </div>
-        ) : isCompleted ? (
-          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: isCompletedOutOfOrder ? "#eab308" : "#22c55e", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Check style={{ width: "11px", height: "11px", color: "white", strokeWidth: 2.5 }} />
-          </div>
-        ) : isToday ? (
-          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", background: "#F07830", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "8px", lineHeight: 1, color: "white", fontWeight: 700 }}>NOW</span>
-          </div>
-        ) : (
-          <div style={{ width: "23.367px", height: "23.367px", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.12)" }} />
-        )}
-      </div>
+      {/* State icon — top-right, Figma spec: square box with 5% fill */}
+      {!isLocked && (
+        <div
+          style={{
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            zIndex: 2,
+            width: "23.367px",
+            height: "23.367px",
+            borderRadius: "4px",
+            background: isCompleted ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {isCompleted ? (
+            <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
+          ) : (
+            <Loader style={{ width: "13px", height: "13px", color: "#ffffff", strokeWidth: 1.8 }} />
+          )}
+        </div>
+      )}
 
       {/* Text block — bottom of card, hugs title + subtitle with 8px gap */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>

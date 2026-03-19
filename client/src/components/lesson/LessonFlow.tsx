@@ -238,7 +238,7 @@ export function LessonFlow({
   const surveyBlocked = currentSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
+    <div className="fixed inset-0 z-[200] flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
       <LessonProgressBar
         currentStep={currentSlide}
         totalSteps={slides.length}
