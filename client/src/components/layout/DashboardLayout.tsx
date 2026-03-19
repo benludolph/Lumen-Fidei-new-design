@@ -1,25 +1,32 @@
 import { Link, useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import logoImg from "@assets/LOGO_1773954119275.png";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-function CandleIcon() {
-  return (
-    <svg width="13" height="20" viewBox="0 0 13 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M6.5 0C6.5 0 9 3.5 9 6C9 7.7 8 8.8 6.5 9C5 8.8 4 7.7 4 6C4 3.5 6.5 0 6.5 0Z" fill="#F07830"/>
-      <rect x="4" y="9" width="5" height="1" rx="0.5" fill="rgba(255,255,255,0.4)"/>
-      <rect x="3.5" y="10" width="6" height="10" rx="1.5" fill="rgba(255,255,255,0.25)"/>
-    </svg>
-  );
-}
-
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  const { data: user } = useQuery<{ name: string; email: string; role: string }>({
+    queryKey: ["/api/user"],
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/logout"),
+    onSuccess: () => {
+      queryClient.clear();
+      navigate("/");
+    },
+  });
 
   useEffect(() => {
     if (drawerOpen) {
@@ -30,7 +37,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    if (profileOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [profileOpen]);
+
   const closeDrawer = () => setDrawerOpen(false);
+
+  const initials = user?.name
+    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "?";
 
   return (
     <div className="relative min-h-screen bg-[#0b0b0b] overflow-x-hidden">
@@ -74,33 +95,114 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           }}
         />
 
-        {/* Navbar inner row — responsive padding */}
-        <div
-          className="flex items-center justify-between h-full px-4 sm:px-[107px]"
-        >
+        {/* Navbar inner row */}
+        <div className="flex items-center justify-between h-full px-4 sm:px-[107px]">
           {/* Logo */}
           <Link href="/dashboard">
-            <div className="flex items-center cursor-pointer select-none" style={{ gap: "8px" }}>
-              <CandleIcon />
-              <span
-                className="text-white uppercase"
-                style={{
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  letterSpacing: "0.08em",
-                }}
-              >
-                Lumen Fidei
-              </span>
+            <div className="flex items-center cursor-pointer select-none">
+              <img
+                src={logoImg}
+                alt="Lumen Fidei"
+                style={{ height: "32px", width: "auto", objectFit: "contain" }}
+              />
             </div>
           </Link>
 
-          {/* Desktop nav links */}
-          <div className="hidden sm:flex items-center">
+          {/* Desktop nav links + profile */}
+          <div className="hidden sm:flex items-center gap-1">
+            <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
             <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
+
+            {/* Profile / sign-out button */}
+            <div ref={profileRef} style={{ position: "relative", marginLeft: "8px" }}>
+              <button
+                data-testid="button-profile"
+                onClick={() => setProfileOpen((v) => !v)}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  background: "rgba(240,120,48,0.15)",
+                  border: "1px solid rgba(240,120,48,0.3)",
+                  color: "#F07830",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(240,120,48,0.25)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(240,120,48,0.15)"; }}
+                aria-label="Profile menu"
+              >
+                {initials}
+              </button>
+
+              {/* Dropdown */}
+              {profileOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 8px)",
+                    right: 0,
+                    minWidth: "180px",
+                    background: "#141516",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                    zIndex: 100,
+                  }}
+                >
+                  {user && (
+                    <div style={{
+                      padding: "12px 14px",
+                      borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    }}>
+                      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: 0 }}>{user.name}</p>
+                      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>{user.email}</p>
+                    </div>
+                  )}
+                  <button
+                    data-testid="button-sign-out"
+                    onClick={() => logoutMutation.mutate()}
+                    disabled={logoutMutation.isPending}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 14px",
+                      background: "none",
+                      border: "none",
+                      color: "rgba(255,255,255,0.7)",
+                      fontFamily: "'Afacad', sans-serif",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      transition: "color 0.15s, background 0.15s",
+                      textAlign: "left",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "white";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "none";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)";
+                    }}
+                  >
+                    <LogOut size={14} />
+                    {logoutMutation.isPending ? "Signing out…" : "Sign Out"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile hamburger */}
@@ -145,20 +247,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             flexShrink: 0,
           }}
         >
-          <div className="flex items-center" style={{ gap: "8px" }}>
-            <CandleIcon />
-            <span
-              className="text-white uppercase"
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "14px",
-                fontWeight: 500,
-                letterSpacing: "0.08em",
-              }}
-            >
-              Lumen Fidei
-            </span>
-          </div>
+          <img
+            src={logoImg}
+            alt="Lumen Fidei"
+            style={{ height: "28px", width: "auto", objectFit: "contain" }}
+          />
           <button
             data-testid="button-close-drawer"
             className="text-white/60 hover:text-white transition-colors"
@@ -170,7 +263,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Drawer nav links */}
-        <nav className="flex flex-col" style={{ padding: "12px 0" }}>
+        <nav className="flex flex-col flex-1" style={{ padding: "12px 0" }}>
+          <DrawerLink href="/dashboard" active={location === "/dashboard"} onClick={closeDrawer}>
+            Dashboard
+          </DrawerLink>
           <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>
             Messages
           </DrawerLink>
@@ -181,6 +277,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             Collection
           </DrawerLink>
         </nav>
+
+        {/* Drawer sign-out */}
+        {user && (
+          <div style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)", padding: "16px 20px" }}>
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: "0 0 2px" }}>{user.name}</p>
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "0 0 12px" }}>{user.email}</p>
+            <button
+              data-testid="button-sign-out-mobile"
+              onClick={() => { closeDrawer(); logoutMutation.mutate(); }}
+              disabled={logoutMutation.isPending}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "none",
+                border: "none",
+                color: "rgba(255,255,255,0.5)",
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "13px",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              <LogOut size={14} />
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Page content */}
