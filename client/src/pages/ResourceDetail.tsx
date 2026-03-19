@@ -6,6 +6,25 @@ import { useState, useRef } from "react";
 import type { PracticeResource } from "@shared/schema";
 import { formatContent } from "@/lib/formatContent";
 
+import divineMercyDetailImg from "@assets/Divine_Mercy_(1)_1773954727973.webp";
+import retaliationDetailImg from "@assets/Retaliation_image_1773954733102.webp";
+import miracleDetailImg from "@assets/Miracle_1773955016570.jpg";
+import lectioDetailImg from "@assets/LectoDivina_1773955016570.png";
+import examenDetailImg from "@assets/Examenn_1773955016571.png";
+
+const DETAIL_IMAGE_MAP: Array<{ match: string; img: string }> = [
+  { match: "divine mercy", img: divineMercyDetailImg },
+  { match: "retaliation", img: retaliationDetailImg },
+  { match: "miracle prayer", img: miracleDetailImg },
+  { match: "lectio", img: lectioDetailImg },
+  { match: "examen", img: examenDetailImg },
+];
+
+function getDetailImage(name: string): string | null {
+  const lower = name.toLowerCase();
+  return DETAIL_IMAGE_MAP.find((m) => lower.includes(m.match))?.img ?? null;
+}
+
 function Breadcrumb({ name }: { name: string }) {
   return (
     <div
@@ -247,7 +266,7 @@ export default function ResourceDetail() {
     );
   }
 
-  const heroImage = resource.imageUrl ?? "/dashboard_bg_cathedral.png";
+  const heroImage = getDetailImage(resource.name) ?? resource.imageUrl ?? "/dashboard_bg_cathedral.png";
   const hasAudio = !!resource.audioUrl;
 
   return (
