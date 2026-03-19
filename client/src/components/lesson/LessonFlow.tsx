@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -187,18 +188,19 @@ export function LessonFlow({
   }, [slides.length]);
 
   if (flowState === "loading") {
-    return (
+    return createPortal(
       <LessonLoadingScreen
         dayNumber={dayNumber}
         theme={content.centralTheme}
         backgroundImage={backgroundImage}
         onComplete={handleLoadingComplete}
-      />
+      />,
+      document.body
     );
   }
 
   if (flowState === "complete") {
-    return (
+    return createPortal(
       <LessonCompletionScreen
         dayNumber={dayNumber}
         theme={content.centralTheme}
@@ -207,18 +209,20 @@ export function LessonFlow({
         saintImage={content.saintImage}
         saintQuote={content.saintQuote}
         onContinue={handleContinue}
-      />
+      />,
+      document.body
     );
   }
 
   if (slides.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
+    return createPortal(
+      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 p-6 bg-white">
         <p className="text-muted-foreground">No content available for this day.</p>
         <Button variant="outline" onClick={onExit} data-testid="button-exit-empty">
           Back to Overview
         </Button>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -237,7 +241,7 @@ export function LessonFlow({
   const requiresInteraction = INTERACTIVE_TYPES.has(currentSlideData.type) && !slideInteracted;
   const surveyBlocked = currentSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
       <LessonProgressBar
         currentStep={currentSlide}
@@ -272,7 +276,7 @@ export function LessonFlow({
       />
 
       {isValidKc && kcAnswered ? null : (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-[210]">
           <div className="max-w-[540px] mx-auto flex items-center justify-between">
             <Button
               variant="secondary"
@@ -302,6 +306,7 @@ export function LessonFlow({
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
