@@ -373,7 +373,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           height: "126px",
           backgroundImage: `url(${isHovered ? certHoverImg : certLockedImg})`,
           backgroundSize: "cover",
-          backgroundPosition: "left center",
+          backgroundPosition: "right center",
           border: "0.487px solid rgba(255,255,255,0.05)",
           borderRadius: "5.842px",
           overflow: "hidden",
