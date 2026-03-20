@@ -5,8 +5,9 @@ import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck } from "lucide-react";
+import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X, Download } from "lucide-react";
 
+import certImg from "@assets/Certificate_1773978297114.png";
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
 import trackAImg3 from "@assets/image_1771985088299.png";
@@ -209,6 +210,379 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
   );
 }
 
+function CertificateModal({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={onClose}
+      data-testid="certificate-modal-backdrop"
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "24px",
+        background: "rgba(0,0,0,0.8)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        data-testid="certificate-modal"
+        style={{
+          position: "relative",
+          background: "#0f1011",
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          borderRadius: "12px",
+          maxWidth: "540px",
+          width: "100%",
+          overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
+        }}
+      >
+        {/* Background landscape image — upper right */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0, right: 0,
+            width: "60%", height: "180px",
+            background: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80') center/cover no-repeat",
+            maskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)",
+            WebkitMaskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          data-testid="button-close-certificate-modal"
+          style={{
+            position: "absolute", top: "16px", right: "16px",
+            background: "rgba(255,255,255,0.07)",
+            border: "0.5px solid rgba(255,255,255,0.1)",
+            borderRadius: "50%",
+            width: "28px", height: "28px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: "rgba(255,255,255,0.55)",
+            zIndex: 10,
+          }}
+        >
+          <X size={13} />
+        </button>
+
+        {/* Content */}
+        <div style={{ position: "relative", zIndex: 1, padding: "40px 36px 32px" }}>
+          {/* Heading */}
+          <h2
+            style={{
+              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+              fontSize: "28px", fontWeight: 500,
+              color: "white", margin: "0 0 12px",
+              lineHeight: 1.15,
+            }}
+          >
+            Your Certificate of Completion
+          </h2>
+
+          {/* Bold subtitle */}
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "14px", fontWeight: 600,
+              color: "rgba(255,255,255,0.85)",
+              margin: "0 0 16px", lineHeight: 1.55,
+            }}
+          >
+            This certificate is unlocked after completing all 30 days of the formation program.
+          </p>
+
+          {/* Description */}
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "13.5px",
+              color: "rgba(255,255,255,0.5)",
+              margin: "0 0 32px", lineHeight: 1.65,
+            }}
+          >
+            This marks the completion of your journey through the program —{" "}
+            a sign of your commitment to prayer, truth, and healing.{" "}
+            Once unlocked, you'll be able to view and download your certificate.
+          </p>
+
+          {/* Certificate preview + lock condition */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px" }}>
+            <div style={{ position: "relative", width: "200px", marginBottom: "16px" }}>
+              <img
+                src={certImg}
+                alt="Certificate preview"
+                style={{
+                  width: "100%",
+                  filter: "grayscale(1) brightness(0.75)",
+                  borderRadius: "6px",
+                  display: "block",
+                }}
+              />
+              {/* Lock overlay */}
+              <div
+                style={{
+                  position: "absolute", inset: 0,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  background: "rgba(0,0,0,0.35)",
+                  borderRadius: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "36px", height: "36px", borderRadius: "50%",
+                    background: "rgba(255,255,255,0.08)",
+                    border: "0.5px solid rgba(255,255,255,0.15)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <Lock style={{ width: "15px", height: "15px", color: "rgba(255,255,255,0.7)" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Unlock condition label */}
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "10px", letterSpacing: "2px",
+                color: "rgba(255,255,255,0.35)",
+                textTransform: "uppercase",
+                margin: "0 0 6px",
+              }}
+            >
+              Unlock Condition
+            </p>
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "15px", fontWeight: 500,
+                color: "rgba(255,255,255,0.75)",
+                margin: 0,
+              }}
+            >
+              Complete all 30 daily lessons
+            </p>
+          </div>
+
+          {/* I understand button — bottom right */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={onClose}
+              data-testid="button-certificate-understand"
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "14px", fontWeight: 500,
+                color: "white",
+                background: "rgba(255,255,255,0.1)",
+                border: "0.5px solid rgba(255,255,255,0.12)",
+                borderRadius: "6px",
+                padding: "10px 24px",
+                cursor: "pointer",
+                letterSpacing: "0.02em",
+              }}
+            >
+              I understand
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface CertificateCardProps {
+  prayerCompletions?: { dayNumber: number }[];
+}
+
+function CertificateCard({ prayerCompletions }: CertificateCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  const completedDayNumbers = new Set(prayerCompletions?.map((c) => c.dayNumber) ?? []);
+  const isUnlocked = Array.from({ length: 30 }, (_, i) => i + 1).every((d) =>
+    completedDayNumbers.has(d)
+  );
+
+  const handleInfoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowModal(true);
+  };
+
+  return (
+    <>
+      {showModal && <CertificateModal onClose={() => setShowModal(false)} />}
+
+      {/* Divider */}
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: "12px",
+          margin: "28px 0 20px",
+        }}
+      >
+        <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
+        <span
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "12px", letterSpacing: "0.14em",
+            color: "rgba(255,255,255,0.35)",
+            textTransform: "uppercase", flexShrink: 0,
+          }}
+        >
+          Certificate
+        </span>
+        <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
+      </div>
+
+      {/* Wrapper: extra top space for the image that pokes above the card */}
+      <div
+        style={{
+          position: "relative",
+          paddingTop: "64px",
+          marginBottom: "8px",
+          /* allow the cert image to show above */
+          overflow: "visible",
+        }}
+      >
+        {/* Certificate image — absolute, pokes above card */}
+        <img
+          src={certImg}
+          alt="Certificate of Completion"
+          style={{
+            position: "absolute",
+            top: 0,
+            right: "-79.49px",
+            width: "463px",
+            height: "209px",
+            mixBlendMode: isHovered ? "normal" : "luminosity",
+            transform: isHovered ? "translateY(-10px)" : "translateY(0)",
+            transition: "transform 0.5s cubic-bezier(0.34,1.56,0.64,1)",
+            pointerEvents: "none",
+            userSelect: "none",
+            zIndex: 2,
+            objectFit: "contain",
+            objectPosition: "right top",
+          }}
+        />
+
+        {/* Card rectangle — Figma: 608×126, #0f1011, border 0.487px rgba(255,255,255,0.05), rounded 5.842px */}
+        <div
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={isUnlocked ? undefined : undefined}
+          data-testid="certificate-card"
+          style={{
+            position: "relative",
+            height: "126px",
+            background: "#0f1011",
+            border: "0.487px solid rgba(255,255,255,0.05)",
+            borderRadius: "5.842px",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            paddingTop: "12.17px",
+            paddingLeft: "12.17px",
+            paddingRight: "12.17px",
+            paddingBottom: "14.118px",
+            cursor: isUnlocked ? "pointer" : "default",
+          }}
+        >
+          {/* Top row: lock icon (left) + info icon (right) */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
+            {/* Lock / download icon box */}
+            <div
+              style={{
+                width: "23.367px", height: "23.367px",
+                borderRadius: "4px",
+                background: isUnlocked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.05)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {isUnlocked
+                ? <Download style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.6)" }} />
+                : <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.45)" }} />
+              }
+            </div>
+
+            {/* Info icon button */}
+            <button
+              onClick={handleInfoClick}
+              data-testid="button-certificate-info"
+              style={{
+                width: "23.367px", height: "23.367px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.04)",
+                border: "0.487px solid rgba(255,255,255,0.08)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+                color: "rgba(255,255,255,0.35)",
+                flexShrink: 0,
+                transition: "background 0.2s, color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
+                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)";
+              }}
+            >
+              <Info size={11} />
+            </button>
+          </div>
+
+          {/* Bottom row: title + subtitle */}
+          <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", gap: "4px" }}>
+            <p
+              style={{
+                fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+                fontSize: "20px", fontWeight: 500,
+                color: "white", margin: 0,
+                lineHeight: 1.15, letterSpacing: "-0.14px",
+              }}
+            >
+              Certificate of Completion
+            </p>
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "11px",
+                color: "rgba(255,255,255,0.4)",
+                margin: 0, lineHeight: 1.5,
+              }}
+            >
+              {isUnlocked
+                ? "You did it! Download the pdf and present to ministry to schedule your prayer session."
+                : "Complete all 30 daily lessons to unlock your certificate."}
+            </p>
+          </div>
+
+          {/* Gradient overlay — left fade matching Figma landscape image */}
+          <div
+            style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(267.99deg, rgba(15,16,17,0) 55%, rgb(15,16,17) 90%)",
+              pointerEvents: "none", zIndex: 1,
+            }}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function DayGridView({
   currentDay,
   isTrackA,
@@ -376,6 +750,8 @@ export function DayGridView({
                 </div>
               );
             })}
+
+            <CertificateCard prayerCompletions={prayerCompletions} />
           </div>
         </div>
       </div>
