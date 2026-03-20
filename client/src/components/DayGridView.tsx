@@ -235,166 +235,85 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         data-testid="certificate-modal"
         style={{
           position: "relative",
-          background: "#0f1011",
+          background: "#141618",
           border: "0.5px solid rgba(255,255,255,0.08)",
           borderRadius: "12px",
-          maxWidth: "540px",
+          maxWidth: "480px",
           width: "100%",
-          overflow: "hidden",
+          padding: "36px 32px 28px",
           boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
         }}
       >
-        {/* Background landscape image — upper right */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0, right: 0,
-            width: "60%", height: "180px",
-            background: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80') center/cover no-repeat",
-            maskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)",
-            WebkitMaskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)",
-            pointerEvents: "none",
-          }}
-        />
-
         {/* Close button */}
         <button
           onClick={onClose}
           data-testid="button-close-certificate-modal"
           style={{
             position: "absolute", top: "16px", right: "16px",
-            background: "rgba(255,255,255,0.07)",
-            border: "0.5px solid rgba(255,255,255,0.1)",
-            borderRadius: "50%",
-            width: "28px", height: "28px",
+            background: "none",
+            border: "none",
+            cursor: "pointer", color: "rgba(255,255,255,0.4)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "rgba(255,255,255,0.55)",
-            zIndex: 10,
+            padding: "4px",
           }}
         >
-          <X size={13} />
+          <X size={15} />
         </button>
 
-        {/* Content */}
-        <div style={{ position: "relative", zIndex: 1, padding: "40px 36px 32px" }}>
-          {/* Heading */}
-          <h2
-            style={{
-              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-              fontSize: "28px", fontWeight: 500,
-              color: "white", margin: "0 0 12px",
-              lineHeight: 1.15,
-            }}
-          >
-            Your Certificate of Completion
-          </h2>
+        {/* Heading */}
+        <h2
+          style={{
+            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+            fontSize: "26px", fontWeight: 500,
+            color: "white", margin: "0 0 10px",
+            lineHeight: 1.2, paddingRight: "24px",
+          }}
+        >
+          Your Certificate of Completion
+        </h2>
 
-          {/* Bold subtitle */}
-          <p
+        {/* Bold subtitle */}
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "14px", fontWeight: 600,
+            color: "rgba(255,255,255,0.8)",
+            margin: "0 0 14px", lineHeight: 1.55,
+          }}
+        >
+          This certificate is unlocked after completing all 30 days of the formation program.
+        </p>
+
+        {/* Description */}
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "14px",
+            color: "rgba(255,255,255,0.45)",
+            margin: "0 0 28px", lineHeight: 1.65,
+          }}
+        >
+          This marks the completion of your journey through the program — a sign of your commitment to prayer, truth, and healing. Once unlocked, you'll be able to view and download your certificate.
+        </p>
+
+        {/* I understand button — right aligned */}
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            data-testid="button-certificate-understand"
             style={{
               fontFamily: "'Afacad', sans-serif",
-              fontSize: "14px", fontWeight: 600,
-              color: "rgba(255,255,255,0.85)",
-              margin: "0 0 16px", lineHeight: 1.55,
+              fontSize: "14px", fontWeight: 500,
+              color: "white",
+              background: "rgba(255,255,255,0.08)",
+              border: "0.5px solid rgba(255,255,255,0.12)",
+              borderRadius: "6px",
+              padding: "9px 22px",
+              cursor: "pointer",
             }}
           >
-            This certificate is unlocked after completing all 30 days of the formation program.
-          </p>
-
-          {/* Description */}
-          <p
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "13.5px",
-              color: "rgba(255,255,255,0.5)",
-              margin: "0 0 32px", lineHeight: 1.65,
-            }}
-          >
-            This marks the completion of your journey through the program —{" "}
-            a sign of your commitment to prayer, truth, and healing.{" "}
-            Once unlocked, you'll be able to view and download your certificate.
-          </p>
-
-          {/* Certificate preview + lock condition */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px" }}>
-            <div style={{ position: "relative", width: "200px", marginBottom: "16px" }}>
-              <img
-                src={certLockedImg}
-                alt="Certificate preview"
-                style={{
-                  width: "100%",
-                  filter: "grayscale(1) brightness(0.75)",
-                  borderRadius: "6px",
-                  display: "block",
-                }}
-              />
-              {/* Lock overlay */}
-              <div
-                style={{
-                  position: "absolute", inset: 0,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  background: "rgba(0,0,0,0.35)",
-                  borderRadius: "6px",
-                }}
-              >
-                <div
-                  style={{
-                    width: "36px", height: "36px", borderRadius: "50%",
-                    background: "rgba(255,255,255,0.08)",
-                    border: "0.5px solid rgba(255,255,255,0.15)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}
-                >
-                  <Lock style={{ width: "15px", height: "15px", color: "rgba(255,255,255,0.7)" }} />
-                </div>
-              </div>
-            </div>
-
-            {/* Unlock condition label */}
-            <p
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "10px", letterSpacing: "2px",
-                color: "rgba(255,255,255,0.35)",
-                textTransform: "uppercase",
-                margin: "0 0 6px",
-              }}
-            >
-              Unlock Condition
-            </p>
-            <p
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "15px", fontWeight: 500,
-                color: "rgba(255,255,255,0.75)",
-                margin: 0,
-              }}
-            >
-              Complete all 30 daily lessons
-            </p>
-          </div>
-
-          {/* I understand button — bottom right */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button
-              onClick={onClose}
-              data-testid="button-certificate-understand"
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "14px", fontWeight: 500,
-                color: "white",
-                background: "rgba(255,255,255,0.1)",
-                border: "0.5px solid rgba(255,255,255,0.12)",
-                borderRadius: "6px",
-                padding: "10px 24px",
-                cursor: "pointer",
-                letterSpacing: "0.02em",
-              }}
-            >
-              I understand
-            </button>
-          </div>
+            I understand
+          </button>
         </div>
       </div>
     </div>
@@ -454,7 +373,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           height: "126px",
           backgroundImage: `url(${isHovered ? certHoverImg : certLockedImg})`,
           backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundPosition: "left center",
           border: "0.487px solid rgba(255,255,255,0.05)",
           borderRadius: "5.842px",
           overflow: "hidden",
