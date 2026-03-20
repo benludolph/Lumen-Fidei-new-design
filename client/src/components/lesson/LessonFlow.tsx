@@ -204,10 +204,6 @@ export function LessonFlow({
       <LessonCompletionScreen
         dayNumber={dayNumber}
         theme={content.centralTheme}
-        saintId={content.saintId}
-        saintName={content.saintName}
-        saintImage={content.saintImage}
-        saintQuote={content.saintQuote}
         onContinue={handleContinue}
       />,
       document.body
