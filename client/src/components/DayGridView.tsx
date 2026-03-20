@@ -7,7 +7,8 @@ import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
 import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X, Download } from "lucide-react";
 
-import certImg from "@assets/Certificate_1773978297114.png";
+import certLockedImg from "@assets/Certificate_Locked_1773979233798.png";
+import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
 import trackAImg3 from "@assets/image_1771985088299.png";
@@ -318,7 +319,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px" }}>
             <div style={{ position: "relative", width: "200px", marginBottom: "16px" }}>
               <img
-                src={certImg}
+                src={certLockedImg}
                 alt="Certificate preview"
                 style={{
                   width: "100%",
@@ -443,140 +444,102 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
       </div>
 
-      {/* Wrapper: extra top space for the image that pokes above the card */}
+      {/* Card — background image switches between locked/hover states */}
       <div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        data-testid="certificate-card"
         style={{
           position: "relative",
-          paddingTop: "64px",
+          height: "126px",
+          backgroundImage: `url(${isHovered ? certHoverImg : certLockedImg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          border: "0.487px solid rgba(255,255,255,0.05)",
+          borderRadius: "5.842px",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          paddingTop: "12.17px",
+          paddingLeft: "12.17px",
+          paddingRight: "12.17px",
+          paddingBottom: "14.118px",
+          cursor: isUnlocked ? "pointer" : "default",
+          transition: "background-image 0s",
           marginBottom: "8px",
-          /* allow the cert image to show above */
-          overflow: "visible",
         }}
       >
-        {/* Certificate image — absolute, pokes above card */}
-        <img
-          src={certImg}
-          alt="Certificate of Completion"
-          style={{
-            position: "absolute",
-            top: 0,
-            right: "-79.49px",
-            width: "463px",
-            height: "209px",
-            mixBlendMode: isHovered ? "normal" : "luminosity",
-            transform: isHovered ? "translateY(-10px)" : "translateY(0)",
-            transition: "transform 0.5s cubic-bezier(0.34,1.56,0.64,1)",
-            pointerEvents: "none",
-            userSelect: "none",
-            zIndex: 2,
-            objectFit: "contain",
-            objectPosition: "right top",
-          }}
-        />
-
-        {/* Card rectangle — Figma: 608×126, #0f1011, border 0.487px rgba(255,255,255,0.05), rounded 5.842px */}
-        <div
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          onClick={isUnlocked ? undefined : undefined}
-          data-testid="certificate-card"
-          style={{
-            position: "relative",
-            height: "126px",
-            background: "#0f1011",
-            border: "0.487px solid rgba(255,255,255,0.05)",
-            borderRadius: "5.842px",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            paddingTop: "12.17px",
-            paddingLeft: "12.17px",
-            paddingRight: "12.17px",
-            paddingBottom: "14.118px",
-            cursor: isUnlocked ? "pointer" : "default",
-          }}
-        >
-          {/* Top row: lock icon (left) + info icon (right) */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
-            {/* Lock / download icon box */}
-            <div
-              style={{
-                width: "23.367px", height: "23.367px",
-                borderRadius: "4px",
-                background: isUnlocked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.05)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              {isUnlocked
-                ? <Download style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.6)" }} />
-                : <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.45)" }} />
-              }
-            </div>
-
-            {/* Info icon button */}
-            <button
-              onClick={handleInfoClick}
-              data-testid="button-certificate-info"
-              style={{
-                width: "23.367px", height: "23.367px",
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.04)",
-                border: "0.487px solid rgba(255,255,255,0.08)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                color: "rgba(255,255,255,0.35)",
-                flexShrink: 0,
-                transition: "background 0.2s, color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)";
-              }}
-            >
-              <Info size={11} />
-            </button>
-          </div>
-
-          {/* Bottom row: title + subtitle */}
-          <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", gap: "4px" }}>
-            <p
-              style={{
-                fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-                fontSize: "20px", fontWeight: 500,
-                color: "white", margin: 0,
-                lineHeight: 1.15, letterSpacing: "-0.14px",
-              }}
-            >
-              Certificate of Completion
-            </p>
-            <p
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "11px",
-                color: "rgba(255,255,255,0.4)",
-                margin: 0, lineHeight: 1.5,
-              }}
-            >
-              {isUnlocked
-                ? "You did it! Download the pdf and present to ministry to schedule your prayer session."
-                : "Complete all 30 daily lessons to unlock your certificate."}
-            </p>
-          </div>
-
-          {/* Gradient overlay — left fade matching Figma landscape image */}
+        {/* Top row: lock icon (left) + info icon (right) */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
+          {/* Lock / download icon box */}
           <div
             style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(267.99deg, rgba(15,16,17,0) 55%, rgb(15,16,17) 90%)",
-              pointerEvents: "none", zIndex: 1,
+              width: "23.367px", height: "23.367px",
+              borderRadius: "4px",
+              background: isUnlocked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.05)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
             }}
-          />
+          >
+            {isUnlocked
+              ? <Download style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.6)" }} />
+              : <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.45)" }} />
+            }
+          </div>
+
+          {/* Info icon button */}
+          <button
+            onClick={handleInfoClick}
+            data-testid="button-certificate-info"
+            style={{
+              width: "23.367px", height: "23.367px",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.04)",
+              border: "0.487px solid rgba(255,255,255,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.35)",
+              flexShrink: 0,
+              transition: "background 0.2s, color 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)";
+            }}
+          >
+            <Info size={11} />
+          </button>
+        </div>
+
+        {/* Bottom row: title + subtitle */}
+        <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", gap: "4px" }}>
+          <p
+            style={{
+              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+              fontSize: "20px", fontWeight: 500,
+              color: "white", margin: 0,
+              lineHeight: 1.15, letterSpacing: "-0.14px",
+            }}
+          >
+            Certificate of Completion
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "11px",
+              color: "rgba(255,255,255,0.45)",
+              margin: 0, lineHeight: 1.5,
+            }}
+          >
+            {isUnlocked
+              ? "You did it! Download the pdf and present to ministry to schedule your prayer session."
+              : "Complete all 30 daily lessons to unlock your certificate."}
+          </p>
         </div>
       </div>
     </>
