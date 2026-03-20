@@ -391,7 +391,7 @@ export default function Dashboard() {
             mentorId={user?.mentorId}
             onExit={handleBackToGrid}
             onComplete={() => {
-              if (selectedDay > 0 && !isPeriodCompleted(selectedDay, "morning")) {
+              if (!isPeriodCompleted(selectedDay, "morning")) {
                 markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
               }
               handleBackToGrid();
