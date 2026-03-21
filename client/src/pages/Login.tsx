@@ -4,12 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import loginBackground from "@/assets/images/login-bg.png";
-import lumenIcon from "@/assets/images/lumen-icon.png";
+import landscapeImg from "@assets/Inner_Image_(1)_1774128191496.webp";
+import logoImg from "@assets/NewLogo_(1)_1774128194728.webp";
 
 const loginSchema = z.object({
   username: z.string().email({ message: "Please enter a valid email" }),
@@ -22,20 +18,17 @@ export default function Login() {
   const { login, user } = useAuth();
   const [_, setLocation] = useLocation();
   const [error, setError] = useState<string | null>(null);
-  
+
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
+    defaultValues: { username: "", password: "" },
   });
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'admin') setLocation('/admin');
-      else if (user.role === 'mentor') setLocation('/mentor');
-      else setLocation('/dashboard');
+      if (user.role === "admin") setLocation("/admin");
+      else if (user.role === "mentor") setLocation("/mentor");
+      else setLocation("/dashboard");
     }
   }, [user, setLocation]);
 
@@ -49,90 +42,274 @@ export default function Login() {
   };
 
   return (
-    <div 
-      className="min-h-screen w-full flex items-center justify-center p-4"
+    <div
       style={{
-        backgroundImage: `url(${loginBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        background: "#000",
+        minHeight: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0 96px",
+        boxSizing: "border-box",
       }}
     >
-      <div className="w-full max-w-md space-y-6 animate-in zoom-in-95 duration-500">
-        <Card className="border border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm">
-          <CardHeader className="space-y-4 text-center pb-2">
-            <div className="space-y-2">
-              <img 
-                src={lumenIcon} 
-                alt="Lumen Fidei" 
-                className="w-20 h-20 mx-auto rounded-xl"
-                data-testid="img-lumen-icon"
-              />
-              <h1 className="font-serif text-3xl font-bold text-black uppercase tracking-[0.05em]">Lumen Fidei</h1>
-              <p className="text-muted-foreground text-sm">30-Day Spiritual Journey</p>
-            </div>
-            <div className="pt-4 border-t border-border">
-              <CardTitle className="text-xl text-black">Welcome Back</CardTitle>
-              <CardDescription className="mt-1">
-                Enter your credentials to continue your journey
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-black">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="you@example.com" 
+      {/* Inner bordered container */}
+      <div
+        style={{
+          position: "relative",
+          maxWidth: "1320px",
+          width: "100%",
+          minHeight: "685px",
+          borderLeft: "1px solid rgba(255,255,255,0.2)",
+          borderRight: "1px solid rgba(255,255,255,0.2)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "145px 32px 161px",
+          boxSizing: "border-box",
+          overflow: "hidden",
+        }}
+      >
+        {/* Landscape painting — full cover */}
+        <img
+          src={landscapeImg}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center top",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Radial gradient vignette overlay — dark at bottom/sides, open at top-center */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "radial-gradient(ellipse 80% 55% at 50% 5%, rgba(0,0,0,0) 33%, rgba(0,0,0,0.97) 80%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Content column */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "32px",
+          }}
+        >
+          {/* Logo */}
+          <div
+            style={{
+              width: "256px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <img
+              src={logoImg}
+              alt="Lumen Fidei"
+              data-testid="img-lumen-logo"
+              style={{
+                width: "220px",
+                height: "auto",
+                display: "block",
+              }}
+            />
+          </div>
+
+          {/* Login card */}
+          <div
+            style={{
+              background: "#0f1011",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: "8px",
+              maxWidth: "466px",
+              minWidth: "400px",
+              width: "466px",
+              padding: "17px 33px 33px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              boxSizing: "border-box",
+            }}
+          >
+            {/* "Log in" heading */}
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "16px",
+                fontWeight: 400,
+                letterSpacing: "3.2px",
+                textTransform: "uppercase",
+                color: "white",
+                textAlign: "center",
+                margin: 0,
+                lineHeight: "31.2px",
+              }}
+            >
+              Log in
+            </p>
+
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              {/* Email */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "5px" }}>
+                <label
+                  htmlFor="email"
+                  style={{
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 400,
+                    color: "white",
+                    lineHeight: "14px",
+                  }}
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
                   {...form.register("username")}
-                  className="bg-white"
                   data-testid="input-email"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.03)",
+                    borderRadius: "6px",
+                    height: "36px",
+                    width: "100%",
+                    color: "white",
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "14px",
+                    padding: "0 12px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
                 />
                 {form.formState.errors.username && (
-                  <p className="text-sm text-destructive">{form.formState.errors.username.message}</p>
+                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
+                    {form.formState.errors.username.message}
+                  </p>
                 )}
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-black">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+
+              {/* Password */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "5px" }}>
+                <label
+                  htmlFor="password"
+                  style={{
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "14px",
+                    fontWeight: 400,
+                    color: "white",
+                    lineHeight: "14px",
+                  }}
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
                   {...form.register("password")}
-                  className="bg-white"
                   data-testid="input-password"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.03)",
+                    borderRadius: "6px",
+                    height: "36px",
+                    width: "100%",
+                    color: "white",
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "14px",
+                    padding: "0 12px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
                 />
                 {form.formState.errors.password && (
-                  <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
+                    {form.formState.errors.password.message}
+                  </p>
                 )}
               </div>
 
               {error && (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
+                <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", color: "#ef4444", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px" }}>
                   {error}
-                </div>
+                </p>
               )}
 
-              <button 
-                type="submit" 
-                className="w-full h-11 px-8 rounded-md text-white font-semibold uppercase tracking-[0.1em] font-sans transition-all duration-200 hover:brightness-110 hover:shadow-md active:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed" 
+              {/* Submit */}
+              <button
+                type="submit"
                 disabled={form.formState.isSubmitting}
                 data-testid="button-login"
-                style={{ 
-                  background: 'linear-gradient(135deg, #FFC54C 0%, #FF7117 100%)',
-                  boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.08)',
+                style={{
+                  marginTop: "4px",
+                  width: "100%",
+                  height: "36px",
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "6px",
+                  color: "white",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  cursor: form.formState.isSubmitting ? "not-allowed" : "pointer",
+                  opacity: form.formState.isSubmitting ? 0.5 : 1,
+                  transition: "background 0.2s, border-color 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!form.formState.isSubmitting) {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.12)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
                 }}
               >
-                {form.formState.isSubmitting ? "SIGNING IN..." : "SIGN IN"}
+                {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
               </button>
             </form>
-          </CardContent>
-          <CardFooter className="justify-center text-sm text-muted-foreground text-center">
-            Having trouble logging in? Contact bludolph@archchicago.org to reset your password
-          </CardFooter>
-        </Card>
+
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "12px",
+                color: "rgba(255,255,255,0.3)",
+                textAlign: "center",
+                margin: "4px 0 0",
+                lineHeight: 1.5,
+              }}
+            >
+              Having trouble? Contact bludolph@archchicago.org
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
