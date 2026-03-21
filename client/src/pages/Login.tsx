@@ -44,30 +44,34 @@ export default function Login() {
   return (
     <>
       <style>{`
+        /* ── Outer shell: black, full viewport, horizontal padding only ── */
         .lf-login-outer {
           background: #000;
           min-height: 100vh;
           width: 100%;
           display: flex;
-          align-items: center;
           justify-content: center;
           padding: 0 96px;
           box-sizing: border-box;
         }
+
+        /* ── Inner: fills full height, no max-width cap, side borders ── */
         .lf-login-inner {
           position: relative;
-          max-width: 1320px;
           width: 100%;
-          min-height: 685px;
+          min-height: 100vh;
           border-left: 1px solid rgba(255,255,255,0.2);
           border-right: 1px solid rgba(255,255,255,0.2);
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           padding: 145px 32px 161px;
           box-sizing: border-box;
           overflow: hidden;
         }
+
+        /* ── Content column: naturally centered, not force-padded ── */
         .lf-login-content {
           position: relative;
           z-index: 1;
@@ -75,41 +79,42 @@ export default function Login() {
           flex-direction: column;
           align-items: center;
           gap: 32px;
-          padding: 0 372px;
           width: 100%;
-          box-sizing: border-box;
         }
+
+        /* ── Logo ── */
+        .lf-login-logo {
+          width: 220px;
+          height: auto;
+          display: block;
+        }
+
+        /* ── Form card: max 466px, naturally centered ── */
         .lf-login-card {
           background: #0f1011;
           border: 1px solid rgba(255,255,255,0.05);
           border-radius: 8px;
           max-width: 466px;
-          min-width: 400px;
-          width: 466px;
+          width: 100%;
           padding: 17px 33px 33px;
           display: flex;
           flex-direction: column;
           gap: 12px;
           box-sizing: border-box;
         }
+
+        /* ── Mobile ── */
         @media (max-width: 768px) {
           .lf-login-outer {
             padding: 0;
-            align-items: flex-start;
           }
           .lf-login-inner {
-            border-left: 1px solid rgba(255,255,255,0.1);
-            border-right: 1px solid rgba(255,255,255,0.1);
-            padding: 145px 0 161px;
-            min-height: 100vh;
+            border-left-color: rgba(255,255,255,0.1);
+            border-right-color: rgba(255,255,255,0.1);
+            padding: 145px 20px 161px;
           }
-          .lf-login-content {
-            padding: 0 20px;
-          }
-          .lf-login-card {
-            max-width: none;
-            min-width: 0;
-            width: 100%;
+          .lf-login-logo {
+            width: 180px;
           }
         }
       `}</style>
@@ -117,30 +122,21 @@ export default function Login() {
       <div className="lf-login-outer">
         <div className="lf-login-inner">
 
-          {/* Landscape painting — full cover */}
+          {/* Landscape painting — the image already has the gradient baked in */}
           <img
             src={landscapeImg}
             alt=""
             aria-hidden="true"
             style={{
               position: "absolute",
-              inset: 0,
+              top: 0,
+              left: 0,
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              objectPosition: "center top",
+              objectPosition: "top center",
               pointerEvents: "none",
-            }}
-          />
-
-          {/* Radial gradient vignette */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "radial-gradient(ellipse 80% 55% at 50% 5%, rgba(0,0,0,0) 33%, rgba(0,0,0,0.97) 80%)",
-              pointerEvents: "none",
+              userSelect: "none",
             }}
           />
 
@@ -151,8 +147,8 @@ export default function Login() {
             <img
               src={logoImg}
               alt="Lumen Fidei"
+              className="lf-login-logo"
               data-testid="img-lumen-logo"
-              style={{ width: "220px", height: "auto", display: "block" }}
             />
 
             {/* Login card */}
