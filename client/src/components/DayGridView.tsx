@@ -7,8 +7,8 @@ import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
 import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X, Download } from "lucide-react";
 
-import certLockedImg from "@assets/Certificate_Locked_1773979140292.png";
-import certHoverImg from "@assets/Certificate_Hover_1773979140291.png";
+import certLockedImg from "@assets/Certificate_Locked_1773979233798.png";
+import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
 import trackAImg3 from "@assets/image_1771985088299.png";
@@ -371,7 +371,6 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         style={{
           position: "relative",
           height: "126px",
-          backgroundColor: "#0f1011",
           backgroundImage: `url(${isHovered ? certHoverImg : certLockedImg})`,
           backgroundSize: "cover",
           backgroundPosition: "right center",
