@@ -246,6 +246,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [loadedFromServer, setLoadedFromServer] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // When navigating back from summary, skip re-revealing messages (they're already shown)
+  const skipRevealRef = useRef(false);
 
   const currentStep = flow.steps[currentStepIdx];
 
@@ -322,6 +324,14 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     if (flowComplete) return;
 
     if (revealTimer.current) clearTimeout(revealTimer.current);
+
+    // When navigating back from summary, messages are already rendered — just show input
+    if (skipRevealRef.current) {
+      skipRevealRef.current = false;
+      setInputReady(true);
+      setShowTyping(false);
+      return;
+    }
 
     setInputReady(false);
     setShowTyping(false);
@@ -425,24 +435,52 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     setCurrentStepIdx(nextIdx);
   }, [currentStepIdx, flow.steps.length]);
 
+  // Clear an answer both locally and on the server (used when navigating back)
+  const clearAnswer = useCallback(async (variableName: string) => {
+    setAnswers(prev => {
+      const next = { ...prev };
+      delete next[variableName];
+      return next;
+    });
+    // Persist the clear to the server so stale answers don't rehydrate on refresh
+    try {
+      await apiRequest("POST", `/api/chat-flow-responses/${encodeURIComponent(contextKey)}`, {
+        variableName,
+        answer: "",
+      });
+    } catch {
+      // non-blocking
+    }
+  }, [contextKey]);
+
   // Handle back navigation
   const handleBack = useCallback(() => {
+    // Case 1: Navigating back from the summary card — re-show current step's input
+    if (flowComplete) {
+      skipRevealRef.current = true;
+      setFlowComplete(false);
+      // Clear current step's variable so user must re-answer
+      if (currentStep?.variableName) {
+        clearAnswer(currentStep.variableName);
+      }
+      // Remove any user bubble from the current step (the final answer bubble)
+      setRenderedMessages(prev => prev.filter(m => m.stepId !== currentStep?.id || m.role !== "user"));
+      return;
+    }
+
+    // Case 2: Normal back through history
     if (history.length === 0) return;
     const prevIdx = history[history.length - 1];
     const prevStep = flow.steps[prevIdx];
-    // Clear variable for the previous step (user will re-answer it)
+    // Clear variable for the previous step (user will re-answer it) and remove from server
     if (prevStep?.variableName) {
-      setAnswers(prev => {
-        const next = { ...prev };
-        delete next[prevStep.variableName!];
-        return next;
-      });
+      clearAnswer(prevStep.variableName);
     }
     // Remove rendered messages for the previous and current steps
     setRenderedMessages(prev => prev.filter(m => m.stepId !== prevStep?.id && m.stepId !== currentStep?.id));
     setHistory(prev => prev.slice(0, -1));
     setCurrentStepIdx(prevIdx);
-  }, [history, flow.steps, currentStep]);
+  }, [flowComplete, history, flow.steps, currentStep, clearAnswer]);
 
   const handleSingleSelect = useCallback((value: string) => {
     setSelectedOptions([value]);
@@ -533,11 +571,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
         <button
           onClick={handleBack}
-          disabled={history.length === 0}
+          disabled={!flowComplete && history.length === 0}
           className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
             "bg-[rgba(30,30,30,0.72)] backdrop-blur-sm border border-[rgba(255,255,255,0.05)]",
-            history.length === 0 ? "opacity-30 cursor-not-allowed" : "hover:bg-[rgba(40,40,40,0.8)]"
+            (!flowComplete && history.length === 0) ? "opacity-30 cursor-not-allowed" : "hover:bg-[rgba(40,40,40,0.8)]"
           )}
           data-testid="button-chat-back"
         >

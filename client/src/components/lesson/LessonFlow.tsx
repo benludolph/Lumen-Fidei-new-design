@@ -270,7 +270,11 @@ export function LessonFlow({
         onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
         surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
         scenarioRevealCount={currentSlideData.type === "scenario" ? scenarioRevealCount : undefined}
-        chatFlowContextKey={currentSlideData.type === "chat_flow" ? `lesson-day${dayNumber}-slide${currentSlide}` : undefined}
+        chatFlowContextKey={currentSlideData.type === "chat_flow"
+          ? (dayNumber < 0
+              ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
+              : `track_a-day${dayNumber}-slide${currentSlide}`)
+          : undefined}
         chatFlowTotalSlides={slides.length}
         chatFlowSlideIndex={currentSlide}
         onChatFlowComplete={currentSlideData.type === "chat_flow" ? handleNext : undefined}
