@@ -1534,8 +1534,7 @@ async function seed() {
     await ensureSchemaColumns();
     await migrateFilesystemImages();
 
-    // Remove any prelim modules beyond position 2 (enforce exactly 2 modules)
-    await db.delete(prelimModules).where(gt(prelimModules.position, 2));
+    // NOTE: do NOT delete prelim modules — admin can create up to 3 (or more)
 
     // Seed users if needed
     const users = await storage.getAllUsers();
@@ -2439,6 +2438,18 @@ As you move into Week 2, continue these daily practices. They are building a fou
           { type: "text", content: "The program is organized into 5 weekly themes: Foundations, The Human Condition, Encountering Jesus, Conversion & Change, and Living the Faith." },
           { type: "text", content: "Your mentor is available to support you throughout the program. Don't hesitate to reach out through the chat feature if you have questions or need encouragement." },
           { type: "action", content: "Identify the best time in your morning to complete your daily lesson. Consistency is key to making lasting change." },
+        ] as { type: string; content: string }[],
+      },
+      {
+        position: 3,
+        title: "The Bible",
+        subtitle: "How to read and understand Scripture",
+        slides: [
+          { type: "text", content: "The Bible is the inspired Word of God — written by human authors under the guidance of the Holy Spirit." },
+          { type: "text", content: "The Catholic Bible contains 73 books: 46 in the Old Testament and 27 in the New Testament. Together they reveal God's plan of salvation." },
+          { type: "text", content: "Scripture and Tradition are the two pillars of divine Revelation. The Church's Magisterium authentically interprets both." },
+          { type: "text", content: "Throughout this program, each day's lesson draws from Scripture. Read each passage slowly, ask what God is saying, and let it speak to your heart." },
+          { type: "action", content: "If you don't have a Bible, download a free Catholic app such as Laudate or iBreviary. Commit to reading each day's passage before completing the lesson." },
         ] as { type: string; content: string }[],
       },
     ]).onConflictDoNothing();
