@@ -1183,7 +1183,7 @@ function ReflectionOverlaySettingsCard() {
       </CardHeader>
       <CardContent className="space-y-5">
         <p className="text-sm text-muted-foreground">
-          This overlay appears when a participant completes a chat flow reflection. It shows their personal reflection summary and the image, headline, and subtext you set here.
+          This overlay appears when a participant completes a chat flow reflection. It shows a 106px circular image, a large 48px headline, a cross divider, and a subtext line — all configurable here.
         </p>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -1218,26 +1218,26 @@ function ReflectionOverlaySettingsCard() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Headline</label>
+              <label className="text-sm font-medium">Headline (48px IvyOra)</label>
               <Input
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Reflection Unlocked"
+                placeholder="He Was There"
                 data-testid="input-reflection-overlay-text"
               />
-              <p className="text-xs text-muted-foreground">Shown in uppercase with letter-spacing below the image. Defaults to "Reflection Unlocked".</p>
+              <p className="text-xs text-muted-foreground">Large headline shown below the fixed "REFLECTION UNLOCKED" label. e.g. "He Was There".</p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Subtext</label>
+              <label className="text-sm font-medium">Subtext (16px Afacad)</label>
               <Textarea
                 value={subtext}
                 onChange={e => setSubtext(e.target.value)}
-                placeholder="Take a moment to sit with what the Lord has revealed..."
+                placeholder="Invite Jesus into the moment — and see it as He does."
                 rows={3}
                 data-testid="textarea-reflection-overlay-subtext"
               />
-              <p className="text-xs text-muted-foreground">Optional descriptive text shown below the headline.</p>
+              <p className="text-xs text-muted-foreground">Shown below the cross divider. e.g. "Invite Jesus into the moment — and see it as He does."</p>
             </div>
 
             <Button
