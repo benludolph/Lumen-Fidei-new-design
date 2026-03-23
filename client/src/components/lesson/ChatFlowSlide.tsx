@@ -300,23 +300,26 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
   const currentStep = flow.steps[currentStepIdx];
 
-  // Load saved answers on mount
+  // Load saved answers on mount; if flow was previously completed, jump straight to summary
   useEffect(() => {
     apiRequest("GET", `/api/chat-flow-responses/${encodeURIComponent(contextKey)}`)
       .then(async (res) => {
         const data = await res.json();
         if (data && typeof data === "object") {
           setAnswers(data as Record<string, string>);
+          if ((data as Record<string, string>).__flow_complete === "1") {
+            setFlowComplete(true);
+          }
         }
         setLoadedFromServer(true);
       })
       .catch(() => setLoadedFromServer(true));
   }, [contextKey]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom whenever chat content changes or flow completes (reveals summary card)
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [renderedMessages, showTyping, inputReady]);
+  }, [renderedMessages, showTyping, inputReady, flowComplete]);
 
   // Resolve the option list for a step (inline options take priority over optionSets)
   const resolveOptions = useCallback((step: ChatFlowStep): ChatFlowOption[] => {
@@ -495,6 +498,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     const doAdvance = () => {
       if (willComplete) {
         setFlowComplete(true);
+        saveAnswer("__flow_complete", "1");
       } else {
         setHistory(prev => [...prev, capturedStepIdx]);
         setCurrentStepIdx(nextIdx);
@@ -527,11 +531,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     const nextIdx = currentStepIdx + 1;
     if (nextIdx >= flow.steps.length) {
       setFlowComplete(true);
+      saveAnswer("__flow_complete", "1");
       return;
     }
     setHistory(prev => [...prev, currentStepIdx]);
     setCurrentStepIdx(nextIdx);
-  }, [currentStepIdx, flow.steps.length]);
+  }, [currentStepIdx, flow.steps.length, saveAnswer]);
 
   // Clear an answer both locally and on the server
   const clearAnswer = useCallback(async (variableName: string) => {
@@ -549,6 +554,15 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       // non-blocking
     }
   }, [contextKey]);
+
+  // Reset to the beginning so the user can redo their reflection
+  const handleRedo = useCallback(() => {
+    saveAnswer("__flow_complete", "0"); // clear completion flag on server
+    setFlowComplete(false);
+    setCurrentStepIdx(0);
+    setRenderedMessages([]);
+    setHistory([]);
+  }, [saveAnswer]);
 
   /**
    * Rewind to a specific step by stepId — triggered by the RotateCw icon on user bubbles.
@@ -897,10 +911,27 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         Your answers have been recorded.
                       </p>
                     )}
+
+                    {/* Redo link — lets the user restart the reflection */}
+                    <button
+                      onClick={handleRedo}
+                      className="mt-4 font-['Afacad'] transition-opacity hover:opacity-70"
+                      style={{
+                        fontSize: "13px",
+                        color: "rgba(255,255,255,0.35)",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
+                      }}
+                      data-testid="button-redo-reflection"
+                    >
+                      Redo this reflection
+                    </button>
                   </div>
                 )}
 
-                <div ref={chatEndRef} className="h-2 shrink-0" />
+                <div ref={chatEndRef} className="h-8 shrink-0" />
               </div>
 
               {/* ── Input row — always at bottom of inner card ──
