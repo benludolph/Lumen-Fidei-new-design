@@ -687,7 +687,7 @@ export function DayGridView({
                         dayNumber={0}
                         title="Introduction — Goal of 30 Days"
                         subtitle="Begin your journey"
-                        isCompleted={false}
+                        isCompleted={isDayCompleted(0)}
                         isToday={false}
                         isLocked={!allPrelimsComplete}
                         backgroundImage={trackASummaries?.find(c => c.dayNumber === 0)?.imageUrl ?? undefined}
