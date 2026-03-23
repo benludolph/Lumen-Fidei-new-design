@@ -29,7 +29,6 @@ export interface ChatFlowStep {
   variableName?: string;
   required?: boolean;
   branches?: ChatFlowBranchCondition[];
-  summaryTemplate?: string;
 }
 
 export interface ChatFlowDefinition {
@@ -55,34 +54,68 @@ interface ChatFlowSlideProps {
 }
 
 // ============================================================
-// Interpolation helpers
+// Summary helpers
 // ============================================================
 
-function interpolate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || "");
-}
-
-function hideSentenceIfEmpty(text: string): string {
-  // Remove sentence fragments where all {{var}} resolved to empty string
-  return text
-    .replace(/[^.!?]*\{\{[^}]+\}\}[^.!?]*[.!?]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function renderSummaryTemplate(template: string, vars: Record<string, string>, options: Record<string, ChatFlowOption[]>): string {
-  let result = template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-    const val = vars[key];
-    if (val && val.trim()) return val;
-    // Look for option label fallback
-    for (const opts of Object.values(options)) {
-      const found = opts.find(o => o.value === val || o.value === key);
-      if (found) return found.label;
+/**
+ * Render the summary template, resolving {{variableName}} tokens.
+ * - `answers` maps variableName → stored VALUE (option value or text)
+ * - `stepOptions` maps variableName → option list for that step
+ * When a value is an option value, look up the option label for display.
+ * When a value is empty/missing, the entire clause containing the token is hidden.
+ */
+function renderSummaryTemplate(
+  template: string,
+  answers: Record<string, string>,
+  stepOptions: Record<string, ChatFlowOption[]>
+): string {
+  // First pass: build a resolved-values map (value → display text)
+  const resolved: Record<string, string> = {};
+  for (const [varName, storedValue] of Object.entries(answers)) {
+    if (!storedValue) {
+      resolved[varName] = "";
+      continue;
     }
-    return "";
+    const opts = stepOptions[varName];
+    if (opts && opts.length > 0) {
+      // Multi-select: stored as comma-joined values
+      const values = storedValue.split(",").map(v => v.trim());
+      const labels = values.map(v => {
+        const found = opts.find(o => o.value === v);
+        return found ? found.label : v;
+      }).filter(Boolean);
+      resolved[varName] = labels.join(", ");
+    } else {
+      resolved[varName] = storedValue;
+    }
+  }
+
+  // Second pass: replace tokens, hiding clauses with empty resolution
+  // Split on sentence boundaries, process each clause
+  let result = template;
+
+  // Hide entire quoted strings containing an empty token
+  result = result.replace(/"[^"]*\{\{(\w+)\}\}[^"]*"/g, (match, key) => {
+    return resolved[key] ? match : "";
   });
-  // Clean up empty clause artifacts
-  result = result.replace(/,\s*,/g, ",").replace(/\.\s*\./g, ".").replace(/\s{2,}/g, " ").trim();
+
+  // Hide comma-separated clauses containing an empty token
+  result = result.replace(/,\s*[^,.!?]*\{\{(\w+)\}\}[^,.!?]*/g, (match, key) => {
+    return resolved[key] ? match : "";
+  });
+
+  // Replace remaining tokens
+  result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => resolved[key] || "");
+
+  // Clean up artifacts from hidden clauses
+  result = result
+    .replace(/\.\s*\./g, ".")
+    .replace(/,\s*\./g, ".")
+    .replace(/:\s*\./g, ".")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\.\s*,/g, ".")
+    .trim();
+
   return result;
 }
 
@@ -180,14 +213,34 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     }
   }, [content]);
 
+  // Build a map of variableName → available options for that step (for summary label lookup)
+  const stepOptionsByVar = useMemo<Record<string, ChatFlowOption[]>>(() => {
+    const map: Record<string, ChatFlowOption[]> = {};
+    for (const step of flow.steps) {
+      if (!step.variableName) continue;
+      if (step.options && step.options.length > 0) {
+        map[step.variableName] = step.options;
+      } else if (step.optionSetVar && step.optionSetMap) {
+        // We can't know at definition time which set will be picked, so include all sets
+        for (const setName of Object.values(step.optionSetMap)) {
+          if (flow.optionSets?.[setName]) {
+            map[step.variableName] = [...(map[step.variableName] || []), ...flow.optionSets[setName]];
+          }
+        }
+      }
+    }
+    return map;
+  }, [flow]);
+
   // Runtime state
+  // answers maps variableName → stored canonical VALUE (option.value or trimmed text)
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
-  const [history, setHistory] = useState<number[]>([]); // indices of visited steps
+  const [history, setHistory] = useState<number[]>([]);
   const [renderedMessages, setRenderedMessages] = useState<RenderedMessage[]>([]);
-  const [revealIndex, setRevealIndex] = useState(0); // which message within current step is being revealed
   const [showTyping, setShowTyping] = useState(false);
   const [inputReady, setInputReady] = useState(false);
+  // selectedOptions holds selected VALUES (not labels)
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [textInput, setTextInput] = useState("");
   const [flowComplete, setFlowComplete] = useState(false);
@@ -196,7 +249,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = flow.steps[currentStepIdx];
-  const isLastStep = currentStepIdx >= flow.steps.length - 1;
 
   // Load saved answers on mount
   useEffect(() => {
@@ -216,10 +268,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [renderedMessages, showTyping, inputReady]);
 
-  // Resolve dynamic option set for a step
+  // Resolve the option list for a step (inline options take priority over optionSets)
   const resolveOptions = useCallback((step: ChatFlowStep): ChatFlowOption[] => {
     if (step.options && step.options.length > 0) return step.options;
     if (step.optionSetVar && step.optionSetMap) {
+      // Look up stored VALUE of the referenced variable
       const storedVal = answers[step.optionSetVar] || "";
       const setName = step.optionSetMap[storedVal] || "";
       if (setName && flow.optionSets?.[setName]) {
@@ -229,7 +282,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     return [];
   }, [answers, flow.optionSets]);
 
-  // Reveal messages for a step sequentially
+  // Reveal messages for a step sequentially with 300–800ms timing
   const revealMessagesForStep = useCallback((stepIdx: number, messageStartId: number) => {
     const step = flow.steps[stepIdx];
     if (!step) return;
@@ -237,14 +290,13 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
     const reveal = (msgIdx: number) => {
       if (msgIdx >= messages.length) {
-        // All messages shown — show input
         setShowTyping(false);
         setInputReady(true);
         return;
       }
-      // Show typing before each message
       setShowTyping(true);
-      const delay = 600 + Math.min(messages[msgIdx].length * 18, 800);
+      // 300ms base + up to 500ms for longer messages = 300-800ms total
+      const delay = 300 + Math.min(messages[msgIdx].length * 15, 500);
       revealTimer.current = setTimeout(() => {
         setShowTyping(false);
         setRenderedMessages(prev => [
@@ -252,12 +304,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           {
             id: `msg-${messageStartId + msgIdx}`,
             role: "system",
-            text: interpolate(messages[msgIdx], {}),
+            text: messages[msgIdx],
             stepId: step.id,
           },
         ]);
-        setRevealIndex(msgIdx + 1);
-        revealTimer.current = setTimeout(() => reveal(msgIdx + 1), 300);
+        // Brief pause between messages (150ms) before starting next reveal
+        revealTimer.current = setTimeout(() => reveal(msgIdx + 1), 150);
       }, delay);
     };
 
@@ -270,17 +322,18 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     if (!currentStep) return;
     if (flowComplete) return;
 
-    // Clear timers
     if (revealTimer.current) clearTimeout(revealTimer.current);
 
     setInputReady(false);
     setShowTyping(false);
-    setSelectedOptions(currentStep.variableName && answers[currentStep.variableName]
-      ? [answers[currentStep.variableName]]
-      : []);
-    setTextInput(currentStep.variableName && answers[currentStep.variableName]
-      ? answers[currentStep.variableName]
-      : "");
+
+    // Pre-populate input with any previously saved answer (VALUE)
+    const savedVal = currentStep.variableName ? (answers[currentStep.variableName] || "") : "";
+    if (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") {
+      setSelectedOptions(savedVal ? savedVal.split(",").map(v => v.trim()).filter(Boolean) : []);
+    } else {
+      setTextInput(savedVal);
+    }
 
     const messageStartId = renderedMessages.length;
     revealMessagesForStep(currentStepIdx, messageStartId);
@@ -291,70 +344,57 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepIdx, loadedFromServer, flowComplete]);
 
-  // Evaluate branch conditions to determine next step index
-  const evaluateNextStep = useCallback((step: ChatFlowStep, answer: string): number => {
-    if (step.branches && step.branches.length > 0) {
-      for (const branch of step.branches) {
-        const varVal = branch.variableName === step.variableName ? answer : (answers[branch.variableName] || "");
-        let matches = false;
-        if (branch.operator === "equals") matches = varVal === branch.value;
-        else if (branch.operator === "not_equals") matches = varVal !== branch.value;
-        else if (branch.operator === "contains") matches = varVal.includes(branch.value);
-        if (matches) {
-          const targetIdx = flow.steps.findIndex(s => s.id === branch.targetStepId);
-          if (targetIdx !== -1) return targetIdx;
-        }
-      }
-    }
-    return currentStepIdx + 1;
-  }, [answers, currentStepIdx, flow.steps]);
-
-  // Save an answer to the server
-  const saveAnswer = useCallback(async (variableName: string, answer: string) => {
-    setAnswers(prev => ({ ...prev, [variableName]: answer }));
+  // Save a canonical VALUE answer to state and server
+  const saveAnswer = useCallback(async (variableName: string, value: string) => {
+    setAnswers(prev => ({ ...prev, [variableName]: value }));
+    if (!value) return; // Don't persist empty (skipped optional) answers
     try {
       await apiRequest("POST", `/api/chat-flow-responses/${encodeURIComponent(contextKey)}`, {
         variableName,
-        answer,
+        answer: value,
       });
     } catch {
       // non-blocking
     }
   }, [contextKey]);
 
-  // Advance to next step after user answers
-  const advanceToNext = useCallback(async (answer: string) => {
+  /**
+   * Advance to the next step.
+   * @param value - the canonical VALUE to store (option.value or trimmed text or "")
+   * @param displayText - the human-readable text to show in the user bubble
+   */
+  const advanceToNext = useCallback(async (value: string, displayText: string) => {
     const step = currentStep;
     if (!step) return;
 
-    // Save answer
+    // Save VALUE to answers/API
     if (step.variableName) {
-      await saveAnswer(step.variableName, answer);
+      await saveAnswer(step.variableName, value);
     }
 
-    // Append user bubble to rendered messages
-    setRenderedMessages(prev => [
-      ...prev,
-      {
-        id: `user-${Date.now()}`,
-        role: "user",
-        text: answer,
-        stepId: step.id,
-      },
-    ]);
+    // Show user bubble with display text (only if there's something to show)
+    if (displayText) {
+      setRenderedMessages(prev => [
+        ...prev,
+        {
+          id: `user-${Date.now()}`,
+          role: "user",
+          text: displayText,
+          stepId: step.id,
+        },
+      ]);
+    }
 
     setInputReady(false);
     setSelectedOptions([]);
     setTextInput("");
 
-    // Determine next step
-    const updatedAnswers = step.variableName ? { ...answers, [step.variableName]: answer } : answers;
-    let nextIdx: number;
+    // Evaluate branches using canonical VALUES
+    const updatedAnswers = step.variableName ? { ...answers, [step.variableName]: value } : answers;
+    let nextIdx = currentStepIdx + 1;
     if (step.branches && step.branches.length > 0) {
-      // Re-evaluate with updated answers
-      nextIdx = currentStepIdx + 1;
       for (const branch of step.branches) {
-        const varVal = branch.variableName === step.variableName ? answer : (updatedAnswers[branch.variableName] || "");
+        const varVal = branch.variableName === step.variableName ? value : (updatedAnswers[branch.variableName] || "");
         let matches = false;
         if (branch.operator === "equals") matches = varVal === branch.value;
         else if (branch.operator === "not_equals") matches = varVal !== branch.value;
@@ -364,12 +404,9 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           if (targetIdx !== -1) { nextIdx = targetIdx; break; }
         }
       }
-    } else {
-      nextIdx = currentStepIdx + 1;
     }
 
     if (nextIdx >= flow.steps.length) {
-      // Flow complete — show summary
       setFlowComplete(true);
       return;
     }
@@ -394,7 +431,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     if (history.length === 0) return;
     const prevIdx = history[history.length - 1];
     const prevStep = flow.steps[prevIdx];
-    // Clear variable for the step we're going back to
+    // Clear variable for the previous step (user will re-answer it)
     if (prevStep?.variableName) {
       setAnswers(prev => {
         const next = { ...prev };
@@ -402,59 +439,68 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         return next;
       });
     }
-    // Remove last rendered messages up to before that step
+    // Remove rendered messages for the previous and current steps
     setRenderedMessages(prev => prev.filter(m => m.stepId !== prevStep?.id && m.stepId !== currentStep?.id));
     setHistory(prev => prev.slice(0, -1));
     setCurrentStepIdx(prevIdx);
   }, [history, flow.steps, currentStep]);
 
-  // Handle single select
   const handleSingleSelect = useCallback((value: string) => {
     setSelectedOptions([value]);
   }, []);
 
-  // Handle multi select
   const handleMultiSelect = useCallback((value: string) => {
     setSelectedOptions(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
   }, []);
 
-  // Handle submit
+  // Handle submit — separate VALUE (for storage/branching) from displayText (for bubble)
   const handleSubmit = useCallback(() => {
     if (!inputReady) return;
     const step = currentStep;
     if (!step) return;
+
     if (step.inputType === "message_only") {
       handleMessageOnlyContinue();
       return;
     }
+
     if (step.inputType === "text_input") {
       const val = textInput.trim();
       if (step.required && !val) return;
-      advanceToNext(val || "(skipped)");
+      // For optional empty: store "" (no API save), show nothing in bubble
+      advanceToNext(val, val);
     } else if (step.inputType === "single_select") {
       if (step.required && selectedOptions.length === 0) return;
-      const opt = resolveOptions(step).find(o => o.value === selectedOptions[0]);
-      advanceToNext(opt ? opt.label : selectedOptions[0] || "(skipped)");
+      const selectedValue = selectedOptions[0] || "";
+      const opts = resolveOptions(step);
+      const opt = opts.find(o => o.value === selectedValue);
+      const displayText = opt ? opt.label : selectedValue;
+      // Store canonical VALUE; display label in bubble
+      advanceToNext(selectedValue, displayText);
     } else if (step.inputType === "multi_select") {
       if (step.required && selectedOptions.length === 0) return;
-      const opts = resolveOptions(step).filter(o => selectedOptions.includes(o.value));
-      advanceToNext(opts.map(o => o.label).join(", ") || "(skipped)");
+      const opts = resolveOptions(step);
+      const selectedLabels = selectedOptions
+        .map(v => opts.find(o => o.value === v)?.label || v)
+        .filter(Boolean);
+      // Store comma-joined VALUES for branching; display comma-joined LABELS in bubble
+      advanceToNext(selectedOptions.join(","), selectedLabels.join(", "));
     }
   }, [inputReady, currentStep, textInput, selectedOptions, handleMessageOnlyContinue, advanceToNext, resolveOptions]);
 
-  // Summary rendering
+  // Summary rendering using canonical values + label lookup
   const summaryText = useMemo(() => {
     const template = flow.summaryTemplate || "";
     if (!template) return "";
-    return renderSummaryTemplate(template, answers, flow.optionSets || {});
-  }, [flow.summaryTemplate, answers, flow.optionSets]);
+    return renderSummaryTemplate(template, answers, stepOptionsByVar);
+  }, [flow.summaryTemplate, answers, stepOptionsByVar]);
 
   const isContinueDisabled = useMemo(() => {
     if (!inputReady) return true;
     if (!currentStep) return true;
-    if (currentStep.inputType === "message_only") return false;
+    if (currentStep.inputType === "message_only" || !currentStep.inputType) return false;
     if (!currentStep.required) return false;
     if (currentStep.inputType === "text_input") return !textInput.trim();
     if (currentStep.inputType === "single_select") return selectedOptions.length === 0;
@@ -464,7 +510,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
   const showSkip = useMemo(() => {
     if (!inputReady) return false;
-    if (!currentStep || currentStep.required) return false;
+    if (!currentStep || currentStep.required || !currentStep.inputType || currentStep.inputType === "message_only") return false;
     if (currentStep.inputType === "text_input" && !textInput.trim()) return true;
     if (currentStep.inputType === "single_select" && selectedOptions.length === 0) return true;
     if (currentStep.inputType === "multi_select" && selectedOptions.length === 0) return true;
@@ -516,7 +562,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-4 min-h-0">
-        {/* Rendered messages */}
         {renderedMessages.map((msg, i) => (
           <MessageBubble
             key={msg.id}
@@ -526,14 +571,13 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           />
         ))}
 
-        {/* Typing indicator */}
         {showTyping && (
           <div className="flex justify-start">
             <TypingIndicator />
           </div>
         )}
 
-        {/* Options after messages are revealed */}
+        {/* Options / input after all messages are revealed */}
         {inputReady && !flowComplete && currentStep && (
           <>
             {(currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
@@ -580,7 +624,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         {/* Summary card when flow complete */}
         {flowComplete && (
           <div className="relative rounded-[8px] bg-[#09090b] border border-[rgba(255,255,255,0.05)] p-6 overflow-hidden">
-            {/* Radial glow */}
             <div
               className="absolute -top-12 -left-12 w-40 h-40 rounded-full pointer-events-none mix-blend-lighten opacity-[0.04]"
               style={{ background: "radial-gradient(circle, #F07830 0%, transparent 70%)" }}
@@ -608,9 +651,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         {showSkip && (
           <button
             onClick={() => {
-              if (currentStep?.inputType === "text_input") setTextInput("");
-              if (currentStep?.inputType === "single_select" || currentStep?.inputType === "multi_select") setSelectedOptions([]);
-              advanceToNext("(skipped)");
+              setSelectedOptions([]);
+              setTextInput("");
+              // Skip: advance with empty value and no display text
+              advanceToNext("", "");
             }}
             className="font-['Afacad'] text-[14px] text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.6)] transition-colors"
             data-testid="button-chat-skip"
@@ -631,7 +675,9 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           <button
             onClick={
               inputReady
-                ? (currentStep?.inputType === "message_only" ? handleMessageOnlyContinue : handleSubmit)
+                ? (currentStep?.inputType === "message_only" || !currentStep?.inputType
+                    ? handleMessageOnlyContinue
+                    : handleSubmit)
                 : undefined
             }
             disabled={isContinueDisabled}
