@@ -1,0 +1,279 @@
+Create a Conversational Slide (chat_flow) for my 30-day Catholic formation app.
+
+This is a guided, branching reflection module (8–12 minutes) designed to help users:
+
+recognize patterns in their life
+identify underlying beliefs (lies/agreements)
+begin seeing their story through Christ’s perspective
+
+This is NOT AI chat — it is a scripted, state-driven flow.
+
+🧩 MODULE NAME
+
+“The Origin of the Weight”
+
+🔁 FLOW STRUCTURE (STEPS)
+STEP 1 — Identify the Weight
+
+Prompt:
+“What has the strongest hold on you right now?”
+
+Input: single select
+
+Options:
+
+Shame
+Anxiety
+Anger
+Control
+Rejection
+Guilt
+
+Store as: emotion
+
+STEP 2 — When Does This Show Up
+
+System message 1:
+“When you think about moments where you’ve felt {{emotion}}, what comes to mind first?”
+
+System message 2 (immediately after):
+“This could be something that happens often… or a moment from a long time ago.”
+
+Input: single select
+
+Options:
+
+Something from a long time ago
+Something more recent
+Something happening right now
+Nothing specific comes to mind
+This doesn’t really fit me
+
+Store as: time_context
+
+STEP 3 — Branch Based on Time Context
+IF: long time ago OR recent
+
+Prompt:
+“What stands out most about that moment?”
+
+Input: single select + optional text
+
+Options:
+
+What someone did or said
+How I felt
+What I did
+I’m not sure
+(Optional) “Describe briefly” (text)
+
+Store as: memory_focus
+
+IF: happening right now
+
+Prompt:
+“What is it doing to you right now?”
+
+Input: single select
+
+Options:
+
+It feels overwhelming
+It keeps repeating in my mind
+I feel stuck
+I feel numb
+Other
+
+Store as: present_effect
+
+IF: nothing comes to mind
+
+System message:
+“That’s okay. Sometimes these patterns form over time, not from one single moment.”
+
+👉 Continue forward (do NOT block user)
+
+IF: “this doesn’t fit me”
+
+👉 Return to Step 1
+
+STEP 4 — The Belief (CORE STEP)
+
+Prompt:
+“In that moment… what did you start to believe?”
+
+Input: single select + optional text
+
+👉 Options should be dynamically tied to emotion
+
+Example (Anxiety):
+
+I’m not safe
+Something bad is going to happen
+I need to stay in control
+I can’t trust others
+Other (text)
+
+Example (Shame):
+
+Something is wrong with me
+I’m not enough
+I’m unlovable
+I will always fail
+Other (text)
+
+Store as: core_belief
+
+STEP 5 — Present Impact
+
+Prompt:
+“How does this affect you now?”
+
+Input: multi-select
+
+Options:
+
+Avoiding people
+Overthinking
+Fear or anxiety
+Anger reactions
+Numbness / shutdown
+Trying to control everything
+Other
+
+Store as: current_patterns
+
+STEP 6 — Compassion Pivot (Bridge Step)
+
+Prompt:
+“If you saw someone else go through that… what would you think about them?”
+
+Input: single select
+
+Options:
+
+They didn’t deserve that
+They were trying their best
+They needed help
+They were alone
+I’m not sure
+
+Store as: compassion_response
+
+STEP 7 — Entering the Scene (Christ Introduction)
+
+System message:
+“Now bring Jesus into that moment.”
+
+Follow-up:
+“In your mind, where is He?”
+
+Input: single select + optional text
+
+Options:
+
+Standing near me
+Watching over me
+Reaching toward me
+I don’t see Him
+I’m not sure
+Other (text)
+
+Store as: jesus_position
+
+STEP 8 — Perspective Shift (YOUR REWRITE — KEY STEP)
+
+Prompt (exact tone requested):
+
+“Now step into His perspective.
+
+Into the scene of that moment in your life.
+
+Look at yourself through His eyes.
+
+What does He see?
+How does He feel about you or your choices at the time?
+What is His perspective on what happened as a whole?”
+
+Input:
+
+Optional text (encouraged but not required)
+
+Also include guided options (important):
+
+He sees someone who was hurting
+He sees someone who needed help
+He is not condemning me
+He is still present there
+I’m not sure
+
+Store as: christ_perspective
+
+STEP 9 — Integration
+
+Prompt:
+“When this feeling shows up again, what will you do?”
+
+Input: single select
+
+Options:
+
+Pause and recognize it
+Remember what is actually true
+Invite Jesus into the moment
+Reach out to someone
+I’m not sure yet
+
+Store as: response_plan
+
+STEP 10 — FINAL SUMMARY CARD
+
+Display a dynamic summary using stored variables
+
+Title:
+“What You’ve Seen”
+
+Body:
+“This pattern didn’t begin today.
+
+It formed when a belief took hold:
+‘{{core_belief}}’
+
+And it still affects you through:
+{{current_patterns}}
+
+But that is not the full story.
+
+In that moment, Jesus was not absent.
+He was {{jesus_position}}.
+
+And from His perspective:
+{{christ_perspective}}
+
+You are not defined by {{emotion}}.
+You are seen, known, and not abandoned.”
+
+✅ COMPLETION
+Mark slide complete
+Enable “Continue”
+Save all variables
+⚙️ BUILDER REQUIREMENTS
+
+In my admin panel, allow me to:
+
+Add/edit steps
+Define options + variables
+Set branching conditions
+Attach emotion-based option sets (for Step 4)
+🚫 CONSTRAINTS
+No AI-generated responses
+Fully scripted logic
+Must integrate with existing progress + track system
+🎯 UX GOAL
+
+This should feel:
+
+personal, but guided
+simple, not overwhelming
+reflective, but structured
+spiritually grounded, not abstract

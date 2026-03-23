@@ -1,0 +1,160 @@
+Create a new slide type in my existing 30-day Catholic formation app called:
+
+"Conversational Slide" (type: chat_flow)
+
+This slide should behave like a guided, state-driven chat interface, not a freeform AI chatbot.
+
+🧩 CORE CONCEPT
+
+This is NOT an AI assistant.
+
+This is a scripted, branching conversation flow that:
+
+progresses step-by-step
+stores user selections
+optionally allows text input
+dynamically changes based on previous answers
+
+It must integrate into my existing system:
+
+Track (A/B/C)
+Day number
+Slide order
+Completion tracking
+Database (like other slide responses)
+🎯 UI REQUIREMENTS
+
+Match the design shown:
+
+Centered chat container
+Dark, minimal UI
+Messages appear as:
+Left side = system (guide text)
+Right side = user responses
+Smooth fade-in for each message
+Typing delay for realism (300–800ms)
+Input Modes (per step)
+
+Each step can define ONE of:
+
+Quick Select Buttons
+Pill-style selectable responses
+Tap = instantly sends message
+Multi-Select (optional)
+For cases like “select all that apply”
+Text Input (optional)
+User can type custom response
+Should NOT be required unless specified
+
+👉 Important:
+Default to guided options first, with optional text input as fallback
+
+🧠 DATA STRUCTURE (IMPORTANT)
+
+Each conversational slide is made of:
+
+steps[]
+
+Each step contains:
+
+id
+prompt (system message)
+input_type ("single_select", "multi_select", "text_optional", "text_required")
+options[] (if applicable)
+variable (where response is stored)
+branching (optional logic for next step)
+🔀 BRANCHING LOGIC
+
+Support conditional navigation:
+
+Example:
+
+If user selects “I don’t remember” → skip memory detail step
+If user selects specific emotion → load tailored “lie options”
+
+This should be handled via:
+
+next_step_id
+OR conditional logic like:
+if emotion == shame → load shame-specific options
+💾 DATA STORAGE
+
+Save responses per user:
+
+user_id
+track (A/B/C)
+day_number
+slide_id
+step_id
+variable_name
+value
+timestamp
+
+This must integrate with my existing survey_responses or similar table.
+
+▶️ FLOW BEHAVIOR
+First prompt appears automatically
+User selects or types response
+Response appears as a chat bubble
+Next prompt appears after short delay
+Continue until final step
+✅ COMPLETION
+When last step is complete:
+Show summary card
+Mark slide as complete
+Enable "Continue" button
+📌 SUMMARY CARD (IMPORTANT)
+
+Final screen should:
+
+Pull from stored variables
+Display personalized message
+
+Example:
+
+Emotion selected
+Lie identified
+Truth selected
+
+This is NOT static text — it should be dynamically generated
+
+⚙️ ADMIN / BUILDER SUPPORT
+
+Inside my lesson builder:
+
+Allow me to:
+
+Add a “Conversational Slide”
+Define steps visually (like other slides)
+Add options + variables
+Define branching rules without coding
+🚫 CONSTRAINTS
+Do NOT use OpenAI or external AI
+This is fully scripted logic
+Do NOT allow infinite chat
+Do NOT break existing slide system
+🎯 UX GOAL
+
+This should feel like:
+
+A guided internal dialogue
+Calm, intentional, not overwhelming
+Fast (no long typing required)
+Personal, but structured
+🔥 OPTIONAL (IF EASY)
+Subtle typing indicator for system messages
+Auto-scroll to latest message
+Ability to review previous answers (read-only)
+💡 FINAL NOTE (FOR REPLIT)
+
+This feature is critical for:
+
+pre-deliverance formation
+identifying patterns (lies, wounds)
+increasing user engagement
+
+It must be:
+
+simple to use
+fast to complete (8–12 minutes max)
+deeply structured under the hood
