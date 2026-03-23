@@ -147,20 +147,6 @@ export function LessonCompletionScreen({
               transform: visible ? "translateY(0)" : "translateY(16px)",
             }}
           >
-            {/* Radial glow — top-left */}
-            <div
-              className="absolute pointer-events-none mix-blend-lighten"
-              style={{
-                top: "-160px",
-                left: "-133px",
-                width: "310px",
-                height: "310px",
-                opacity: 0.04,
-                background:
-                  "radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 90%)",
-              }}
-            />
-
             {/* Icon — Trophy in frosted glass box */}
             <div
               className="flex items-center justify-center shrink-0"

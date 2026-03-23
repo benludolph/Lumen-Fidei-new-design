@@ -133,14 +133,14 @@ function MediaContent({ text }: { text: string }) {
         href={trimmed}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-primary underline break-all text-xl font-['Afacad',sans-serif]"
+        className="text-[#00b57a] underline break-all text-xl font-['Afacad',sans-serif] hover:text-[#00d490]"
       >
         {trimmed}
       </a>
     );
   }
 
-  return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{text}</p>;
+  return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)]">{text}</p>;
 }
 
 function parseMediaContent(content: string): { url: string; text: string } {
@@ -224,13 +224,13 @@ function MultiSelectList({ content, onInteracted }: { content: string; onInterac
   }, []);
 
   if (options.length === 0) {
-    return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{content}</p>;
+    return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)]">{content}</p>;
   }
 
   return (
     <div className="space-y-5">
       {heading && (
-        <p className="font-bold leading-[1.4] text-[32px] font-['Afacad',sans-serif]">{heading}</p>
+        <p className="font-bold leading-[1.4] text-[32px] font-['Afacad',sans-serif] text-white">{heading}</p>
       )}
       <div className="space-y-2">
         {options.map((option, idx) => (
@@ -239,17 +239,17 @@ function MultiSelectList({ content, onInteracted }: { content: string; onInterac
             type="button"
             onClick={() => toggle(idx)}
             className={cn(
-              "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors",
+              "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors border",
               checked[idx]
-                ? "bg-black/5 text-black"
-                : "bg-transparent text-black hover:bg-black/[0.02]"
+                ? "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] text-white"
+                : "bg-transparent border-transparent text-[rgba(255,255,255,0.7)] hover:bg-[rgba(255,255,255,0.04)]"
             )}
             data-testid={`checkbox-option-${idx}`}
           >
             {checked[idx] ? (
               <CheckSquare className="w-5 h-5 text-[#00b57a] shrink-0 mt-0.5" />
             ) : (
-              <Square className="w-5 h-5 shrink-0 mt-0.5 text-black/40" />
+              <Square className="w-5 h-5 shrink-0 mt-0.5 text-[rgba(255,255,255,0.3)]" />
             )}
             <span className="leading-[1.4] text-xl font-['Afacad',sans-serif]">{option}</span>
           </button>
@@ -269,13 +269,13 @@ function SingleSelectList({ content, onInteracted }: { content: string; onIntera
   }, []);
 
   if (options.length === 0) {
-    return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif]">{content}</p>;
+    return <p className="whitespace-pre-wrap leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)]">{content}</p>;
   }
 
   return (
     <div className="space-y-5">
       {heading && (
-        <p className="font-bold leading-[1.4] text-[32px] font-['Afacad',sans-serif]">{heading}</p>
+        <p className="font-bold leading-[1.4] text-[32px] font-['Afacad',sans-serif] text-white">{heading}</p>
       )}
       <div className="space-y-2">
         {options.map((option, idx) => (
@@ -290,17 +290,17 @@ function SingleSelectList({ content, onInteracted }: { content: string; onIntera
               }
             }}
             className={cn(
-              "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors",
+              "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors border",
               selected === idx
-                ? "bg-black/5 text-black"
-                : "bg-transparent text-black hover:bg-black/[0.02]"
+                ? "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] text-white"
+                : "bg-transparent border-transparent text-[rgba(255,255,255,0.7)] hover:bg-[rgba(255,255,255,0.04)]"
             )}
             data-testid={`radio-option-${idx}`}
           >
             {selected === idx ? (
               <CheckCircle2 className="w-5 h-5 text-[#00b57a] shrink-0 mt-0.5" />
             ) : (
-              <Circle className="w-5 h-5 shrink-0 mt-0.5 text-black/40" />
+              <Circle className="w-5 h-5 shrink-0 mt-0.5 text-[rgba(255,255,255,0.3)]" />
             )}
             <span className="leading-[1.4] text-xl font-['Afacad',sans-serif]">{option}</span>
           </button>
@@ -393,10 +393,10 @@ export function LessonSlide({
 
   return (
     <div
-      className={cn("flex-1 overflow-y-auto pb-28 bg-white", animationClass)}
+      className={cn("flex-1 overflow-y-auto", animationClass)}
       data-testid={`lesson-slide-${type}`}
     >
-      <div className="max-w-[540px] mx-auto px-6 py-8 flex flex-col justify-center min-h-full">
+      <div className="flex flex-col justify-center min-h-full">
         {type === "text" ? (
           <TextSlide content={content} />
         ) : type === "multi_select" ? (
@@ -476,7 +476,7 @@ function ScenarioSlide({ content, revealedCount }: { content: string; revealedCo
   return (
     <div className="flex flex-col gap-8">
       {headline && (
-        <h1 className="font-['Afacad',sans-serif] font-bold text-[30px] text-black leading-[1.2]">
+        <h1 className="font-['Afacad',sans-serif] font-bold text-[30px] text-white leading-[1.2]">
           {headline}
         </h1>
       )}
@@ -493,22 +493,22 @@ function ScenarioSlide({ content, revealedCount }: { content: string; revealedCo
                     data-testid={`scenario-step-img-${i}`}
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-zinc-100 shrink-0 flex items-center justify-center">
-                    <User className="w-5 h-5 text-zinc-400" />
+                  <div className="w-12 h-12 rounded-xl bg-[rgba(255,255,255,0.08)] shrink-0 flex items-center justify-center">
+                    <User className="w-5 h-5 text-[rgba(255,255,255,0.4)]" />
                   </div>
                 )}
-                <p className="font-['Afacad',sans-serif] font-medium text-[20px] text-black leading-[1.4] pt-2">
+                <p className="font-['Afacad',sans-serif] font-medium text-[20px] text-[rgba(255,255,255,0.8)] leading-[1.4] pt-2">
                   {step.text}
                 </p>
               </div>
             </RevealStep>
             {i < shown.length - 1 && (
               <div className="flex flex-col items-start ml-5 py-2 gap-[5px]">
-                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
-                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
-                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
-                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
-                <div className="w-[3px] h-[5px] rounded-full bg-zinc-300" />
+                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
+                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
+                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
+                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
+                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
               </div>
             )}
           </div>
@@ -552,20 +552,24 @@ function ActionSlide({ content, onInteracted }: { content: string; onInteracted?
   return (
     <div className="space-y-6 flex flex-col items-center justify-center min-h-[200px]" data-testid="slide-action">
       {isHtml ? (
-        <HtmlContent content={content} className="text-xl font-['Afacad',sans-serif] text-black text-center leading-[1.4]" />
+        <HtmlContent content={content} className="text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] text-center leading-[1.4]" />
       ) : (
-        <p className="text-xl font-['Afacad',sans-serif] text-black text-center whitespace-pre-wrap leading-[1.4]">
+        <p className="text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] text-center whitespace-pre-wrap leading-[1.4]">
           {content}
         </p>
       )}
       <Button
-        variant={done ? "secondary" : "default"}
         size="lg"
         onClick={() => {
           setDone(!done);
           if (!done) onInteracted?.();
         }}
-        className="gap-2"
+        className={cn(
+          "gap-2 font-['Afacad',sans-serif]",
+          done
+            ? "bg-[#00b57a]/10 text-[#00b57a] border border-[#00b57a]/30 hover:bg-[#00b57a]/20"
+            : "bg-[#18181b] text-white border border-[rgba(255,255,255,0.1)] hover:bg-[#27272a]"
+        )}
         data-testid="button-action-done"
       >
         {done ? (
@@ -639,9 +643,9 @@ function TextInputSlide({
   return (
     <div className="space-y-6" data-testid="slide-text-input">
       {isHtmlContent(prompt) ? (
-        <HtmlContent content={prompt} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black" />
+        <HtmlContent content={prompt} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)]" />
       ) : (
-        <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black">
+        <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)]">
           {prompt}
         </p>
       )}
@@ -649,13 +653,14 @@ function TextInputSlide({
         value={journalContent}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Write your response here..."
-        className="min-h-[150px] w-full bg-white border-black/10 text-base font-['Afacad',sans-serif]"
+        className="min-h-[150px] w-full bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] text-base font-['Afacad',sans-serif] focus:border-[rgba(255,255,255,0.2)]"
         data-testid="input-text-response"
       />
       <div className="flex justify-end">
         <Button
           onClick={handleSave}
           disabled={isPending || !journalContent.trim() || saved}
+          className="bg-[#18181b] text-white hover:bg-[#27272a] border border-[rgba(255,255,255,0.1)]"
           data-testid="button-save-response"
         >
           {isPending ? "Saving..." : saved ? "Saved" : "Save Response"}
@@ -695,12 +700,12 @@ function MentorMessageSlide({
       <div className="space-y-4" data-testid="slide-mentor-message">
         <div className="overflow-y-auto max-h-[50vh]" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
           {isHtmlContent(content) ? (
-            <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words" />
+            <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] break-words" />
           ) : (
-            <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words">{content}</p>
+            <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] break-words">{content}</p>
           )}
         </div>
-        <p className="text-sm text-black/50 font-['Afacad',sans-serif]">No mentor assigned yet.</p>
+        <p className="text-sm text-[#6a6a6a] font-['Afacad',sans-serif]">No mentor assigned yet.</p>
       </div>
     );
   }
@@ -711,8 +716,8 @@ function MentorMessageSlide({
         <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
           <CheckCircle className="w-8 h-8 text-[#00b57a]" />
         </div>
-        <p className="text-[24px] font-bold font-['Afacad',sans-serif] text-black">Message Sent!</p>
-        <p className="text-lg font-['Afacad',sans-serif] text-black/60">Your mentor will see it in your conversation.</p>
+        <p className="text-[24px] font-bold font-['Afacad',sans-serif] text-white">Message Sent!</p>
+        <p className="text-lg font-['Afacad',sans-serif] text-[#6a6a6a]">Your mentor will see it in your conversation.</p>
       </div>
     );
   }
@@ -721,23 +726,23 @@ function MentorMessageSlide({
     <div className="space-y-6" data-testid="slide-mentor-message">
       <div className="overflow-y-auto max-h-[40vh]" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
         {isHtmlContent(content) ? (
-          <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words" />
+          <HtmlContent content={content} className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] break-words" />
         ) : (
-          <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black break-words">{content}</p>
+          <p className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] break-words">{content}</p>
         )}
       </div>
       <Textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type your message to your mentor..."
-        className="min-h-[150px] w-full bg-white border-black/10 text-base font-['Afacad',sans-serif]"
+        className="min-h-[150px] w-full bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] text-base font-['Afacad',sans-serif] focus:border-[rgba(255,255,255,0.2)]"
         data-testid="input-mentor-message"
       />
       <div className="flex justify-end">
         <Button
           onClick={handleSend}
           disabled={isPending || !message.trim()}
-          className="gap-2"
+          className="gap-2 bg-[#18181b] text-white hover:bg-[#27272a] border border-[rgba(255,255,255,0.1)]"
           data-testid="button-send-mentor"
         >
           <Send className="w-4 h-4" />
@@ -846,10 +851,10 @@ function TimerSlide({
     <div className="flex flex-col items-center space-y-8" data-testid="slide-timer">
       <div className="relative w-[140px] h-[140px] flex items-center justify-center">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="54" fill="none" stroke="#e4e4e7" strokeWidth="6" />
+          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
           <circle
             cx="60" cy="60" r="54" fill="none"
-            stroke={done ? "#00b57a" : "#18181b"}
+            stroke={done ? "#00b57a" : "rgba(255,255,255,0.7)"}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -861,7 +866,7 @@ function TimerSlide({
           {done ? (
             <CheckCircle className="w-10 h-10 text-[#00b57a]" />
           ) : (
-            <span className="text-[32px] font-bold font-['Afacad',sans-serif] text-black tabular-nums">
+            <span className="text-[32px] font-bold font-['Afacad',sans-serif] text-white tabular-nums">
               {minutes}:{seconds.toString().padStart(2, "0")}
             </span>
           )}
@@ -869,7 +874,7 @@ function TimerSlide({
       </div>
 
       {!done && (
-        <p className="text-[16px] text-black/70 font-['Afacad',sans-serif]">
+        <p className="text-[16px] text-[#6a6a6a] font-['Afacad',sans-serif]">
           Take a moment to reflect on this passage
         </p>
       )}
@@ -878,10 +883,10 @@ function TimerSlide({
         <button
           onClick={toggleAudio}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-['Afacad',sans-serif] text-[14px] font-medium",
+            "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-['Afacad',sans-serif] text-[14px] font-medium border",
             isPlaying
-              ? "bg-zinc-900 text-white shadow-md"
-              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+              ? "bg-[rgba(255,255,255,0.15)] text-white border-[rgba(255,255,255,0.2)] shadow-md"
+              : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.7)] border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.1)]"
           )}
           data-testid="button-audio-toggle"
         >
@@ -971,7 +976,7 @@ function KnowledgeCheckSlide({
   return (
     <>
       <div className="space-y-6" data-testid="slide-knowledge-check">
-        <p className="font-bold leading-[1.4] text-[28px] font-['Afacad',sans-serif] text-black">
+        <p className="font-bold leading-[1.4] text-[28px] font-['Afacad',sans-serif] text-white">
           {data.question}
         </p>
         <div className="space-y-2">
@@ -980,21 +985,21 @@ function KnowledgeCheckSlide({
             const isThis = selectedIndex === idx;
             const isCorrectOption = idx === data.correctIndex;
 
-            let optionStyle = "bg-transparent hover:bg-black/[0.02]";
-            let circleStyle = "bg-black/5 text-black/60 border-2 border-transparent";
+            let optionStyle = "bg-transparent border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)]";
+            let circleStyle = "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.5)] border-2 border-transparent";
 
             if (answered) {
               if (isThis && isCorrect) {
-                optionStyle = "bg-[#00b57a]/10 ring-2 ring-[#00b57a]";
+                optionStyle = "bg-[#00b57a]/10 ring-2 ring-[#00b57a] border-transparent";
                 circleStyle = "bg-[#00b57a] text-white border-2 border-[#00b57a]";
               } else if (isThis && !isCorrect) {
-                optionStyle = "bg-[#ef4444]/10 ring-2 ring-[#ef4444]";
+                optionStyle = "bg-[#ef4444]/10 ring-2 ring-[#ef4444] border-transparent";
                 circleStyle = "bg-[#ef4444] text-white border-2 border-[#ef4444]";
               } else if (isCorrectOption) {
-                optionStyle = "bg-[#00b57a]/5 ring-1 ring-[#00b57a]/40";
+                optionStyle = "bg-[#00b57a]/5 ring-1 ring-[#00b57a]/40 border-transparent";
                 circleStyle = "bg-[#00b57a]/20 text-[#00b57a] border-2 border-[#00b57a]/40";
               } else {
-                optionStyle = "bg-transparent opacity-50";
+                optionStyle = "bg-transparent opacity-40 border border-[rgba(255,255,255,0.08)]";
               }
             }
 
@@ -1023,7 +1028,7 @@ function KnowledgeCheckSlide({
                     <Circle className="w-4 h-4" />
                   )}
                 </span>
-                <span className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black pt-1">
+                <span className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] pt-1">
                   {option}
                 </span>
               </button>
@@ -1037,8 +1042,8 @@ function KnowledgeCheckSlide({
           className={cn(
             "fixed bottom-0 left-0 right-0 z-[60] border-t px-6 py-5 animate-in slide-in-from-bottom duration-300",
             isCorrect
-              ? "bg-[#f0fdf4] border-[#00b57a]/30"
-              : "bg-[#fef2f2] border-[#ef4444]/30"
+              ? "bg-[#0a1f17] border-[#00b57a]/30"
+              : "bg-[#1f0a0a] border-[#ef4444]/30"
           )}
           data-testid="kc-feedback-banner"
         >
@@ -1064,9 +1069,9 @@ function KnowledgeCheckSlide({
                     Explanation:
                   </p>
                   {isHtmlContent(data.explanation) ? (
-                    <HtmlContent content={data.explanation} className="text-sm font-['Afacad',sans-serif] text-black/80 leading-relaxed" />
+                    <HtmlContent content={data.explanation} className="text-sm font-['Afacad',sans-serif] text-[rgba(255,255,255,0.7)] leading-relaxed" />
                   ) : (
-                    <p className="text-sm font-['Afacad',sans-serif] text-black/80 leading-relaxed" data-testid="kc-explanation">
+                    <p className="text-sm font-['Afacad',sans-serif] text-[rgba(255,255,255,0.7)] leading-relaxed" data-testid="kc-explanation">
                       {data.explanation}
                     </p>
                   )}
@@ -1228,8 +1233,8 @@ function SurveySlide({
         <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-[#00b57a]" />
         </div>
-        <h3 className="text-2xl font-bold font-['Afacad',sans-serif] text-black">Response Received</h3>
-        <p className="text-lg font-['Afacad',sans-serif] text-black/60 max-w-[320px]">
+        <h3 className="text-2xl font-bold font-['Afacad',sans-serif] text-white">Response Received</h3>
+        <p className="text-lg font-['Afacad',sans-serif] text-[#6a6a6a] max-w-[320px]">
           Thank you for sharing your experience. You can continue.
         </p>
       </div>
@@ -1239,7 +1244,7 @@ function SurveySlide({
   if (data.questions.length === 0) {
     return (
       <div className="slide-text-content" data-testid="slide-survey-empty">
-        <p className="text-black/50 italic">Survey not configured.</p>
+        <p className="text-[rgba(255,255,255,0.4)] italic">Survey not configured.</p>
       </div>
     );
   }
@@ -1250,12 +1255,12 @@ function SurveySlide({
       {(data.title || data.description) && (
         <div className="space-y-2">
           {data.title && (
-            <h2 className="font-bold text-[28px] font-['Afacad',sans-serif] text-black leading-tight">
+            <h2 className="font-bold text-[28px] font-['Afacad',sans-serif] text-white leading-tight">
               {data.title}
             </h2>
           )}
           {data.description && (
-            <p className="text-lg font-['Afacad',sans-serif] text-black/60 leading-[1.4]">
+            <p className="text-lg font-['Afacad',sans-serif] text-[#6a6a6a] leading-[1.4]">
               {data.description}
             </p>
           )}
@@ -1266,7 +1271,7 @@ function SurveySlide({
       <div className="space-y-8">
         {data.questions.map((q, idx) => (
           <div key={q.id} className="space-y-3" data-testid={`survey-question-${idx}`}>
-            <p className="font-semibold text-[18px] font-['Afacad',sans-serif] text-black leading-[1.3]">
+            <p className="font-semibold text-[18px] font-['Afacad',sans-serif] text-[rgba(255,255,255,0.9)] leading-[1.3]">
               <span className="text-[#00b57a] mr-1.5">{idx + 1}.</span>
               {q.label}
             </p>
@@ -1283,14 +1288,14 @@ function SurveySlide({
                       className={cn(
                         "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-['Afacad',sans-serif] text-[17px]",
                         selected
-                          ? "border-[#00b57a] bg-[#00b57a]/5 text-black"
-                          : "border-black/10 bg-transparent text-black/70 hover:border-black/25"
+                          ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
+                          : "border-[rgba(255,255,255,0.1)] bg-transparent text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.2)]"
                       )}
                       data-testid={`survey-option-${idx}-${opt}`}
                     >
                       <span className={cn(
                         "shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-black/25"
+                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-[rgba(255,255,255,0.3)]"
                       )}>
                         {selected && <span className="w-2 h-2 rounded-full bg-white block" />}
                       </span>
@@ -1303,7 +1308,7 @@ function SurveySlide({
 
             {q.type === "multi_select" && q.options && (
               <div className="space-y-2">
-                <p className="text-sm text-black/40 font-['Afacad',sans-serif]">Select all that apply</p>
+                <p className="text-sm text-[#6a6a6a] font-['Afacad',sans-serif]">Select all that apply</p>
                 {q.options.map(opt => {
                   const selected = Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(opt);
                   return (
@@ -1314,14 +1319,14 @@ function SurveySlide({
                       className={cn(
                         "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-['Afacad',sans-serif] text-[17px]",
                         selected
-                          ? "border-[#00b57a] bg-[#00b57a]/5 text-black"
-                          : "border-black/10 bg-transparent text-black/70 hover:border-black/25"
+                          ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
+                          : "border-[rgba(255,255,255,0.1)] bg-transparent text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.2)]"
                       )}
                       data-testid={`survey-option-${idx}-${opt}`}
                     >
                       <span className={cn(
                         "shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors",
-                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-black/25"
+                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-[rgba(255,255,255,0.3)]"
                       )}>
                         {selected && (
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -1350,7 +1355,7 @@ function SurveySlide({
                           "flex-1 h-12 rounded-xl border-2 font-bold text-lg font-['Afacad',sans-serif] transition-all duration-150",
                           selected
                             ? "border-[#00b57a] bg-[#00b57a] text-white shadow-sm"
-                            : "border-black/10 bg-transparent text-black/50 hover:border-black/30 hover:text-black/70"
+                            : "border-[rgba(255,255,255,0.1)] bg-transparent text-[rgba(255,255,255,0.5)] hover:border-[rgba(255,255,255,0.25)] hover:text-[rgba(255,255,255,0.8)]"
                         )}
                         data-testid={`survey-rating-${idx}-${n}`}
                       >
@@ -1360,8 +1365,8 @@ function SurveySlide({
                   })}
                 </div>
                 <div className="flex justify-between px-0.5">
-                  <span className="text-xs text-black/35 font-['Afacad',sans-serif]">Not at all</span>
-                  <span className="text-xs text-black/35 font-['Afacad',sans-serif]">Very much</span>
+                  <span className="text-xs text-[#6a6a6a] font-['Afacad',sans-serif]">Not at all</span>
+                  <span className="text-xs text-[#6a6a6a] font-['Afacad',sans-serif]">Very much</span>
                 </div>
               </div>
             )}
@@ -1372,7 +1377,7 @@ function SurveySlide({
                 onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
                 placeholder="Write your response here..."
                 rows={3}
-                className="font-['Afacad',sans-serif] text-[17px] resize-none border-black/15 focus:border-[#00b57a] focus:ring-[#00b57a]/20"
+                className="font-['Afacad',sans-serif] text-[17px] resize-none bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#00b57a] focus:ring-[#00b57a]/20"
                 data-testid={`survey-text-${idx}`}
               />
             )}
@@ -1388,7 +1393,7 @@ function SurveySlide({
           "w-full h-12 text-[17px] font-semibold font-['Afacad',sans-serif] transition-all",
           allAnswered
             ? "bg-[#00b57a] hover:bg-[#00a06a] text-white"
-            : "bg-black/10 text-black/30 cursor-not-allowed"
+            : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.2)] cursor-not-allowed"
         )}
         data-testid="button-survey-submit"
       >
@@ -1416,10 +1421,10 @@ function QuizQuestionSlide({
 
   return (
     <div className="space-y-6" data-testid="slide-quiz-question">
-      <p className="text-sm font-medium text-black/40 font-['Afacad',sans-serif]" data-testid="text-quiz-progress">
+      <p className="text-sm font-medium text-[#6a6a6a] font-['Afacad',sans-serif]" data-testid="text-quiz-progress">
         Question {questionIndex + 1} of {quizData.questions.length}
       </p>
-      <p className="font-bold leading-[1.4] text-[28px] font-['Afacad',sans-serif] text-black">
+      <p className="font-bold leading-[1.4] text-[28px] font-['Afacad',sans-serif] text-white">
         {q.question}
       </p>
       <div className="space-y-2">
@@ -1432,10 +1437,10 @@ function QuizQuestionSlide({
               type="button"
               onClick={() => onAnswer?.(letter)}
               className={cn(
-                "flex items-start gap-3 w-full text-left p-4 rounded-xl transition-all duration-200",
+                "flex items-start gap-3 w-full text-left p-4 rounded-xl transition-all duration-200 border",
                 isSelected
-                  ? "bg-black/5 ring-2 ring-[#00b57a]"
-                  : "bg-transparent hover:bg-black/[0.02]"
+                  ? "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] ring-2 ring-[#00b57a]"
+                  : "bg-transparent border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)]"
               )}
               data-testid={`quiz-option-${letter}`}
             >
@@ -1443,11 +1448,11 @@ function QuizQuestionSlide({
                 "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
                 isSelected
                   ? "bg-[#00b57a] text-white"
-                  : "bg-black/5 text-black/60"
+                  : "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.5)]"
               )}>
                 {letter}
               </span>
-              <span className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-black pt-1">
+              <span className="leading-[1.4] text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.8)] pt-1">
                 {option}
               </span>
             </button>
@@ -1491,20 +1496,20 @@ function QuizResultSlide({
         <CheckCircle2 className="w-8 h-8 text-[#00b57a]" />
       </div>
       {answered === 0 ? (
-        <p className="text-xl font-['Afacad',sans-serif] text-black/70">
+        <p className="text-xl font-['Afacad',sans-serif] text-[#6a6a6a]">
           Go back and answer the questions to see your result.
         </p>
       ) : result ? (
         <>
-          <h2 className="text-[32px] font-bold font-['Afacad',sans-serif] text-black leading-tight">
+          <h2 className="text-[32px] font-bold font-['Afacad',sans-serif] text-white leading-tight">
             {result.title}
           </h2>
-          <p className="text-xl leading-[1.5] font-['Afacad',sans-serif] text-black/70 max-w-[420px]">
+          <p className="text-xl leading-[1.5] font-['Afacad',sans-serif] text-[rgba(255,255,255,0.7)] max-w-[420px]">
             {result.description}
           </p>
         </>
       ) : (
-        <p className="text-xl font-['Afacad',sans-serif] text-black/70">
+        <p className="text-xl font-['Afacad',sans-serif] text-[rgba(255,255,255,0.7)]">
           You answered {answered} of {total} questions.
         </p>
       )}
