@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Send, RotateCw } from "lucide-react";
+import { X, Send, RotateCw, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
@@ -904,42 +904,68 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               </div>
 
               {/* ── Input row — always at bottom of inner card ──
-                   Shown for: text_input (with field), multi_select, message_only, flowComplete.
-                   Hidden for: single_select (auto-advances on option tap). */}
+                   message_only + flowComplete → full-width Continue button.
+                   text_input → text field + send button.
+                   multi_select → send/done button.
+                   single_select → hidden (auto-advances on option tap). */}
               {(flowComplete ||
                 (inputReady &&
                   currentStep &&
                   currentStep.inputType !== "single_select")) && (
-                <div className="flex gap-2 items-center shrink-0 pt-2">
-                  {/* Text field — only for text_input steps */}
-                  {showTextInput && (
-                    <input
-                      type="text"
-                      value={textInput}
-                      onChange={e => setTextInput(e.target.value)}
-                      onKeyDown={e =>
-                        e.key === "Enter" && !isSendDisabled && handleSubmit()
-                      }
-                      placeholder="Type your answer here..."
-                      className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
-                      style={{ height: "36px" }}
-                      data-testid="input-chat-text"
-                    />
+                <div className="shrink-0 pt-2">
+                  {/* Full-width Continue — for message_only steps and after flow completes */}
+                  {(flowComplete ||
+                    currentStep?.inputType === "message_only" ||
+                    !currentStep?.inputType) ? (
+                    <button
+                      onClick={handleSubmit}
+                      className="w-full flex items-center justify-center gap-2 font-['Afacad'] font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
+                      style={{
+                        background: "#18181b",
+                        height: "42px",
+                        fontSize: "15px",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
+                      }}
+                      data-testid="button-chat-continue"
+                    >
+                      Continue
+                      <ArrowRight style={{ width: "16px", height: "16px" }} />
+                    </button>
+                  ) : (
+                    /* Small send button — for text_input and multi_select */
+                    <div className="flex gap-2 items-center">
+                      {/* Text field — only for text_input steps */}
+                      {showTextInput && (
+                        <input
+                          type="text"
+                          value={textInput}
+                          onChange={e => setTextInput(e.target.value)}
+                          onKeyDown={e =>
+                            e.key === "Enter" && !isSendDisabled && handleSubmit()
+                          }
+                          placeholder="Type your answer here..."
+                          className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
+                          style={{ height: "36px" }}
+                          data-testid="input-chat-text"
+                        />
+                      )}
+
+                      {/* Spacer when no text field, to push send button right */}
+                      {!showTextInput && <div className="flex-1" />}
+
+                      {/* Send / Done button */}
+                      <button
+                        onClick={handleSubmit}
+                        disabled={isSendDisabled}
+                        className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                        style={{ width: "36px", height: "36px" }}
+                        data-testid="button-chat-send"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
-
-                  {/* Spacer when no text field, to push send button right */}
-                  {!showTextInput && <div className="flex-1" />}
-
-                  {/* Send / Next / Done button */}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={isSendDisabled}
-                    className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
-                    style={{ width: "36px", height: "36px" }}
-                    data-testid="button-chat-send"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
                 </div>
               )}
             </div>
