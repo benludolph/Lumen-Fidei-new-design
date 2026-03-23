@@ -1262,6 +1262,45 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               </div>
             </div>
           </div>
+
+          {/* ── Bottom bar — Continue button (matches Figma completion screen) ── */}
+          <div
+            className="relative shrink-0 flex flex-col items-end justify-center w-full"
+            style={{
+              background: "#0f1116",
+              borderTop: "1px solid rgba(255,255,255,0.05)",
+              paddingTop: "32px",
+              paddingBottom: "32px",
+              paddingLeft: "53px",
+              paddingRight: "53px",
+              zIndex: 1,
+            }}
+          >
+            <button
+              onClick={onComplete}
+              className="flex items-center justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+              style={{
+                background: "#18181b",
+                height: "36px",
+                gap: "8px",
+                paddingLeft: "16px",
+                paddingRight: "16px",
+                paddingTop: "8px",
+                paddingBottom: "8px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                lineHeight: "20px",
+                boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
+                whiteSpace: "nowrap",
+                border: "none",
+                cursor: "pointer",
+              }}
+              data-testid="button-review-continue"
+            >
+              Continue
+              <ArrowRight style={{ width: "16px", height: "16px" }} />
+            </button>
+          </div>
         </div>
       )}
 
