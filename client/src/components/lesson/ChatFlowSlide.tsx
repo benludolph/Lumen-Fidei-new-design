@@ -1312,33 +1312,31 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   transform: unlockPhase >= 2 ? "translateY(0)" : "translateY(16px)",
                 }}
               >
-                {summaryText ? (
-                  <div
-                    style={{
-                      background: "#0f1116",
-                      border: "1px solid rgba(255,255,255,0.05)",
-                      borderRadius: 8,
-                      padding: "21px",
-                    }}
+                <div
+                  style={{
+                    background: "#0f1116",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: 8,
+                    padding: "21px",
+                  }}
+                >
+                  <p
+                    className="font-['Afacad'] font-normal uppercase"
+                    style={{ fontSize: "13px", letterSpacing: "1.3px", color: "rgba(255,255,255,0.4)", marginBottom: 12 }}
                   >
-                    <p
-                      className="font-['Afacad'] font-normal uppercase"
-                      style={{ fontSize: "13px", letterSpacing: "1.3px", color: "rgba(255,255,255,0.4)", marginBottom: 12 }}
-                    >
-                      Your Reflection
-                    </p>
-                    <p
-                      className="font-['IvyOra_Display'] font-normal"
-                      style={{ fontSize: "18px", lineHeight: 1.55, color: "rgba(255,255,255,0.82)" }}
-                    >
-                      {summaryText}
-                    </p>
-                  </div>
-                ) : null}
+                    Your Reflection
+                  </p>
+                  <p
+                    className="font-['IvyOra_Display'] font-normal"
+                    style={{ fontSize: "18px", lineHeight: 1.55, color: summaryText ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.3)" }}
+                  >
+                    {summaryText || "Your reflection has been recorded."}
+                  </p>
+                </div>
               </div>
 
               {/* Featured image, headline, subtext */}
-              <div className="relative flex flex-col items-center" style={{ marginTop: summaryText ? 40 : 0, gap: 20, maxWidth: 480, width: "100%" }}>
+              <div className="relative flex flex-col items-center" style={{ marginTop: 40, gap: 20, maxWidth: 480, width: "100%" }}>
 
                 {/* Image */}
                 {overlayConfig?.imageUrl && (
