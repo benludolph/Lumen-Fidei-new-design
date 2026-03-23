@@ -292,6 +292,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [flowComplete, setFlowComplete] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set to true to cancel any in-flight reveal chain when the step changes or rewinds
   const revealCancelRef = useRef(false);
@@ -316,9 +317,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       .catch(() => setLoadedFromServer(true));
   }, [contextKey]);
 
-  // Auto-scroll to bottom whenever chat content changes or flow completes (reveals summary card)
+  // Auto-scroll to bottom — scroll the overflow container directly so nested flex
+  // layouts don't confuse scrollIntoView (which targets the document viewport).
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [renderedMessages, showTyping, inputReady, flowComplete]);
 
   // Resolve the option list for a step (inline options take priority over optionSets)
@@ -816,6 +820,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             >
               {/* Messages list (scrollable, flex-1) */}
               <div
+                ref={scrollContainerRef}
                 className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
                 style={{ scrollbarWidth: "none" }}
               >
