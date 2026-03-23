@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import landscapeImg from "@assets/Inner_Image_(1)_1774128191496.webp";
+import landscapeImg from "@assets/OilPaintingBG_1774227836014.webp";
 import logoImg from "@assets/NewLogo_(1)_1774128194728.webp";
 
 const loginSchema = z.object({
