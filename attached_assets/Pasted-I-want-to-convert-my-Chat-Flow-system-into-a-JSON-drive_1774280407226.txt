@@ -1,0 +1,107 @@
+I want to convert my Chat Flow system into a JSON-driven engine.
+
+Right now, the system is UI-based with limited support for:
+- messages
+- input types
+- basic branching
+
+This is too restrictive.
+
+I do NOT want to rely on the visual editor anymore.
+
+----------------------------------------
+
+NEW REQUIREMENTS
+
+1. JSON AS SOURCE OF TRUTH
+
+- The entire flow should be defined by a JSON object
+- The UI builder should become OPTIONAL (or ignored)
+- Importing JSON should fully define the flow
+- Exporting should return the exact same structure
+
+----------------------------------------
+
+2. SUPPORT RICH SCHEMA (IMPORTANT)
+
+The engine must support this structure:
+
+Each step can have:
+
+{
+  "id": "string",
+  "type": "narrator | single_select | open_text | final",
+  "content": "string",              // for narrator
+  "messages": ["string"],           // optional alternative
+  "question": "string",             // for inputs
+  "options": [
+    { "id": "A", "text": "Option text" }
+  ],
+  "allow_other": true,
+  "other_placeholder": "string",
+
+  "variable": "string",             // where answer is stored
+
+  "branch_reflections": {           // immediate response after answer
+    "A": "text",
+    "B": "text"
+  },
+
+  "branches": {                     // branching paths
+    "A": [ step objects ],
+    "B": [ step objects ]
+  },
+
+  "dynamic_reflection": {
+    "template": "You said {var}",
+    "references": ["var"]
+  }
+}
+
+----------------------------------------
+
+3. RUNTIME ENGINE
+
+Build a conversation engine that:
+
+- Processes steps sequentially
+- Stores user responses in memory (by variable name)
+- Evaluates branching logic when present
+- Injects branch steps dynamically into the flow
+- Supports dynamic text rendering (template replacement)
+
+----------------------------------------
+
+4. REMOVE UI DEPENDENCY
+
+- The current step builder UI is NOT required
+- Keep only:
+  → JSON import
+  → JSON export
+  → preview/run mode
+
+----------------------------------------
+
+5. VALIDATION
+
+- Validate JSON before running
+- Show clear errors if:
+  → missing fields
+  → invalid types
+  → broken references
+
+----------------------------------------
+
+6. GOAL
+
+I want to paste a full JSON conversation (including branching and reflections) and have it run exactly as written.
+
+No manual step editing.
+
+----------------------------------------
+
+Focus on:
+- Clean parser
+- Flexible schema
+- Runtime execution engine
+- Maintaining step order and branching integrity

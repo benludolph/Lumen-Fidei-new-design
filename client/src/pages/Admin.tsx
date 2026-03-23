@@ -2138,34 +2138,44 @@ function importJsonToEditorData(raw: string): Omit<ChatFlowEditorData, "showJson
 // ────────────────────────────────────────────────────────────────────────────
 
 function ChatFlowSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  const [showJson, setShowJson] = useState(false);
-  const [expandedStep, setExpandedStep] = useState<number | null>(0);
-  const [expandedSection, setExpandedSection] = useState<"steps" | "optionSets" | "summary">("steps");
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [exportCopied, setExportCopied] = useState(false);
+  const [showReference, setShowReference] = useState(false);
   const { toast } = useToast();
 
-  const data = parseChatFlowEditorData(content);
-  const update = (next: Omit<ChatFlowEditorData, "showJson">) => onChange(serializeChatFlowEditorData(next));
+  // ── Validation / status ──
+  const flowStatus = useMemo(() => {
+    try {
+      const p = JSON.parse(content || "{}");
+      if (!Array.isArray(p.steps)) return { ok: false, error: "Missing 'steps' array", stepCount: 0, isRich: false };
+      const isRich = p.steps.some((s: any) => "type" in s || "content" in s || "question" in s);
+      return { ok: true, error: null, stepCount: p.steps.length, isRich };
+    } catch (e: any) {
+      return { ok: false, error: e.message || "Invalid JSON", stepCount: 0, isRich: false };
+    }
+  }, [content]);
 
+  // ── Import handler — accepts both rich and legacy formats ──
   const handleImport = () => {
     setImportError(null);
     try {
       if (!importText.trim()) throw new Error("Paste your JSON first.");
-      const editorData = importJsonToEditorData(importText.trim());
-      onChange(serializeChatFlowEditorData(editorData));
+      const p = JSON.parse(importText.trim());
+      if (!p || typeof p !== "object") throw new Error("Expected a JSON object at the top level.");
+      if (!Array.isArray(p.steps)) throw new Error("Missing 'steps' array.");
+      // Pretty-print and set as the content directly — engine handles both formats
+      onChange(JSON.stringify(p, null, 2));
       setShowImportModal(false);
       setImportText("");
-      setExpandedSection("steps");
-      setExpandedStep(editorData.steps.length > 0 ? 0 : null);
-      toast({ title: `Imported ${editorData.steps.length} steps successfully.` });
+      toast({ title: `Imported ${p.steps.length} step${p.steps.length === 1 ? "" : "s"} successfully.` });
     } catch (err: any) {
       setImportError(err.message || "Failed to parse JSON.");
     }
   };
 
+  // ── Export — copy to clipboard ──
   const handleExport = () => {
     try {
       const pretty = JSON.stringify(JSON.parse(content || "{}"), null, 2);
@@ -2177,114 +2187,20 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
       toast({ title: "Export failed", description: "Could not copy JSON.", variant: "destructive" });
     }
   };
-  const updateStep = (stepIdx: number, patch: Partial<ChatFlowStepEditor>) => {
-    const steps = data.steps.map((s, i) => i === stepIdx ? { ...s, ...patch } : s);
-    update({ ...data, steps });
-  };
 
-  // ---- Step CRUD ----
-  const addStep = () => {
-    update({ ...data, steps: [...data.steps, newChatFlowStep()] });
-    setExpandedStep(data.steps.length);
+  // ── Format button — pretty-print in place ──
+  const handleFormat = () => {
+    try {
+      onChange(JSON.stringify(JSON.parse(content), null, 2));
+    } catch {
+      toast({ title: "Cannot format: invalid JSON", variant: "destructive" });
+    }
   };
-  const removeStep = (idx: number) => {
-    const steps = data.steps.filter((_, i) => i !== idx);
-    update({ ...data, steps });
-    if (expandedStep === idx) setExpandedStep(null);
-    else if (expandedStep !== null && expandedStep > idx) setExpandedStep(expandedStep - 1);
-  };
-  const moveStep = (idx: number, dir: "up" | "down") => {
-    const steps = [...data.steps];
-    const target = dir === "up" ? idx - 1 : idx + 1;
-    if (target < 0 || target >= steps.length) return;
-    [steps[idx], steps[target]] = [steps[target], steps[idx]];
-    update({ ...data, steps });
-    if (expandedStep === idx) setExpandedStep(target);
-    else if (expandedStep === target) setExpandedStep(idx);
-  };
-
-  // ---- Messages ----
-  const updateStepMessage = (stepIdx: number, msgIdx: number, val: string) => {
-    const messages = data.steps[stepIdx].messages.map((m, i) => i === msgIdx ? val : m);
-    updateStep(stepIdx, { messages });
-  };
-  const addMessage = (stepIdx: number) => updateStep(stepIdx, { messages: [...data.steps[stepIdx].messages, ""] });
-  const removeMessage = (stepIdx: number, msgIdx: number) => {
-    if (data.steps[stepIdx].messages.length <= 1) return;
-    updateStep(stepIdx, { messages: data.steps[stepIdx].messages.filter((_, i) => i !== msgIdx) });
-  };
-
-  // ---- Options ----
-  const updateOption = (stepIdx: number, optIdx: number, field: "label" | "value", val: string) => {
-    const options = data.steps[stepIdx].options.map((o, i) => i === optIdx ? { ...o, [field]: val } : o);
-    updateStep(stepIdx, { options });
-  };
-  const addOption = (stepIdx: number) => updateStep(stepIdx, { options: [...data.steps[stepIdx].options, { label: "", value: "" }] });
-  const removeOption = (stepIdx: number, optIdx: number) =>
-    updateStep(stepIdx, { options: data.steps[stepIdx].options.filter((_, i) => i !== optIdx) });
-
-  // ---- optionSetMap entries ----
-  const updateSetMapEntry = (stepIdx: number, entryIdx: number, field: "sourceValue" | "setName", val: string) => {
-    const optionSetMap = data.steps[stepIdx].optionSetMap.map((e, i) => i === entryIdx ? { ...e, [field]: val } : e);
-    updateStep(stepIdx, { optionSetMap });
-  };
-  const addSetMapEntry = (stepIdx: number) =>
-    updateStep(stepIdx, { optionSetMap: [...data.steps[stepIdx].optionSetMap, { sourceValue: "", setName: "" }] });
-  const removeSetMapEntry = (stepIdx: number, entryIdx: number) =>
-    updateStep(stepIdx, { optionSetMap: data.steps[stepIdx].optionSetMap.filter((_, i) => i !== entryIdx) });
-
-  // ---- Branch conditions ----
-  const updateBranch = (stepIdx: number, branchIdx: number, patch: Partial<ChatFlowBranchEditor>) => {
-    const branches = data.steps[stepIdx].branches.map((b, i) => i === branchIdx ? { ...b, ...patch } : b);
-    updateStep(stepIdx, { branches });
-  };
-  const addBranch = (stepIdx: number) =>
-    updateStep(stepIdx, { branches: [...data.steps[stepIdx].branches, { variableName: "", operator: "equals", value: "", targetStepId: "" }] });
-  const removeBranch = (stepIdx: number, branchIdx: number) =>
-    updateStep(stepIdx, { branches: data.steps[stepIdx].branches.filter((_, i) => i !== branchIdx) });
-
-  // ---- Option Sets (top-level) ----
-  const updateOptionSet = (setIdx: number, patch: Partial<ChatFlowOptionSetEntry>) => {
-    const optionSets = data.optionSets.map((s, i) => i === setIdx ? { ...s, ...patch } : s);
-    update({ ...data, optionSets });
-  };
-  const addOptionSet = () => update({ ...data, optionSets: [...data.optionSets, { name: "", options: [{ label: "", value: "" }] }] });
-  const removeOptionSet = (setIdx: number) => update({ ...data, optionSets: data.optionSets.filter((_, i) => i !== setIdx) });
-  const updateOptionSetOption = (setIdx: number, optIdx: number, field: "label" | "value", val: string) => {
-    const options = data.optionSets[setIdx].options.map((o, i) => i === optIdx ? { ...o, [field]: val } : o);
-    updateOptionSet(setIdx, { options });
-  };
-  const addOptionSetOption = (setIdx: number) =>
-    updateOptionSet(setIdx, { options: [...data.optionSets[setIdx].options, { label: "", value: "" }] });
-  const removeOptionSetOption = (setIdx: number, optIdx: number) =>
-    updateOptionSet(setIdx, { options: data.optionSets[setIdx].options.filter((_, i) => i !== optIdx) });
-
-  // Derived helper: all variable names from all steps (for branch variableName dropdown)
-  const allVarNames = data.steps.map(s => s.variableName).filter(Boolean);
-  // All step IDs for branch targetStepId dropdown
-  const allStepIds = data.steps.map(s => ({ id: s.id, label: s.messages[0]?.slice(0, 32) || s.id }));
-  // All option set names for optionSetMap setName dropdown
-  const allSetNames = data.optionSets.map(s => s.name).filter(Boolean);
-
-  if (showJson) {
-    return (
-      <div className="space-y-2" data-testid={`chatflow-editor-json-${index}`}>
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">JSON (advanced)</label>
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => { setShowImportModal(true); setShowJson(false); }} data-testid={`button-chatflow-import-json-${index}`}>Import JSON</Button>
-            <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(false)}>Visual Editor</Button>
-          </div>
-        </div>
-        <Textarea value={content} onChange={e => onChange(e.target.value)} rows={20} className="font-mono text-xs" data-testid={`textarea-chatflow-json-${index}`} />
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-4" data-testid={`chatflow-editor-${index}`}>
-      {/* ── Import JSON modal ─────────────────────────────────────────────── */}
-      <Dialog open={showImportModal} onOpenChange={open => { setShowImportModal(open); if (!open) { setImportError(null); } }}>
+    <div className="space-y-3" data-testid={`chatflow-editor-${index}`}>
+      {/* ── Import JSON modal ── */}
+      <Dialog open={showImportModal} onOpenChange={open => { setShowImportModal(open); if (!open) setImportError(null); }}>
         <DialogContent className="max-w-2xl" data-testid={`chatflow-import-modal-${index}`}>
           <DialogHeader>
             <DialogTitle>Import JSON Flow</DialogTitle>
@@ -2292,20 +2208,24 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
               Paste a JSON object with a <code className="bg-muted px-1 rounded">steps</code> array.
-              Accepts both the simplified format (<code className="bg-muted px-1 rounded">input</code> key) and the native internal format (<code className="bg-muted px-1 rounded">inputType</code> key).
+              Accepts both the rich schema (<code className="bg-muted px-1 rounded">type</code> field) and the legacy format.
               Importing will <span className="text-destructive font-medium">replace</span> all current steps.
             </p>
             <div className="text-xs text-muted-foreground bg-muted rounded p-2 font-mono leading-relaxed whitespace-pre">{`{
   "steps": [
-    { "id": "step_1", "messages": ["Hello!"], "input": null },
+    { "id": "s1", "type": "narrator", "content": "Welcome." },
     {
-      "id": "step_2",
-      "messages": ["Pick one:"],
-      "input": { "type": "single_select", "options": ["A", "B"], "variable": "choice" }
+      "id": "s2", "type": "single_select",
+      "question": "How do you feel?",
+      "options": [{ "id": "A", "text": "Anxious" }, { "id": "B", "text": "At peace" }],
+      "variable": "feeling",
+      "branch_reflections": { "A": "That takes courage.", "B": "What a gift." },
+      "branches": { "A": [{ "id": "s3a", "type": "narrator", "content": "Let's explore that." }] }
     },
-    { "id": "step_3", "messages": ["Tell me more:"], "input": { "type": "text", "variable": "details" } }
+    { "id": "s4", "type": "open_text", "question": "What else?", "variable": "more" },
+    { "id": "s5", "type": "final", "content": "Thank you for sharing." }
   ],
-  "summaryTemplate": "You chose {{choice}}. Details: {{details}}"
+  "summaryTemplate": "I feel {feeling}. {more}"
 }`}</div>
             <Textarea
               value={importText}
@@ -2322,267 +2242,74 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
             )}
           </div>
           <div className="flex justify-end gap-2 pt-1">
-            <Button variant="outline" size="sm" onClick={() => { setShowImportModal(false); setImportError(null); }} data-testid={`button-chatflow-import-cancel-${index}`}>Cancel</Button>
-            <Button size="sm" onClick={handleImport} data-testid={`button-chatflow-import-confirm-${index}`}>Import & Replace Steps</Button>
+            <Button variant="outline" size="sm" onClick={() => { setShowImportModal(false); setImportError(null); }}>Cancel</Button>
+            <Button size="sm" onClick={handleImport} data-testid={`button-chatflow-import-confirm-${index}`}>Import & Replace</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Section tabs */}
-      <div className="flex items-center gap-1 border-b">
-        {(["steps", "optionSets", "summary"] as const).map(sec => (
-          <button
-            key={sec}
-            onClick={() => setExpandedSection(sec)}
-            className={`px-3 py-1.5 text-xs font-medium transition-colors border-b-2 -mb-px ${expandedSection === sec ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-            data-testid={`button-chatflow-section-${sec}-${index}`}
-          >
-            {sec === "steps" ? `Steps (${data.steps.length})` : sec === "optionSets" ? `Option Sets (${data.optionSets.length})` : "Summary"}
-          </button>
-        ))}
+      {/* ── Status + toolbar ── */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Status pill */}
+        {flowStatus.ok ? (
+          <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+            <CheckCircle2 className="w-3 h-3" />
+            {flowStatus.stepCount} step{flowStatus.stepCount === 1 ? "" : "s"} · {flowStatus.isRich ? "Rich schema" : "Legacy schema"}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-destructive">
+            <AlertTriangle className="w-3 h-3" />
+            {flowStatus.error}
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-1">
+          <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={handleFormat} data-testid={`button-chatflow-format-${index}`}>Format</Button>
           <Button size="sm" variant="outline" className="h-6 text-xs" onClick={handleExport} data-testid={`button-chatflow-export-${index}`}>
             {exportCopied ? "Copied!" : "Export JSON"}
           </Button>
           <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowImportModal(true)} data-testid={`button-chatflow-import-${index}`}>Import JSON</Button>
-          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(true)}>Raw JSON</Button>
         </div>
       </div>
 
-      {/* ===== STEPS SECTION ===== */}
-      {expandedSection === "steps" && (
-        <div className="space-y-3">
-          {data.steps.length === 0 && (
-            <p className="text-sm text-muted-foreground italic">No steps yet. Add one below.</p>
-          )}
-          {data.steps.map((step, stepIdx) => {
-            const isExpanded = expandedStep === stepIdx;
-            const needsOptions = step.inputType === "single_select" || step.inputType === "multi_select";
-            const usesDynOptions = step.inputType === "single_select" || step.inputType === "multi_select";
-            return (
-              <div key={step.id} className="border rounded-lg bg-muted/20">
-                {/* Step row header */}
-                <div className="flex items-center gap-2 px-3 py-2">
-                  <span className="text-xs font-semibold text-muted-foreground w-5 shrink-0">{stepIdx + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs text-muted-foreground truncate block">
-                      {step.messages[0]?.trim() || "(no message)"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveStep(stepIdx, "up")} disabled={stepIdx === 0} data-testid={`button-chatflow-step-up-${stepIdx}`}><ChevronUp className="w-3 h-3" /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveStep(stepIdx, "down")} disabled={stepIdx === data.steps.length - 1} data-testid={`button-chatflow-step-down-${stepIdx}`}><ChevronDown className="w-3 h-3" /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpandedStep(isExpanded ? null : stepIdx)} data-testid={`button-chatflow-step-expand-${stepIdx}`}>
-                      {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStep(stepIdx)} data-testid={`button-chatflow-step-remove-${stepIdx}`}><Trash2 className="w-3 h-3 text-destructive" /></Button>
-                  </div>
-                </div>
+      {/* ── JSON editor ── */}
+      <Textarea
+        value={content}
+        onChange={e => onChange(e.target.value)}
+        rows={28}
+        className="font-mono text-xs"
+        placeholder={'{\n  "steps": [\n    { "id": "s1", "type": "narrator", "content": "Hello!" }\n  ]\n}'}
+        data-testid={`textarea-chatflow-json-${index}`}
+      />
 
-                {isExpanded && (
-                  <div className="px-3 pb-3 space-y-4 border-t pt-3">
-                    {/* Messages */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Messages (revealed one at a time)</label>
-                      {step.messages.map((msg, msgIdx) => (
-                        <div key={msgIdx} className="flex gap-1 items-start">
-                          <Textarea value={msg} onChange={e => updateStepMessage(stepIdx, msgIdx, e.target.value)} rows={2} placeholder={`Message ${msgIdx + 1}...`} className="text-sm flex-1" data-testid={`textarea-chatflow-msg-${stepIdx}-${msgIdx}`} />
-                          {step.messages.length > 1 && (
-                            <Button variant="ghost" size="icon" className="h-7 w-7 mt-0.5 shrink-0" onClick={() => removeMessage(stepIdx, msgIdx)}><X className="w-3 h-3 text-muted-foreground" /></Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button variant="outline" size="sm" className="h-7 text-xs gap-1 mt-1" onClick={() => addMessage(stepIdx)} data-testid={`button-chatflow-add-msg-${stepIdx}`}><Plus className="w-3 h-3" /> Add Message</Button>
-                    </div>
+      {/* ── JSON reference (collapsible) ── */}
+      <div>
+        <button
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          onClick={() => setShowReference(r => !r)}
+          data-testid={`button-chatflow-reference-toggle-${index}`}
+        >
+          {showReference ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          Schema reference
+        </button>
+        {showReference && (
+          <div className="mt-2 p-3 bg-muted/40 rounded text-xs font-mono leading-relaxed text-muted-foreground whitespace-pre overflow-x-auto">{`Step types:
+  narrator       → content or messages[], no input
+  single_select  → question, options [{id, text}], variable, allow_other
+  open_text      → question, variable, required
+  final          → content or messages[], no input, ends flow
 
-                    {/* Input Type */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-muted-foreground">Input Type</label>
-                      <Select
-                        value={step.inputType || ""}
-                        onValueChange={val => updateStep(stepIdx, {
-                          inputType: val as ChatFlowStepEditor["inputType"],
-                          options: val === "single_select" || val === "multi_select" ? (step.options.length ? step.options : [{ label: "", value: "" }]) : [],
-                        })}
-                      >
-                        <SelectTrigger className="h-8 text-xs" data-testid={`select-chatflow-input-type-${stepIdx}`}><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(INPUT_TYPE_LABELS).map(([v, l]) => (
-                            <SelectItem key={v} value={v || "message_only"}>{l}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+Rich features:
+  branch_reflections: { "optionId": "text shown after answer" }
+  branches:           { "optionId": [ ...sub-steps ] }
+  dynamic_reflection: { "template": "You said {variable}" }
+  allow_other:        true  (shows free-text field alongside options)
 
-                    {/* Variable Name */}
-                    {step.inputType && step.inputType !== "message_only" && (
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">Variable Name <span className="text-muted-foreground/60">(use in summary as {"{{variable_name}}"})</span></label>
-                        <Input value={step.variableName} onChange={e => updateStep(stepIdx, { variableName: e.target.value.replace(/[^a-z0-9_]/g, "_") })} placeholder="e.g. wound_type" className="h-8 text-xs" data-testid={`input-chatflow-var-${stepIdx}`} />
-                      </div>
-                    )}
+Template tokens:
+  {variable}   or  {{variable}}  (both work in summaryTemplate & dynamic_reflection)
 
-                    {/* Required toggle */}
-                    {step.inputType && step.inputType !== "message_only" && (
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" checked={step.required} onChange={e => updateStep(stepIdx, { required: e.target.checked })} id={`chatflow-req-${stepIdx}`} data-testid={`checkbox-chatflow-required-${stepIdx}`} />
-                        <label htmlFor={`chatflow-req-${stepIdx}`} className="text-xs text-muted-foreground cursor-pointer">Required (disable Continue until answered)</label>
-                      </div>
-                    )}
-
-                    {/* Inline Options */}
-                    {needsOptions && (
-                      <div className="space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Inline Options <span className="text-muted-foreground/60">(or use Dynamic Option Set below)</span></label>
-                        {step.options.map((opt, optIdx) => (
-                          <div key={optIdx} className="flex gap-1 items-center">
-                            <Input value={opt.label} onChange={e => updateOption(stepIdx, optIdx, "label", e.target.value)} placeholder="Label (shown to user)" className="h-7 text-xs flex-1" data-testid={`input-chatflow-opt-label-${stepIdx}-${optIdx}`} />
-                            <Input value={opt.value} onChange={e => updateOption(stepIdx, optIdx, "value", e.target.value.replace(/[^a-z0-9_]/g, "_"))} placeholder="value" className="h-7 text-xs w-28" data-testid={`input-chatflow-opt-value-${stepIdx}-${optIdx}`} />
-                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeOption(stepIdx, optIdx)} data-testid={`button-chatflow-remove-opt-${stepIdx}-${optIdx}`}><Trash2 className="w-3 h-3 text-destructive" /></Button>
-                          </div>
-                        ))}
-                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addOption(stepIdx)} data-testid={`button-chatflow-add-opt-${stepIdx}`}><Plus className="w-3 h-3" /> Add Option</Button>
-                      </div>
-                    )}
-
-                    {/* Dynamic Option Set (optionSetVar + optionSetMap) */}
-                    {usesDynOptions && (
-                      <div className="space-y-2 border rounded p-2 bg-muted/10">
-                        <label className="text-xs font-semibold text-muted-foreground">Dynamic Option Set</label>
-                        <p className="text-xs text-muted-foreground/70">Select options based on a previously answered variable's value.</p>
-                        <div className="space-y-1">
-                          <label className="text-xs text-muted-foreground">Source Variable (whose answer picks the set)</label>
-                          <Select value={step.optionSetVar || "__none__"} onValueChange={val => { const v = val === "__none__" ? "" : val; updateStep(stepIdx, { optionSetVar: v, optionSetMap: v ? step.optionSetMap : [] }); }}>
-                            <SelectTrigger className="h-7 text-xs" data-testid={`select-chatflow-osvar-${stepIdx}`}><SelectValue placeholder="(none)" /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="__none__">None</SelectItem>
-                              {allVarNames.filter(v => v !== step.variableName).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        {step.optionSetVar && (
-                          <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Mapping: answer value → option set name</label>
-                            {step.optionSetMap.map((entry, entryIdx) => (
-                              <div key={entryIdx} className="flex gap-1 items-center">
-                                <Input value={entry.sourceValue} onChange={e => updateSetMapEntry(stepIdx, entryIdx, "sourceValue", e.target.value)} placeholder="answer value (e.g. anxiety)" className="h-7 text-xs flex-1" data-testid={`input-chatflow-osmap-src-${stepIdx}-${entryIdx}`} />
-                                <span className="text-xs text-muted-foreground">→</span>
-                                <Select value={entry.setName || ""} onValueChange={val => updateSetMapEntry(stepIdx, entryIdx, "setName", val)}>
-                                  <SelectTrigger className="h-7 text-xs flex-1" data-testid={`select-chatflow-osmap-set-${stepIdx}-${entryIdx}`}><SelectValue placeholder="set name" /></SelectTrigger>
-                                  <SelectContent>
-                                    {allSetNames.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeSetMapEntry(stepIdx, entryIdx)}><X className="w-3 h-3 text-muted-foreground" /></Button>
-                              </div>
-                            ))}
-                            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addSetMapEntry(stepIdx)} data-testid={`button-chatflow-add-osmap-${stepIdx}`}><Plus className="w-3 h-3" /> Add Mapping</Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Branch Conditions */}
-                    <div className="space-y-2 border rounded p-2 bg-muted/10">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-muted-foreground">Branch Conditions</label>
-                        <Button variant="outline" size="sm" className="h-6 text-xs gap-1" onClick={() => addBranch(stepIdx)} data-testid={`button-chatflow-add-branch-${stepIdx}`}><Plus className="w-3 h-3" /> Add Branch</Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground/70">Evaluated in order after this step. First match wins; falls through to next step if none match.</p>
-                      {step.branches.length === 0 && <p className="text-xs text-muted-foreground italic">No branches — always goes to next step.</p>}
-                      {step.branches.map((branch, branchIdx) => (
-                        <div key={branchIdx} className="flex flex-col gap-1 border rounded p-2 bg-background">
-                          <div className="flex gap-1 items-center">
-                            <span className="text-xs text-muted-foreground w-4 shrink-0">If</span>
-                            <Select value={branch.variableName || ""} onValueChange={val => updateBranch(stepIdx, branchIdx, { variableName: val })}>
-                              <SelectTrigger className="h-7 text-xs flex-1" data-testid={`select-chatflow-branch-var-${stepIdx}-${branchIdx}`}><SelectValue placeholder="variable" /></SelectTrigger>
-                              <SelectContent>
-                                {allVarNames.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                            <Select value={branch.operator} onValueChange={val => updateBranch(stepIdx, branchIdx, { operator: val as ChatFlowBranchEditor["operator"] })}>
-                              <SelectTrigger className="h-7 text-xs w-28" data-testid={`select-chatflow-branch-op-${stepIdx}-${branchIdx}`}><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="equals">equals</SelectItem>
-                                <SelectItem value="not_equals">not equals</SelectItem>
-                                <SelectItem value="contains">contains</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Input value={branch.value} onChange={e => updateBranch(stepIdx, branchIdx, { value: e.target.value })} placeholder="value" className="h-7 text-xs flex-1" data-testid={`input-chatflow-branch-val-${stepIdx}-${branchIdx}`} />
-                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeBranch(stepIdx, branchIdx)}><X className="w-3 h-3 text-muted-foreground" /></Button>
-                          </div>
-                          <div className="flex gap-1 items-center pl-4">
-                            <span className="text-xs text-muted-foreground w-10 shrink-0">→ go to</span>
-                            <Select value={branch.targetStepId || ""} onValueChange={val => updateBranch(stepIdx, branchIdx, { targetStepId: val })}>
-                              <SelectTrigger className="h-7 text-xs flex-1" data-testid={`select-chatflow-branch-target-${stepIdx}-${branchIdx}`}><SelectValue placeholder="target step" /></SelectTrigger>
-                              <SelectContent>
-                                {allStepIds.filter(s => s.id !== step.id).map(s => (
-                                  <SelectItem key={s.id} value={s.id}>{s.label || s.id}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <Button variant="outline" size="sm" className="gap-1 w-full" onClick={addStep} data-testid={`button-chatflow-add-step-${index}`}><Plus className="w-3 h-3" /> Add Step</Button>
-        </div>
-      )}
-
-      {/* ===== OPTION SETS SECTION ===== */}
-      {expandedSection === "optionSets" && (
-        <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">Define reusable option sets here. Reference them in steps via "Dynamic Option Set".</p>
-          {data.optionSets.length === 0 && <p className="text-sm text-muted-foreground italic">No option sets yet.</p>}
-          {data.optionSets.map((set, setIdx) => (
-            <div key={setIdx} className="border rounded-lg bg-muted/20 p-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <Input value={set.name} onChange={e => updateOptionSet(setIdx, { name: e.target.value.replace(/[^a-z0-9_]/g, "_") })} placeholder="set_name (e.g. anxiety_options)" className="h-8 text-xs flex-1 font-mono" data-testid={`input-chatflow-setname-${setIdx}`} />
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeOptionSet(setIdx)} data-testid={`button-chatflow-remove-set-${setIdx}`}><Trash2 className="w-3 h-3 text-destructive" /></Button>
-              </div>
-              <div className="space-y-1 pl-2">
-                <label className="text-xs text-muted-foreground">Options</label>
-                {set.options.map((opt, optIdx) => (
-                  <div key={optIdx} className="flex gap-1 items-center">
-                    <Input value={opt.label} onChange={e => updateOptionSetOption(setIdx, optIdx, "label", e.target.value)} placeholder="Label" className="h-7 text-xs flex-1" data-testid={`input-chatflow-setoption-label-${setIdx}-${optIdx}`} />
-                    <Input value={opt.value} onChange={e => updateOptionSetOption(setIdx, optIdx, "value", e.target.value.replace(/[^a-z0-9_]/g, "_"))} placeholder="value" className="h-7 text-xs w-28" data-testid={`input-chatflow-setoption-value-${setIdx}-${optIdx}`} />
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeOptionSetOption(setIdx, optIdx)}><X className="w-3 h-3 text-muted-foreground" /></Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addOptionSetOption(setIdx)} data-testid={`button-chatflow-add-setoption-${setIdx}`}><Plus className="w-3 h-3" /> Add Option</Button>
-              </div>
-            </div>
-          ))}
-          <Button variant="outline" size="sm" className="gap-1 w-full" onClick={addOptionSet} data-testid={`button-chatflow-add-set-${index}`}><Plus className="w-3 h-3" /> Add Option Set</Button>
-        </div>
-      )}
-
-      {/* ===== SUMMARY SECTION ===== */}
-      {expandedSection === "summary" && (
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-muted-foreground">Summary Template</label>
-          <p className="text-xs text-muted-foreground">Use {"{{variable_name}}"} tokens. Clauses containing empty tokens are automatically hidden from the user.</p>
-          <p className="text-xs text-muted-foreground/60">Available variables: {allVarNames.length > 0 ? allVarNames.map(v => `{{${v}}}`).join(", ") : "(none defined yet)"}</p>
-          <Textarea
-            value={data.summaryTemplate}
-            onChange={e => update({ ...data, summaryTemplate: e.target.value })}
-            rows={6}
-            placeholder="I am carrying {{wound_type}}. The lie I believe: {{core_lie}}."
-            className="text-sm"
-            data-testid={`textarea-chatflow-summary-${index}`}
-          />
-          {data.summaryTemplate && (
-            <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2 italic">
-              Preview: {data.summaryTemplate.replace(/\{\{(\w+)\}\}/g, (_, key) => `[${key}]`)}
-            </div>
-          )}
-        </div>
-      )}
+Legacy schema (inputType) also accepted for backward compatibility.`}</div>
+        )}
+      </div>
     </div>
   );
 }
