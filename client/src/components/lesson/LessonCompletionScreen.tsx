@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight, X, Trophy } from "lucide-react";
 import { playLessonComplete } from "@/lib/sounds";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
+import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
 
 interface LessonCompletionScreenProps {
   dayNumber: number;
@@ -71,7 +72,7 @@ export function LessonCompletionScreen({
           <ArrowLeft className="w-4 h-4 text-white" />
         </FrostedButton>
 
-        {/* Center: pill */}
+        {/* Center: pill — Figma: bg-[#202020] px-16 py-12 rounded-36 "COMPLETE" */}
         <div
           className="flex items-center justify-center"
           style={{
@@ -85,16 +86,10 @@ export function LessonCompletionScreen({
           }}
         >
           <span
-            className="font-['Afacad'] font-medium whitespace-nowrap uppercase"
+            className="font-['Afacad'] font-medium whitespace-nowrap"
             style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
           >
-            {pillLabel}
-          </span>
-          <span
-            className="font-['Afacad'] font-normal whitespace-nowrap"
-            style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
-          >
-            Complete
+            COMPLETE
           </span>
         </div>
 
@@ -193,19 +188,16 @@ export function LessonCompletionScreen({
                 Lesson Complete
               </p>
 
-              {/* Stars decoration — h-[14.352px] w-[151.845px] */}
+              {/* Ornamental divider — Figma: h-[14.352px] w-[151.845px] */}
               <div
-                className="flex items-center justify-between shrink-0"
+                className="shrink-0 flex items-center justify-center"
                 style={{ height: "14.352px", width: "151.845px" }}
               >
-                {[...Array(5)].map((_, i) => (
-                  <span
-                    key={i}
-                    style={{ color: "#F07830", fontSize: "9px", lineHeight: 1 }}
-                  >
-                    ★
-                  </span>
-                ))}
+                <img
+                  src={crossDividerImg}
+                  alt=""
+                  style={{ width: "100%", height: "auto", opacity: 0.4, display: "block" }}
+                />
               </div>
 
               {/* Subtitle — day theme */}

@@ -1,6 +1,6 @@
 import answerCorrectUrl from "@assets/Answer_Correct_1772555574960.wav";
 import wrongAnswerUrl from "@assets/Wrong_Answer_1772557340180.wav";
-import lessonCompleteUrl from "@assets/Lesson_Complete_1772555574975.wav";
+import lessonCompleteUrl from "@assets/Completionn_1774245079856.mp3";
 import clickContinueUrl from "@assets/Click_Continue_1772555574975.wav";
 import timerCompleteUrl from "@assets/Unrealsfx_-_Building_Game_UI_-_Pop_Up_Message_Inviting_1772562554662.wav";
 import sendMessageUrl from "@assets/Sending_a_Message_1772567972547.wav";
