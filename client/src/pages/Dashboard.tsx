@@ -230,7 +230,8 @@ export default function Dashboard() {
   }
 
   // Once prelims are done, wait for Day 0 agreement check before rendering program
-  if (allPrelimsComplete && day0Loading) {
+  // Only block on day0Loading if we don't already have day0Data cached
+  if (allPrelimsComplete && day0Loading && !day0Data) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
@@ -299,11 +300,8 @@ export default function Dashboard() {
   };
 
   const handlePrelimComplete = (position: number) => {
-    completePrelimMutation.mutate(position, {
-      onSettled: () => {
-        setViewMode("grid");
-      },
-    });
+    setViewMode("grid");
+    completePrelimMutation.mutate(position);
   };
 
   const handlePrelimExit = () => {

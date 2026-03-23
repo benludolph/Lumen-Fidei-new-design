@@ -57,7 +57,7 @@ export function LessonCompletionScreen({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-[#111]"
+      className="fixed inset-0 z-[220] flex flex-col bg-[#111]"
       data-testid="lesson-completion-screen"
       style={{ paddingTop: "24px" }}
     >
