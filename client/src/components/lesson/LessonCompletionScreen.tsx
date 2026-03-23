@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, X, Trophy } from "lucide-react";
 import { playLessonComplete } from "@/lib/sounds";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
 
@@ -98,8 +98,8 @@ export function LessonCompletionScreen({
           </span>
         </div>
 
-        {/* Right: Exit / Continue */}
-        <FrostedButton onClick={onContinue} testId="button-completion-continue">
+        {/* Right: X exit */}
+        <FrostedButton onClick={onContinue} testId="button-completion-exit">
           <X className="w-4 h-4 text-white" />
         </FrostedButton>
       </div>
@@ -131,9 +131,12 @@ export function LessonCompletionScreen({
         </div>
 
         {/* Centered completion card */}
-        <div className="flex-1 flex items-center justify-center relative" style={{ padding: "24px" }}>
+        <div
+          className="flex-1 flex items-center justify-center relative overflow-auto"
+          style={{ paddingTop: "64px", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "24px" }}
+        >
           <div
-            className="relative overflow-hidden flex flex-col items-center gap-8 w-full"
+            className="relative overflow-hidden flex flex-col items-center w-full"
             style={{
               maxWidth: "528px",
               background: "#0f1116",
@@ -143,6 +146,7 @@ export function LessonCompletionScreen({
               paddingBottom: "64px",
               paddingLeft: "12px",
               paddingRight: "12px",
+              gap: "32px",
               transition: "opacity 700ms ease, transform 700ms ease",
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(16px)",
@@ -162,35 +166,38 @@ export function LessonCompletionScreen({
               }}
             />
 
-            {/* Icon */}
+            {/* Icon — Trophy in frosted glass box */}
             <div
               className="flex items-center justify-center shrink-0"
               style={{
-                width: "35px",
-                height: "35px",
+                width: "35.007px",
+                height: "35.007px",
                 background: "rgba(255,255,255,0.05)",
                 borderRadius: "5.835px",
                 boxShadow: "0px 1.459px 2.917px 0px rgba(0,0,0,0.1)",
               }}
             >
-              <CheckCircle2
+              <Trophy
                 className="text-white/60"
-                style={{ width: "18px", height: "18px" }}
+                style={{ width: "19.476px", height: "19.476px" }}
               />
             </div>
 
             {/* Text group */}
-            <div className="flex flex-col items-center gap-6">
-              {/* Heading */}
+            <div className="flex flex-col items-center" style={{ gap: "24px" }}>
+              {/* Heading — NOT italic per Figma */}
               <p
-                className="font-['IvyOra_Display'] text-[#f7f8f8] text-center"
-                style={{ fontSize: "24px", lineHeight: 1, fontStyle: "italic" }}
+                className="font-['IvyOra_Display'] text-[#f7f8f8] text-center whitespace-nowrap"
+                style={{ fontSize: "24px", lineHeight: 1, fontStyle: "normal" }}
               >
                 Lesson Complete
               </p>
 
-              {/* Stars decoration */}
-              <div className="flex items-center" style={{ gap: "20px", height: "14px" }}>
+              {/* Stars decoration — h-[14.352px] w-[151.845px] */}
+              <div
+                className="flex items-center justify-between shrink-0"
+                style={{ height: "14.352px", width: "151.845px" }}
+              >
                 {[...Array(5)].map((_, i) => (
                   <span
                     key={i}
@@ -201,19 +208,53 @@ export function LessonCompletionScreen({
                 ))}
               </div>
 
-              {/* Subtitle */}
-              {theme && (
-                <p
-                  className="font-['Afacad'] text-[#8a8f98] text-center"
-                  style={{ fontSize: "13px", lineHeight: "16px" }}
-                >
-                  {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}
-                  {theme}
-                </p>
-              )}
+              {/* Subtitle — day theme */}
+              <p
+                className="font-['Afacad'] font-normal text-[#8a8f98] text-center whitespace-nowrap"
+                style={{ fontSize: "10px", lineHeight: "10.223px" }}
+              >
+                {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}
+                {theme || "Lorem ipsum"}
+              </p>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Bottom bar — bg-[#0f1116], border-t, Continue button right-aligned ── */}
+      <div
+        className="shrink-0 flex flex-col items-end justify-center w-full"
+        style={{
+          background: "#0f1116",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          paddingTop: "32px",
+          paddingBottom: "32px",
+          paddingRight: "53px",
+          paddingLeft: "53px",
+        }}
+      >
+        <button
+          onClick={onContinue}
+          className="flex items-center justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+          style={{
+            background: "#18181b",
+            height: "36px",
+            gap: "8px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "8px",
+            paddingBottom: "8px",
+            borderRadius: "6px",
+            fontSize: "14px",
+            lineHeight: "20px",
+            boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
+            whiteSpace: "nowrap",
+          }}
+          data-testid="button-completion-continue"
+        >
+          Continue
+          <ArrowRight style={{ width: "16px", height: "16px" }} />
+        </button>
       </div>
     </div>
   );
