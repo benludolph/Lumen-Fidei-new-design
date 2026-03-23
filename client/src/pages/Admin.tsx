@@ -2064,13 +2064,119 @@ const INPUT_TYPE_LABELS: Record<string, string> = {
   text_input: "Text Input",
 };
 
+// ── Simplified JSON → internal editor format converter ──────────────────────
+function labelToSlug(label: string): string {
+  return label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || label;
+}
+
+function importSimplifiedStep(s: any, i: number): ChatFlowStepEditor {
+  const id = s.id || `step_${i + 1}`;
+  const messages: string[] = Array.isArray(s.messages) ? s.messages.map(String) : [String(s.message || "")];
+  const inp = "input" in s ? s.input : null; // simplified uses `input`
+
+  let inputType: ChatFlowStepEditor["inputType"] = undefined;
+  let options: ChatFlowOptionEditor[] = [];
+  let variableName = "";
+  let required = false;
+
+  if (inp) {
+    const rawType: string = (inp.type || "").toLowerCase();
+    if (rawType === "text" || rawType === "text_input") {
+      inputType = "text_input";
+    } else if (rawType === "single_select" || rawType === "single_select_with_other") {
+      inputType = "single_select";
+      options = (Array.isArray(inp.options) ? inp.options : []).map((o: any) => {
+        if (typeof o === "string") return { label: o, value: labelToSlug(o) };
+        return { label: String(o.label ?? o.value ?? ""), value: String(o.value ?? labelToSlug(o.label ?? "")) };
+      });
+      if (rawType === "single_select_with_other" && !options.find(o => o.value === "other")) {
+        options.push({ label: "Other", value: "other" });
+      }
+    } else if (rawType === "multi_select") {
+      inputType = "multi_select";
+      options = (Array.isArray(inp.options) ? inp.options : []).map((o: any) => {
+        if (typeof o === "string") return { label: o, value: labelToSlug(o) };
+        return { label: String(o.label ?? o.value ?? ""), value: String(o.value ?? labelToSlug(o.label ?? "")) };
+      });
+    } else if (rawType === "message_only") {
+      inputType = "message_only";
+    }
+    variableName = inp.variable || inp.variableName || "";
+    required = !!inp.required;
+  }
+
+  const branches: ChatFlowBranchEditor[] = Array.isArray(s.branches)
+    ? s.branches.map((b: any) => ({
+        variableName: b.variableName || b.variable || "",
+        operator: (b.operator || "equals") as ChatFlowBranchEditor["operator"],
+        value: b.value || "",
+        targetStepId: b.targetStepId || b.target || "",
+      }))
+    : [];
+
+  return { id, messages, inputType, variableName, required, options, optionSetVar: "", optionSetMap: [], branches };
+}
+
+function importJsonToEditorData(raw: string): Omit<ChatFlowEditorData, "showJson"> {
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object") throw new Error("Expected a JSON object at the top level.");
+  if (!Array.isArray(parsed.steps)) throw new Error("Missing 'steps' array.");
+
+  // Detect format: simplified uses `input` key; native uses `inputType`
+  const isSimplified = parsed.steps.length === 0 || parsed.steps.some((s: any) => "input" in s);
+  if (isSimplified) {
+    return {
+      steps: parsed.steps.map(importSimplifiedStep),
+      optionSets: [],
+      summaryTemplate: parsed.summaryTemplate || "",
+    };
+  }
+  // Native internal format — existing parser handles it
+  return parseChatFlowEditorData(raw);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 function ChatFlowSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   const [showJson, setShowJson] = useState(false);
   const [expandedStep, setExpandedStep] = useState<number | null>(0);
   const [expandedSection, setExpandedSection] = useState<"steps" | "optionSets" | "summary">("steps");
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [exportCopied, setExportCopied] = useState(false);
+  const { toast } = useToast();
 
   const data = parseChatFlowEditorData(content);
   const update = (next: Omit<ChatFlowEditorData, "showJson">) => onChange(serializeChatFlowEditorData(next));
+
+  const handleImport = () => {
+    setImportError(null);
+    try {
+      if (!importText.trim()) throw new Error("Paste your JSON first.");
+      const editorData = importJsonToEditorData(importText.trim());
+      onChange(serializeChatFlowEditorData(editorData));
+      setShowImportModal(false);
+      setImportText("");
+      setExpandedSection("steps");
+      setExpandedStep(editorData.steps.length > 0 ? 0 : null);
+      toast({ title: `Imported ${editorData.steps.length} steps successfully.` });
+    } catch (err: any) {
+      setImportError(err.message || "Failed to parse JSON.");
+    }
+  };
+
+  const handleExport = () => {
+    try {
+      const pretty = JSON.stringify(JSON.parse(content || "{}"), null, 2);
+      navigator.clipboard.writeText(pretty).then(() => {
+        setExportCopied(true);
+        setTimeout(() => setExportCopied(false), 2000);
+      });
+    } catch {
+      toast({ title: "Export failed", description: "Could not copy JSON.", variant: "destructive" });
+    }
+  };
   const updateStep = (stepIdx: number, patch: Partial<ChatFlowStepEditor>) => {
     const steps = data.steps.map((s, i) => i === stepIdx ? { ...s, ...patch } : s);
     update({ ...data, steps });
@@ -2165,7 +2271,10 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
       <div className="space-y-2" data-testid={`chatflow-editor-json-${index}`}>
         <div className="flex items-center justify-between">
           <label className="text-xs font-medium text-muted-foreground">JSON (advanced)</label>
-          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(false)}>Visual Editor</Button>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => { setShowImportModal(true); setShowJson(false); }} data-testid={`button-chatflow-import-json-${index}`}>Import JSON</Button>
+            <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(false)}>Visual Editor</Button>
+          </div>
         </div>
         <Textarea value={content} onChange={e => onChange(e.target.value)} rows={20} className="font-mono text-xs" data-testid={`textarea-chatflow-json-${index}`} />
       </div>
@@ -2174,6 +2283,51 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
 
   return (
     <div className="space-y-4" data-testid={`chatflow-editor-${index}`}>
+      {/* ── Import JSON modal ─────────────────────────────────────────────── */}
+      <Dialog open={showImportModal} onOpenChange={open => { setShowImportModal(open); if (!open) { setImportError(null); } }}>
+        <DialogContent className="max-w-2xl" data-testid={`chatflow-import-modal-${index}`}>
+          <DialogHeader>
+            <DialogTitle>Import JSON Flow</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Paste a JSON object with a <code className="bg-muted px-1 rounded">steps</code> array.
+              Accepts both the simplified format (<code className="bg-muted px-1 rounded">input</code> key) and the native internal format (<code className="bg-muted px-1 rounded">inputType</code> key).
+              Importing will <span className="text-destructive font-medium">replace</span> all current steps.
+            </p>
+            <div className="text-xs text-muted-foreground bg-muted rounded p-2 font-mono leading-relaxed whitespace-pre">{`{
+  "steps": [
+    { "id": "step_1", "messages": ["Hello!"], "input": null },
+    {
+      "id": "step_2",
+      "messages": ["Pick one:"],
+      "input": { "type": "single_select", "options": ["A", "B"], "variable": "choice" }
+    },
+    { "id": "step_3", "messages": ["Tell me more:"], "input": { "type": "text", "variable": "details" } }
+  ],
+  "summaryTemplate": "You chose {{choice}}. Details: {{details}}"
+}`}</div>
+            <Textarea
+              value={importText}
+              onChange={e => { setImportText(e.target.value); setImportError(null); }}
+              rows={12}
+              placeholder='{ "steps": [ ... ] }'
+              className="font-mono text-xs"
+              data-testid={`textarea-chatflow-import-${index}`}
+            />
+            {importError && (
+              <p className="text-xs text-destructive flex items-center gap-1" data-testid={`text-chatflow-import-error-${index}`}>
+                <AlertTriangle className="w-3 h-3 shrink-0" /> {importError}
+              </p>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="outline" size="sm" onClick={() => { setShowImportModal(false); setImportError(null); }} data-testid={`button-chatflow-import-cancel-${index}`}>Cancel</Button>
+            <Button size="sm" onClick={handleImport} data-testid={`button-chatflow-import-confirm-${index}`}>Import & Replace Steps</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Section tabs */}
       <div className="flex items-center gap-1 border-b">
         {(["steps", "optionSets", "summary"] as const).map(sec => (
@@ -2186,8 +2340,12 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
             {sec === "steps" ? `Steps (${data.steps.length})` : sec === "optionSets" ? `Option Sets (${data.optionSets.length})` : "Summary"}
           </button>
         ))}
-        <div className="ml-auto">
-          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(true)}>JSON</Button>
+        <div className="ml-auto flex items-center gap-1">
+          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={handleExport} data-testid={`button-chatflow-export-${index}`}>
+            {exportCopied ? "Copied!" : "Export JSON"}
+          </Button>
+          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowImportModal(true)} data-testid={`button-chatflow-import-${index}`}>Import JSON</Button>
+          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(true)}>Raw JSON</Button>
         </div>
       </div>
 
