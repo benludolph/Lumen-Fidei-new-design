@@ -120,6 +120,14 @@ function renderSummaryTemplate(
 }
 
 // ============================================================
+// Timing helpers
+// ============================================================
+
+/** Random float in [min, max) — used to give each interaction a slightly
+ *  different rhythm so the conversation never feels robotic. */
+const rand = (min: number, max: number) => min + Math.random() * (max - min);
+
+// ============================================================
 // Typing indicator
 // ============================================================
 
@@ -165,9 +173,10 @@ function MessageBubble({
       className={cn(
         "flex items-center gap-[10px]",
         role === "system" ? "justify-start" : "justify-end",
-        "transition-all duration-150 ease-out",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+        "transition-all ease-out",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-[10px]"
       )}
+      style={{ transitionDuration: "180ms" }}
     >
       {/* Rewind icon — left of user bubbles only */}
       {role === "user" && onRewind && (
@@ -268,6 +277,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [loadedFromServer, setLoadedFromServer] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set to true to cancel any in-flight reveal chain when the step changes or rewinds
+  const revealCancelRef = useRef(false);
   // When navigating back from summary, skip re-revealing messages (they're already shown)
   const skipRevealRef = useRef(false);
 
@@ -305,22 +316,44 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     return [];
   }, [answers, flow.optionSets]);
 
-  // Reveal messages for a step sequentially with 300–800ms timing
+  /**
+   * Reveal messages for a step with natural conversational pacing:
+   *  - Typing indicator:      700–1100ms (randomized per message)
+   *  - Between messages:      300–500ms stagger
+   *  - Input reveal delay:    300–500ms after final message
+   *
+   * Uses revealCancelRef so any stale chain is immediately abandoned when the
+   * step changes (e.g. rewind or fast navigation).
+   */
   const revealMessagesForStep = useCallback((stepIdx: number, messageStartId: number) => {
     const step = flow.steps[stepIdx];
     if (!step) return;
     const messages = step.messages || [];
 
+    revealCancelRef.current = false;
+
+    const schedule = (fn: () => void, ms: number) => {
+      revealTimer.current = setTimeout(() => {
+        if (revealCancelRef.current) return;
+        fn();
+      }, ms);
+    };
+
     const reveal = (msgIdx: number) => {
+      if (revealCancelRef.current) return;
+
       if (msgIdx >= messages.length) {
-        setShowTyping(false);
-        setInputReady(true);
+        // All messages shown — wait before revealing input controls
+        schedule(() => {
+          setShowTyping(false);
+          setInputReady(true);
+        }, rand(300, 500));
         return;
       }
+
+      // Show typing indicator, then swap in the actual message
       setShowTyping(true);
-      // 300ms base + up to 500ms for longer messages = 300-800ms total
-      const delay = 300 + Math.min(messages[msgIdx].length * 15, 500);
-      revealTimer.current = setTimeout(() => {
+      schedule(() => {
         setShowTyping(false);
         setRenderedMessages(prev => [
           ...prev,
@@ -331,9 +364,9 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             stepId: step.id,
           },
         ]);
-        // Brief pause between messages (150ms) before starting next reveal
-        revealTimer.current = setTimeout(() => reveal(msgIdx + 1), 150);
-      }, delay);
+        // Pause between consecutive messages before next typing indicator
+        schedule(() => reveal(msgIdx + 1), rand(300, 500));
+      }, rand(700, 1100));
     };
 
     reveal(0);
@@ -370,6 +403,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     revealMessagesForStep(currentStepIdx, messageStartId);
 
     return () => {
+      revealCancelRef.current = true;
       if (revealTimer.current) clearTimeout(revealTimer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -390,42 +424,37 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   }, [contextKey]);
 
   /**
-   * Advance to the next step.
-   * @param value - the canonical VALUE to store (option.value or trimmed text or "")
-   * @param displayText - the human-readable text to show in the user bubble
+   * Advance to the next step with natural conversational pacing:
+   *  1. Hide input immediately (no lag after tap)
+   *  2. 150–250ms  → render user bubble (fade-in)
+   *  3. 400–700ms  → start the system response (typing indicator)
+   *
+   * @param value       - canonical VALUE to store (option.value / trimmed text / "")
+   * @param displayText - human-readable label shown in the user bubble
    */
-  const advanceToNext = useCallback(async (value: string, displayText: string) => {
+  const advanceToNext = useCallback((value: string, displayText: string) => {
     const step = currentStep;
     if (!step) return;
 
-    // Save VALUE to answers/API
-    if (step.variableName) {
-      await saveAnswer(step.variableName, value);
-    }
+    // Fire-and-forget — don't await so delays below start immediately
+    if (step.variableName) saveAnswer(step.variableName, value);
 
-    // Show user bubble with display text (only if there's something to show)
-    if (displayText) {
-      setRenderedMessages(prev => [
-        ...prev,
-        {
-          id: `user-${Date.now()}`,
-          role: "user",
-          text: displayText,
-          stepId: step.id,
-        },
-      ]);
-    }
-
+    // Lock input right away so the user can't double-submit
     setInputReady(false);
     setSelectedOptions([]);
     setTextInput("");
 
-    // Evaluate branches using canonical VALUES
-    const updatedAnswers = step.variableName ? { ...answers, [step.variableName]: value } : answers;
+    // Evaluate branches synchronously before any async work
+    const updatedAnswers = step.variableName
+      ? { ...answers, [step.variableName]: value }
+      : answers;
     let nextIdx = currentStepIdx + 1;
     if (step.branches && step.branches.length > 0) {
       for (const branch of step.branches) {
-        const varVal = branch.variableName === step.variableName ? value : (updatedAnswers[branch.variableName] || "");
+        const varVal =
+          branch.variableName === step.variableName
+            ? value
+            : (updatedAnswers[branch.variableName] || "");
         let matches = false;
         if (branch.operator === "equals") matches = varVal === branch.value;
         else if (branch.operator === "not_equals") matches = varVal !== branch.value;
@@ -437,13 +466,44 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       }
     }
 
-    if (nextIdx >= flow.steps.length) {
-      setFlowComplete(true);
-      return;
-    }
+    const willComplete = nextIdx >= flow.steps.length;
+    const capturedStepIdx = currentStepIdx;
 
-    setHistory(prev => [...prev, currentStepIdx]);
-    setCurrentStepIdx(nextIdx);
+    // Cancel any stale reveal chain before we start the timer sequence
+    revealCancelRef.current = true;
+    if (revealTimer.current) clearTimeout(revealTimer.current);
+
+    const userBubbleDelay = rand(150, 250);
+    const preResponseDelay = rand(400, 700);
+
+    const doAdvance = () => {
+      if (willComplete) {
+        setFlowComplete(true);
+      } else {
+        setHistory(prev => [...prev, capturedStepIdx]);
+        setCurrentStepIdx(nextIdx);
+      }
+    };
+
+    if (displayText) {
+      // Step 1: show user bubble after short delay
+      revealTimer.current = setTimeout(() => {
+        setRenderedMessages(prev => [
+          ...prev,
+          {
+            id: `user-${Date.now()}`,
+            role: "user",
+            text: displayText,
+            stepId: step.id,
+          },
+        ]);
+        // Step 2: wait pre-response pause, then show system response
+        revealTimer.current = setTimeout(doAdvance, preResponseDelay);
+      }, userBubbleDelay);
+    } else {
+      // No bubble — just wait the pre-response pause
+      revealTimer.current = setTimeout(doAdvance, preResponseDelay);
+    }
   }, [currentStep, currentStepIdx, answers, flow.steps, saveAnswer]);
 
   // Handle message_only continue
@@ -492,6 +552,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       const s = flow.steps.find(st => st.id === sid);
       if (s?.variableName) clearAnswer(s.variableName);
     }
+
+    // Cancel any in-flight reveal / advance timers
+    revealCancelRef.current = true;
+    if (revealTimer.current) clearTimeout(revealTimer.current);
 
     // Truncate rendered messages
     setRenderedMessages(prev => firstMsgIdx >= 0 ? prev.slice(0, firstMsgIdx) : []);
