@@ -1056,148 +1056,210 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         </div>
       </div>
 
-      {/* ── Reflection Review Card (return visit) ──
-          Shown when the user navigates back to an already-completed flow.
-          Matches the Figma "completed" state: bg card + reflection text + redo. */}
+      {/* ── Reflection Review Card (return visit) — Figma node 3097:13688 ── */}
       {flowComplete && isRestoredFlow && (
         <div
           className="fixed inset-0 flex flex-col"
           style={{ zIndex: 500, background: "#111", animation: "rp-overlay-in 0.35s ease-out both" }}
         >
-          {/* Oil-painting background at 60% opacity */}
-          <img
-            src={candleBg}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style={{ opacity: 0.6 }}
-          />
-          {/* Gradient overlay — left/right fade as per Figma */}
+          {/* ── Top bar (Figma: 3097:13716) ── */}
           <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(0,0,0,0) 10%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.92) 72%, rgba(0,0,0,0) 90%)",
-            }}
-          />
-          {/* Dark bottom fade for mobile readability */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.9) 100%)",
-            }}
-          />
+            className="relative shrink-0 flex items-center justify-between w-full"
+            style={{ padding: "24px 24px 24px", zIndex: 1 }}
+          >
+            {/* 42×42 spacer (matches Figma left rectangle placeholder) */}
+            <div style={{ width: "42px", height: "42px" }} />
 
-          {/* Top bar: "COMPLETE" pill + X */}
-          <div className="relative flex items-center justify-between px-6 pt-6 pb-4" style={{ zIndex: 1 }}>
-            <div style={{ width: "42px" }} />
+            {/* COMPLETE pill */}
             <div
               style={{
                 background: "#202020",
                 borderRadius: "36px",
-                padding: "10px 18px",
+                padding: "12px 16px",
                 fontFamily: "Afacad",
                 fontWeight: 500,
-                fontSize: "13px",
-                letterSpacing: "2.6px",
+                fontSize: "14px",
+                letterSpacing: "2.8px",
+                lineHeight: "18px",
                 color: "#efefef",
               }}
             >
               COMPLETE
             </div>
-            <button
-              onClick={onComplete}
-              className="flex items-center justify-center"
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "20px",
-                background: "rgba(42,42,42,0.5)",
-                backdropFilter: "blur(9px)",
-                border: "none",
-                cursor: "pointer",
-              }}
-              data-testid="button-review-close"
-            >
-              <X style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.7)" }} />
-            </button>
-          </div>
 
-          {/* Main content area — scrollable card */}
-          <div
-            className="relative flex-1 overflow-y-auto"
-            style={{ zIndex: 1, padding: "8px 16px 48px" }}
-          >
-            {/* Inner card */}
-            <div
-              style={{
-                background: "#0f1116",
-                border: "1px solid rgba(255,255,255,0.05)",
-                borderRadius: "8px",
-                padding: "22px 20px",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              {/* Orange radial gradient corner glow (Figma) */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-48px",
-                  left: "-48px",
-                  width: "160px",
-                  height: "160px",
-                  borderRadius: "80px",
-                  background: "radial-gradient(circle, rgba(240,120,48,0.12) 0%, rgba(240,120,48,0) 70%)",
-                  mixBlendMode: "lighten",
-                  pointerEvents: "none",
-                }}
-              />
-
-              {/* "YOUR REFLECTION" label */}
-              <p
-                style={{
-                  fontFamily: "Afacad",
-                  fontSize: "13px",
-                  letterSpacing: "1.3px",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.4)",
-                  marginBottom: "12px",
-                }}
-              >
-                Your Reflection
-              </p>
-
-              {/* Summary text */}
-              {summaryText && (
-                <p
-                  style={{
-                    fontFamily: "Afacad",
-                    fontSize: "15px",
-                    lineHeight: "22px",
-                    color: "rgba(255,255,255,0.85)",
-                    marginBottom: "18px",
-                  }}
-                >
-                  {summaryText}
-                </p>
-              )}
-
-              {/* Redo link */}
+            {/* Close button — 42×42 container, 40×40 blur button */}
+            <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
               <button
-                onClick={handleRedo}
+                onClick={onComplete}
+                className="flex items-center justify-center"
                 style={{
-                  fontFamily: "Afacad",
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.35)",
-                  background: "none",
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "20px",
+                  background: "rgba(42,42,42,0.5)",
+                  backdropFilter: "blur(9px)",
                   border: "none",
                   cursor: "pointer",
-                  padding: "4px 0 0",
                 }}
-                data-testid="button-redo-reflection"
+                data-testid="button-review-close"
               >
-                Redo this reflection
+                <X style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.7)" }} />
               </button>
+            </div>
+          </div>
+
+          {/* ── Main card area (Figma: 3097:13727) ── bg-[#010101], rounded top ── */}
+          <div
+            className="relative flex-1 flex flex-col min-h-0 overflow-clip"
+            style={{
+              background: "#010101",
+              borderRadius: "24px 24px 0 0",
+            }}
+          >
+            {/* Oil painting bg (Figma: opacity-60) */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ borderRadius: "24px 24px 0 0" }}>
+              <img
+                src={candleBg}
+                alt=""
+                className="absolute w-full max-w-none"
+                style={{ opacity: 0.6, top: "-8.53%", height: "117.06%", left: 0 }}
+              />
+            </div>
+            {/* Left/right gradient (Figma: 3097:13730) */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(90deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
+              }}
+            />
+
+            {/* ── Content container — centers the 640px card ── */}
+            <div
+              className="relative flex-1 flex flex-col items-center overflow-y-auto"
+              style={{ padding: "32px 24px 48px" }}
+            >
+              {/* ── Outer 640px card (Figma: 3097:13732) ── bg-[#0f1116], top-rounded ── */}
+              <div
+                className="relative w-full flex flex-col overflow-hidden"
+                style={{
+                  maxWidth: "640px",
+                  background: "#0f1116",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  borderRadius: "24px 24px 0 0",
+                  padding: "32px 20px 1px",
+                  flex: "1 0 auto",
+                }}
+              >
+                {/* White radial gradient top-left (Figma: 3097:13733 — mix-blend-lighten, opacity ~4%) */}
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: "-160px",
+                    left: "-133px",
+                    width: "310px",
+                    height: "310px",
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 90%)",
+                    mixBlendMode: "lighten",
+                  }}
+                />
+
+                {/* ── Inner card (Figma: 3097:13734) ── bg-[#09090b], top-rounded ── */}
+                <div
+                  className="relative w-full overflow-hidden"
+                  style={{
+                    background: "#09090b",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: "8px 8px 0 0",
+                    boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.05)",
+                    padding: "25px",
+                  }}
+                >
+                  {/* ── Reflection sub-card (Figma: 3097:13736) ── bg-[#0f1116], rounded ── */}
+                  <div
+                    className="relative w-full overflow-hidden"
+                    style={{
+                      background: "#0f1116",
+                      border: "1px solid rgba(255,255,255,0.05)",
+                      borderRadius: "6px",
+                      padding: "21px 21px 22px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                    }}
+                  >
+                    {/* Orange radial corner glow (Figma: 3097:13743 — mix-blend-lighten, opacity ~4%) */}
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        top: "-48px",
+                        left: "-48px",
+                        width: "160px",
+                        height: "160px",
+                        borderRadius: "80px",
+                        background: "radial-gradient(circle, rgba(240,120,48,0.18) 0%, rgba(240,120,48,0) 70%)",
+                        mixBlendMode: "lighten",
+                      }}
+                    />
+
+                    {/* "Your Reflection" label */}
+                    <p
+                      style={{
+                        fontFamily: "Afacad",
+                        fontWeight: 400,
+                        fontSize: "13px",
+                        letterSpacing: "1.3px",
+                        lineHeight: "19.5px",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.4)",
+                        margin: 0,
+                      }}
+                    >
+                      Your Reflection
+                    </p>
+
+                    {/* Summary text */}
+                    {summaryText && (
+                      <p
+                        style={{
+                          fontFamily: "Afacad",
+                          fontWeight: 400,
+                          fontSize: "15px",
+                          lineHeight: "22px",
+                          color: "rgba(255,255,255,0.85)",
+                          margin: 0,
+                        }}
+                      >
+                        {summaryText}
+                      </p>
+                    )}
+
+                    {/* "Redo this reflection" */}
+                    <div style={{ paddingTop: "3.75px" }}>
+                      <button
+                        onClick={handleRedo}
+                        style={{
+                          fontFamily: "Afacad",
+                          fontWeight: 400,
+                          fontSize: "13px",
+                          lineHeight: "19.5px",
+                          color: "rgba(255,255,255,0.35)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                          display: "block",
+                          margin: "0 auto",
+                          textAlign: "center",
+                        }}
+                        data-testid="button-redo-reflection"
+                      >
+                        Redo this reflection
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
