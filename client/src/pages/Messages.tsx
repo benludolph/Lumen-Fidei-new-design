@@ -26,7 +26,7 @@ function InitialsAvatar({ name, size = 36 }: { name: string; size?: number }) {
         border: "1px solid rgba(240,120,48,0.3)",
         color: "#F07830",
         fontFamily: "Afacad, sans-serif",
-        fontSize: size * 0.33,
+        fontSize: size * 0.33, /* approved exception: dynamically computed from avatar size prop */
         fontWeight: 600,
         display: "flex",
         alignItems: "center",

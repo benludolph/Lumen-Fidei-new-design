@@ -360,7 +360,9 @@ export default function ResourceDetail() {
                   .join(" · ")}
               </p>
 
-              {/* Resource title — Figma specifies 80.2px; scales down fluidly on narrow screens */}
+              {/* Resource title hero — approved exception: fluid clamp sizing (36→80px).
+                  The type scale tops out at type-display-xl (34/48px) which is too small
+                  for this full-bleed hero. font-serif sets the correct typeface. */}
               <h1
                 data-testid="resource-title"
                 className="font-serif"
