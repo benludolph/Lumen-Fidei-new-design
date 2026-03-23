@@ -10,6 +10,8 @@ import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X
 
 import certLockedImg from "@assets/Certificate_Locked_1773979233798.png";
 import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
+import certBgNormal from "@assets/Certification_normal_1774299706134.webp";
+import certBgHover from "@assets/Certification_hover_1774299706134.webp";
 import introVideoThumb from "@assets/IntroVideo_1774228694683.webp";
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
@@ -457,7 +459,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
       </div>
 
-      {/* Card — background image switches between locked/hover states */}
+      {/* Card — backgrounds crossfade on hover */}
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -465,9 +467,6 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         style={{
           position: "relative",
           height: "126px",
-          backgroundImage: `url(${isHovered ? certHoverImg : certLockedImg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "right center",
           border: "0.487px solid rgba(255,255,255,0.05)",
           borderRadius: "5.842px",
           overflow: "hidden",
@@ -479,10 +478,29 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           paddingRight: "12.17px",
           paddingBottom: "14.118px",
           cursor: isUnlocked ? "pointer" : "default",
-          transition: "background-image 0s",
           marginBottom: "8px",
         }}
       >
+        {/* Normal (grayscale) background — always visible */}
+        <div
+          style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `url(${certBgNormal})`,
+            backgroundSize: "cover",
+            backgroundPosition: "right center",
+          }}
+        />
+        {/* Hover (color) background — fades in on hover */}
+        <div
+          style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `url(${certBgHover})`,
+            backgroundSize: "cover",
+            backgroundPosition: "right center",
+            opacity: isHovered ? 1 : 0,
+            transition: "opacity 500ms ease",
+          }}
+        />
         {/* Top row: lock icon (left) + info icon (right) */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
           {/* Lock / download icon box */}
