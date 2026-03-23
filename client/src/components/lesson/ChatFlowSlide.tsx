@@ -3,6 +3,7 @@ import { X, Send, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
+import bgMusicSrc from "@assets/BG_Msic_1774239770169.mp3";
 
 // ============================================================
 // Types
@@ -229,6 +230,21 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
 // ============================================================
 
 export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, onComplete, onExit }: ChatFlowSlideProps) {
+  // ── Ambient background music ──
+  useEffect(() => {
+    const audio = new Audio(bgMusicSrc);
+    audio.loop = true;
+    audio.volume = 0.12;
+    const playPromise = audio.play();
+    return () => {
+      if (playPromise !== undefined) {
+        playPromise.then(() => audio.pause()).catch(() => audio.pause());
+      } else {
+        audio.pause();
+      }
+    };
+  }, []);
+
   // Parse flow definition
   const flow = useMemo<ChatFlowDefinition>(() => {
     try {
