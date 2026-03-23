@@ -9,6 +9,7 @@ import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X
 
 import certLockedImg from "@assets/Certificate_Locked_1773979233798.png";
 import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
+import introVideoThumb from "@assets/IntroVideo_1774228694683.webp";
 import trackAImg1 from "@assets/image_1771985019617.png";
 import trackAImg2 from "@assets/image_1771985039759.png";
 import trackAImg3 from "@assets/image_1771985088299.png";
@@ -91,6 +92,97 @@ function TwoColGrid({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
       {children}
+    </div>
+  );
+}
+
+function ThreeColGrid({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+      {children}
+    </div>
+  );
+}
+
+function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleClose = () => {
+    if (iframeRef.current) {
+      const src = iframeRef.current.src;
+      iframeRef.current.src = "";
+      iframeRef.current.src = src;
+    }
+    onClose();
+  };
+
+  if (!open) return null;
+
+  return (
+    <div
+      onClick={handleClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(0,0,0,0.85)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px",
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: "860px",
+          background: "#0f1011",
+          borderRadius: "8px",
+          overflow: "hidden",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+        }}
+      >
+        <button
+          onClick={handleClose}
+          aria-label="Close video"
+          style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            zIndex: 10,
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            background: "rgba(0,0,0,0.6)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          <X size={14} />
+        </button>
+        <div style={{ position: "relative", paddingTop: "56.25%", width: "100%" }}>
+          <iframe
+            ref={iframeRef}
+            src="https://player.vimeo.com/video/1176037760?badge=0&autopause=0&player_id=0&app_id=58479"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+            title="Intro Video"
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -489,6 +581,7 @@ export function DayGridView({
   const [selectedDayForDialog, setSelectedDayForDialog] = useState(0);
   const [guideModalOpen, setGuideModalOpen] = useState(false);
   const [activeWeek, setActiveWeek] = useState(1);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
 
   const allDays = Array.from({ length: 30 }, (_, i) => i + 1);
   const weekGroups = groupDaysByWeek(allDays);
@@ -543,20 +636,31 @@ export function DayGridView({
           <div style={{ paddingTop: "24px" }}>
             {prelimModulesData && prelimModulesData.length > 0 && (
               <>
+                <VideoModal open={videoModalOpen} onClose={() => setVideoModalOpen(false)} />
                 <SectionDivider label="Pre-Modules" />
-                <TwoColGrid>
+                <ThreeColGrid>
                   {prelimModulesData.map((mod) => {
                     const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
+                    const isFirst = mod.position === 1;
+                    const moduleWithThumb = isFirst
+                      ? { ...mod, imageUrl: mod.imageUrl ?? introVideoThumb }
+                      : mod;
                     return (
                       <PrelimCard
                         key={mod.position}
-                        module={mod}
+                        module={moduleWithThumb}
                         isAccessible={!!prevDone && !mod.completed}
-                        onClick={() => onPrelimSelect?.(mod.position)}
+                        onClick={() => {
+                          if (isFirst) {
+                            setVideoModalOpen(true);
+                          } else {
+                            onPrelimSelect?.(mod.position);
+                          }
+                        }}
                       />
                     );
                   })}
-                </TwoColGrid>
+                </ThreeColGrid>
               </>
             )}
 
