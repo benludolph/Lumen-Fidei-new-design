@@ -1,0 +1,113 @@
+Refine the existing “Reflection Unlocked” overlay to match the Figma design exactly. Do NOT redesign — adjust timing, layout, and visual effects only.
+
+1. Slow Down Sequencing (CRITICAL)
+
+Current issue: animations are too fast and feel jumpy.
+
+Fix timing:
+Overlay fade-in: 400–500ms
+Icon entrance delay: +200ms after overlay
+Icon animation duration: 600–800ms
+Wait 400–600ms after icon settles
+
+Then reveal text:
+
+Each text element stagger: 120–160ms
+Each animation duration: 300–400ms
+
+Continue button:
+
+Delay: +300ms after last text element
+
+👉 Everything should feel slower and intentional, not instant
+
+2. Keep YOUR Icon (Do NOT replace)
+Use the exact icon from Figma (cross inside circle)
+Do NOT substitute with flame or any other symbol
+3. Fix Circle Glow (Figma Match)
+
+Current issue: glow is too weak / incorrect
+
+Apply layered glow (not single shadow):
+Inner ring: crisp white stroke
+Glow layer 1:
+white
+opacity: ~20%
+blur: 8–12px
+Glow layer 2:
+white
+opacity: ~10%
+blur: 24–32px
+Optional outer halo:
+very soft
+opacity: 5%
+blur: 40px+
+
+👉 This should feel like a soft radiant halo, not a harsh outline
+
+4. Add Particle System (Behind Circle)
+
+Add subtle, continuous white particles behind the icon.
+
+Behavior:
+6–12 particles max
+Size: 2–4px
+Color: white
+Opacity: 10–20%
+Motion:
+Slow drifting movement (random directions)
+Fade in/out over time
+Loop infinitely
+Confined to area around circle (not full screen)
+Important:
+Particles should feel like:
+→ dust floating in light
+NOT sparks, NOT fire, NOT fast movement
+Must run continuously (not tied to entrance animation)
+5. Fix Continue Button Width
+
+Current issue: button spans too wide
+
+Fix:
+Set max-width equal to content container
+Align with text block width (centered)
+Do NOT stretch full-width across screen
+
+👉 Button should feel like part of the card, not the page
+
+6. Improve Text Reveal
+
+Each element should:
+
+Fade in (opacity 0 → 1)
+Slight upward motion (10–12px → 0)
+Duration: 300–400ms
+Ease-out
+
+Order:
+
+“REFLECTION UNLOCKED”
+Title
+Divider (cross)
+Subtitle
+Button
+7. Maintain Visual Hierarchy
+Icon is the focal point first
+Text is secondary
+Button is last
+
+Nothing should appear all at once
+
+8. Motion Principle
+
+Everything should feel:
+
+calm
+intentional
+slightly delayed
+
+Avoid:
+
+instant rendering
+simultaneous animations
+sharp transitions

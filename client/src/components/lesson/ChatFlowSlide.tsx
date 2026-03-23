@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Send, RotateCw, ArrowRight, Flame } from "lucide-react";
+import { X, Send, RotateCw, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
@@ -329,16 +329,17 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     }
     // Restored from server → jump to fully-revealed immediately (no animation)
     if (restoredCompletionRef.current) {
-      setUnlockPhase(5);
+      setUnlockPhase(6);
       return;
     }
-    // Fresh completion → stagger each element in
+    // Fresh completion → stagger each element in (intentionally slow, calm pacing)
     const timers = [
-      setTimeout(() => setUnlockPhase(1), 200),   // icon
-      setTimeout(() => setUnlockPhase(2), 900),    // "REFLECTION UNLOCKED" label
-      setTimeout(() => setUnlockPhase(3), 1600),   // title
-      setTimeout(() => setUnlockPhase(4), 2200),   // line + subtitle
-      setTimeout(() => setUnlockPhase(5), 3000),   // continue button + redo
+      setTimeout(() => setUnlockPhase(1), 200),    // icon (700ms entrance)
+      setTimeout(() => setUnlockPhase(2), 1300),   // "REFLECTION UNLOCKED" — wait ~400ms after icon settles
+      setTimeout(() => setUnlockPhase(3), 1460),   // title (+160ms)
+      setTimeout(() => setUnlockPhase(4), 1620),   // divider (+160ms)
+      setTimeout(() => setUnlockPhase(5), 1800),   // subtitle (+180ms)
+      setTimeout(() => setUnlockPhase(6), 2160),   // button + redo (+360ms)
     ];
     return () => timers.forEach(clearTimeout);
   }, [flowComplete]);
@@ -1045,66 +1046,114 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       </div>
 
       {/* ── Reflection Unlock Overlay ──
-          Covers the entire screen (fixed) when the flow completes.
-          Elements fade in sequentially: icon → label → title → line+text → button */}
+          Covers the entire screen when the flow completes.
+          6 sequential phases — calm, intentional pacing.                       */}
       {flowComplete && (
         <div
           className="fixed inset-0 flex flex-col"
-          style={{ zIndex: 500, background: "#0b0b0b" }}
+          style={{
+            zIndex: 500,
+            background: "#0b0b0b",
+            opacity: 1,
+            animation: "rp-overlay-in 0.45s ease-out both",
+          }}
         >
-          {/* Oil-painting bg at very low opacity for depth */}
+          {/* Background texture — very subtle */}
           <img
             src={candleBg}
             alt=""
             className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style={{ opacity: 0.07 }}
+            style={{ opacity: 0.06 }}
           />
-          {/* Dark gradient — stronger at the bottom so text stays readable */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(11,11,11,0.1) 0%, rgba(11,11,11,0.85) 50%, #0b0b0b 100%)",
+                "linear-gradient(to bottom, rgba(11,11,11,0.05) 0%, rgba(11,11,11,0.75) 50%, #0b0b0b 100%)",
             }}
           />
 
-          {/* Centre content */}
+          {/* ── Centre content ── */}
           <div className="relative flex-1 flex flex-col items-center justify-center px-8">
 
-            {/* Phase 1 — Icon */}
+            {/* Phase 1 — Cross-in-circle icon with layered white glow */}
             <div
               style={{
+                position: "relative",
+                marginBottom: "36px",
                 opacity: unlockPhase >= 1 ? 1 : 0,
-                transform: unlockPhase >= 1 ? "scale(1) translateY(0)" : "scale(0.75) translateY(10px)",
-                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
-                marginBottom: "28px",
+                transform: unlockPhase >= 1 ? "scale(1) translateY(0)" : "scale(0.82) translateY(12px)",
+                transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
               }}
             >
+              {/* Floating particles — rendered continuously once icon is visible */}
+              {unlockPhase >= 1 && (
+                <div style={{ position: "absolute", inset: "-60px", pointerEvents: "none" }}>
+                  {[
+                    { top: "18%", left: "8%",  size: 3, anim: "rp-float-1 7.2s ease-in-out infinite",        delay: "0s"    },
+                    { top: "10%", left: "72%", size: 2, anim: "rp-float-2 8.5s ease-in-out infinite",        delay: "1.1s"  },
+                    { top: "72%", left: "15%", size: 3, anim: "rp-float-3 6.8s ease-in-out infinite",        delay: "0.4s"  },
+                    { top: "78%", left: "70%", size: 2, anim: "rp-float-4 9.1s ease-in-out infinite",        delay: "2.3s"  },
+                    { top: "5%",  left: "40%", size: 2, anim: "rp-float-5 7.6s ease-in-out infinite",        delay: "0.8s"  },
+                    { top: "88%", left: "45%", size: 3, anim: "rp-float-6 8.0s ease-in-out infinite",        delay: "1.7s"  },
+                    { top: "40%", left: "3%",  size: 2, anim: "rp-float-7 6.4s ease-in-out infinite",        delay: "3.0s"  },
+                    { top: "45%", left: "88%", size: 2, anim: "rp-float-8 7.9s ease-in-out infinite",        delay: "0.3s"  },
+                  ].map((p, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        position: "absolute",
+                        top: p.top,
+                        left: p.left,
+                        width: `${p.size}px`,
+                        height: `${p.size}px`,
+                        borderRadius: "50%",
+                        background: "rgba(255,255,255,0.9)",
+                        animation: p.anim,
+                        animationDelay: p.delay,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Circle with layered white glow */}
               <div
                 style={{
-                  width: "72px",
-                  height: "72px",
+                  width: "80px",
+                  height: "80px",
                   borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(240,120,48,0.18) 0%, rgba(240,120,48,0) 70%)",
-                  border: "1px solid rgba(240,120,48,0.15)",
+                  background: "rgba(255,255,255,0.03)",
+                  boxShadow: [
+                    "0 0 0 1px rgba(255,255,255,0.22)",
+                    "0 0 10px 4px rgba(255,255,255,0.14)",
+                    "0 0 28px 10px rgba(255,255,255,0.07)",
+                    "0 0 55px 20px rgba(255,255,255,0.04)",
+                  ].join(", "),
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Flame style={{ width: "30px", height: "30px", color: "#F07830" }} />
+                {/* Cross icon (SVG) */}
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  {/* Vertical bar */}
+                  <rect x="14.5" y="4" width="3" height="24" rx="1.5" fill="rgba(255,255,255,0.88)" />
+                  {/* Horizontal bar — positioned at upper third */}
+                  <rect x="4" y="12.5" width="24" height="3" rx="1.5" fill="rgba(255,255,255,0.88)" />
+                </svg>
               </div>
             </div>
 
-            {/* Phase 2 — REFLECTION UNLOCKED */}
+            {/* Phase 2 — "REFLECTION UNLOCKED" label */}
             <p
               style={{
                 opacity: unlockPhase >= 2 ? 1 : 0,
-                transform: unlockPhase >= 2 ? "translateY(0)" : "translateY(10px)",
-                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                transform: unlockPhase >= 2 ? "translateY(0)" : "translateY(12px)",
+                transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
                 fontFamily: "Afacad",
                 fontSize: "11px",
-                color: "rgba(240,120,48,0.75)",
+                color: "rgba(255,255,255,0.38)",
                 letterSpacing: "0.22em",
                 textTransform: "uppercase",
                 marginBottom: "14px",
@@ -1117,58 +1166,62 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             <h2
               style={{
                 opacity: unlockPhase >= 3 ? 1 : 0,
-                transform: unlockPhase >= 3 ? "translateY(0)" : "translateY(10px)",
-                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                transform: unlockPhase >= 3 ? "translateY(0)" : "translateY(12px)",
+                transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
                 fontFamily: "IvyOra Display",
                 fontStyle: "normal",
                 fontSize: "30px",
                 lineHeight: "36px",
                 color: "rgba(255,255,255,0.95)",
-                marginBottom: "24px",
+                marginBottom: "28px",
                 textAlign: "center",
               }}
             >
               Your Reflection
             </h2>
 
-            {/* Phase 4 — Divider line */}
+            {/* Phase 4 — Cross divider */}
             <div
               style={{
                 opacity: unlockPhase >= 4 ? 1 : 0,
-                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1)",
-                width: "48px",
-                height: "1px",
-                background: "rgba(255,255,255,0.12)",
-                marginBottom: "22px",
+                transform: unlockPhase >= 4 ? "translateY(0)" : "translateY(12px)",
+                transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
+                position: "relative",
+                width: "12px",
+                height: "12px",
+                marginBottom: "24px",
               }}
-            />
+            >
+              <div style={{ position: "absolute", top: "50%", left: 0, width: "100%", height: "1px", background: "rgba(255,255,255,0.18)", transform: "translateY(-50%)" }} />
+              <div style={{ position: "absolute", left: "50%", top: 0, height: "100%", width: "1px", background: "rgba(255,255,255,0.18)", transform: "translateX(-50%)" }} />
+            </div>
 
-            {/* Phase 4 — Summary text */}
+            {/* Phase 5 — Summary text */}
             {summaryText && (
               <p
                 style={{
-                  opacity: unlockPhase >= 4 ? 1 : 0,
-                  transform: unlockPhase >= 4 ? "translateY(0)" : "translateY(8px)",
-                  transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                  opacity: unlockPhase >= 5 ? 1 : 0,
+                  transform: unlockPhase >= 5 ? "translateY(0)" : "translateY(12px)",
+                  transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
                   fontFamily: "Afacad",
                   fontSize: "15px",
                   lineHeight: "24px",
-                  color: "rgba(255,255,255,0.6)",
+                  color: "rgba(255,255,255,0.55)",
                   textAlign: "center",
-                  maxWidth: "300px",
+                  maxWidth: "296px",
                 }}
               >
                 {summaryText}
               </p>
             )}
 
-            {/* Phase 5 — Redo link */}
+            {/* Phase 6 — Redo link */}
             <button
               onClick={handleRedo}
               style={{
-                opacity: unlockPhase >= 5 ? 0.45 : 0,
-                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1)",
-                marginTop: "24px",
+                opacity: unlockPhase >= 6 ? 0.4 : 0,
+                transition: "opacity 0.38s ease-out",
+                marginTop: "28px",
                 fontFamily: "Afacad",
                 fontSize: "13px",
                 color: "rgba(255,255,255,0.5)",
@@ -1183,25 +1236,31 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             </button>
           </div>
 
-          {/* Phase 5 — Continue button pinned to the bottom */}
+          {/* Phase 6 — Continue button — centred, content-width (not full-width) */}
           <div
-            className="relative"
+            className="relative flex justify-center"
             style={{
-              opacity: unlockPhase >= 5 ? 1 : 0,
-              transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1)",
+              opacity: unlockPhase >= 6 ? 1 : 0,
+              transform: unlockPhase >= 6 ? "translateY(0)" : "translateY(12px)",
+              transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
               padding: "0 24px 52px",
               zIndex: 1,
             }}
           >
             <button
               onClick={onComplete}
-              className="w-full flex items-center justify-center gap-2 font-['Afacad'] font-medium text-[#fafafa] rounded-[6px] hover:opacity-90 transition-opacity"
+              className="flex items-center justify-center gap-2 font-['Afacad'] font-medium text-[#fafafa] rounded-[6px] hover:opacity-90 transition-opacity"
               style={{
                 background: "#18181b",
                 height: "50px",
                 fontSize: "16px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
+                paddingLeft: "32px",
+                paddingRight: "32px",
+                minWidth: "200px",
+                maxWidth: "296px",
+                width: "100%",
+                border: "1px solid rgba(255,255,255,0.1)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)",
               }}
               data-testid="button-unlock-continue"
             >
