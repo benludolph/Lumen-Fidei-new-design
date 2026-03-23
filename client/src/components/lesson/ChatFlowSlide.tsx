@@ -560,8 +560,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
   if (!loadedFromServer) {
     return (
-      <div className="flex-1 flex flex-col bg-[#111] pt-[24px]">
-        <div className="flex-1 bg-[#010101] rounded-tl-[24px] rounded-tr-[24px] mt-[24px] flex items-center justify-center">
+      <div className="flex-1 flex flex-col bg-[#111]" style={{ paddingTop: "24px" }}>
+        <div className="flex-1 flex items-center justify-center" style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}>
           <div className="text-[rgba(255,255,255,0.3)] text-sm font-['Afacad']">Loading…</div>
         </div>
       </div>
@@ -648,7 +648,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         </div>
       </div>
 
-      {/* ── Content area — candle BG + centered card ── */}
+      {/* ── Content area — candle BG + full-height card ── */}
       <div
         className="flex-1 relative flex flex-col overflow-hidden"
         style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}
@@ -669,168 +669,154 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             className="absolute inset-0"
             style={{
               borderRadius: "24px 24px 0 0",
-              background: "linear-gradient(89.999deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
+              background: "linear-gradient(90deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
             }}
           />
         </div>
 
-        {/* Scrollable inner section — centers the card */}
+        {/* Inner section — px-24 only, card fills height */}
         <div
           className="flex-1 overflow-auto flex flex-col items-center relative"
-          style={{ paddingTop: "48px", paddingBottom: "80px", paddingLeft: "24px", paddingRight: "24px" }}
+          style={{ paddingLeft: "24px", paddingRight: "24px" }}
         >
-          {/* Outer card — bg #0f1116, max-w 528px */}
+          {/* Radial glow — top left of section */}
           <div
-            className="w-full relative overflow-hidden"
+            className="absolute pointer-events-none mix-blend-lighten"
             style={{
-              maxWidth: "528px",
-              background: "#0f1116",
-              border: "0.5px solid rgba(255,255,255,0.05)",
-              borderRadius: "8px",
-              paddingLeft: "48px",
-              paddingRight: "48px",
-              paddingTop: "31px",
-              paddingBottom: "31px",
+              top: "-160px",
+              left: "-109px",
+              width: "310px",
+              height: "310px",
+              opacity: 0.04,
+              background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 90%)",
+            }}
+          />
+
+          {/* Chat card — flex-1, max-w-640, rounded top only */}
+          <div
+            className="flex-1 flex flex-col overflow-hidden relative w-full"
+            style={{
+              maxWidth: "640px",
+              background: "#09090b",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: "8px 8px 0 0",
+              padding: "24px",
+              boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.05)",
             }}
           >
-            {/* Radial glow — top left */}
+            {/* Messages list (scrollable, flex-1) */}
             <div
-              className="absolute pointer-events-none mix-blend-lighten"
-              style={{
-                top: "-160.5px",
-                left: "-133.5px",
-                width: "310px",
-                height: "310px",
-                opacity: 0.04,
-                background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 90%)",
-              }}
-            />
-
-            {/* Inner chat card — bg #09090b, h-450px */}
-            <div
-              className="flex flex-col overflow-hidden relative"
-              style={{
-                background: "#09090b",
-                border: "1px solid rgba(255,255,255,0.05)",
-                borderRadius: "6px",
-                height: "450px",
-                padding: "24px",
-              }}
+              className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
+              style={{ scrollbarWidth: "none" }}
             >
-              {/* Messages list (scrollable, grows from top) */}
-              <div
-                className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
-                style={{ scrollbarWidth: "none" }}
-              >
-                {renderedMessages.map((msg, i) => (
-                  <MessageBubble
-                    key={msg.id}
-                    role={msg.role}
-                    text={msg.text}
-                    isNew={i === renderedMessages.length - 1}
-                  />
-                ))}
+              {renderedMessages.map((msg, i) => (
+                <MessageBubble
+                  key={msg.id}
+                  role={msg.role}
+                  text={msg.text}
+                  isNew={i === renderedMessages.length - 1}
+                />
+              ))}
 
-                {showTyping && (
-                  <div className="flex justify-start">
-                    <TypingIndicator />
-                  </div>
-                )}
-
-                {/* Option buttons — appear inside chat after messages */}
-                {inputReady && !flowComplete && currentStep &&
-                  (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
-                  <div className="flex flex-col gap-2">
-                    {resolveOptions(currentStep).map(opt => (
-                      <OptionButton
-                        key={opt.value}
-                        label={opt.label}
-                        selected={selectedOptions.includes(opt.value)}
-                        onClick={() =>
-                          currentStep.inputType === "multi_select"
-                            ? handleMultiSelect(opt.value)
-                            : handleSingleSelect(opt.value)
-                        }
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Summary card when flow complete */}
-                {flowComplete && (
-                  <div
-                    className="relative overflow-hidden"
-                    style={{
-                      background: "#0f1116",
-                      border: "1px solid rgba(255,255,255,0.05)",
-                      borderRadius: "6px",
-                      padding: "20px",
-                    }}
-                  >
-                    <div
-                      className="absolute pointer-events-none mix-blend-lighten"
-                      style={{
-                        top: "-48px",
-                        left: "-48px",
-                        width: "160px",
-                        height: "160px",
-                        opacity: 0.04,
-                        background: "radial-gradient(circle, #F07830 0%, transparent 70%)",
-                        borderRadius: "50%",
-                      }}
-                    />
-                    <p
-                      className="font-['Afacad'] uppercase mb-3"
-                      style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
-                    >
-                      Your Reflection
-                    </p>
-                    {summaryText ? (
-                      <p
-                        className="font-['Afacad']"
-                        style={{ fontSize: "15px", lineHeight: "22px", color: "rgba(255,255,255,0.85)" }}
-                      >
-                        {summaryText}
-                      </p>
-                    ) : (
-                      <p
-                        className="font-['Afacad'] italic"
-                        style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)" }}
-                      >
-                        Your answers have been recorded.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div ref={chatEndRef} className="h-2 shrink-0" />
-              </div>
-
-              {/* Text input row — pinned to bottom of chat card */}
-              {inputReady && !flowComplete && currentStep && currentStep.inputType === "text_input" && (
-                <div className="flex gap-2 items-center shrink-0 pt-2">
-                  <input
-                    type="text"
-                    value={textInput}
-                    onChange={e => setTextInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && !isContinueDisabled && handleSubmit()}
-                    placeholder="Type your answer here..."
-                    className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
-                    style={{ height: "36px" }}
-                    data-testid="input-chat-text"
-                  />
-                  <button
-                    onClick={handleSubmit}
-                    disabled={currentStep.required && !textInput.trim()}
-                    className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
-                    style={{ width: "36px", height: "36px" }}
-                    data-testid="button-chat-send"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+              {showTyping && (
+                <div className="flex justify-start">
+                  <TypingIndicator />
                 </div>
               )}
+
+              {/* Option buttons — appear inside chat after messages */}
+              {inputReady && !flowComplete && currentStep &&
+                (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
+                <div className="flex flex-col gap-2">
+                  {resolveOptions(currentStep).map(opt => (
+                    <OptionButton
+                      key={opt.value}
+                      label={opt.label}
+                      selected={selectedOptions.includes(opt.value)}
+                      onClick={() =>
+                        currentStep.inputType === "multi_select"
+                          ? handleMultiSelect(opt.value)
+                          : handleSingleSelect(opt.value)
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Summary card when flow complete */}
+              {flowComplete && (
+                <div
+                  className="relative overflow-hidden"
+                  style={{
+                    background: "#0f1116",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: "6px",
+                    padding: "20px",
+                  }}
+                >
+                  <div
+                    className="absolute pointer-events-none mix-blend-lighten"
+                    style={{
+                      top: "-48px",
+                      left: "-48px",
+                      width: "160px",
+                      height: "160px",
+                      opacity: 0.04,
+                      background: "radial-gradient(circle, #F07830 0%, transparent 70%)",
+                      borderRadius: "50%",
+                    }}
+                  />
+                  <p
+                    className="font-['Afacad'] uppercase mb-3"
+                    style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
+                  >
+                    Your Reflection
+                  </p>
+                  {summaryText ? (
+                    <p
+                      className="font-['Afacad']"
+                      style={{ fontSize: "15px", lineHeight: "22px", color: "rgba(255,255,255,0.85)" }}
+                    >
+                      {summaryText}
+                    </p>
+                  ) : (
+                    <p
+                      className="font-['Afacad'] italic"
+                      style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)" }}
+                    >
+                      Your answers have been recorded.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div ref={chatEndRef} className="h-2 shrink-0" />
             </div>
+
+            {/* Text input row — pinned to bottom of chat card */}
+            {inputReady && !flowComplete && currentStep && currentStep.inputType === "text_input" && (
+              <div className="flex gap-2 items-center shrink-0 pt-2">
+                <input
+                  type="text"
+                  value={textInput}
+                  onChange={e => setTextInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && !isContinueDisabled && handleSubmit()}
+                  placeholder="Type your answer here..."
+                  className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
+                  style={{ height: "36px" }}
+                  data-testid="input-chat-text"
+                />
+                <button
+                  onClick={handleSubmit}
+                  disabled={currentStep.required && !textInput.trim()}
+                  className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                  style={{ width: "36px", height: "36px" }}
+                  data-testid="button-chat-send"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
