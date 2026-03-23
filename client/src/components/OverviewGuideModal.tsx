@@ -37,7 +37,7 @@ export function OverviewGuideModal({
       >
         <DialogHeader>
           <DialogTitle
-            className="text-white font-sans text-xl font-bold"
+            className="type-display-sm text-white font-bold"
             data-testid="text-overview-guide-title"
           >
             Week {weekNumber}: {weekTheme}

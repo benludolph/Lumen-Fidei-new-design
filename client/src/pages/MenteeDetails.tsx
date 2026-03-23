@@ -37,7 +37,7 @@ export default function MenteeDetails() {
               <ChevronLeft className="w-4 h-4" /> Back to Portal
             </Button>
         </Link>
-        <h1 className="font-serif text-3xl font-bold text-primary">{mentee.name}'s Journey</h1>
+        <h1 className="type-display-lg font-serif font-bold text-primary">{mentee.name}'s Journey</h1>
         <p className="text-muted-foreground">Viewing progress for Track {mentee.track}</p>
       </div>
 

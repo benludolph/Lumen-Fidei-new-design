@@ -223,7 +223,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="text-white/50" style={{ fontFamily: "Afacad, sans-serif" }}>Loading...</p>
+          <p className="type-body-md text-white/50">Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -236,7 +236,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="text-white/50" style={{ fontFamily: "Afacad, sans-serif" }}>Loading...</p>
+          <p className="type-body-md text-white/50">Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -247,7 +247,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <AlertCircle className="w-12 h-12 text-white/60 mb-4" />
-          <h2 className="text-xl font-medium mb-2 text-white">Unable to Load</h2>
+          <h2 className="type-display-sm font-medium mb-2 text-white">Unable to Load</h2>
           <p className="text-white/50">Please refresh the page or try again later.</p>
         </div>
       </DashboardLayout>
@@ -277,7 +277,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="text-white/50" style={{ fontFamily: "Afacad, sans-serif" }}>Loading program...</p>
+          <p className="type-body-md text-white/50">Loading program...</p>
         </div>
       </DashboardLayout>
     );
@@ -314,7 +314,7 @@ export default function Dashboard() {
         <Dialog open={prayerModalOpen !== null} onOpenChange={() => setPrayerModalOpen(null)}>
           <DialogContent className="w-[95vw] max-w-lg h-[90vh] sm:h-auto sm:max-h-[80vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle className="font-serif text-lg sm:text-xl">{prayerModalOpen}</DialogTitle>
+              <DialogTitle className="type-display-sm font-serif">{prayerModalOpen}</DialogTitle>
             </DialogHeader>
             <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base">
               {prayerModalOpen && PRAYER_TEXTS[prayerModalOpen as keyof typeof PRAYER_TEXTS]}
@@ -424,7 +424,7 @@ export default function Dashboard() {
               <div className="space-y-4 sm:space-y-8 pb-10 max-w-3xl mx-auto">
                 <div className="text-center space-y-2 mb-4 sm:mb-8">
                   <Badge variant="outline" className="mb-2">Day {selectedDay}</Badge>
-                  <h1 className="font-serif text-2xl sm:text-4xl font-bold text-primary">
+                  <h1 className="type-display-lg sm:type-display-xl font-serif font-bold text-primary">
                     {dayContent.isReflectionDay ? "Weekly Reflection" : "Daily Devotion"}
                   </h1>
                 </div>
@@ -625,7 +625,7 @@ export default function Dashboard() {
                       <Dialog open={examenModalOpen} onOpenChange={setExamenModalOpen}>
                         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle className="font-serif text-xl">Examination of Conscience</DialogTitle>
+                            <DialogTitle className="type-display-sm font-serif">Examination of Conscience</DialogTitle>
                             <p className="text-sm text-muted-foreground">Daily Examen (10-15 minutes)</p>
                           </DialogHeader>
                           <div className="prose max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">

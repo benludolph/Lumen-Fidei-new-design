@@ -23,7 +23,7 @@ export default function MentorPortal() {
   return (
     <Shell>
       <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-primary mb-2">Mentorship Portal</h1>
+        <h1 className="type-display-lg font-serif font-bold text-primary mb-2">Mentorship Portal</h1>
         <p className="text-muted-foreground">Oversee your mentees' spiritual progress</p>
       </div>
 
