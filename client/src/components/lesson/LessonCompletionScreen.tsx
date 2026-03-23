@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, X, Trophy } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { playLessonComplete } from "@/lib/sounds";
-import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
+import slideBg from "@assets/SlideBG_1774302310257.webp";
 import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
 
 interface LessonCompletionScreenProps {
   dayNumber: number;
   theme: string;
+  completionMessage?: string | null;
   onContinue: () => void;
   onBack?: () => void;
 }
@@ -14,6 +15,7 @@ interface LessonCompletionScreenProps {
 export function LessonCompletionScreen({
   dayNumber,
   theme,
+  completionMessage,
   onContinue,
   onBack,
 }: LessonCompletionScreenProps) {
@@ -27,25 +29,55 @@ export function LessonCompletionScreen({
 
   return (
     <div
-      className="fixed inset-0 z-[220] flex flex-col bg-[#111]"
+      className="fixed inset-0 z-[220] flex flex-col"
       data-testid="lesson-completion-screen"
     >
-      {/* ── Header — identical to LessonFlow ── */}
+      {/* ── Full-screen background: painting + radial vignette ── */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+        <img
+          src={slideBg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 140% 80% at 50% 120%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.05) 100%)",
+          }}
+        />
+      </div>
+
+      {/* ── Header: blurred top nav bar ── */}
       <div
-        className="shrink-0 flex items-center justify-between"
-        style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "24px", paddingBottom: "24px" }}
+        className="relative shrink-0 flex items-center justify-between"
+        style={{
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          background: "rgba(0,0,0,0.6)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+          paddingTop: "24px",
+          paddingBottom: "24px",
+        }}
       >
         {/* Left: Back button */}
         <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
           <button
             onClick={onBack}
             disabled={!onBack}
-            className="flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(52,52,52,0.7)] disabled:opacity-0 disabled:pointer-events-none"
+            className="flex items-center justify-center transition-opacity hover:opacity-80 disabled:opacity-0 disabled:pointer-events-none"
             style={{
               width: "40px",
               height: "40px",
-              background: "rgba(30,30,30,0.72)",
+              background: "#18181b",
               backdropFilter: "blur(11px)",
+              WebkitBackdropFilter: "blur(11px)",
+              borderRadius: "20px",
+              border: "none",
+              cursor: "pointer",
             }}
             data-testid="button-completion-back"
           >
@@ -55,19 +87,19 @@ export function LessonCompletionScreen({
 
         {/* Center: COMPLETE pill */}
         <div
-          className="flex items-center justify-center"
+          className="flex items-center"
           style={{
-            background: "#202020",
+            background: "#18181b",
             borderRadius: "36px",
             paddingLeft: "16px",
             paddingRight: "16px",
-            paddingTop: "10px",
-            paddingBottom: "10px",
+            paddingTop: "12px",
+            paddingBottom: "12px",
             maxHeight: "42px",
           }}
         >
           <span
-            className="font-['Afacad'] font-medium whitespace-nowrap uppercase"
+            className="font-['Afacad'] font-medium whitespace-nowrap"
             style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
           >
             COMPLETE
@@ -78,12 +110,16 @@ export function LessonCompletionScreen({
         <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
           <button
             onClick={onContinue}
-            className="flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(62,62,62,0.7)]"
+            className="flex items-center justify-center transition-opacity hover:opacity-80"
             style={{
               width: "40px",
               height: "40px",
-              background: "rgba(42,42,42,0.5)",
+              background: "#18181b",
               backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
+              borderRadius: "20px",
+              border: "none",
+              cursor: "pointer",
             }}
             data-testid="button-completion-exit"
           >
@@ -92,114 +128,109 @@ export function LessonCompletionScreen({
         </div>
       </div>
 
-      {/* ── Content area — identical structure to LessonFlow ── */}
-      <div className="flex-1 relative flex flex-col items-center overflow-hidden pt-8">
-        {/* Oil painting background + gradient overlay */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-          <img
-            src={candleBg}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(89.99deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
-            }}
-          />
-        </div>
-
-        {/* Dark card — fills remaining height, top corners rounded, same as LessonFlow */}
+      {/* ── Content area ── */}
+      <div
+        className="relative flex-1 flex flex-col items-center overflow-hidden"
+        style={{ paddingTop: "32px", paddingLeft: "20px", paddingRight: "20px" }}
+      >
+        {/* Dark card — identical structure to slide screens */}
         <div
           className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px]"
           style={{
-            background: "#0f1116",
+            background: "rgb(15,17,22)",
             border: "0.5px solid rgba(255,255,255,0.05)",
             borderBottom: "none",
             borderRadius: "8px 8px 0 0",
-            padding: "24px",
+            padding: "48px",
           }}
         >
-          {/* Completion content — centered in the card */}
+          {/* Subtle radial highlight at top-left corner */}
           <div
-            className="flex-1 flex flex-col items-center justify-center"
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              gap: "32px",
+              borderRadius: "inherit",
+              background: "radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 60%)",
+            }}
+          />
+
+          {/* Completion content */}
+          <div
+            className="relative flex-1 flex flex-col"
+            style={{
+              gap: "12px",
               transition: "opacity 700ms ease, transform 700ms ease",
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(16px)",
             }}
           >
-            {/* Trophy icon in frosted glass box */}
-            <div
-              className="flex items-center justify-center shrink-0"
-              style={{
-                width: "35px",
-                height: "35px",
-                background: "rgba(255,255,255,0.05)",
-                borderRadius: "6px",
-                boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1)",
-              }}
+            {/* Headline */}
+            <p
+              className="font-['IvyOra_Display'] text-white"
+              style={{ fontSize: "26px", lineHeight: "30px", letterSpacing: "-0.52px", fontWeight: 500 }}
             >
-              <Trophy className="text-white/60" style={{ width: "19px", height: "19px" }} />
+              Lesson Complete
+            </p>
+
+            {/* Body: completion message or default text */}
+            <div style={{ marginTop: "12px" }}>
+              <p
+                className="font-['Afacad'] font-normal text-white/80"
+                style={{ fontSize: "20px", lineHeight: 1.4 }}
+              >
+                {completionMessage ||
+                  (dayNumber > 0
+                    ? `Day ${dayNumber} is complete. Well done for showing up today.`
+                    : "Well done for showing up today.")}
+              </p>
             </div>
 
-            {/* Text group */}
-            <div className="flex flex-col items-center" style={{ gap: "24px" }}>
+            {/* Divider + day/theme tag */}
+            <div className="flex flex-col items-start" style={{ gap: "16px", marginTop: "24px" }}>
+              <img
+                src={crossDividerImg}
+                alt=""
+                style={{ width: "152px", height: "auto", opacity: 0.4 }}
+              />
               <p
-                className="font-['IvyOra_Display'] text-[#f7f8f8] text-center"
-                style={{ fontSize: "24px", lineHeight: 1 }}
+                className="font-['Afacad'] font-normal text-white/40"
+                style={{ fontSize: "13px", letterSpacing: "0.04em" }}
               >
-                Lesson Complete
-              </p>
-
-              {/* Ornamental divider */}
-              <div className="shrink-0 flex items-center justify-center" style={{ height: "14px", width: "152px" }}>
-                <img
-                  src={crossDividerImg}
-                  alt=""
-                  style={{ width: "100%", height: "auto", opacity: 0.4, display: "block" }}
-                />
-              </div>
-
-              <p
-                className="font-['Afacad'] font-normal text-[#8a8f98] text-center"
-                style={{ fontSize: "10px", lineHeight: "10px" }}
-              >
-                {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}
-                {theme || "Lorem ipsum"}
+                {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Footer — identical to LessonFlow ── */}
+      {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
       <div
-        className="shrink-0 flex flex-col items-center justify-center"
+        className="relative shrink-0 flex flex-col items-center justify-center"
         style={{
-          background: "#0f1116",
+          background: "black",
           borderTop: "1px solid rgba(255,255,255,0.05)",
-          paddingTop: "32px",
-          paddingBottom: "32px",
+          padding: "32px",
         }}
       >
-        <div className="max-w-[640px] w-full mx-auto flex items-center justify-end px-4">
+        <div className="max-w-[640px] w-full flex items-center justify-end">
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity hover:opacity-80 text-[14px] leading-[20px]"
+            className="flex items-center gap-2 justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity hover:opacity-80"
             style={{
               background: "#18181b",
               borderRadius: "6px",
-              height: "36px",
               paddingLeft: "16px",
               paddingRight: "16px",
+              paddingTop: "12px",
+              paddingBottom: "12px",
+              fontSize: "14px",
+              letterSpacing: "2.8px",
+              lineHeight: "20px",
               boxShadow: "0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px rgba(0,0,0,0.06)",
             }}
             data-testid="button-completion-continue"
           >
-            Continue
+            CONTINUE
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
