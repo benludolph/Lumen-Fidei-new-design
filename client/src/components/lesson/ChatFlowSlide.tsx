@@ -392,7 +392,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [overlayDismissed, setOverlayDismissed] = useState(false);
 
   const { data: overlayConfig } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
-    queryKey: ["/api/reflection-overlay"],
+    queryKey: ["/api/admin/reflection-overlay"],
   });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -440,11 +440,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     audio.volume = 0.8;
     audio.play().catch(() => {});
     const timers = [
-      setTimeout(() => setUnlockPhase(1), 300),   // overlay bg + header
-      setTimeout(() => setUnlockPhase(2), 900),   // reflection card
-      setTimeout(() => setUnlockPhase(3), 1500),  // image
-      setTimeout(() => setUnlockPhase(4), 2000),  // headline
-      setTimeout(() => setUnlockPhase(5), 2400),  // subtext + close btn
+      setTimeout(() => setUnlockPhase(1), 400),   // overlay bg + header
+      setTimeout(() => setUnlockPhase(2), 2000),  // reflection card
+      setTimeout(() => setUnlockPhase(3), 2320),  // image
+      setTimeout(() => setUnlockPhase(4), 2640),  // headline
+      setTimeout(() => setUnlockPhase(5), 3000),  // subtext
+      setTimeout(() => setUnlockPhase(6), 3600),  // close btn
     ];
     return () => timers.forEach(clearTimeout);
   }, [flowComplete]);
@@ -1247,8 +1248,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               style={{
                 width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "opacity 400ms ease-out",
-                opacity: unlockPhase >= 5 ? 1 : 0,
-                pointerEvents: unlockPhase >= 5 ? "auto" : "none",
+                opacity: unlockPhase >= 6 ? 1 : 0,
+                pointerEvents: unlockPhase >= 6 ? "auto" : "none",
               }}
             >
               <button

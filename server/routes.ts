@@ -924,7 +924,7 @@ export async function registerRoutes(
 
   // === Reflection Overlay Settings ===
 
-  app.get('/api/reflection-overlay', requireAuth, async (req, res) => {
+  app.get('/api/admin/reflection-overlay', requireAuth, async (req, res) => {
     const [imageUrl, text, subtext] = await Promise.all([
       storage.getCohortSetting("reflection_overlay_image"),
       storage.getCohortSetting("reflection_overlay_text"),

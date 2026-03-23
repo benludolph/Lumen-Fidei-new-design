@@ -124,6 +124,9 @@ export default function Admin() {
           <div className="mt-8">
             <TrackAContentManagementView />
           </div>
+          <div className="mt-8">
+            <ReflectionOverlaySettingsCard />
+          </div>
         </TabsContent>
 
         <TabsContent value="messages">
@@ -1112,8 +1115,6 @@ function CohortSettingsView() {
 
       <Day0SettingsCard />
 
-      <ReflectionOverlaySettingsCard />
-
       <DataExportCard />
     </div>
   );
@@ -1128,7 +1129,7 @@ function ReflectionOverlaySettingsCard() {
   const [subtext, setSubtext] = useState("");
 
   const { data, isLoading } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
-    queryKey: ["/api/reflection-overlay"],
+    queryKey: ["/api/admin/reflection-overlay"],
   });
 
   useEffect(() => {
@@ -1145,7 +1146,7 @@ function ReflectionOverlaySettingsCard() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/reflection-overlay"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/reflection-overlay"] });
       toast({ title: "Reflection overlay saved" });
     },
     onError: () => {
