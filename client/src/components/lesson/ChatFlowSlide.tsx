@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
 import bgMusicSrc from "@assets/BG_Msic_1774239770169.mp3";
+import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
+import crossParticleImg from "@assets/Cross_Particle_1774243395977.webp";
+import reflectionUnlockSound from "@assets/Reflection_Unlock_Sound_1774243654585.mp3";
 
 // ============================================================
 // Types
@@ -290,6 +293,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [textInput, setTextInput] = useState("");
   const [flowComplete, setFlowComplete] = useState(false);
+  // True when the completed flow was restored from the server (show review card, not animation)
+  const [isRestoredFlow, setIsRestoredFlow] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
   const [unlockPhase, setUnlockPhase] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -313,6 +318,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           setAnswers(data as Record<string, string>);
           if ((data as Record<string, string>).__flow_complete === "1") {
             restoredCompletionRef.current = true; // skip animation on restore
+            setIsRestoredFlow(true);
             setFlowComplete(true);
           }
         }
@@ -327,19 +333,23 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       setUnlockPhase(0);
       return;
     }
-    // Restored from server → jump to fully-revealed immediately (no animation)
+    // Restored from server → already showing review card, no animation needed
     if (restoredCompletionRef.current) {
-      setUnlockPhase(6);
       return;
     }
-    // Fresh completion → stagger each element in (intentionally slow, calm pacing)
+    // Fresh completion — play the unlock sound once, then stagger elements in
+    // very slowly so it feels reverent and intentional
+    const audio = new Audio(reflectionUnlockSound);
+    audio.volume = 0.8;
+    audio.play().catch(() => {}); // silently ignore autoplay policy blocks
+
     const timers = [
-      setTimeout(() => setUnlockPhase(1), 200),    // icon (700ms entrance)
-      setTimeout(() => setUnlockPhase(2), 1300),   // "REFLECTION UNLOCKED" — wait ~400ms after icon settles
-      setTimeout(() => setUnlockPhase(3), 1460),   // title (+160ms)
-      setTimeout(() => setUnlockPhase(4), 1620),   // divider (+160ms)
-      setTimeout(() => setUnlockPhase(5), 1800),   // subtitle (+180ms)
-      setTimeout(() => setUnlockPhase(6), 2160),   // button + redo (+360ms)
+      setTimeout(() => setUnlockPhase(1), 400),    // icon entrance (700ms ease-out)
+      setTimeout(() => setUnlockPhase(2), 2000),   // "REFLECTION UNLOCKED" — settle + 900ms wait
+      setTimeout(() => setUnlockPhase(3), 2320),   // title (+320ms)
+      setTimeout(() => setUnlockPhase(4), 2640),   // divider (+320ms)
+      setTimeout(() => setUnlockPhase(5), 3000),   // subtitle (+360ms)
+      setTimeout(() => setUnlockPhase(6), 3600),   // button + redo (+600ms)
     ];
     return () => timers.forEach(clearTimeout);
   }, [flowComplete]);
@@ -598,6 +608,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const handleRedo = useCallback(() => {
     saveAnswer("__flow_complete", "0"); // clear completion flag on server
     restoredCompletionRef.current = false; // next completion should animate
+    setIsRestoredFlow(false);
     setFlowComplete(false);
     setCurrentStepIdx(0);
     setRenderedMessages([]);
@@ -1045,17 +1056,162 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         </div>
       </div>
 
-      {/* ── Reflection Unlock Overlay ──
-          Covers the entire screen when the flow completes.
-          6 sequential phases — calm, intentional pacing.                       */}
-      {flowComplete && (
+      {/* ── Reflection Review Card (return visit) ──
+          Shown when the user navigates back to an already-completed flow.
+          Matches the Figma "completed" state: bg card + reflection text + redo. */}
+      {flowComplete && isRestoredFlow && (
+        <div
+          className="fixed inset-0 flex flex-col"
+          style={{ zIndex: 500, background: "#111", animation: "rp-overlay-in 0.35s ease-out both" }}
+        >
+          {/* Oil-painting background at 60% opacity */}
+          <img
+            src={candleBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style={{ opacity: 0.6 }}
+          />
+          {/* Gradient overlay — left/right fade as per Figma */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(0,0,0,0) 10%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.92) 72%, rgba(0,0,0,0) 90%)",
+            }}
+          />
+          {/* Dark bottom fade for mobile readability */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.9) 100%)",
+            }}
+          />
+
+          {/* Top bar: "COMPLETE" pill + X */}
+          <div className="relative flex items-center justify-between px-6 pt-6 pb-4" style={{ zIndex: 1 }}>
+            <div style={{ width: "42px" }} />
+            <div
+              style={{
+                background: "#202020",
+                borderRadius: "36px",
+                padding: "10px 18px",
+                fontFamily: "Afacad",
+                fontWeight: 500,
+                fontSize: "13px",
+                letterSpacing: "2.6px",
+                color: "#efefef",
+              }}
+            >
+              COMPLETE
+            </div>
+            <button
+              onClick={onComplete}
+              className="flex items-center justify-center"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "20px",
+                background: "rgba(42,42,42,0.5)",
+                backdropFilter: "blur(9px)",
+                border: "none",
+                cursor: "pointer",
+              }}
+              data-testid="button-review-close"
+            >
+              <X style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.7)" }} />
+            </button>
+          </div>
+
+          {/* Main content area — scrollable card */}
+          <div
+            className="relative flex-1 overflow-y-auto"
+            style={{ zIndex: 1, padding: "8px 16px 48px" }}
+          >
+            {/* Inner card */}
+            <div
+              style={{
+                background: "#0f1116",
+                border: "1px solid rgba(255,255,255,0.05)",
+                borderRadius: "8px",
+                padding: "22px 20px",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {/* Orange radial gradient corner glow (Figma) */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-48px",
+                  left: "-48px",
+                  width: "160px",
+                  height: "160px",
+                  borderRadius: "80px",
+                  background: "radial-gradient(circle, rgba(240,120,48,0.12) 0%, rgba(240,120,48,0) 70%)",
+                  mixBlendMode: "lighten",
+                  pointerEvents: "none",
+                }}
+              />
+
+              {/* "YOUR REFLECTION" label */}
+              <p
+                style={{
+                  fontFamily: "Afacad",
+                  fontSize: "13px",
+                  letterSpacing: "1.3px",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.4)",
+                  marginBottom: "12px",
+                }}
+              >
+                Your Reflection
+              </p>
+
+              {/* Summary text */}
+              {summaryText && (
+                <p
+                  style={{
+                    fontFamily: "Afacad",
+                    fontSize: "15px",
+                    lineHeight: "22px",
+                    color: "rgba(255,255,255,0.85)",
+                    marginBottom: "18px",
+                  }}
+                >
+                  {summaryText}
+                </p>
+              )}
+
+              {/* Redo link */}
+              <button
+                onClick={handleRedo}
+                style={{
+                  fontFamily: "Afacad",
+                  fontSize: "13px",
+                  color: "rgba(255,255,255,0.35)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px 0 0",
+                }}
+                data-testid="button-redo-reflection"
+              >
+                Redo this reflection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reflection Unlock Overlay (first-time completion only) ──
+          6 phases with very slow, reverent pacing. Never shown on return visits. */}
+      {flowComplete && !isRestoredFlow && (
         <div
           className="fixed inset-0 flex flex-col"
           style={{
             zIndex: 500,
             background: "#0b0b0b",
-            opacity: 1,
-            animation: "rp-overlay-in 0.45s ease-out both",
+            animation: "rp-overlay-in 0.5s ease-out both",
           }}
         >
           {/* Background texture — very subtle */}
@@ -1080,24 +1236,24 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             <div
               style={{
                 position: "relative",
-                marginBottom: "36px",
+                marginBottom: "40px",
                 opacity: unlockPhase >= 1 ? 1 : 0,
-                transform: unlockPhase >= 1 ? "scale(1) translateY(0)" : "scale(0.82) translateY(12px)",
+                transform: unlockPhase >= 1 ? "scale(1) translateY(0)" : "scale(0.8) translateY(14px)",
                 transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
               }}
             >
-              {/* Floating particles — rendered continuously once icon is visible */}
+              {/* Floating dust particles — shown once icon is visible */}
               {unlockPhase >= 1 && (
                 <div style={{ position: "absolute", inset: "-60px", pointerEvents: "none" }}>
                   {[
-                    { top: "18%", left: "8%",  size: 3, anim: "rp-float-1 7.2s ease-in-out infinite",        delay: "0s"    },
-                    { top: "10%", left: "72%", size: 2, anim: "rp-float-2 8.5s ease-in-out infinite",        delay: "1.1s"  },
-                    { top: "72%", left: "15%", size: 3, anim: "rp-float-3 6.8s ease-in-out infinite",        delay: "0.4s"  },
-                    { top: "78%", left: "70%", size: 2, anim: "rp-float-4 9.1s ease-in-out infinite",        delay: "2.3s"  },
-                    { top: "5%",  left: "40%", size: 2, anim: "rp-float-5 7.6s ease-in-out infinite",        delay: "0.8s"  },
-                    { top: "88%", left: "45%", size: 3, anim: "rp-float-6 8.0s ease-in-out infinite",        delay: "1.7s"  },
-                    { top: "40%", left: "3%",  size: 2, anim: "rp-float-7 6.4s ease-in-out infinite",        delay: "3.0s"  },
-                    { top: "45%", left: "88%", size: 2, anim: "rp-float-8 7.9s ease-in-out infinite",        delay: "0.3s"  },
+                    { top: "18%", left: "8%",  size: 3, anim: "rp-float-1 7.2s ease-in-out infinite",  delay: "0s"   },
+                    { top: "10%", left: "72%", size: 2, anim: "rp-float-2 8.5s ease-in-out infinite",  delay: "1.1s" },
+                    { top: "72%", left: "15%", size: 3, anim: "rp-float-3 6.8s ease-in-out infinite",  delay: "0.4s" },
+                    { top: "78%", left: "70%", size: 2, anim: "rp-float-4 9.1s ease-in-out infinite",  delay: "2.3s" },
+                    { top: "5%",  left: "40%", size: 2, anim: "rp-float-5 7.6s ease-in-out infinite",  delay: "0.8s" },
+                    { top: "88%", left: "45%", size: 3, anim: "rp-float-6 8.0s ease-in-out infinite",  delay: "1.7s" },
+                    { top: "40%", left: "3%",  size: 2, anim: "rp-float-7 6.4s ease-in-out infinite",  delay: "3.0s" },
+                    { top: "45%", left: "88%", size: 2, anim: "rp-float-8 7.9s ease-in-out infinite",  delay: "0.3s" },
                   ].map((p, i) => (
                     <div
                       key={i}
@@ -1117,31 +1273,30 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 </div>
               )}
 
-              {/* Circle with layered white glow */}
+              {/* Circle with layered white glow — contains the cross image */}
               <div
                 style={{
-                  width: "80px",
-                  height: "80px",
+                  width: "88px",
+                  height: "88px",
                   borderRadius: "50%",
-                  background: "rgba(255,255,255,0.03)",
+                  background: "rgba(0,0,0,0.6)",
                   boxShadow: [
-                    "0 0 0 1px rgba(255,255,255,0.22)",
-                    "0 0 10px 4px rgba(255,255,255,0.14)",
-                    "0 0 28px 10px rgba(255,255,255,0.07)",
-                    "0 0 55px 20px rgba(255,255,255,0.04)",
+                    "0 0 0 1px rgba(255,255,255,0.20)",
+                    "0 0 12px 4px rgba(255,255,255,0.14)",
+                    "0 0 30px 12px rgba(255,255,255,0.07)",
+                    "0 0 60px 22px rgba(255,255,255,0.04)",
                   ].join(", "),
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  overflow: "hidden",
                 }}
               >
-                {/* Cross icon (SVG) */}
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  {/* Vertical bar */}
-                  <rect x="14.5" y="4" width="3" height="24" rx="1.5" fill="rgba(255,255,255,0.88)" />
-                  {/* Horizontal bar — positioned at upper third */}
-                  <rect x="4" y="12.5" width="24" height="3" rx="1.5" fill="rgba(255,255,255,0.88)" />
-                </svg>
+                <img
+                  src={crossParticleImg}
+                  alt="Cross"
+                  style={{ width: "88px", height: "88px", objectFit: "cover", borderRadius: "50%" }}
+                />
               </div>
             </div>
 
@@ -1150,7 +1305,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               style={{
                 opacity: unlockPhase >= 2 ? 1 : 0,
                 transform: unlockPhase >= 2 ? "translateY(0)" : "translateY(12px)",
-                transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
+                transition: "opacity 0.42s ease-out, transform 0.42s ease-out",
                 fontFamily: "Afacad",
                 fontSize: "11px",
                 color: "rgba(255,255,255,0.38)",
@@ -1167,7 +1322,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               style={{
                 opacity: unlockPhase >= 3 ? 1 : 0,
                 transform: unlockPhase >= 3 ? "translateY(0)" : "translateY(12px)",
-                transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
+                transition: "opacity 0.42s ease-out, transform 0.42s ease-out",
                 fontFamily: "IvyOra Display",
                 fontStyle: "normal",
                 fontSize: "30px",
@@ -1180,20 +1335,22 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               Your Reflection
             </h2>
 
-            {/* Phase 4 — Cross divider */}
+            {/* Phase 4 — Cross divider image (full-width with cross in centre) */}
             <div
               style={{
                 opacity: unlockPhase >= 4 ? 1 : 0,
                 transform: unlockPhase >= 4 ? "translateY(0)" : "translateY(12px)",
-                transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
-                position: "relative",
-                width: "12px",
-                height: "12px",
-                marginBottom: "24px",
+                transition: "opacity 0.42s ease-out, transform 0.42s ease-out",
+                width: "100%",
+                maxWidth: "296px",
+                marginBottom: "22px",
               }}
             >
-              <div style={{ position: "absolute", top: "50%", left: 0, width: "100%", height: "1px", background: "rgba(255,255,255,0.18)", transform: "translateY(-50%)" }} />
-              <div style={{ position: "absolute", left: "50%", top: 0, height: "100%", width: "1px", background: "rgba(255,255,255,0.18)", transform: "translateX(-50%)" }} />
+              <img
+                src={crossDividerImg}
+                alt=""
+                style={{ width: "100%", height: "auto", display: "block", opacity: 0.55 }}
+              />
             </div>
 
             {/* Phase 5 — Summary text */}
@@ -1202,7 +1359,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 style={{
                   opacity: unlockPhase >= 5 ? 1 : 0,
                   transform: unlockPhase >= 5 ? "translateY(0)" : "translateY(12px)",
-                  transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
+                  transition: "opacity 0.42s ease-out, transform 0.42s ease-out",
                   fontFamily: "Afacad",
                   fontSize: "15px",
                   lineHeight: "24px",
@@ -1220,7 +1377,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               onClick={handleRedo}
               style={{
                 opacity: unlockPhase >= 6 ? 0.4 : 0,
-                transition: "opacity 0.38s ease-out",
+                transition: "opacity 0.42s ease-out",
                 marginTop: "28px",
                 fontFamily: "Afacad",
                 fontSize: "13px",
@@ -1236,13 +1393,13 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             </button>
           </div>
 
-          {/* Phase 6 — Continue button — centred, content-width (not full-width) */}
+          {/* Phase 6 — Continue button — centred, content-width */}
           <div
             className="relative flex justify-center"
             style={{
               opacity: unlockPhase >= 6 ? 1 : 0,
               transform: unlockPhase >= 6 ? "translateY(0)" : "translateY(12px)",
-              transition: "opacity 0.38s ease-out, transform 0.38s ease-out",
+              transition: "opacity 0.42s ease-out, transform 0.42s ease-out",
               padding: "0 24px 52px",
               zIndex: 1,
             }}
