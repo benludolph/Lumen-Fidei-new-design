@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DayCard } from "./DayCard";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
@@ -653,6 +654,11 @@ export function DayGridView({
                         onClick={() => {
                           if (isFirst) {
                             setVideoModalOpen(true);
+                            if (!mod.completed) {
+                              apiRequest("POST", `/api/prelim-modules/1/complete`)
+                                .then(() => queryClient.invalidateQueries({ queryKey: ["/api/prelim-modules"] }))
+                                .catch(() => {});
+                            }
                           } else {
                             onPrelimSelect?.(mod.position);
                           }
