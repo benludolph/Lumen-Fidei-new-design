@@ -1111,10 +1111,13 @@ export async function registerRoutes(
   app.get(api.day0.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Day 0 agreement requires all 2 prelim modules completed first
+    // Day 0 agreement requires all prelim modules completed first
     if (req.user!.role === 'participant') {
-      const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      if (completions.length < 2) {
+      const [allModules, completions] = await Promise.all([
+        storage.getPrelimModules(),
+        storage.getUserPrelimCompletions(req.user!.id),
+      ]);
+      if (completions.length < allModules.length) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
     }
@@ -1134,10 +1137,13 @@ export async function registerRoutes(
   app.post(api.day0.signAgreement.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    // Agreement requires all 2 prelim modules completed first
+    // Agreement requires all prelim modules completed first
     if (req.user!.role === 'participant') {
-      const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      if (completions.length < 2) {
+      const [allModules, completions] = await Promise.all([
+        storage.getPrelimModules(),
+        storage.getUserPrelimCompletions(req.user!.id),
+      ]);
+      if (completions.length < allModules.length) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
     }
@@ -1340,7 +1346,11 @@ export async function registerRoutes(
       return res.status(403).json({ message: "Only participants can complete prelim modules." });
     }
     const position = Number(req.params.position);
-    if (isNaN(position) || position < 1 || position > 2) {
+    if (isNaN(position) || position < 1) {
+      return res.status(400).json({ message: "Invalid module position." });
+    }
+    const allModules = await storage.getPrelimModules();
+    if (position > allModules.length) {
       return res.status(400).json({ message: "Invalid module position." });
     }
     const userId = req.user!.id;
@@ -1406,7 +1416,7 @@ export async function registerRoutes(
   // PUT /api/admin/prelim-modules/:position — admin-only update of module content
   app.put('/api/admin/prelim-modules/:position', requireRole('admin'), async (req, res) => {
     const position = Number(req.params.position);
-    if (isNaN(position) || position < 1 || position > 2) {
+    if (isNaN(position) || position < 1) {
       return res.status(400).json({ message: "Invalid module position." });
     }
     try {
