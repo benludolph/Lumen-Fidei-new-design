@@ -239,12 +239,14 @@ export function LessonFlow({
   const isChatFlow = currentSlideData.type === "chat_flow";
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
-      <LessonProgressBar
-        currentStep={currentSlide}
-        totalSteps={slides.length}
-        onExit={onExit}
-      />
+    <div className={cn("fixed inset-0 z-[200] flex flex-col overflow-x-hidden", isChatFlow ? "bg-[#111]" : "bg-white")} data-testid="lesson-flow">
+      {!isChatFlow && (
+        <LessonProgressBar
+          currentStep={currentSlide}
+          totalSteps={slides.length}
+          onExit={onExit}
+        />
+      )}
 
       <LessonSlide
         key={`slide-${animKey}`}

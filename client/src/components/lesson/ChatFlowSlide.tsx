@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ArrowLeft, X, Send, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
 
 // ============================================================
 // Types
@@ -559,138 +560,298 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
   if (!loadedFromServer) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#010101]">
-        <div className="text-[rgba(255,255,255,0.3)] text-sm font-['Afacad']">Loading…</div>
+      <div className="flex-1 flex flex-col bg-[#111] pt-[24px]">
+        <div className="flex-1 bg-[#010101] rounded-tl-[24px] rounded-tr-[24px] mt-[24px] flex items-center justify-center">
+          <div className="text-[rgba(255,255,255,0.3)] text-sm font-['Afacad']">Loading…</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#010101] overflow-hidden rounded-tl-[24px] rounded-tr-[24px]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
-        <button
-          onClick={handleBack}
-          disabled={!flowComplete && history.length === 0}
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
-            "bg-[rgba(30,30,30,0.72)] backdrop-blur-sm border border-[rgba(255,255,255,0.05)]",
-            (!flowComplete && history.length === 0) ? "opacity-30 cursor-not-allowed" : "hover:bg-[rgba(40,40,40,0.8)]"
-          )}
-          data-testid="button-chat-back"
-        >
-          <ArrowLeft className="w-4 h-4 text-white" />
-        </button>
+    <div className="flex-1 flex flex-col bg-[#111] overflow-hidden" style={{ paddingTop: "24px" }}>
 
-        <div className="bg-[#202020] px-4 py-[6px] rounded-[36px] flex items-center">
-          <span className="font-['Afacad'] font-medium text-[14px] tracking-[2.8px] text-[rgba(255,255,255,0.7)] uppercase">
-            {flowComplete ? "Complete" : `Reflection ${stepNumber} of ${totalSteps}`}
-          </span>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between shrink-0" style={{ paddingLeft: "24px", paddingRight: "24px", paddingBottom: "24px" }}>
+
+        {/* Back button */}
+        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+          <button
+            onClick={handleBack}
+            disabled={!flowComplete && history.length === 0}
+            className={cn(
+              "flex items-center justify-center transition-colors",
+              "rounded-[20px]",
+              (!flowComplete && history.length === 0)
+                ? "opacity-30 cursor-not-allowed"
+                : "hover:bg-[rgba(40,40,40,0.85)]"
+            )}
+            style={{
+              width: "40px",
+              height: "40px",
+              background: "rgba(30,30,30,0.72)",
+              backdropFilter: "blur(11px)",
+            }}
+            data-testid="button-chat-back"
+          >
+            <ArrowLeft className="w-4 h-4 text-white" />
+          </button>
         </div>
 
-        <button
-          onClick={onExit}
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-[rgba(30,30,30,0.72)] backdrop-blur-sm border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(40,40,40,0.8)] transition-colors"
-          data-testid="button-chat-exit"
+        {/* Center pill — "REFLECTION · N of N" */}
+        <div
+          className="flex items-center justify-center"
+          style={{ width: "168px" }}
         >
-          <X className="w-4 h-4 text-white" />
-        </button>
+          <div
+            className="flex items-center justify-center"
+            style={{
+              background: "#202020",
+              borderRadius: "36px",
+              paddingLeft: "16px",
+              paddingRight: "16px",
+              paddingTop: "12px",
+              paddingBottom: "12px",
+              maxHeight: "42px",
+            }}
+          >
+            <span
+              className="font-['Afacad'] font-medium whitespace-nowrap"
+              style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
+            >
+              {flowComplete ? "COMPLETE" : "REFLECTION"}
+            </span>
+            <span
+              className="font-['Afacad'] font-normal whitespace-nowrap"
+              style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
+            >
+              {flowComplete ? "" : `${stepNumber} of ${totalSteps}`}
+            </span>
+          </div>
+        </div>
+
+        {/* Exit button */}
+        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+          <button
+            onClick={onExit}
+            className="flex items-center justify-center rounded-[20px] transition-colors hover:bg-[rgba(52,52,52,0.6)]"
+            style={{
+              width: "40px",
+              height: "40px",
+              background: "rgba(42,42,42,0.5)",
+              backdropFilter: "blur(18px)",
+            }}
+            data-testid="button-chat-exit"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+        </div>
       </div>
 
-      {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-4 py-2 flex flex-col gap-4 min-h-0">
-        {renderedMessages.map((msg, i) => (
-          <MessageBubble
-            key={msg.id}
-            role={msg.role}
-            text={msg.text}
-            isNew={i === renderedMessages.length - 1}
+      {/* ── Content area — candle BG + centered card ── */}
+      <div
+        className="flex-1 relative flex flex-col overflow-hidden"
+        style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}
+      >
+        {/* Background image + gradient overlay */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{ borderRadius: "24px 24px 0 0", overflow: "hidden" }}
+        >
+          <img
+            src={candleBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.6, borderRadius: "24px 24px 0 0" }}
           />
-        ))}
+          <div
+            className="absolute inset-0"
+            style={{
+              borderRadius: "24px 24px 0 0",
+              background: "linear-gradient(89.999deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
+            }}
+          />
+        </div>
 
-        {showTyping && (
-          <div className="flex justify-start">
-            <TypingIndicator />
-          </div>
-        )}
+        {/* Scrollable inner section — centers the card */}
+        <div
+          className="flex-1 overflow-auto flex flex-col items-center relative"
+          style={{ paddingTop: "48px", paddingBottom: "80px", paddingLeft: "24px", paddingRight: "24px" }}
+        >
+          {/* Outer card — bg #0f1116, max-w 528px */}
+          <div
+            className="w-full relative overflow-hidden"
+            style={{
+              maxWidth: "528px",
+              background: "#0f1116",
+              border: "0.5px solid rgba(255,255,255,0.05)",
+              borderRadius: "8px",
+              paddingLeft: "48px",
+              paddingRight: "48px",
+              paddingTop: "31px",
+              paddingBottom: "31px",
+            }}
+          >
+            {/* Radial glow — top left */}
+            <div
+              className="absolute pointer-events-none mix-blend-lighten"
+              style={{
+                top: "-160.5px",
+                left: "-133.5px",
+                width: "310px",
+                height: "310px",
+                opacity: 0.04,
+                background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 90%)",
+              }}
+            />
 
-        {/* Options / input after all messages are revealed */}
-        {inputReady && !flowComplete && currentStep && (
-          <>
-            {(currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
-              <div className="flex flex-col gap-2">
-                {resolveOptions(currentStep).map(opt => (
-                  <OptionButton
-                    key={opt.value}
-                    label={opt.label}
-                    selected={selectedOptions.includes(opt.value)}
-                    onClick={() =>
-                      currentStep.inputType === "multi_select"
-                        ? handleMultiSelect(opt.value)
-                        : handleSingleSelect(opt.value)
-                    }
+            {/* Inner chat card — bg #09090b, h-450px */}
+            <div
+              className="flex flex-col overflow-hidden relative"
+              style={{
+                background: "#09090b",
+                border: "1px solid rgba(255,255,255,0.05)",
+                borderRadius: "6px",
+                height: "450px",
+                padding: "24px",
+              }}
+            >
+              {/* Messages list (scrollable, grows from top) */}
+              <div
+                className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {renderedMessages.map((msg, i) => (
+                  <MessageBubble
+                    key={msg.id}
+                    role={msg.role}
+                    text={msg.text}
+                    isNew={i === renderedMessages.length - 1}
                   />
                 ))}
-              </div>
-            )}
 
-            {currentStep.inputType === "text_input" && (
-              <div className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  value={textInput}
-                  onChange={e => setTextInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && !isContinueDisabled && handleSubmit()}
-                  placeholder="Type your answer here..."
-                  className="flex-1 h-9 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
-                  data-testid="input-chat-text"
-                />
-                <button
-                  onClick={handleSubmit}
-                  disabled={currentStep.required && !textInput.trim()}
-                  className="w-9 h-9 rounded-[6px] flex items-center justify-center bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  data-testid="button-chat-send"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </>
-        )}
+                {showTyping && (
+                  <div className="flex justify-start">
+                    <TypingIndicator />
+                  </div>
+                )}
 
-        {/* Summary card when flow complete */}
-        {flowComplete && (
-          <div className="relative rounded-[8px] bg-[#09090b] border border-[rgba(255,255,255,0.05)] p-6 overflow-hidden">
-            <div
-              className="absolute -top-12 -left-12 w-40 h-40 rounded-full pointer-events-none mix-blend-lighten opacity-[0.04]"
-              style={{ background: "radial-gradient(circle, #F07830 0%, transparent 70%)" }}
-            />
-            <p className="font-['Afacad'] text-[13px] text-[rgba(255,255,255,0.4)] uppercase tracking-widest mb-3">
-              Your Reflection
-            </p>
-            {summaryText ? (
-              <p className="font-['Afacad'] text-[15px] leading-[22px] text-[rgba(255,255,255,0.85)]">
-                {summaryText}
-              </p>
-            ) : (
-              <p className="font-['Afacad'] text-[14px] text-[rgba(255,255,255,0.5)] italic">
-                Your answers have been recorded.
-              </p>
-            )}
+                {/* Option buttons — appear inside chat after messages */}
+                {inputReady && !flowComplete && currentStep &&
+                  (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
+                  <div className="flex flex-col gap-2">
+                    {resolveOptions(currentStep).map(opt => (
+                      <OptionButton
+                        key={opt.value}
+                        label={opt.label}
+                        selected={selectedOptions.includes(opt.value)}
+                        onClick={() =>
+                          currentStep.inputType === "multi_select"
+                            ? handleMultiSelect(opt.value)
+                            : handleSingleSelect(opt.value)
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Summary card when flow complete */}
+                {flowComplete && (
+                  <div
+                    className="relative overflow-hidden"
+                    style={{
+                      background: "#0f1116",
+                      border: "1px solid rgba(255,255,255,0.05)",
+                      borderRadius: "6px",
+                      padding: "20px",
+                    }}
+                  >
+                    <div
+                      className="absolute pointer-events-none mix-blend-lighten"
+                      style={{
+                        top: "-48px",
+                        left: "-48px",
+                        width: "160px",
+                        height: "160px",
+                        opacity: 0.04,
+                        background: "radial-gradient(circle, #F07830 0%, transparent 70%)",
+                        borderRadius: "50%",
+                      }}
+                    />
+                    <p
+                      className="font-['Afacad'] uppercase mb-3"
+                      style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
+                    >
+                      Your Reflection
+                    </p>
+                    {summaryText ? (
+                      <p
+                        className="font-['Afacad']"
+                        style={{ fontSize: "15px", lineHeight: "22px", color: "rgba(255,255,255,0.85)" }}
+                      >
+                        {summaryText}
+                      </p>
+                    ) : (
+                      <p
+                        className="font-['Afacad'] italic"
+                        style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)" }}
+                      >
+                        Your answers have been recorded.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div ref={chatEndRef} className="h-2 shrink-0" />
+              </div>
+
+              {/* Text input row — pinned to bottom of chat card */}
+              {inputReady && !flowComplete && currentStep && currentStep.inputType === "text_input" && (
+                <div className="flex gap-2 items-center shrink-0 pt-2">
+                  <input
+                    type="text"
+                    value={textInput}
+                    onChange={e => setTextInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && !isContinueDisabled && handleSubmit()}
+                    placeholder="Type your answer here..."
+                    className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
+                    style={{ height: "36px" }}
+                    data-testid="input-chat-text"
+                  />
+                  <button
+                    onClick={handleSubmit}
+                    disabled={currentStep.required && !textInput.trim()}
+                    className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                    style={{ width: "36px", height: "36px" }}
+                    data-testid="button-chat-send"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
-
-        <div ref={chatEndRef} className="h-2" />
+        </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="shrink-0 bg-[#0f1011] border-t border-[rgba(228,228,231,0.06)] px-6 py-8 flex items-center justify-end gap-3">
+      {/* ── Footer ── */}
+      <div
+        className="shrink-0 flex items-center justify-end gap-3"
+        style={{
+          background: "#0f1011",
+          borderTop: "1px solid rgba(228,228,231,0.06)",
+          paddingLeft: "24px",
+          paddingRight: "24px",
+          paddingTop: "32px",
+          paddingBottom: "32px",
+        }}
+      >
         {showSkip && (
           <button
             onClick={() => {
               setSelectedOptions([]);
               setTextInput("");
-              // Skip: advance with empty value and no display text
               advanceToNext("", "");
             }}
             className="font-['Afacad'] text-[14px] text-[rgba(255,255,255,0.4)] hover:text-[rgba(255,255,255,0.6)] transition-colors"
@@ -721,7 +882,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             className={cn(
               "flex items-center gap-2 px-5 py-2.5 rounded-[6px] font-['Afacad'] text-[14px] font-medium transition-colors",
               isContinueDisabled
-                ? "bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.3)] cursor-not-allowed"
+                ? "bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.3)] cursor-not-allowed opacity-50"
                 : "bg-[#F07830] text-white hover:bg-[#d96a28]"
             )}
             data-testid="button-chat-continue"
