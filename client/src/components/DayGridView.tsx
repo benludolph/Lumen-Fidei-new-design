@@ -140,6 +140,7 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           width: "100%",
           maxWidth: "860px",
           background: "#0f1011",
+          border: "1px solid rgba(255,255,255,0.05)",
           borderRadius: "8px",
           overflow: "hidden",
           boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
