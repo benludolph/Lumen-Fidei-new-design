@@ -1778,7 +1778,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario", "chat_flow"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -1793,6 +1793,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   quiz: "Quiz",
   survey: "Survey",
   scenario: "Scenario Stepper",
+  chat_flow: "Chat Flow",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -1808,7 +1809,485 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
   survey: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
   scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
+  chat_flow: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
 };
+
+// ============================================================
+// Chat Flow — Origin of the Weight default template
+// ============================================================
+
+const ORIGIN_OF_THE_WEIGHT_TEMPLATE = JSON.stringify({
+  steps: [
+    {
+      id: "step_1",
+      messages: ["Let's begin with something simple.", "Can you name what you are currently carrying — the weight, the wound, or the struggle that brought you here?"],
+      inputType: "single_select",
+      variableName: "wound_type",
+      required: true,
+      options: [
+        { label: "A wound from the past", value: "past_wound" },
+        { label: "A persistent sin or addiction", value: "sin_addiction" },
+        { label: "Fear, anxiety, or dread", value: "anxiety" },
+        { label: "Shame or unworthiness", value: "shame" },
+        { label: "Anger or resentment", value: "anger" },
+        { label: "Grief or loss", value: "grief" },
+        { label: "Confusion about my identity", value: "identity" },
+        { label: "Something else", value: "other" },
+      ],
+    },
+    {
+      id: "step_2",
+      messages: ["I hear you.", "How long have you been carrying this?"],
+      inputType: "single_select",
+      variableName: "duration",
+      required: true,
+      options: [
+        { label: "Less than a year", value: "recent" },
+        { label: "A few years", value: "few_years" },
+        { label: "Most of my life", value: "most_of_life" },
+        { label: "I'm not sure", value: "unsure" },
+      ],
+    },
+    {
+      id: "step_3",
+      messages: ["That's a long time to carry something alone.", "Do you have a sense of where this weight first entered your life?"],
+      inputType: "single_select",
+      variableName: "origin_moment",
+      required: false,
+      options: [
+        { label: "Childhood or family of origin", value: "childhood" },
+        { label: "A specific traumatic event", value: "trauma" },
+        { label: "A relationship", value: "relationship" },
+        { label: "My own choices over time", value: "own_choices" },
+        { label: "I don't know", value: "unknown" },
+      ],
+    },
+    {
+      id: "step_4",
+      messages: ["Thank you for sharing that.", "When this weight is heaviest, what lie do you find yourself believing about yourself?"],
+      inputType: "text_input",
+      variableName: "core_lie",
+      required: false,
+    },
+    {
+      id: "step_5",
+      messages: ["That lie has likely shaped many of your decisions.", "Has anyone in your life spoken that lie to you — or modeled it?"],
+      inputType: "single_select",
+      variableName: "lie_source",
+      required: false,
+      options: [
+        { label: "A parent or caregiver", value: "parent" },
+        { label: "A sibling or peer", value: "peer" },
+        { label: "A religious figure", value: "religious" },
+        { label: "A partner or spouse", value: "partner" },
+        { label: "No one — I constructed it myself", value: "self" },
+        { label: "I'm not sure", value: "unsure" },
+      ],
+    },
+    {
+      id: "step_6",
+      messages: ["You didn't choose to believe that lie. It was placed in you.", "How does carrying this weight affect your relationship with God?"],
+      inputType: "single_select",
+      variableName: "god_relationship",
+      required: false,
+      options: [
+        { label: "I feel distant or abandoned", value: "distant" },
+        { label: "I feel unworthy to approach Him", value: "unworthy" },
+        { label: "I'm angry at Him", value: "angry" },
+        { label: "I struggle to trust Him", value: "distrust" },
+        { label: "It hasn't affected my faith much", value: "unaffected" },
+      ],
+    },
+    {
+      id: "step_7",
+      messages: ["That makes complete sense.", "What would it mean for you if this weight were truly lifted?"],
+      inputType: "text_input",
+      variableName: "freedom_vision",
+      required: false,
+    },
+    {
+      id: "step_8",
+      messages: ["Hold that vision. That is what God desires for you.", "What is one small step you feel called to take this week — even if it feels difficult?"],
+      inputType: "text_input",
+      variableName: "next_step",
+      required: false,
+    },
+    {
+      id: "step_9",
+      messages: ["You are not alone in this.", "Before we close, is there anything else you want to bring before the Lord today?"],
+      inputType: "text_input",
+      variableName: "closing_intention",
+      required: false,
+    },
+    {
+      id: "step_10",
+      messages: ["Thank you for your honesty and courage.", "The Lord sees everything you have just shared. He is not surprised, and He is not discouraged. He is with you."],
+      inputType: "message_only",
+    },
+  ],
+  optionSets: {},
+  summaryTemplate: "I am carrying {{wound_type}} that has been with me for {{duration}}. It began in {{origin_moment}}. The lie I believe is: \"{{core_lie}}\". One step I commit to this week: {{next_step}}.",
+}, null, 2);
+
+// ============================================================
+// Chat Flow Slide Editor
+// ============================================================
+
+interface ChatFlowOptionEditor {
+  label: string;
+  value: string;
+}
+
+interface ChatFlowBranchEditor {
+  variableName: string;
+  operator: "equals" | "not_equals" | "contains";
+  value: string;
+  targetStepId: string;
+}
+
+interface ChatFlowStepEditor {
+  id: string;
+  messages: string[];
+  inputType: "single_select" | "multi_select" | "text_input" | "message_only" | "";
+  options: ChatFlowOptionEditor[];
+  optionSetVar: string;
+  optionSetMap: string;
+  variableName: string;
+  required: boolean;
+  branches: ChatFlowBranchEditor[];
+}
+
+interface ChatFlowEditorData {
+  steps: ChatFlowStepEditor[];
+  summaryTemplate: string;
+  showJson: boolean;
+}
+
+function parseChatFlowEditorData(content: string): Omit<ChatFlowEditorData, "showJson"> {
+  try {
+    const p = JSON.parse(content || "{}");
+    const steps: ChatFlowStepEditor[] = (Array.isArray(p.steps) ? p.steps : []).map((s: any) => ({
+      id: s.id || `step_${Date.now()}_${Math.random()}`,
+      messages: Array.isArray(s.messages) ? s.messages : [s.messages || ""],
+      inputType: s.inputType || "",
+      options: Array.isArray(s.options) ? s.options : [],
+      optionSetVar: s.optionSetVar || "",
+      optionSetMap: s.optionSetMap ? JSON.stringify(s.optionSetMap) : "",
+      variableName: s.variableName || "",
+      required: s.required !== false,
+      branches: Array.isArray(s.branches) ? s.branches : [],
+    }));
+    return {
+      steps,
+      summaryTemplate: p.summaryTemplate || "",
+    };
+  } catch {
+    return { steps: [], summaryTemplate: "" };
+  }
+}
+
+function serializeChatFlowEditorData(data: Omit<ChatFlowEditorData, "showJson">): string {
+  const steps = data.steps.map(s => {
+    const step: any = {
+      id: s.id,
+      messages: s.messages.filter(m => m.trim()),
+      inputType: s.inputType || undefined,
+    };
+    if (s.inputType === "single_select" || s.inputType === "multi_select") {
+      step.options = s.options.filter(o => o.label || o.value);
+    }
+    if (s.optionSetVar) {
+      step.optionSetVar = s.optionSetVar;
+      try { step.optionSetMap = JSON.parse(s.optionSetMap); } catch { step.optionSetMap = {}; }
+    }
+    if (s.variableName) step.variableName = s.variableName;
+    if (s.inputType && s.inputType !== "message_only") step.required = s.required;
+    if (s.branches.length > 0) step.branches = s.branches;
+    return step;
+  });
+  return JSON.stringify({ steps, optionSets: {}, summaryTemplate: data.summaryTemplate }, null, 2);
+}
+
+function newChatFlowStep(): ChatFlowStepEditor {
+  return {
+    id: `step_${Date.now()}`,
+    messages: [""],
+    inputType: "message_only",
+    options: [],
+    optionSetVar: "",
+    optionSetMap: "",
+    variableName: "",
+    required: false,
+    branches: [],
+  };
+}
+
+const INPUT_TYPE_LABELS: Record<string, string> = {
+  "": "No input (message only)",
+  message_only: "Message only (Continue button)",
+  single_select: "Single Select",
+  multi_select: "Multi Select",
+  text_input: "Text Input",
+};
+
+function ChatFlowSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  const [showJson, setShowJson] = useState(false);
+  const [expandedStep, setExpandedStep] = useState<number | null>(0);
+
+  const data = parseChatFlowEditorData(content);
+
+  const update = (next: Omit<ChatFlowEditorData, "showJson">) => onChange(serializeChatFlowEditorData(next));
+
+  const updateStep = (stepIdx: number, patch: Partial<ChatFlowStepEditor>) => {
+    const steps = data.steps.map((s, i) => i === stepIdx ? { ...s, ...patch } : s);
+    update({ ...data, steps });
+  };
+
+  const addStep = () => {
+    update({ ...data, steps: [...data.steps, newChatFlowStep()] });
+    setExpandedStep(data.steps.length);
+  };
+
+  const removeStep = (idx: number) => {
+    const steps = data.steps.filter((_, i) => i !== idx);
+    update({ ...data, steps });
+    if (expandedStep === idx) setExpandedStep(null);
+    else if (expandedStep !== null && expandedStep > idx) setExpandedStep(expandedStep - 1);
+  };
+
+  const moveStep = (idx: number, dir: "up" | "down") => {
+    const steps = [...data.steps];
+    const target = dir === "up" ? idx - 1 : idx + 1;
+    if (target < 0 || target >= steps.length) return;
+    [steps[idx], steps[target]] = [steps[target], steps[idx]];
+    update({ ...data, steps });
+    if (expandedStep === idx) setExpandedStep(target);
+    else if (expandedStep === target) setExpandedStep(idx);
+  };
+
+  const updateStepMessage = (stepIdx: number, msgIdx: number, val: string) => {
+    const messages = data.steps[stepIdx].messages.map((m, i) => i === msgIdx ? val : m);
+    updateStep(stepIdx, { messages });
+  };
+
+  const addMessage = (stepIdx: number) => {
+    const messages = [...data.steps[stepIdx].messages, ""];
+    updateStep(stepIdx, { messages });
+  };
+
+  const removeMessage = (stepIdx: number, msgIdx: number) => {
+    if (data.steps[stepIdx].messages.length <= 1) return;
+    const messages = data.steps[stepIdx].messages.filter((_, i) => i !== msgIdx);
+    updateStep(stepIdx, { messages });
+  };
+
+  const updateOption = (stepIdx: number, optIdx: number, field: "label" | "value", val: string) => {
+    const options = data.steps[stepIdx].options.map((o, i) => i === optIdx ? { ...o, [field]: val } : o);
+    updateStep(stepIdx, { options });
+  };
+
+  const addOption = (stepIdx: number) => {
+    updateStep(stepIdx, { options: [...data.steps[stepIdx].options, { label: "", value: "" }] });
+  };
+
+  const removeOption = (stepIdx: number, optIdx: number) => {
+    updateStep(stepIdx, { options: data.steps[stepIdx].options.filter((_, i) => i !== optIdx) });
+  };
+
+  if (showJson) {
+    return (
+      <div className="space-y-2" data-testid={`chatflow-editor-json-${index}`}>
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-muted-foreground">JSON (advanced)</label>
+          <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(false)}>
+            Visual Editor
+          </Button>
+        </div>
+        <Textarea
+          value={content}
+          onChange={e => onChange(e.target.value)}
+          rows={20}
+          className="font-mono text-xs"
+          data-testid={`textarea-chatflow-json-${index}`}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4" data-testid={`chatflow-editor-${index}`}>
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Steps ({data.steps.length})</label>
+        <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setShowJson(true)}>
+          JSON
+        </Button>
+      </div>
+
+      {data.steps.length === 0 && (
+        <p className="text-sm text-muted-foreground italic">No steps yet. Add one below.</p>
+      )}
+
+      {data.steps.map((step, stepIdx) => {
+        const isExpanded = expandedStep === stepIdx;
+        const needsOptions = step.inputType === "single_select" || step.inputType === "multi_select";
+        return (
+          <div key={step.id} className="border rounded-lg bg-muted/20">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <span className="text-xs font-semibold text-muted-foreground w-5 shrink-0">{stepIdx + 1}</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs text-muted-foreground truncate block">
+                  {step.messages[0]?.trim() || "(no message)"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveStep(stepIdx, "up")} disabled={stepIdx === 0} data-testid={`button-chatflow-step-up-${stepIdx}`}>
+                  <ChevronUp className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveStep(stepIdx, "down")} disabled={stepIdx === data.steps.length - 1} data-testid={`button-chatflow-step-down-${stepIdx}`}>
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setExpandedStep(isExpanded ? null : stepIdx)} data-testid={`button-chatflow-step-expand-${stepIdx}`}>
+                  {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStep(stepIdx)} data-testid={`button-chatflow-step-remove-${stepIdx}`}>
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </Button>
+              </div>
+            </div>
+
+            {isExpanded && (
+              <div className="px-3 pb-3 space-y-3 border-t pt-3">
+                {/* Messages */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Messages (revealed one at a time)</label>
+                  {step.messages.map((msg, msgIdx) => (
+                    <div key={msgIdx} className="flex gap-1 items-start">
+                      <Textarea
+                        value={msg}
+                        onChange={e => updateStepMessage(stepIdx, msgIdx, e.target.value)}
+                        rows={2}
+                        placeholder={`Message ${msgIdx + 1}...`}
+                        className="text-sm flex-1"
+                        data-testid={`textarea-chatflow-msg-${stepIdx}-${msgIdx}`}
+                      />
+                      {step.messages.length > 1 && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 mt-0.5 shrink-0" onClick={() => removeMessage(stepIdx, msgIdx)}>
+                          <X className="w-3 h-3 text-muted-foreground" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1 mt-1" onClick={() => addMessage(stepIdx)} data-testid={`button-chatflow-add-msg-${stepIdx}`}>
+                    <Plus className="w-3 h-3" /> Add Message
+                  </Button>
+                </div>
+
+                {/* Input Type */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Input Type</label>
+                  <Select value={step.inputType || ""} onValueChange={val => updateStep(stepIdx, { inputType: val as ChatFlowStepEditor["inputType"], options: val === "single_select" || val === "multi_select" ? (step.options.length ? step.options : [{ label: "", value: "" }]) : [] })}>
+                    <SelectTrigger className="h-8 text-xs" data-testid={`select-chatflow-input-type-${stepIdx}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(INPUT_TYPE_LABELS).map(([v, l]) => (
+                        <SelectItem key={v} value={v || "message_only"}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Variable Name */}
+                {step.inputType && step.inputType !== "message_only" && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Variable Name (for summary: {"{{variable_name}}"})</label>
+                    <Input
+                      value={step.variableName}
+                      onChange={e => updateStep(stepIdx, { variableName: e.target.value.replace(/[^a-z0-9_]/g, "_") })}
+                      placeholder="e.g. wound_type"
+                      className="h-8 text-xs"
+                      data-testid={`input-chatflow-var-${stepIdx}`}
+                    />
+                  </div>
+                )}
+
+                {/* Required toggle */}
+                {step.inputType && step.inputType !== "message_only" && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={step.required}
+                      onChange={e => updateStep(stepIdx, { required: e.target.checked })}
+                      id={`chatflow-req-${stepIdx}`}
+                      data-testid={`checkbox-chatflow-required-${stepIdx}`}
+                    />
+                    <label htmlFor={`chatflow-req-${stepIdx}`} className="text-xs text-muted-foreground cursor-pointer">
+                      Required (disable Continue until answered)
+                    </label>
+                  </div>
+                )}
+
+                {/* Options (for select types) */}
+                {needsOptions && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Options</label>
+                    {step.options.map((opt, optIdx) => (
+                      <div key={optIdx} className="flex gap-1 items-center">
+                        <Input
+                          value={opt.label}
+                          onChange={e => updateOption(stepIdx, optIdx, "label", e.target.value)}
+                          placeholder="Label (shown to user)"
+                          className="h-7 text-xs flex-1"
+                          data-testid={`input-chatflow-opt-label-${stepIdx}-${optIdx}`}
+                        />
+                        <Input
+                          value={opt.value}
+                          onChange={e => updateOption(stepIdx, optIdx, "value", e.target.value.replace(/[^a-z0-9_]/g, "_"))}
+                          placeholder="value"
+                          className="h-7 text-xs w-28"
+                          data-testid={`input-chatflow-opt-value-${stepIdx}-${optIdx}`}
+                        />
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeOption(stepIdx, optIdx)} data-testid={`button-chatflow-remove-opt-${stepIdx}-${optIdx}`}>
+                          <Trash2 className="w-3 h-3 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addOption(stepIdx)} data-testid={`button-chatflow-add-opt-${stepIdx}`}>
+                      <Plus className="w-3 h-3" /> Add Option
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <Button variant="outline" size="sm" className="gap-1 w-full" onClick={addStep} data-testid={`button-chatflow-add-step-${index}`}>
+        <Plus className="w-3 h-3" /> Add Step
+      </Button>
+
+      {/* Summary template */}
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Summary Template</label>
+        <p className="text-xs text-muted-foreground">Use {"{{variable_name}}"} to insert answers. Empty clauses are auto-hidden.</p>
+        <Textarea
+          value={data.summaryTemplate}
+          onChange={e => update({ ...data, summaryTemplate: e.target.value })}
+          rows={4}
+          placeholder="I am carrying {{wound_type}}. The lie I believe: {{core_lie}}."
+          className="text-sm"
+          data-testid={`textarea-chatflow-summary-${index}`}
+        />
+        {data.summaryTemplate && (
+          <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2 italic">
+            Preview: {data.summaryTemplate.replace(/\{\{(\w+)\}\}/g, (_, key) => `[${key}]`)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function ScenarioStepImageUpload({ stepIndex, editorIndex, currentUrl, onUploaded }: { stepIndex: number; editorIndex: number; currentUrl: string; onUploaded: (url: string) => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -2761,6 +3240,7 @@ function TrackAContentManagementView() {
     if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
+    if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     return "";
   };
 
@@ -3203,6 +3683,12 @@ function TrackAContentManagementView() {
                               />
                             ) : slide.type === "scenario" ? (
                               <ScenarioSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "chat_flow" ? (
+                              <ChatFlowSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -3853,6 +4339,7 @@ function PrelimContentManagementView() {
     if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
+    if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     return "";
   };
 
@@ -4068,6 +4555,12 @@ function PrelimContentManagementView() {
                               />
                             ) : slide.type === "scenario" ? (
                               <ScenarioSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "chat_flow" ? (
+                              <ChatFlowSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}

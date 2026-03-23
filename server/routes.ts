@@ -4,7 +4,7 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, practiceResources, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, practiceResources, chatFlowResponses, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -1354,6 +1354,53 @@ export async function registerRoutes(
     }
     const completion = await storage.completePrelimModule(userId, position);
     res.json(completion);
+  });
+
+  // GET /api/chat-flow-responses/:contextKey — get all variable answers for current user in a given flow
+  app.get('/api/chat-flow-responses/:contextKey', requireAuth, async (req, res) => {
+    const userId = req.user!.id;
+    const contextKey = String(req.params.contextKey);
+    try {
+      const rows = await db
+        .select()
+        .from(chatFlowResponses)
+        .where(and(eq(chatFlowResponses.userId, userId), eq(chatFlowResponses.contextKey, contextKey)));
+      const result: Record<string, string> = {};
+      for (const row of rows) {
+        result[row.variableName] = row.answer;
+      }
+      res.json(result);
+    } catch (err) {
+      console.error("Error fetching chat flow responses:", err);
+      res.status(500).json({ message: "Failed to fetch responses." });
+    }
+  });
+
+  // POST /api/chat-flow-responses/:contextKey — upsert a variable answer for current user
+  app.post('/api/chat-flow-responses/:contextKey', requireAuth, async (req, res) => {
+    const userId = req.user!.id;
+    const contextKey = String(req.params.contextKey);
+    const { variableName, answer } = req.body;
+    if (!variableName || typeof variableName !== 'string') {
+      return res.status(400).json({ message: "variableName is required." });
+    }
+    if (answer === undefined || answer === null) {
+      return res.status(400).json({ message: "answer is required." });
+    }
+    const answerStr = String(answer);
+    try {
+      await db
+        .insert(chatFlowResponses)
+        .values({ userId, contextKey, variableName, answer: answerStr })
+        .onConflictDoUpdate({
+          target: [chatFlowResponses.userId, chatFlowResponses.contextKey, chatFlowResponses.variableName],
+          set: { answer: answerStr, updatedAt: new Date() },
+        });
+      res.json({ ok: true });
+    } catch (err) {
+      console.error("Error saving chat flow response:", err);
+      res.status(500).json({ message: "Failed to save response." });
+    }
   });
 
   // PUT /api/admin/prelim-modules/:position — admin-only update of module content

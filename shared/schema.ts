@@ -144,6 +144,18 @@ export const surveyResponses = pgTable("survey_responses", {
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
 
+// Chat flow responses - stores per-variable answers for chat_flow slides
+export const chatFlowResponses = pgTable("chat_flow_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  contextKey: text("context_key").notNull(), // e.g. "prelim-2" or "day-5"
+  variableName: text("variable_name").notNull(),
+  answer: text("answer").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("chat_flow_user_context_var_unique").on(table.userId, table.contextKey, table.variableName),
+]);
+
 // Cohort settings - stores program-wide configuration like start date
 export const cohortSettings = pgTable("cohort_settings", {
   id: serial("id").primaryKey(),
@@ -230,6 +242,7 @@ export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omi
 export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, submittedAt: true });
 export const insertPrelimModuleSchema = createInsertSchema(prelimModules).omit({ id: true });
 export const insertPrelimCompletionSchema = createInsertSchema(prelimCompletions).omit({ id: true, completedAt: true });
+export const insertChatFlowResponseSchema = createInsertSchema(chatFlowResponses).omit({ id: true, updatedAt: true });
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -271,6 +284,9 @@ export type InsertPrelimModule = z.infer<typeof insertPrelimModuleSchema>;
 
 export type PrelimCompletion = typeof prelimCompletions.$inferSelect;
 export type InsertPrelimCompletion = z.infer<typeof insertPrelimCompletionSchema>;
+
+export type ChatFlowResponse = typeof chatFlowResponses.$inferSelect;
+export type InsertChatFlowResponse = z.infer<typeof insertChatFlowResponseSchema>;
 
 // Prelim module with user completion status (returned from /api/prelim-modules)
 export type PrelimModuleWithStatus = PrelimModule & { completed: boolean };

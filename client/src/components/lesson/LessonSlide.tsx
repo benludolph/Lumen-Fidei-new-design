@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import DOMPurify from "dompurify";
 import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage } from "@/lib/sounds";
 import { HtmlContent } from "@/components/ui/html-content";
+import { ChatFlowSlide } from "./ChatFlowSlide";
 
 import audioDay0 from "@assets/Day_0_1772743901058.mp3";
 import audioDay1 from "@assets/Day_1_1772743901058.mp3";
@@ -42,7 +43,8 @@ export type SlideType =
   | "quiz_result"
   | "knowledge_check"
   | "survey"
-  | "scenario";
+  | "scenario"
+  | "chat_flow";
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -328,6 +330,12 @@ interface LessonSlideProps {
   onSurveySubmitted?: () => void;
   surveyAlreadySubmitted?: boolean;
   scenarioRevealCount?: number;
+  // chat_flow specific
+  chatFlowContextKey?: string;
+  chatFlowTotalSlides?: number;
+  chatFlowSlideIndex?: number;
+  onChatFlowComplete?: () => void;
+  onChatFlowExit?: () => void;
 }
 
 export function LessonSlide({
@@ -350,11 +358,38 @@ export function LessonSlide({
   onSurveySubmitted,
   surveyAlreadySubmitted,
   scenarioRevealCount = 1,
+  chatFlowContextKey,
+  chatFlowTotalSlides = 1,
+  chatFlowSlideIndex = 0,
+  onChatFlowComplete,
+  onChatFlowExit,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
       ? "lesson-slide-in-right"
       : "lesson-slide-in-left";
+
+  // chat_flow takes over the entire slide area with its own UI
+  if (type === "chat_flow") {
+    return (
+      <div
+        className={cn("flex-1 flex flex-col overflow-hidden", animationClass)}
+        data-testid="lesson-slide-chat_flow"
+      >
+        <ChatFlowSlide
+          content={content}
+          contextKey={chatFlowContextKey || `chat-flow-${dayNumber}`}
+          totalSlides={chatFlowTotalSlides}
+          slideIndex={chatFlowSlideIndex}
+          onComplete={() => {
+            onInteracted?.();
+            onChatFlowComplete?.();
+          }}
+          onExit={onChatFlowExit || (() => {})}
+        />
+      </div>
+    );
+  }
 
   return (
     <div

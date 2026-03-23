@@ -233,9 +233,10 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(currentSlideData.type) && !slideInteracted;
   const surveyBlocked = currentSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
+  const isChatFlow = currentSlideData.type === "chat_flow";
 
   return createPortal(
     <div className="fixed inset-0 z-[200] flex flex-col bg-white overflow-x-hidden" data-testid="lesson-flow">
@@ -269,9 +270,14 @@ export function LessonFlow({
         onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
         surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
         scenarioRevealCount={currentSlideData.type === "scenario" ? scenarioRevealCount : undefined}
+        chatFlowContextKey={currentSlideData.type === "chat_flow" ? `lesson-day${dayNumber}-slide${currentSlide}` : undefined}
+        chatFlowTotalSlides={slides.length}
+        chatFlowSlideIndex={currentSlide}
+        onChatFlowComplete={currentSlideData.type === "chat_flow" ? handleNext : undefined}
+        onChatFlowExit={currentSlideData.type === "chat_flow" ? onExit : undefined}
       />
 
-      {isValidKc && kcAnswered ? null : (
+      {(isValidKc && kcAnswered) || isChatFlow ? null : (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-[210]">
           <div className="max-w-[540px] mx-auto flex items-center justify-between">
             <Button
