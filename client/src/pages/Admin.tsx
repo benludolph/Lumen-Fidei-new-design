@@ -2294,10 +2294,10 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
                         <p className="text-xs text-muted-foreground/70">Select options based on a previously answered variable's value.</p>
                         <div className="space-y-1">
                           <label className="text-xs text-muted-foreground">Source Variable (whose answer picks the set)</label>
-                          <Select value={step.optionSetVar || ""} onValueChange={val => updateStep(stepIdx, { optionSetVar: val, optionSetMap: val ? step.optionSetMap : [] })}>
+                          <Select value={step.optionSetVar || "__none__"} onValueChange={val => { const v = val === "__none__" ? "" : val; updateStep(stepIdx, { optionSetVar: v, optionSetMap: v ? step.optionSetMap : [] }); }}>
                             <SelectTrigger className="h-7 text-xs" data-testid={`select-chatflow-osvar-${stepIdx}`}><SelectValue placeholder="(none)" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">None</SelectItem>
+                              <SelectItem value="__none__">None</SelectItem>
                               {allVarNames.filter(v => v !== step.variableName).map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
                             </SelectContent>
                           </Select>
