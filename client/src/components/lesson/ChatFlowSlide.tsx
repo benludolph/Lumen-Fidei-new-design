@@ -393,6 +393,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
   const { data: overlayConfig } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
     queryKey: ["/api/admin/reflection-overlay"],
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
