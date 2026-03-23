@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
 import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
-import candleBg from "@assets/OilPaintingBG_1774246403878.webp";
+import slideBg from "@assets/SlideBG_1774302310257.webp";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
 import { playClickContinue } from "@/lib/sounds";
 
@@ -288,24 +288,53 @@ export function LessonFlow({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden bg-[#111]"
+      className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden"
       data-testid="lesson-flow"
     >
-      {/* ── Header: back | lesson pill | exit ── */}
+      {/* ── Full-screen background: painting + radial vignette ── */}
+      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+        <img
+          src={slideBg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "radial-gradient(ellipse 140% 80% at 50% 120%, rgba(0,0,0,0.92) 28%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.05) 100%)",
+          }}
+        />
+      </div>
+
+      {/* ── Header: blurred top nav bar ── */}
       <div
-        className="shrink-0 flex items-center justify-between"
-        style={{ paddingLeft: "16px", paddingRight: "16px", paddingTop: "24px", paddingBottom: "24px" }}
+        className="relative shrink-0 flex items-center justify-between"
+        style={{
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          background: "rgba(0,0,0,0.6)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+          paddingTop: "24px",
+          paddingBottom: "24px",
+        }}
       >
         {/* Left: Back button */}
         <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
           <button
             onClick={handlePrev}
-            className="flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(52,52,52,0.7)]"
+            className="flex items-center justify-center transition-opacity hover:opacity-80"
             style={{
               width: "40px",
               height: "40px",
-              background: "rgba(30,30,30,0.72)",
+              background: "#18181b",
               backdropFilter: "blur(11px)",
+              WebkitBackdropFilter: "blur(11px)",
+              borderRadius: "20px",
+              border: "none",
+              cursor: "pointer",
             }}
             data-testid="button-lesson-header-back"
           >
@@ -313,30 +342,37 @@ export function LessonFlow({
           </button>
         </div>
 
-        {/* Center: Lesson theme + slide counter pill */}
+        {/* Center: Lesson name pill + slide counter */}
         <div
-          className="flex items-center justify-center gap-2"
+          className="flex items-center"
           style={{
-            background: "#202020",
+            background: "#18181b",
             borderRadius: "36px",
             paddingLeft: "16px",
             paddingRight: "16px",
-            paddingTop: "10px",
-            paddingBottom: "10px",
+            paddingTop: "12px",
+            paddingBottom: "12px",
             maxHeight: "42px",
           }}
         >
           {content.centralTheme && (
             <span
-              className="font-['Afacad'] font-medium whitespace-nowrap uppercase"
-              style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
+              className="font-['Afacad'] font-medium whitespace-nowrap overflow-hidden"
+              style={{
+                fontSize: "14px",
+                color: "#efefef",
+                lineHeight: "18px",
+                maxWidth: "132px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
             >
               {content.centralTheme}
             </span>
           )}
           <span
             className="font-['Afacad'] font-normal whitespace-nowrap"
-            style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px" }}
+            style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
           >
             {currentSlide + 1} of {slides.length}
           </span>
@@ -346,12 +382,16 @@ export function LessonFlow({
         <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
           <button
             onClick={onExit}
-            className="flex items-center justify-center rounded-full transition-colors hover:bg-[rgba(62,62,62,0.7)]"
+            className="flex items-center justify-center transition-opacity hover:opacity-80"
             style={{
               width: "40px",
               height: "40px",
-              background: "rgba(42,42,42,0.5)",
+              background: "#18181b",
               backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
+              borderRadius: "20px",
+              border: "none",
+              cursor: "pointer",
             }}
             data-testid="button-lesson-exit"
           >
@@ -360,71 +400,70 @@ export function LessonFlow({
         </div>
       </div>
 
-      {/* ── Content area: oil painting bg + gradient + fill dark card ── */}
-      <div className="flex-1 relative flex flex-col items-center overflow-hidden pt-8">
-        {/* Oil painting background + gradient overlay */}
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-          <img
-            src={candleBg}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(89.99deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
-            }}
-          />
-        </div>
-
+      {/* ── Content area ── */}
+      <div
+        className="relative flex-1 flex flex-col items-center overflow-hidden"
+        style={{ paddingTop: "32px", paddingLeft: "20px", paddingRight: "20px" }}
+      >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
           className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px]"
           style={{
-            background: "#0f1116",
+            background: "rgb(15,17,22)",
             border: "0.5px solid rgba(255,255,255,0.05)",
             borderBottom: "none",
             borderRadius: "8px 8px 0 0",
-            padding: "24px",
-            gap: "32px",
+            padding: "48px",
           }}
         >
-          <div className="flex-1 overflow-y-auto relative">
+          {/* Subtle radial highlight at top-left corner */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              borderRadius: "inherit",
+              background: "radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 60%)",
+            }}
+          />
+          <div className="relative flex-1 overflow-y-auto">
             {lessonSlideEl}
           </div>
         </div>
       </div>
 
-      {/* ── Footer: dark bar with right-aligned Continue/Finish button ── */}
+      {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
       {!(isValidKc && kcAnswered) && (
         <div
-          className="shrink-0 flex flex-col items-center justify-center"
+          className="relative shrink-0 flex flex-col items-center justify-center"
           style={{
-            background: "#0f1116",
+            background: "black",
             borderTop: "1px solid rgba(255,255,255,0.05)",
-            paddingTop: "32px",
-            paddingBottom: "32px",
+            padding: "32px",
           }}
         >
-          <div className="max-w-[640px] w-full mx-auto flex items-center justify-end px-4">
+          <div className="max-w-[640px] w-full flex items-center justify-end">
             <button
               onClick={handleNext}
               disabled={navBlocked}
               className={cn(
-                "flex items-center gap-2 justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity text-[14px] leading-[20px]",
+                "flex items-center gap-2 justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity",
                 navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{
                 background: "#18181b",
                 borderRadius: "6px",
-                height: "36px",
                 paddingLeft: "16px",
                 paddingRight: "16px",
+                paddingTop: "12px",
+                paddingBottom: "12px",
+                fontSize: "14px",
+                letterSpacing: "2.8px",
+                lineHeight: "20px",
                 boxShadow: "0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px rgba(0,0,0,0.06)",
               }}
               data-testid="button-lesson-next"
             >
-              {isLastSlide ? "Finish" : "Continue"}
+              {isLastSlide ? "FINISH" : "CONTINUE"}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
