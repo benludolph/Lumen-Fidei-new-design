@@ -797,16 +797,14 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         </div>
       </div>
 
-      {/* ── Content area (bg image + two-tier card) ── */}
+      {/* ── Content area (bg image + card) — Figma: pt-16 px-16 ── */}
       <div
         className="flex-1 relative flex flex-col overflow-hidden"
-        style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}
       >
         {/* Background image + gradient overlay (absolute, fills content area) */}
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none overflow-hidden"
-          style={{ borderRadius: "24px 24px 0 0" }}
         >
           <img
             src={candleBg}
@@ -823,48 +821,22 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           />
         </div>
 
-        {/* Scrollable section — pt-32 exposes bg image at top, px-24 sides */}
+        {/* Scrollable section — Figma: pt-16 px-16 */}
         <div
           className="flex-1 overflow-auto flex flex-col items-center relative"
-          style={{ paddingTop: "32px", paddingLeft: "24px", paddingRight: "24px" }}
+          style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
         >
-          {/* Outer card: bg-[#0f1116], max-w-640, pt-32 px-48 (no bottom pad), fills height */}
+          {/* Chat card — Figma: bg-[#09090b], border, rounded top only, p-24, fills height */}
           <div
-            className="flex-1 flex flex-col relative w-full overflow-hidden"
+            className="flex-1 flex flex-col overflow-hidden relative w-full"
             style={{
-              maxWidth: "640px",
-              background: "#0f1116",
-              border: "0.5px solid rgba(255,255,255,0.05)",
-              paddingTop: "32px",
-              paddingLeft: "48px",
-              paddingRight: "48px",
+              background: "#09090b",
+              border: "1px solid rgba(255,255,255,0.05)",
+              borderRadius: "8px 8px 0 0",
+              padding: "24px",
+              boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.05)",
             }}
           >
-            {/* Radial glow — top-left corner of outer card */}
-            <div
-              className="absolute pointer-events-none mix-blend-lighten"
-              style={{
-                top: "-160px",
-                left: "-133px",
-                width: "310px",
-                height: "310px",
-                opacity: 0.04,
-                background:
-                  "radial-gradient(circle at 50% 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 90%)",
-              }}
-            />
-
-            {/* Inner chat card: bg-[#09090b], rounded top only, fills rest of height */}
-            <div
-              className="flex-1 flex flex-col overflow-hidden relative"
-              style={{
-                background: "#09090b",
-                border: "1px solid rgba(255,255,255,0.05)",
-                borderRadius: "8px 8px 0 0",
-                padding: "24px",
-                boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.05)",
-              }}
-            >
               {/* Messages list (scrollable, flex-1) */}
               <div
                 ref={scrollContainerRef}
@@ -1052,7 +1024,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 </div>
               )}
             </div>
-          </div>
         </div>
       </div>
 
