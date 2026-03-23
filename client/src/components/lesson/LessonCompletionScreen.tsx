@@ -154,11 +154,11 @@ export function LessonCompletionScreen({
             }}
           />
 
-          {/* Completion content */}
+          {/* Completion content — vertically and horizontally centered */}
           <div
-            className="relative flex-1 flex flex-col"
+            className="relative flex-1 flex flex-col items-center justify-center"
             style={{
-              gap: "12px",
+              gap: "24px",
               transition: "opacity 700ms ease, transform 700ms ease",
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(16px)",
@@ -166,39 +166,26 @@ export function LessonCompletionScreen({
           >
             {/* Headline */}
             <p
-              className="font-['IvyOra_Display'] text-white"
-              style={{ fontSize: "26px", lineHeight: "30px", letterSpacing: "-0.52px", fontWeight: 500 }}
+              className="font-['IvyOra_Display'] text-white text-center"
+              style={{ fontSize: "32px", lineHeight: "36px", letterSpacing: "-0.64px", fontWeight: 500 }}
             >
               Lesson Complete
             </p>
 
-            {/* Body: completion message or default text */}
-            <div style={{ marginTop: "12px" }}>
-              <p
-                className="font-['Afacad'] font-normal text-white/80"
-                style={{ fontSize: "20px", lineHeight: 1.4 }}
-              >
-                {completionMessage ||
-                  (dayNumber > 0
-                    ? `Day ${dayNumber} is complete. Well done for showing up today.`
-                    : "Well done for showing up today.")}
-              </p>
-            </div>
+            {/* Cross divider */}
+            <img
+              src={crossDividerImg}
+              alt=""
+              style={{ width: "152px", height: "auto", opacity: 0.4 }}
+            />
 
-            {/* Divider + day/theme tag */}
-            <div className="flex flex-col items-start" style={{ gap: "16px", marginTop: "24px" }}>
-              <img
-                src={crossDividerImg}
-                alt=""
-                style={{ width: "152px", height: "auto", opacity: 0.4 }}
-              />
-              <p
-                className="font-['Afacad'] font-normal text-white/40"
-                style={{ fontSize: "13px", letterSpacing: "0.04em" }}
-              >
-                {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
-              </p>
-            </div>
+            {/* Day · Theme tag */}
+            <p
+              className="font-['Afacad'] font-normal text-white/40 text-center"
+              style={{ fontSize: "13px", letterSpacing: "0.04em" }}
+            >
+              {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
+            </p>
           </div>
         </div>
       </div>
