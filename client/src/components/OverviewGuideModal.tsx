@@ -47,7 +47,7 @@ export function OverviewGuideModal({
         <div className="space-y-5 mt-2">
           <div className="flex items-start gap-3" data-testid="section-week-description">
             <BookOpen className="w-5 h-5 text-white/60 mt-0.5 shrink-0" />
-            <p className="text-white/80 text-[15px] leading-relaxed">
+            <p className="type-body-lg text-white/80">
               {description}
             </p>
           </div>
@@ -57,8 +57,8 @@ export function OverviewGuideModal({
           <div className="flex items-start gap-3" data-testid="section-how-it-works">
             <Lightbulb className="w-5 h-5 text-white/60 mt-0.5 shrink-0" />
             <div>
-              <p className="text-white font-bold text-[15px] mb-1">How It Works</p>
-              <p className="text-white/80 text-[14px] leading-relaxed">
+              <p className="type-body-lg text-white font-bold mb-1">How It Works</p>
+              <p className="type-body-md text-white/80">
                 Each day has a short lesson. Tap a day to begin. You'll move
                 through several screens — a question to reflect on, a short
                 teaching, scripture, an activity, and a closing thought. Complete

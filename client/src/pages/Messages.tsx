@@ -139,15 +139,7 @@ export default function Messages() {
                 flexShrink: 0,
               }}
             >
-              <span
-                style={{
-                  fontFamily: "Afacad, sans-serif",
-                  fontSize: "18px",
-                  fontWeight: 600,
-                  color: "white",
-                  letterSpacing: "0.01em",
-                }}
-              >
+              <span className="type-display-sm font-semibold" style={{ color: "white", letterSpacing: "0.01em" }}>
                 Messages
               </span>
 
@@ -196,14 +188,7 @@ export default function Messages() {
                     }}
                   >
                     <DialogHeader>
-                      <DialogTitle
-                        style={{
-                          fontFamily: "Afacad, sans-serif",
-                          fontSize: "16px",
-                          fontWeight: 600,
-                          color: "white",
-                        }}
-                      >
+                      <DialogTitle className="type-body-md font-semibold" style={{ color: "white" }}>
                         Start New Conversation
                       </DialogTitle>
                     </DialogHeader>
@@ -227,6 +212,7 @@ export default function Messages() {
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Search users…"
                           data-testid="input-search-users"
+                          className="type-body-md"
                           style={{
                             width: "100%",
                             paddingLeft: "32px",
@@ -237,8 +223,6 @@ export default function Messages() {
                             border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: "6px",
                             color: "white",
-                            fontFamily: "Afacad, sans-serif",
-                            fontSize: "14px",
                             outline: "none",
                             boxSizing: "border-box",
                           }}
@@ -256,15 +240,7 @@ export default function Messages() {
                         }}
                       >
                         {availableUsers.length === 0 ? (
-                          <p
-                            style={{
-                              fontFamily: "Afacad, sans-serif",
-                              fontSize: "14px",
-                              color: "rgba(255,255,255,0.4)",
-                              textAlign: "center",
-                              padding: "24px 0",
-                            }}
-                          >
+                          <p className="type-body-md text-center" style={{ color: "rgba(255,255,255,0.4)", padding: "24px 0" }}>
                             {searchQuery ? "No users found" : "No new users to message"}
                           </p>
                         ) : (
@@ -296,26 +272,10 @@ export default function Messages() {
                             >
                               <InitialsAvatar name={u.name} size={32} />
                               <div>
-                                <p
-                                  style={{
-                                    fontFamily: "Afacad, sans-serif",
-                                    fontSize: "14px",
-                                    fontWeight: 500,
-                                    color: "white",
-                                    margin: 0,
-                                  }}
-                                >
+                                <p className="type-body-md font-medium" style={{ color: "white", margin: 0 }}>
                                   {u.name}
                                 </p>
-                                <p
-                                  style={{
-                                    fontFamily: "Afacad, sans-serif",
-                                    fontSize: "12px",
-                                    color: "rgba(255,255,255,0.4)",
-                                    margin: 0,
-                                    textTransform: "capitalize",
-                                  }}
-                                >
+                                <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.4)", margin: 0, textTransform: "capitalize" }}>
                                   {u.role}
                                 </p>
                               </div>
@@ -332,15 +292,7 @@ export default function Messages() {
             {/* Contact list */}
             <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
               {contacts?.length === 0 && (
-                <p
-                  style={{
-                    fontFamily: "Afacad, sans-serif",
-                    fontSize: "14px",
-                    color: "rgba(255,255,255,0.3)",
-                    textAlign: "center",
-                    padding: "32px 16px",
-                  }}
-                >
+                <p className="type-body-md text-center" style={{ color: "rgba(255,255,255,0.3)", padding: "32px 16px" }}>
                   No contacts available.
                 </p>
               )}
@@ -384,29 +336,10 @@ export default function Messages() {
                   >
                     <InitialsAvatar name={contact.name} size={36} />
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <p
-                        style={{
-                          fontFamily: "Afacad, sans-serif",
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          color: "white",
-                          margin: 0,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                      <p className="type-body-md font-medium" style={{ color: "white", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {contact.name}
                       </p>
-                      <p
-                        style={{
-                          fontFamily: "Afacad, sans-serif",
-                          fontSize: "12px",
-                          color: "rgba(255,255,255,0.4)",
-                          margin: 0,
-                          textTransform: "capitalize",
-                        }}
-                      >
+                      <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.4)", margin: 0, textTransform: "capitalize" }}>
                         {contact.role}
                       </p>
                     </div>
@@ -447,12 +380,11 @@ export default function Messages() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontFamily: "Afacad, sans-serif",
-                  fontSize: "14px",
                   color: "rgba(255,255,255,0.3)",
                   padding: "24px",
                   textAlign: "center",
                 }}
+                className="type-body-md"
               >
                 Select a conversation to start messaging
               </div>
@@ -538,14 +470,7 @@ function ChatWindow({
           </button>
         )}
         <InitialsAvatar name={otherUserName} size={30} />
-        <span
-          style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "15px",
-            fontWeight: 500,
-            color: "white",
-          }}
-        >
+        <span className="type-body-lg font-medium" style={{ color: "white" }}>
           {otherUserName}
         </span>
       </div>
@@ -554,13 +479,12 @@ function ChatWindow({
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px" }}>
         {isLoading ? (
           <div
+            className="type-body-md"
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "14px",
               color: "rgba(255,255,255,0.3)",
             }}
           >
@@ -577,13 +501,12 @@ function ChatWindow({
           >
             {messages?.length === 0 && (
               <div
+                className="type-body-md"
                 style={{
                   flex: 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontFamily: "Afacad, sans-serif",
-                  fontSize: "14px",
                   color: "rgba(255,255,255,0.3)",
                   paddingTop: "40px",
                 }}
@@ -605,12 +528,10 @@ function ChatWindow({
                     borderRadius: isMe ? "14px 14px 3px 14px" : "14px 14px 14px 3px",
                     background: isMe ? "#484D55" : "#292929",
                     color: "rgba(255,255,255,0.9)",
-                    fontFamily: "Afacad, sans-serif",
-                    fontSize: "14px",
-                    lineHeight: "1.45",
                     wordBreak: "break-word",
                     overflowWrap: "break-word",
                   }}
+                  className="type-body-md"
                 >
                   {msg.content}
                 </div>
@@ -640,6 +561,7 @@ function ChatWindow({
             onChange={(e) => setContent(e.target.value)}
             placeholder="Type a message…"
             data-testid="input-message"
+            className="type-body-md"
             style={{
               flex: 1,
               padding: "9px 14px",
@@ -647,8 +569,6 @@ function ChatWindow({
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "8px",
               color: "white",
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "14px",
               outline: "none",
               transition: "border-color 0.15s",
             }}

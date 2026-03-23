@@ -120,6 +120,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <button
                 data-testid="button-profile"
                 onClick={() => setProfileOpen((v) => !v)}
+                className="type-body-sm font-semibold"
                 style={{
                   width: "32px",
                   height: "32px",
@@ -127,9 +128,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   background: "rgba(240,120,48,0.15)",
                   border: "1px solid rgba(240,120,48,0.3)",
                   color: "#F07830",
-                  fontFamily: "Afacad, sans-serif",
-                  fontSize: "12px",
-                  fontWeight: 600,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -165,14 +163,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       padding: "12px 14px",
                       borderBottom: "1px solid rgba(255,255,255,0.06)",
                     }}>
-                      <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: 0 }}>{user.name}</p>
-                      <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>{user.email}</p>
+                      <p className="type-body-md font-medium" style={{ color: "white", margin: 0 }}>{user.name}</p>
+                      <p className="type-body-xs" style={{ color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>{user.email}</p>
                     </div>
                   )}
                   <button
                     data-testid="button-sign-out"
                     onClick={() => logoutMutation.mutate()}
                     disabled={logoutMutation.isPending}
+                    className="type-body-md"
                     style={{
                       width: "100%",
                       display: "flex",
@@ -182,8 +181,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       background: "none",
                       border: "none",
                       color: "rgba(255,255,255,0.7)",
-                      fontFamily: "Afacad, sans-serif",
-                      fontSize: "13px",
                       cursor: "pointer",
                       transition: "color 0.15s, background 0.15s",
                       textAlign: "left",
@@ -281,12 +278,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Drawer sign-out */}
         {user && (
           <div style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)", padding: "16px 20px" }}>
-            <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: "0 0 2px" }}>{user.name}</p>
-            <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "0 0 12px" }}>{user.email}</p>
+            <p className="type-body-md font-medium" style={{ color: "white", margin: "0 0 2px" }}>{user.name}</p>
+            <p className="type-body-xs" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 12px" }}>{user.email}</p>
             <button
               data-testid="button-sign-out-mobile"
               onClick={() => { closeDrawer(); logoutMutation.mutate(); }}
               disabled={logoutMutation.isPending}
+              className="type-body-md"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -294,8 +292,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 background: "none",
                 border: "none",
                 color: "rgba(255,255,255,0.5)",
-                fontFamily: "Afacad, sans-serif",
-                fontSize: "13px",
                 cursor: "pointer",
                 padding: 0,
               }}
@@ -327,10 +323,8 @@ function NavLink({
   return (
     <Link href={href}>
       <span
-        className={cn("flex items-center cursor-pointer", active ? "text-white" : "text-white/70 hover:text-white")}
+        className={cn("flex items-center cursor-pointer type-body-md", active ? "text-white" : "text-white/70 hover:text-white")}
         style={{
-          fontFamily: "Afacad, sans-serif",
-          fontSize: "14px",
           height: "32px",
           padding: "0 12px",
           transition: "color 0.15s",
@@ -359,13 +353,10 @@ function DrawerLink({
         data-testid={`drawer-link-${String(children).toLowerCase()}`}
         onClick={onClick}
         className={cn(
-          "flex items-center cursor-pointer transition-colors",
-          active ? "text-white" : "text-white/60 hover:text-white"
+          "flex items-center cursor-pointer transition-colors type-body-lg",
+          active ? "text-white font-medium" : "text-white/60 hover:text-white font-normal"
         )}
         style={{
-          fontFamily: "Afacad, sans-serif",
-          fontSize: "16px",
-          fontWeight: active ? 500 : 400,
           padding: "14px 20px",
           borderLeft: active ? "2px solid #F07830" : "2px solid transparent",
           transition: "color 0.15s, border-color 0.15s",

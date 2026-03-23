@@ -166,8 +166,8 @@ export function LessonCompletionScreen({
           >
             {/* Headline */}
             <p
-              className="font-serif text-white text-center"
-              style={{ fontSize: "32px", lineHeight: "36px", letterSpacing: "-0.64px", fontWeight: 500 }}
+              className="type-display-lg text-white text-center"
+              style={{ letterSpacing: "-0.64px" }}
             >
               Lesson Complete
             </p>
@@ -201,7 +201,7 @@ export function LessonCompletionScreen({
         <div className="max-w-[640px] w-full flex items-center justify-end">
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 justify-center font-sans font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+            className="flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] transition-opacity hover:opacity-80"
             style={{
               background: "#18181b",
               borderRadius: "6px",
@@ -209,9 +209,6 @@ export function LessonCompletionScreen({
               paddingRight: "16px",
               paddingTop: "12px",
               paddingBottom: "12px",
-              fontSize: "14px",
-              letterSpacing: "2.8px",
-              lineHeight: "20px",
               boxShadow: "0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px rgba(0,0,0,0.06)",
             }}
             data-testid="button-completion-continue"

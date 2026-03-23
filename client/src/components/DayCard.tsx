@@ -142,13 +142,10 @@ export function DayCard({
       {/* Text block — bottom of card, hugs title + subtitle with 8px gap */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
         <p
+          className="type-display-sm"
           style={{
-            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-            fontSize: "16px",
-            lineHeight: "15.5px",
             letterSpacing: "-0.14px",
             color: "white",
-            fontWeight: 500,
             overflow: "hidden",
             display: "-webkit-box",
             WebkitLineClamp: 2,
@@ -159,10 +156,8 @@ export function DayCard({
         </p>
         {subtitle && (
           <p
-            className="font-sans"
+            className="type-body-xs"
             style={{
-              fontSize: "10px",
-              lineHeight: "13px",
               color: "rgba(255,255,255,0.45)",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -176,11 +171,11 @@ export function DayCard({
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
               <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
-              <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>AM</span>
+              <span className="type-body-xs" style={{ color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>AM</span>
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
               <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
-              <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>PM</span>
+              <span className="type-body-xs" style={{ color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>PM</span>
             </span>
           </div>
         )}

@@ -1034,11 +1034,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 {flowComplete || currentStep?.inputType === "none" ? (
                   <button
                     onClick={handleSubmit}
-                    className="w-full flex items-center justify-center gap-2 font-sans font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
+                    className="w-full flex items-center justify-center gap-2 type-body-lg font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
                     style={{
                       background: "#18181b",
                       height: "42px",
-                      fontSize: "15px",
                       border: "1px solid rgba(255,255,255,0.08)",
                       boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
                     }}
@@ -1091,15 +1090,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           >
             <div style={{ width: "42px", height: "42px" }} />
             <div
+              className="type-caption-md"
               style={{
                 background: "#202020",
                 borderRadius: "36px",
                 padding: "12px 16px",
-                fontFamily: "Afacad, sans-serif",
-                fontWeight: 500,
-                fontSize: "14px",
-                letterSpacing: "0.2em",
-                lineHeight: "18px",
                 color: "#efefef",
               }}
             >
@@ -1152,7 +1147,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     Your Reflection
                   </p>
                   {summaryText ? (
-                    <p className="font-serif" style={{ fontSize: "18px", lineHeight: "28px", color: "rgba(255,255,255,0.9)" }}>
+                    <p className="type-display-sm" style={{ color: "rgba(255,255,255,0.9)" }}>
                       {summaryText}
                     </p>
                   ) : (
@@ -1173,14 +1168,13 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   </button>
                   <button
                     onClick={onComplete}
-                    className="flex items-center gap-2 font-sans font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+                    className="flex items-center gap-2 type-body-md font-medium text-[#fafafa] transition-opacity hover:opacity-80"
                     style={{
                       background: "#18181b",
                       borderRadius: "6px",
                       height: "36px",
                       paddingLeft: "16px",
                       paddingRight: "16px",
-                      fontSize: "14px",
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                     data-testid="button-review-continue"
@@ -1268,12 +1262,9 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
               {/* 48px IvyOra Display headline (admin-configurable) */}
               <p
-                className="font-serif text-white text-center"
+                className="type-display-xl text-white text-center"
                 style={{
-                  fontSize: 48,
-                  fontWeight: 500,
                   letterSpacing: "-0.96px",
-                  lineHeight: 1,
                   transition: "opacity 600ms ease-out",
                   opacity: unlockPhase >= 3 ? 1 : 0,
                 }}
@@ -1330,8 +1321,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 data-testid="button-reflection-overlay-continue"
               >
                 <span
-                  className="font-sans font-medium text-center"
-                  style={{ fontSize: 15, lineHeight: "22.5px", color: "#fafafa" }}
+                  className="type-body-lg font-medium text-center"
+                  style={{ color: "#fafafa" }}
                 >
                   Continue
                 </span>

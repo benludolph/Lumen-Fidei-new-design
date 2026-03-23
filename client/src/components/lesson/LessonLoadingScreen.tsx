@@ -62,7 +62,7 @@ export function LessonLoadingScreen({
           <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.6)" }}>
             {dayNumber < 0 ? `Module ${Math.abs(dayNumber)}` : dayNumber === 0 ? "Introduction" : `Day ${dayNumber}`}
           </p>
-          <h1 style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontWeight: 500, fontSize: "28px", color: "white", lineHeight: 1.1 }} className="max-w-[340px] sm:max-w-lg">
+          <h1 className="type-display-md font-serif max-w-[340px] sm:max-w-lg" style={{ fontWeight: 500, color: "white" }}>
             {theme}
           </h1>
         </div>

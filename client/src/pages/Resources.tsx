@@ -93,16 +93,7 @@ function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
       <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
-      <span style={{
-        fontFamily: "Afacad, sans-serif",
-        fontWeight: 400,
-        fontSize: "12px",
-        color: "#d0d6e0",
-        letterSpacing: "2.4px",
-        textTransform: "uppercase",
-        lineHeight: "24px",
-        whiteSpace: "nowrap",
-      }}>
+      <span className="type-caption-md" style={{ color: "#d0d6e0", whiteSpace: "nowrap" }}>
         {label}
       </span>
       <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(180,188,208,0.15))" }} />
@@ -195,13 +186,9 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
 
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 3 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-              fontWeight: 500,
-              fontSize: "16px",
+            <p className="type-display-sm" style={{
               color: "#f7f8f8",
               letterSpacing: "-0.1402px",
-              lineHeight: "15.539px",
               marginBottom: "7.789px",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -209,13 +196,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
             }}>
               {resource.name}
             </p>
-            <p style={{
-              fontFamily: "Afacad, sans-serif",
-              fontWeight: 400,
-              fontSize: "10px",
-              color: "#8a8f98",
-              lineHeight: "10.223px",
-            }}>
+            <p className="type-body-xs" style={{ color: "#8a8f98" }}>
               {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
             </p>
           </div>
@@ -332,13 +313,9 @@ function ExternalCard({
 
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 3 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-              fontWeight: 500,
-              fontSize: "16px",
+            <p className="type-display-sm" style={{
               color: "#f7f8f8",
               letterSpacing: "-0.1402px",
-              lineHeight: "15.539px",
               marginBottom: "7.789px",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -346,13 +323,7 @@ function ExternalCard({
             }}>
               {name}
             </p>
-            <p style={{
-              fontFamily: "Afacad, sans-serif",
-              fontWeight: 400,
-              fontSize: "10px",
-              color: "#8a8f98",
-              lineHeight: "10.223px",
-            }}>
+            <p className="type-body-xs" style={{ color: "#8a8f98" }}>
               {description}
             </p>
           </div>
@@ -398,15 +369,7 @@ export default function Resources() {
           paddingBottom: "64px",
         }}
       >
-        <h1 style={{
-          fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-          fontWeight: 500,
-          fontSize: "42px",
-          color: "white",
-          textAlign: "center",
-          lineHeight: "1.1",
-          marginBottom: "48px",
-        }}>
+        <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
           Resources
         </h1>
 

@@ -49,14 +49,8 @@ function Breadcrumb({ name }: { name: string }) {
         <Link href="/resources">
           <span
             data-testid="breadcrumb-resources"
-            style={{
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "15px",
-              lineHeight: "15px",
-              color: "rgba(255,255,255,0.6)",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
+            className="type-body-lg"
+            style={{ color: "rgba(255,255,255,0.6)", cursor: "pointer", whiteSpace: "nowrap" }}
           >
             Resources
           </span>
@@ -68,10 +62,8 @@ function Breadcrumb({ name }: { name: string }) {
 
         <span
           data-testid="breadcrumb-current"
+          className="type-body-lg"
           style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "15px",
-            lineHeight: "15px",
             color: "rgba(255,255,255,0.6)",
             whiteSpace: "nowrap",
             overflow: "hidden",
@@ -198,27 +190,14 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
 
       {/* Info row */}
       <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <span style={{
-          fontFamily: "Afacad, sans-serif",
-          fontWeight: 600,
-          fontSize: "15.6px",
-          lineHeight: "24px",
-          color: "white",
-          letterSpacing: "-0.1px",
-        }}>
+        <span className="type-body-lg font-semibold" style={{ color: "white", letterSpacing: "-0.1px" }}>
           Listen to Audio
         </span>
 
         {duration && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Clock style={{ width: "14px", height: "14px", color: "white", flexShrink: 0 }} />
-            <span style={{
-              fontFamily: "Afacad, sans-serif",
-              fontWeight: 500,
-              fontSize: "13.5px",
-              lineHeight: "16.8px",
-              color: "rgba(255,255,255,0.6)",
-            }}>
+            <span className="type-body-md font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
               {duration}
             </span>
           </div>
@@ -253,11 +232,11 @@ export default function ResourceDetail() {
       <DashboardLayout>
         <Breadcrumb name="Not found" />
         <div style={{ backgroundColor: "black", minHeight: "685px", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "80px" }}>
-          <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "16px", color: "rgba(255,255,255,0.4)", marginBottom: "20px" }}>
+          <p className="type-body-md" style={{ color: "rgba(255,255,255,0.4)", marginBottom: "20px" }}>
             This resource could not be found.
           </p>
           <Link href="/resources">
-            <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "14px", color: "#F07830", cursor: "pointer" }}>
+            <span className="type-body-md" style={{ color: "#F07830", cursor: "pointer" }}>
               ← Back to Resources
             </span>
           </Link>
@@ -375,16 +354,7 @@ export default function ResourceDetail() {
               }}
             >
               {/* Duration / type badge */}
-              <p style={{
-                fontFamily: "Afacad, sans-serif",
-                fontWeight: 400,
-                fontSize: "12px",
-                color: "#d0d6e0",
-                letterSpacing: "2.4px",
-                textTransform: "uppercase",
-                lineHeight: "1",
-                margin: 0,
-              }}>
+              <p className="type-caption-md" style={{ color: "#d0d6e0", margin: 0 }}>
                 {[resource.duration, resource.type === "prayer" ? "Prayer" : "Practice"]
                   .filter(Boolean)
                   .join(" · ")}
@@ -393,8 +363,8 @@ export default function ResourceDetail() {
               {/* Resource title — Figma specifies 80.2px; scales down fluidly on narrow screens */}
               <h1
                 data-testid="resource-title"
+                className="font-serif"
                 style={{
-                  fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
                   fontWeight: 500,
                   fontSize: "clamp(36px, 6vw + 10px, 80.2px)",
                   lineHeight: "1.01",
@@ -405,15 +375,12 @@ export default function ResourceDetail() {
                 {resource.name}
               </h1>
 
-              {/* Subtitle — Afacad Regular 22.5px, 60% white */}
+              {/* Subtitle — Afacad body-lg, 60% white */}
               {resource.subtitle && (
                 <p
                   data-testid="resource-subtitle"
+                  className="type-body-lg"
                   style={{
-                    fontFamily: "Afacad, sans-serif",
-                    fontWeight: 400,
-                    fontSize: "22.5px",
-                    lineHeight: "31.2px",
                     color: "rgba(255,255,255,0.6)",
                     margin: 0,
                   }}

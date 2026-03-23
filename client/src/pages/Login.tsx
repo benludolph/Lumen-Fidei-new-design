@@ -154,19 +154,7 @@ export default function Login() {
             {/* Login card */}
             <div className="lf-login-card">
 
-              <p
-                style={{
-                  fontFamily: "Afacad, sans-serif",
-                  fontSize: "16px",
-                  fontWeight: 400,
-                  letterSpacing: "3.2px",
-                  textTransform: "uppercase",
-                  color: "white",
-                  textAlign: "center",
-                  margin: 0,
-                  lineHeight: "31.2px",
-                }}
-              >
+              <p className="type-caption-lg text-center" style={{ color: "white", margin: 0 }}>
                 Log in
               </p>
 
@@ -178,12 +166,8 @@ export default function Login() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "5px" }}>
                   <label
                     htmlFor="email"
-                    style={{
-                      fontFamily: "Afacad, sans-serif",
-                      fontSize: "14px",
-                      color: "white",
-                      lineHeight: "14px",
-                    }}
+                    className="type-body-md"
+                    style={{ color: "white" }}
                   >
                     Email
                   </label>
@@ -193,6 +177,7 @@ export default function Login() {
                     placeholder="you@example.com"
                     {...form.register("username")}
                     data-testid="input-email"
+                    className="type-body-md"
                     style={{
                       background: "rgba(255,255,255,0.05)",
                       border: "1px solid rgba(255,255,255,0.03)",
@@ -200,8 +185,6 @@ export default function Login() {
                       height: "36px",
                       width: "100%",
                       color: "white",
-                      fontFamily: "Afacad, sans-serif",
-                      fontSize: "14px",
                       padding: "0 12px",
                       outline: "none",
                       boxSizing: "border-box",
@@ -210,7 +193,7 @@ export default function Login() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
                   />
                   {form.formState.errors.username && (
-                    <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
+                    <p className="type-body-sm" style={{ color: "#ef4444", margin: 0 }}>
                       {form.formState.errors.username.message}
                     </p>
                   )}
@@ -220,12 +203,8 @@ export default function Login() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "5px" }}>
                   <label
                     htmlFor="password"
-                    style={{
-                      fontFamily: "Afacad, sans-serif",
-                      fontSize: "14px",
-                      color: "white",
-                      lineHeight: "14px",
-                    }}
+                    className="type-body-md"
+                    style={{ color: "white" }}
                   >
                     Password
                   </label>
@@ -234,6 +213,7 @@ export default function Login() {
                     type="password"
                     {...form.register("password")}
                     data-testid="input-password"
+                    className="type-body-md"
                     style={{
                       background: "rgba(255,255,255,0.05)",
                       border: "1px solid rgba(255,255,255,0.03)",
@@ -241,8 +221,6 @@ export default function Login() {
                       height: "36px",
                       width: "100%",
                       color: "white",
-                      fontFamily: "Afacad, sans-serif",
-                      fontSize: "14px",
                       padding: "0 12px",
                       outline: "none",
                       boxSizing: "border-box",
@@ -251,14 +229,14 @@ export default function Login() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
                   />
                   {form.formState.errors.password && (
-                    <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
+                    <p className="type-body-sm" style={{ color: "#ef4444", margin: 0 }}>
                       {form.formState.errors.password.message}
                     </p>
                   )}
                 </div>
 
                 {error && (
-                  <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "13px", color: "#ef4444", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px" }}>
+                  <p className="type-body-sm" style={{ color: "#ef4444", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px" }}>
                     {error}
                   </p>
                 )}
@@ -267,6 +245,7 @@ export default function Login() {
                   type="submit"
                   disabled={form.formState.isSubmitting}
                   data-testid="button-login"
+                  className="type-body-md font-medium"
                   style={{
                     marginTop: "4px",
                     width: "100%",
@@ -275,9 +254,6 @@ export default function Login() {
                     border: "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "6px",
                     color: "white",
-                    fontFamily: "Afacad, sans-serif",
-                    fontSize: "14px",
-                    fontWeight: 500,
                     letterSpacing: "2px",
                     textTransform: "uppercase",
                     cursor: form.formState.isSubmitting ? "not-allowed" : "pointer",
@@ -299,16 +275,7 @@ export default function Login() {
                 </button>
               </form>
 
-              <p
-                style={{
-                  fontFamily: "Afacad, sans-serif",
-                  fontSize: "12px",
-                  color: "rgba(255,255,255,0.3)",
-                  textAlign: "center",
-                  margin: "4px 0 0",
-                  lineHeight: 1.5,
-                }}
-              >
+              <p className="type-body-sm text-center" style={{ color: "rgba(255,255,255,0.3)", margin: "4px 0 0" }}>
                 Having trouble? Contact bludolph@archchicago.org
               </p>
             </div>

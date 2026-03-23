@@ -446,7 +446,7 @@ export function LessonFlow({
               onClick={handleNext}
               disabled={navBlocked}
               className={cn(
-                "flex items-center gap-2 justify-center font-sans font-medium text-[#fafafa] transition-opacity",
+                "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] transition-opacity",
                 navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{
@@ -456,9 +456,6 @@ export function LessonFlow({
                 paddingRight: "16px",
                 paddingTop: "12px",
                 paddingBottom: "12px",
-                fontSize: "14px",
-                letterSpacing: "2.8px",
-                lineHeight: "20px",
                 boxShadow: "0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px rgba(0,0,0,0.06)",
               }}
               data-testid="button-lesson-next"

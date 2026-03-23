@@ -230,7 +230,7 @@ function MultiSelectList({ content, onInteracted }: { content: string; onInterac
   return (
     <div className="space-y-5">
       {heading && (
-        <p className="font-bold font-sans leading-[1.2] text-[24px] sm:text-[32px] text-white">{heading}</p>
+        <p className="type-display-lg font-bold text-white">{heading}</p>
       )}
       <div className="space-y-2">
         {options.map((option, idx) => (
@@ -275,7 +275,7 @@ function SingleSelectList({ content, onInteracted }: { content: string; onIntera
   return (
     <div className="space-y-5">
       {heading && (
-        <p className="font-bold font-sans leading-[1.2] text-[24px] sm:text-[32px] text-white">{heading}</p>
+        <p className="type-display-lg font-bold text-white">{heading}</p>
       )}
       <div className="space-y-2">
         {options.map((option, idx) => (
@@ -476,7 +476,7 @@ function ScenarioSlide({ content, revealedCount }: { content: string; revealedCo
   return (
     <div className="flex flex-col gap-8">
       {headline && (
-        <h1 className="font-sans font-bold text-[22px] sm:text-[30px] text-white leading-[1.2]">
+        <h1 className="type-display-lg font-bold text-white">
           {headline}
         </h1>
       )}
@@ -716,7 +716,7 @@ function MentorMessageSlide({
         <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
           <CheckCircle className="w-8 h-8 text-[#00b57a]" />
         </div>
-        <p className="font-bold font-sans text-[22px] sm:text-[24px] text-white">Message Sent!</p>
+        <p className="type-display-md font-bold text-white">Message Sent!</p>
         <p className="type-body-lg text-[#6a6a6a]">Your mentor will see it in your conversation.</p>
       </div>
     );
@@ -866,7 +866,7 @@ function TimerSlide({
           {done ? (
             <CheckCircle className="w-10 h-10 text-[#00b57a]" />
           ) : (
-            <span className="font-bold font-sans text-[28px] sm:text-[32px] text-white tabular-nums">
+            <span className="type-display-lg font-bold text-white tabular-nums">
               {minutes}:{seconds.toString().padStart(2, "0")}
             </span>
           )}
@@ -976,7 +976,7 @@ function KnowledgeCheckSlide({
   return (
     <>
       <div className="space-y-6" data-testid="slide-knowledge-check">
-        <p className="font-bold font-sans leading-[1.2] text-[22px] sm:text-[28px] text-white">
+        <p className="type-display-lg font-bold text-white">
           {data.question}
         </p>
         <div className="space-y-2">
@@ -1233,7 +1233,7 @@ function SurveySlide({
         <div className="w-16 h-16 rounded-full bg-[#00b57a]/10 flex items-center justify-center">
           <CheckCircle2 className="w-8 h-8 text-[#00b57a]" />
         </div>
-        <h3 className="font-bold font-sans text-[22px] sm:text-[26px] text-white">Response Received</h3>
+        <h3 className="type-display-md font-bold text-white">Response Received</h3>
         <p className="type-body-lg text-[#6a6a6a] max-w-[320px]">
           Thank you for sharing your experience. You can continue.
         </p>
@@ -1255,7 +1255,7 @@ function SurveySlide({
       {(data.title || data.description) && (
         <div className="space-y-2">
           {data.title && (
-            <h2 className="font-bold font-sans text-[22px] sm:text-[28px] text-white leading-tight">
+            <h2 className="type-display-lg font-bold text-white leading-tight">
               {data.title}
             </h2>
           )}
@@ -1271,7 +1271,7 @@ function SurveySlide({
       <div className="space-y-8">
         {data.questions.map((q, idx) => (
           <div key={q.id} className="space-y-3" data-testid={`survey-question-${idx}`}>
-            <p className="font-semibold font-sans text-[17px] sm:text-[18px] text-[rgba(255,255,255,0.9)] leading-[1.3]">
+            <p className="type-body-xl font-semibold text-[rgba(255,255,255,0.9)]">
               <span className="text-[#00b57a] mr-1.5">{idx + 1}.</span>
               {q.label}
             </p>
@@ -1424,7 +1424,7 @@ function QuizQuestionSlide({
       <p className="type-body-sm font-medium text-[#6a6a6a]" data-testid="text-quiz-progress">
         Question {questionIndex + 1} of {quizData.questions.length}
       </p>
-      <p className="font-bold font-sans leading-[1.2] text-[22px] sm:text-[28px] text-white">
+      <p className="type-display-lg font-bold text-white">
         {q.question}
       </p>
       <div className="space-y-2">
@@ -1501,7 +1501,7 @@ function QuizResultSlide({
         </p>
       ) : result ? (
         <>
-          <h2 className="font-bold font-sans text-[26px] sm:text-[32px] text-white leading-tight">
+          <h2 className="type-display-lg font-bold text-white leading-tight">
             {result.title}
           </h2>
           <p className="type-body-xl leading-[1.5] text-[rgba(255,255,255,0.7)] max-w-[420px]">

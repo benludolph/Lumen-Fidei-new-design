@@ -223,17 +223,7 @@ function SaintsDivider() {
           background: "rgba(255,255,255,0.1)",
         }}
       />
-      <span
-        style={{
-          fontFamily: "Afacad, sans-serif",
-          fontSize: "12px",
-          fontWeight: 600,
-          letterSpacing: "4px",
-          color: "rgba(255,255,255,0.35)",
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <span className="type-caption-md" style={{ color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>
         SAINTS
       </span>
       <div
@@ -254,17 +244,7 @@ export default function Collections() {
         data-testid="collections-page"
         className="px-5 sm:px-[107px] pt-8 pb-20 min-h-[calc(100vh-72px)]"
       >
-        <h1
-          style={{
-            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-            fontWeight: 500,
-            fontSize: "42px",
-            color: "white",
-            textAlign: "center",
-            lineHeight: "1.1",
-            marginBottom: "48px",
-          }}
-        >
+        <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
           Collection
         </h1>
 

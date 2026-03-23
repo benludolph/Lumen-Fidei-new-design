@@ -83,7 +83,7 @@ function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", margin: "20px 0" }}>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
-      <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "12px", letterSpacing: "0.14em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", flexShrink: 0 }}>
+      <span className="type-caption-sm" style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>
         {label}
       </span>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
@@ -193,7 +193,7 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function SundayBanner() {
   return (
-    <div data-testid="banner-sunday" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", margin: "12px 0", fontFamily: "Afacad, sans-serif", fontSize: "12px", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
+    <div data-testid="banner-sunday" className="type-caption-md" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", margin: "12px 0", color: "rgba(255,255,255,0.4)" }}>
       ✦ Sunday — Rest &amp; Mass ✦
     </div>
   );
@@ -232,9 +232,9 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
         )}
       </div>
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
-        <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "16px", lineHeight: "15.5px", letterSpacing: "-0.14px", color: "white", fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
+        <p className="type-display-sm" style={{ letterSpacing: "-0.14px", color: "white", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
         {subtitle && (
-          <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "10px", lineHeight: "13px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
+          <p className="type-body-xs" style={{ color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
         )}
       </div>
     </button>
@@ -260,24 +260,10 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
       >
         {/* Left: week label + title */}
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <p style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "12px",
-            fontWeight: 400,
-            letterSpacing: "0.2em",
-            color: "#d0d6e0",
-            textTransform: "uppercase",
-            lineHeight: "24px",
-          }}>
+          <p className="type-caption-md" style={{ color: "#d0d6e0" }}>
             Week {weekNumber} of 5
           </p>
-          <p style={{
-            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-            fontSize: "18px",
-            fontWeight: 500,
-            color: "white",
-            lineHeight: "28px",
-          }}>
+          <p className="type-display-sm" style={{ color: "white" }}>
             {title}
           </p>
         </div>
@@ -286,10 +272,8 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
         <button
           data-testid="button-week-guide"
           onClick={onGuideClick}
+          className="type-body-xs"
           style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "10px",
-            fontWeight: 400,
             color: "white",
             background: "rgba(255,255,255,0.03)",
             border: "0.5px solid rgba(255,255,255,0.06)",
@@ -358,36 +342,24 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
 
         {/* Heading */}
         <h2
-          style={{
-            fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-            fontSize: "26px", fontWeight: 500,
-            color: "white", margin: "0 0 10px",
-            lineHeight: 1.2, paddingRight: "24px",
-          }}
+          className="type-display-lg"
+          style={{ color: "white", margin: "0 0 10px", paddingRight: "24px" }}
         >
           Your Certificate of Completion
         </h2>
 
         {/* Bold subtitle */}
         <p
-          style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "14px", fontWeight: 600,
-            color: "rgba(255,255,255,0.8)",
-            margin: "0 0 14px", lineHeight: 1.55,
-          }}
+          className="type-body-md font-semibold"
+          style={{ color: "rgba(255,255,255,0.8)", margin: "0 0 14px" }}
         >
           This certificate is unlocked after completing all 30 days of the formation program.
         </p>
 
         {/* Description */}
         <p
-          style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "14px",
-            color: "rgba(255,255,255,0.45)",
-            margin: "0 0 28px", lineHeight: 1.65,
-          }}
+          className="type-body-md"
+          style={{ color: "rgba(255,255,255,0.45)", margin: "0 0 28px" }}
         >
           This marks the completion of your journey through the program — a sign of your commitment to prayer, truth, and healing. Once unlocked, you'll be able to view and download your certificate.
         </p>
@@ -397,9 +369,8 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
           <button
             onClick={onClose}
             data-testid="button-certificate-understand"
+            className="type-body-md font-medium"
             style={{
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "14px", fontWeight: 500,
               color: "white",
               background: "rgba(255,255,255,0.08)",
               border: "0.5px solid rgba(255,255,255,0.12)",
@@ -447,12 +418,8 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
       >
         <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
         <span
-          style={{
-            fontFamily: "Afacad, sans-serif",
-            fontSize: "12px", letterSpacing: "0.14em",
-            color: "rgba(255,255,255,0.35)",
-            textTransform: "uppercase", flexShrink: 0,
-          }}
+          className="type-caption-sm"
+          style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }}
         >
           Certificate
         </span>
@@ -550,22 +517,14 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         {/* Bottom row: title + subtitle */}
         <div style={{ position: "relative", zIndex: 3, display: "flex", flexDirection: "column", gap: "4px" }}>
           <p
-            style={{
-              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-              fontSize: "20px", fontWeight: 500,
-              color: "white", margin: 0,
-              lineHeight: 1.15, letterSpacing: "-0.14px",
-            }}
+            className="type-display-md"
+            style={{ color: "white", margin: 0, letterSpacing: "-0.14px" }}
           >
             Certificate of Completion
           </p>
           <p
-            style={{
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "11px",
-              color: "rgba(255,255,255,0.45)",
-              margin: 0, lineHeight: 1.5,
-            }}
+            className="type-body-xs"
+            style={{ color: "rgba(255,255,255,0.45)", margin: 0 }}
           >
             {isUnlocked
               ? "You did it! Download the pdf and present to ministry to schedule your prayer session."

@@ -18,7 +18,7 @@ export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelim
           <p className="font-sans font-bold text-white/70 type-body-md leading-6">
             Initial 30 Days
           </p>
-          <p className="font-sans font-bold text-white text-[18px] leading-7 truncate">
+          <p className="type-display-sm font-bold text-white truncate">
             {inPrelimSection ? "Getting Started" : `Week ${weekNumber}: ${weekTheme}`}
           </p>
         </div>
