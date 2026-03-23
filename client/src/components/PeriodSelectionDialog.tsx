@@ -25,7 +25,7 @@ export function PeriodSelectionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-['Afacad',sans-serif] text-lg">
+          <DialogTitle className="font-sans type-body-xl font-semibold">
             Day {dayNumber}: {dayTitle}
           </DialogTitle>
         </DialogHeader>

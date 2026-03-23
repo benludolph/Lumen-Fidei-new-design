@@ -127,7 +127,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   background: "rgba(240,120,48,0.15)",
                   border: "1px solid rgba(240,120,48,0.3)",
                   color: "#F07830",
-                  fontFamily: "'Afacad', sans-serif",
+                  fontFamily: "Afacad, sans-serif",
                   fontSize: "12px",
                   fontWeight: 600,
                   cursor: "pointer",
@@ -165,8 +165,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       padding: "12px 14px",
                       borderBottom: "1px solid rgba(255,255,255,0.06)",
                     }}>
-                      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: 0 }}>{user.name}</p>
-                      <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>{user.email}</p>
+                      <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: 0 }}>{user.name}</p>
+                      <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>{user.email}</p>
                     </div>
                   )}
                   <button
@@ -182,7 +182,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       background: "none",
                       border: "none",
                       color: "rgba(255,255,255,0.7)",
-                      fontFamily: "'Afacad', sans-serif",
+                      fontFamily: "Afacad, sans-serif",
                       fontSize: "13px",
                       cursor: "pointer",
                       transition: "color 0.15s, background 0.15s",
@@ -281,8 +281,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Drawer sign-out */}
         {user && (
           <div style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)", padding: "16px 20px" }}>
-            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: "0 0 2px" }}>{user.name}</p>
-            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "0 0 12px" }}>{user.email}</p>
+            <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "13px", fontWeight: 500, color: "white", margin: "0 0 2px" }}>{user.name}</p>
+            <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "0 0 12px" }}>{user.email}</p>
             <button
               data-testid="button-sign-out-mobile"
               onClick={() => { closeDrawer(); logoutMutation.mutate(); }}
@@ -294,7 +294,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 background: "none",
                 border: "none",
                 color: "rgba(255,255,255,0.5)",
-                fontFamily: "'Afacad', sans-serif",
+                fontFamily: "Afacad, sans-serif",
                 fontSize: "13px",
                 cursor: "pointer",
                 padding: 0,
@@ -329,7 +329,7 @@ function NavLink({
       <span
         className={cn("flex items-center cursor-pointer", active ? "text-white" : "text-white/70 hover:text-white")}
         style={{
-          fontFamily: "'Afacad', sans-serif",
+          fontFamily: "Afacad, sans-serif",
           fontSize: "14px",
           height: "32px",
           padding: "0 12px",
@@ -363,7 +363,7 @@ function DrawerLink({
           active ? "text-white" : "text-white/60 hover:text-white"
         )}
         style={{
-          fontFamily: "'Afacad', sans-serif",
+          fontFamily: "Afacad, sans-serif",
           fontSize: "16px",
           fontWeight: active ? 500 : 400,
           padding: "14px 20px",

@@ -215,7 +215,7 @@ export function LessonFlow({
   if (slides.length === 0) {
     return createPortal(
       <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 p-6 bg-[#111]">
-        <p className="text-white/60 font-['Afacad',sans-serif]">No content available for this day.</p>
+        <p className="type-body-lg text-white/60">No content available for this day.</p>
         <Button variant="outline" onClick={onExit} data-testid="button-exit-empty">
           Back to Overview
         </Button>
@@ -358,9 +358,8 @@ export function LessonFlow({
         >
           {content.centralTheme && (
             <span
-              className="font-['Afacad'] font-medium whitespace-nowrap overflow-hidden"
+              className="type-body-md font-medium whitespace-nowrap overflow-hidden"
               style={{
-                fontSize: "14px",
                 color: "#efefef",
                 lineHeight: "18px",
                 maxWidth: "132px",
@@ -372,8 +371,8 @@ export function LessonFlow({
             </span>
           )}
           <span
-            className="font-['Afacad'] font-normal whitespace-nowrap"
-            style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
+            className="type-body-sm whitespace-nowrap"
+            style={{ color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
           >
             {currentSlide + 1} of {slides.length}
           </span>
@@ -447,7 +446,7 @@ export function LessonFlow({
               onClick={handleNext}
               disabled={navBlocked}
               className={cn(
-                "flex items-center gap-2 justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity",
+                "flex items-center gap-2 justify-center font-sans font-medium text-[#fafafa] transition-opacity",
                 navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{

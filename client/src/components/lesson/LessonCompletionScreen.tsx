@@ -99,8 +99,8 @@ export function LessonCompletionScreen({
           }}
         >
           <span
-            className="font-['Afacad'] font-medium whitespace-nowrap"
-            style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
+            className="type-caption-md whitespace-nowrap"
+            style={{ color: "#efefef", lineHeight: "18px" }}
           >
             COMPLETE
           </span>
@@ -166,7 +166,7 @@ export function LessonCompletionScreen({
           >
             {/* Headline */}
             <p
-              className="font-['IvyOra_Display'] text-white text-center"
+              className="font-serif text-white text-center"
               style={{ fontSize: "32px", lineHeight: "36px", letterSpacing: "-0.64px", fontWeight: 500 }}
             >
               Lesson Complete
@@ -181,8 +181,7 @@ export function LessonCompletionScreen({
 
             {/* Day · Theme tag */}
             <p
-              className="font-['Afacad'] font-normal text-white/40 text-center"
-              style={{ fontSize: "13px", letterSpacing: "0.04em" }}
+              className="type-body-sm text-white/40 text-center"
             >
               {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
             </p>
@@ -202,7 +201,7 @@ export function LessonCompletionScreen({
         <div className="max-w-[640px] w-full flex items-center justify-end">
           <button
             onClick={onContinue}
-            className="flex items-center gap-2 justify-center font-['Afacad'] font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+            className="flex items-center gap-2 justify-center font-sans font-medium text-[#fafafa] transition-opacity hover:opacity-80"
             style={{
               background: "#18181b",
               borderRadius: "6px",

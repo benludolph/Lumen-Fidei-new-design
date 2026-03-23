@@ -159,11 +159,10 @@ export function DayCard({
         </p>
         {subtitle && (
           <p
+            className="font-sans"
             style={{
-              fontFamily: "'Afacad', sans-serif",
               fontSize: "10px",
               lineHeight: "13px",
-              letterSpacing: "0px",
               color: "rgba(255,255,255,0.45)",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -177,11 +176,11 @@ export function DayCard({
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
               <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
-              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>AM</span>
+              <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>AM</span>
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
               <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
-              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>PM</span>
+              <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>PM</span>
             </span>
           </div>
         )}

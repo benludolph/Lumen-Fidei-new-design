@@ -307,7 +307,7 @@ function MessageBubble({
       )}
       <div
         className={cn(
-          "px-3 py-2 rounded-[6px] text-[14px] leading-[20px] font-['Afacad'] text-[rgba(255,255,255,0.9)]",
+          "px-3 py-2 rounded-[6px] type-body-md leading-[20px] text-[rgba(255,255,255,0.9)]",
           role === "system" ? "bg-[#181818] max-w-[210px]" : "bg-[#4c2913] max-w-[270px]",
         )}
       >
@@ -326,7 +326,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
     <button
       onClick={onClick}
       className={cn(
-        "text-left px-3 py-2 rounded-[6px] text-[14px] leading-[20px] font-['Afacad'] border transition-colors",
+        "text-left px-3 py-2 rounded-[6px] type-body-md leading-[20px] border transition-colors",
         selected
           ? "bg-[#4c2913] border-[#4c2913] text-[rgba(255,255,255,0.95)]"
           : "bg-[#181818] border-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.2)] hover:text-[rgba(255,255,255,0.9)]",
@@ -816,7 +816,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       <div className="flex-1 flex flex-col bg-[#111] overflow-hidden" style={{ paddingTop: "24px" }}>
         <div className="flex-1 relative overflow-hidden" style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-[rgba(255,255,255,0.3)] text-sm font-['Afacad']">Loading…</div>
+            <div className="type-body-sm text-[rgba(255,255,255,0.3)]">Loading…</div>
           </div>
         </div>
       </div>
@@ -847,15 +847,15 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             }}
           >
             <span
-              className="font-['Afacad'] font-medium whitespace-nowrap"
-              style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
+              className="type-caption-md whitespace-nowrap"
+              style={{ color: "#efefef", lineHeight: "18px" }}
             >
               {flowComplete ? "COMPLETE" : "REFLECTION"}
             </span>
             {!flowComplete && (
               <span
-                className="font-['Afacad'] font-normal whitespace-nowrap"
-                style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
+                className="type-body-sm whitespace-nowrap"
+                style={{ color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
               >
                 {stepNumber} of {totalSteps}
               </span>
@@ -959,7 +959,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         onChange={e => setOtherText(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && otherText.trim() && advanceToNext(otherText.trim(), otherText.trim())}
                         placeholder={currentStep.otherPlaceholder || "Or type your own…"}
-                        className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
+                        className="flex-1 px-3 rounded-[6px] type-body-md bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
                         style={{ height: "36px" }}
                         data-testid="input-chat-other"
                       />
@@ -999,24 +999,24 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     }}
                   />
                   <p
-                    className="font-['Afacad'] uppercase mb-3"
-                    style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em" }}
+                    className="type-caption-sm mb-3"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
                   >
                     Your Reflection
                   </p>
                   {summaryText ? (
-                    <p className="font-['Afacad']" style={{ fontSize: "15px", lineHeight: "22px", color: "rgba(255,255,255,0.85)" }}>
+                    <p className="type-body-lg" style={{ lineHeight: "22px", color: "rgba(255,255,255,0.85)" }}>
                       {summaryText}
                     </p>
                   ) : (
-                    <p className="font-['Afacad'] italic" style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)" }}>
+                    <p className="type-body-md italic" style={{ color: "rgba(255,255,255,0.5)" }}>
                       Your answers have been recorded.
                     </p>
                   )}
                   <button
                     onClick={handleRedo}
-                    className="mt-4 font-['Afacad'] transition-opacity hover:opacity-70"
-                    style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                    className="mt-4 type-body-sm transition-opacity hover:opacity-70"
+                    style={{ color: "rgba(255,255,255,0.35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                     data-testid="button-redo-reflection"
                   >
                     Redo this reflection
@@ -1034,7 +1034,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 {flowComplete || currentStep?.inputType === "none" ? (
                   <button
                     onClick={handleSubmit}
-                    className="w-full flex items-center justify-center gap-2 font-['Afacad'] font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
+                    className="w-full flex items-center justify-center gap-2 font-sans font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
                     style={{
                       background: "#18181b",
                       height: "42px",
@@ -1056,7 +1056,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         onChange={e => setTextInput(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && !isSendDisabled && handleSubmit()}
                         placeholder="Type your answer here…"
-                        className="flex-1 px-3 rounded-[6px] text-[14px] font-['Afacad'] bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
+                        className="flex-1 px-3 rounded-[6px] type-body-md bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
                         style={{ height: "36px" }}
                         data-testid="input-chat-text"
                       />
@@ -1095,10 +1095,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 background: "#202020",
                 borderRadius: "36px",
                 padding: "12px 16px",
-                fontFamily: "Afacad",
+                fontFamily: "Afacad, sans-serif",
                 fontWeight: 500,
                 fontSize: "14px",
-                letterSpacing: "2.8px",
+                letterSpacing: "0.2em",
                 lineHeight: "18px",
                 color: "#efefef",
               }}
@@ -1148,15 +1148,15 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     padding: "28px",
                   }}
                 >
-                  <p className="font-['Afacad'] uppercase mb-4" style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", letterSpacing: "0.12em" }}>
+                  <p className="type-caption-sm mb-4" style={{ color: "rgba(255,255,255,0.35)" }}>
                     Your Reflection
                   </p>
                   {summaryText ? (
-                    <p className="font-['IvyOra_Display']" style={{ fontSize: "18px", lineHeight: "28px", color: "rgba(255,255,255,0.9)" }}>
+                    <p className="font-serif" style={{ fontSize: "18px", lineHeight: "28px", color: "rgba(255,255,255,0.9)" }}>
                       {summaryText}
                     </p>
                   ) : (
-                    <p className="font-['Afacad'] italic" style={{ fontSize: "15px", color: "rgba(255,255,255,0.5)" }}>
+                    <p className="type-body-md italic" style={{ color: "rgba(255,255,255,0.5)" }}>
                       Your answers have been recorded.
                     </p>
                   )}
@@ -1165,15 +1165,15 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 <div className="flex items-center justify-between mt-6">
                   <button
                     onClick={handleRedo}
-                    className="font-['Afacad'] transition-opacity hover:opacity-70"
-                    style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                    className="type-body-sm transition-opacity hover:opacity-70"
+                    style={{ color: "rgba(255,255,255,0.35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                     data-testid="button-redo-reflection-review"
                   >
                     Redo this reflection
                   </button>
                   <button
                     onClick={onComplete}
-                    className="flex items-center gap-2 font-['Afacad'] font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+                    className="flex items-center gap-2 font-sans font-medium text-[#fafafa] transition-opacity hover:opacity-80"
                     style={{
                       background: "#18181b",
                       borderRadius: "6px",
@@ -1254,12 +1254,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             {/* ── Text section ── */}
             <div className="flex flex-col items-center w-full" style={{ gap: 20 }}>
 
-              {/* "REFLECTION UNLOCKED" — 16px, Afacad, all caps, 20% kerning (3.2px) */}
+              {/* "REFLECTION UNLOCKED" — type-caption-lg, all caps */}
               <p
-                className="font-['Afacad'] font-normal uppercase text-white text-center whitespace-nowrap"
+                className="type-caption-lg text-white text-center whitespace-nowrap"
                 style={{
-                  fontSize: 16,
-                  letterSpacing: "3.2px",
                   lineHeight: "20px",
                   transition: "opacity 600ms ease-out",
                   opacity: unlockPhase >= 3 ? 1 : 0,
@@ -1270,7 +1268,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
               {/* 48px IvyOra Display headline (admin-configurable) */}
               <p
-                className="font-['IvyOra_Display'] text-white text-center"
+                className="font-serif text-white text-center"
                 style={{
                   fontSize: 48,
                   fontWeight: 500,
@@ -1297,11 +1295,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 />
               </div>
 
-              {/* 16px Afacad subtext (admin-configurable) */}
+              {/* 16px subtext (admin-configurable) */}
               <p
-                className="font-['Afacad'] font-normal text-white text-center"
+                className="type-body-lg text-white text-center"
                 style={{
-                  fontSize: 16,
                   lineHeight: "20px",
                   transition: "opacity 600ms ease-out",
                   opacity: unlockPhase >= 5 ? 1 : 0,
@@ -1333,7 +1330,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 data-testid="button-reflection-overlay-continue"
               >
                 <span
-                  className="font-['Afacad'] font-medium text-center"
+                  className="font-sans font-medium text-center"
                   style={{ fontSize: 15, lineHeight: "22.5px", color: "#fafafa" }}
                 >
                   Continue

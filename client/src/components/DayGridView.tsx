@@ -83,7 +83,7 @@ function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", margin: "20px 0" }}>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
-      <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "12px", letterSpacing: "0.14em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", flexShrink: 0 }}>
+      <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "12px", letterSpacing: "0.14em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", flexShrink: 0 }}>
         {label}
       </span>
       <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
@@ -193,7 +193,7 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function SundayBanner() {
   return (
-    <div data-testid="banner-sunday" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", margin: "12px 0", fontFamily: "'Afacad', sans-serif", fontSize: "12px", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
+    <div data-testid="banner-sunday" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", margin: "12px 0", fontFamily: "Afacad, sans-serif", fontSize: "12px", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>
       ✦ Sunday — Rest &amp; Mass ✦
     </div>
   );
@@ -234,7 +234,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
         <p style={{ fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif", fontSize: "16px", lineHeight: "15.5px", letterSpacing: "-0.14px", color: "white", fontWeight: 500, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
         {subtitle && (
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", lineHeight: "13px", letterSpacing: "0px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
+          <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "10px", lineHeight: "13px", color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
         )}
       </div>
     </button>
@@ -261,10 +261,10 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
         {/* Left: week label + title */}
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <p style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "12px",
             fontWeight: 400,
-            letterSpacing: "2.4px",
+            letterSpacing: "0.2em",
             color: "#d0d6e0",
             textTransform: "uppercase",
             lineHeight: "24px",
@@ -287,7 +287,7 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
           data-testid="button-week-guide"
           onClick={onGuideClick}
           style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "10px",
             fontWeight: 400,
             color: "white",
@@ -371,7 +371,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         {/* Bold subtitle */}
         <p
           style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "14px", fontWeight: 600,
             color: "rgba(255,255,255,0.8)",
             margin: "0 0 14px", lineHeight: 1.55,
@@ -383,7 +383,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         {/* Description */}
         <p
           style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "14px",
             color: "rgba(255,255,255,0.45)",
             margin: "0 0 28px", lineHeight: 1.65,
@@ -398,7 +398,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             data-testid="button-certificate-understand"
             style={{
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontSize: "14px", fontWeight: 500,
               color: "white",
               background: "rgba(255,255,255,0.08)",
@@ -448,7 +448,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
         <span
           style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "12px", letterSpacing: "0.14em",
             color: "rgba(255,255,255,0.35)",
             textTransform: "uppercase", flexShrink: 0,
@@ -561,7 +561,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           </p>
           <p
             style={{
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontSize: "11px",
               color: "rgba(255,255,255,0.45)",
               margin: 0, lineHeight: 1.5,

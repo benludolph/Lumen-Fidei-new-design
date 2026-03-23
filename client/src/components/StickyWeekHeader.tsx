@@ -15,10 +15,10 @@ export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelim
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-['Afacad',sans-serif] font-bold text-white/70 text-[14px] leading-6">
+          <p className="font-sans font-bold text-white/70 type-body-md leading-6">
             Initial 30 Days
           </p>
-          <p className="font-['Afacad',sans-serif] font-bold text-white text-[18px] leading-7 truncate">
+          <p className="font-sans font-bold text-white text-[18px] leading-7 truncate">
             {inPrelimSection ? "Getting Started" : `Week ${weekNumber}: ${weekTheme}`}
           </p>
         </div>
@@ -29,7 +29,7 @@ export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelim
             data-testid="button-overview-guide"
           >
             <BookOpen className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
-            <span className="font-['Afacad',sans-serif] font-bold text-white/80 text-[12px] tracking-wider uppercase group-hover:text-white transition-colors">
+            <span className="font-sans font-bold text-white/80 type-caption-sm group-hover:text-white transition-colors">
               Overview & Guide
             </span>
           </button>

@@ -94,7 +94,7 @@ function SectionDivider({ label }: { label: string }) {
     <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
       <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
       <span style={{
-        fontFamily: "'Afacad', sans-serif",
+        fontFamily: "Afacad, sans-serif",
         fontWeight: 400,
         fontSize: "12px",
         color: "#d0d6e0",
@@ -210,7 +210,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
               {resource.name}
             </p>
             <p style={{
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontWeight: 400,
               fontSize: "10px",
               color: "#8a8f98",
@@ -347,7 +347,7 @@ function ExternalCard({
               {name}
             </p>
             <p style={{
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontWeight: 400,
               fontSize: "10px",
               color: "#8a8f98",

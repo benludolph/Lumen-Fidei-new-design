@@ -50,7 +50,7 @@ function Breadcrumb({ name }: { name: string }) {
           <span
             data-testid="breadcrumb-resources"
             style={{
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontSize: "15px",
               lineHeight: "15px",
               color: "rgba(255,255,255,0.6)",
@@ -69,7 +69,7 @@ function Breadcrumb({ name }: { name: string }) {
         <span
           data-testid="breadcrumb-current"
           style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "15px",
             lineHeight: "15px",
             color: "rgba(255,255,255,0.6)",
@@ -199,7 +199,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
       {/* Info row */}
       <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
         <span style={{
-          fontFamily: "'Afacad', sans-serif",
+          fontFamily: "Afacad, sans-serif",
           fontWeight: 600,
           fontSize: "15.6px",
           lineHeight: "24px",
@@ -213,7 +213,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Clock style={{ width: "14px", height: "14px", color: "white", flexShrink: 0 }} />
             <span style={{
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontWeight: 500,
               fontSize: "13.5px",
               lineHeight: "16.8px",
@@ -253,11 +253,11 @@ export default function ResourceDetail() {
       <DashboardLayout>
         <Breadcrumb name="Not found" />
         <div style={{ backgroundColor: "black", minHeight: "685px", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "80px" }}>
-          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "16px", color: "rgba(255,255,255,0.4)", marginBottom: "20px" }}>
+          <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "16px", color: "rgba(255,255,255,0.4)", marginBottom: "20px" }}>
             This resource could not be found.
           </p>
           <Link href="/resources">
-            <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "14px", color: "#F07830", cursor: "pointer" }}>
+            <span style={{ fontFamily: "Afacad, sans-serif", fontSize: "14px", color: "#F07830", cursor: "pointer" }}>
               ← Back to Resources
             </span>
           </Link>
@@ -376,7 +376,7 @@ export default function ResourceDetail() {
             >
               {/* Duration / type badge */}
               <p style={{
-                fontFamily: "'Afacad', sans-serif",
+                fontFamily: "Afacad, sans-serif",
                 fontWeight: 400,
                 fontSize: "12px",
                 color: "#d0d6e0",
@@ -410,7 +410,7 @@ export default function ResourceDetail() {
                 <p
                   data-testid="resource-subtitle"
                   style={{
-                    fontFamily: "'Afacad', sans-serif",
+                    fontFamily: "Afacad, sans-serif",
                     fontWeight: 400,
                     fontSize: "22.5px",
                     lineHeight: "31.2px",

@@ -156,7 +156,7 @@ export default function Login() {
 
               <p
                 style={{
-                  fontFamily: "'Afacad', sans-serif",
+                  fontFamily: "Afacad, sans-serif",
                   fontSize: "16px",
                   fontWeight: 400,
                   letterSpacing: "3.2px",
@@ -179,7 +179,7 @@ export default function Login() {
                   <label
                     htmlFor="email"
                     style={{
-                      fontFamily: "'Afacad', sans-serif",
+                      fontFamily: "Afacad, sans-serif",
                       fontSize: "14px",
                       color: "white",
                       lineHeight: "14px",
@@ -200,7 +200,7 @@ export default function Login() {
                       height: "36px",
                       width: "100%",
                       color: "white",
-                      fontFamily: "'Afacad', sans-serif",
+                      fontFamily: "Afacad, sans-serif",
                       fontSize: "14px",
                       padding: "0 12px",
                       outline: "none",
@@ -210,7 +210,7 @@ export default function Login() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
                   />
                   {form.formState.errors.username && (
-                    <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
+                    <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
                       {form.formState.errors.username.message}
                     </p>
                   )}
@@ -221,7 +221,7 @@ export default function Login() {
                   <label
                     htmlFor="password"
                     style={{
-                      fontFamily: "'Afacad', sans-serif",
+                      fontFamily: "Afacad, sans-serif",
                       fontSize: "14px",
                       color: "white",
                       lineHeight: "14px",
@@ -241,7 +241,7 @@ export default function Login() {
                       height: "36px",
                       width: "100%",
                       color: "white",
-                      fontFamily: "'Afacad', sans-serif",
+                      fontFamily: "Afacad, sans-serif",
                       fontSize: "14px",
                       padding: "0 12px",
                       outline: "none",
@@ -251,14 +251,14 @@ export default function Login() {
                     onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
                   />
                   {form.formState.errors.password && (
-                    <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
+                    <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "12px", color: "#ef4444", margin: 0 }}>
                       {form.formState.errors.password.message}
                     </p>
                   )}
                 </div>
 
                 {error && (
-                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "13px", color: "#ef4444", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px" }}>
+                  <p style={{ fontFamily: "Afacad, sans-serif", fontSize: "13px", color: "#ef4444", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px" }}>
                     {error}
                   </p>
                 )}
@@ -275,7 +275,7 @@ export default function Login() {
                     border: "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "6px",
                     color: "white",
-                    fontFamily: "'Afacad', sans-serif",
+                    fontFamily: "Afacad, sans-serif",
                     fontSize: "14px",
                     fontWeight: 500,
                     letterSpacing: "2px",
@@ -301,7 +301,7 @@ export default function Login() {
 
               <p
                 style={{
-                  fontFamily: "'Afacad', sans-serif",
+                  fontFamily: "Afacad, sans-serif",
                   fontSize: "12px",
                   color: "rgba(255,255,255,0.3)",
                   textAlign: "center",

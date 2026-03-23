@@ -25,7 +25,7 @@ function InitialsAvatar({ name, size = 36 }: { name: string; size?: number }) {
         background: "rgba(240,120,48,0.15)",
         border: "1px solid rgba(240,120,48,0.3)",
         color: "#F07830",
-        fontFamily: "'Afacad', sans-serif",
+        fontFamily: "Afacad, sans-serif",
         fontSize: size * 0.33,
         fontWeight: 600,
         display: "flex",
@@ -141,7 +141,7 @@ export default function Messages() {
             >
               <span
                 style={{
-                  fontFamily: "'Afacad', sans-serif",
+                  fontFamily: "Afacad, sans-serif",
                   fontSize: "18px",
                   fontWeight: 600,
                   color: "white",
@@ -198,7 +198,7 @@ export default function Messages() {
                     <DialogHeader>
                       <DialogTitle
                         style={{
-                          fontFamily: "'Afacad', sans-serif",
+                          fontFamily: "Afacad, sans-serif",
                           fontSize: "16px",
                           fontWeight: 600,
                           color: "white",
@@ -237,7 +237,7 @@ export default function Messages() {
                             border: "1px solid rgba(255,255,255,0.08)",
                             borderRadius: "6px",
                             color: "white",
-                            fontFamily: "'Afacad', sans-serif",
+                            fontFamily: "Afacad, sans-serif",
                             fontSize: "14px",
                             outline: "none",
                             boxSizing: "border-box",
@@ -258,7 +258,7 @@ export default function Messages() {
                         {availableUsers.length === 0 ? (
                           <p
                             style={{
-                              fontFamily: "'Afacad', sans-serif",
+                              fontFamily: "Afacad, sans-serif",
                               fontSize: "14px",
                               color: "rgba(255,255,255,0.4)",
                               textAlign: "center",
@@ -298,7 +298,7 @@ export default function Messages() {
                               <div>
                                 <p
                                   style={{
-                                    fontFamily: "'Afacad', sans-serif",
+                                    fontFamily: "Afacad, sans-serif",
                                     fontSize: "14px",
                                     fontWeight: 500,
                                     color: "white",
@@ -309,7 +309,7 @@ export default function Messages() {
                                 </p>
                                 <p
                                   style={{
-                                    fontFamily: "'Afacad', sans-serif",
+                                    fontFamily: "Afacad, sans-serif",
                                     fontSize: "12px",
                                     color: "rgba(255,255,255,0.4)",
                                     margin: 0,
@@ -334,7 +334,7 @@ export default function Messages() {
               {contacts?.length === 0 && (
                 <p
                   style={{
-                    fontFamily: "'Afacad', sans-serif",
+                    fontFamily: "Afacad, sans-serif",
                     fontSize: "14px",
                     color: "rgba(255,255,255,0.3)",
                     textAlign: "center",
@@ -386,7 +386,7 @@ export default function Messages() {
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <p
                         style={{
-                          fontFamily: "'Afacad', sans-serif",
+                          fontFamily: "Afacad, sans-serif",
                           fontSize: "14px",
                           fontWeight: 500,
                           color: "white",
@@ -400,7 +400,7 @@ export default function Messages() {
                       </p>
                       <p
                         style={{
-                          fontFamily: "'Afacad', sans-serif",
+                          fontFamily: "Afacad, sans-serif",
                           fontSize: "12px",
                           color: "rgba(255,255,255,0.4)",
                           margin: 0,
@@ -447,7 +447,7 @@ export default function Messages() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontFamily: "'Afacad', sans-serif",
+                  fontFamily: "Afacad, sans-serif",
                   fontSize: "14px",
                   color: "rgba(255,255,255,0.3)",
                   padding: "24px",
@@ -540,7 +540,7 @@ function ChatWindow({
         <InitialsAvatar name={otherUserName} size={30} />
         <span
           style={{
-            fontFamily: "'Afacad', sans-serif",
+            fontFamily: "Afacad, sans-serif",
             fontSize: "15px",
             fontWeight: 500,
             color: "white",
@@ -559,7 +559,7 @@ function ChatWindow({
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontSize: "14px",
               color: "rgba(255,255,255,0.3)",
             }}
@@ -582,7 +582,7 @@ function ChatWindow({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontFamily: "'Afacad', sans-serif",
+                  fontFamily: "Afacad, sans-serif",
                   fontSize: "14px",
                   color: "rgba(255,255,255,0.3)",
                   paddingTop: "40px",
@@ -605,7 +605,7 @@ function ChatWindow({
                     borderRadius: isMe ? "14px 14px 3px 14px" : "14px 14px 14px 3px",
                     background: isMe ? "#484D55" : "#292929",
                     color: "rgba(255,255,255,0.9)",
-                    fontFamily: "'Afacad', sans-serif",
+                    fontFamily: "Afacad, sans-serif",
                     fontSize: "14px",
                     lineHeight: "1.45",
                     wordBreak: "break-word",
@@ -647,7 +647,7 @@ function ChatWindow({
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "8px",
               color: "white",
-              fontFamily: "'Afacad', sans-serif",
+              fontFamily: "Afacad, sans-serif",
               fontSize: "14px",
               outline: "none",
               transition: "border-color 0.15s",

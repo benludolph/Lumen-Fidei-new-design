@@ -52,7 +52,7 @@ export function formatContent(content: string): JSX.Element[] {
       result.push(
         <ol key={result.length} style={{ listStyleType: "decimal", paddingLeft: "20px", margin: "10px 0" }}>
           {listItems.map((item, idx) => (
-            <li key={idx} style={{ marginBottom: "6px", color: "rgba(255,255,255,0.75)", fontFamily: "'Afacad', sans-serif", fontSize: "15px", lineHeight: "1.65" }}>
+            <li key={idx} style={{ marginBottom: "6px", color: "rgba(255,255,255,0.75)", fontFamily: "Afacad, sans-serif", fontSize: "15px", lineHeight: "1.65" }}>
               {formatInlineStyles(item)}
             </li>
           ))}
@@ -75,7 +75,7 @@ export function formatContent(content: string): JSX.Element[] {
       const inner = line.slice(1, -1);
       if (!inner.includes("*")) {
         result.push(
-          <p key={result.length} style={{ fontFamily: "'Afacad', sans-serif", fontSize: "15px", color: "rgba(255,255,255,0.5)", fontStyle: "italic", margin: "8px 0" }}>
+          <p key={result.length} style={{ fontFamily: "Afacad, sans-serif", fontSize: "15px", color: "rgba(255,255,255,0.5)", fontStyle: "italic", margin: "8px 0" }}>
             {inner}
           </p>
         );
@@ -97,7 +97,7 @@ export function formatContent(content: string): JSX.Element[] {
     }
 
     result.push(
-      <p key={result.length} style={{ fontFamily: "'Afacad', sans-serif", fontSize: "15px", color: "rgba(255,255,255,0.78)", lineHeight: "1.7", margin: "4px 0" }}>
+      <p key={result.length} style={{ fontFamily: "Afacad, sans-serif", fontSize: "15px", color: "rgba(255,255,255,0.78)", lineHeight: "1.7", margin: "4px 0" }}>
         {formatInlineStyles(line)}
       </p>
     );

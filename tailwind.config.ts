@@ -39,7 +39,7 @@ export default {
         muted: {
           DEFAULT: "hsl(var(--muted) / <alpha-value>)",
           foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
-          border: "var(--muted-border)",
+          border: "hsl(var(--muted-border) / <alpha-value>)",
         },
         accent: {
           DEFAULT: "hsl(var(--accent) / <alpha-value>)",
@@ -84,7 +84,7 @@ export default {
       },
       fontFamily: {
         sans: ["'Afacad'", "system-ui", "sans-serif"],
-        serif: ["'Afacad'", "system-ui", "sans-serif"],
+        serif: ["'Ivy Ora Display'", "'Cormorant Garamond'", "Georgia", "serif"],
         mono: ["var(--font-mono)"],
       },
       letterSpacing: {

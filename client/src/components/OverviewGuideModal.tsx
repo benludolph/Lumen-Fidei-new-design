@@ -32,12 +32,12 @@ export function OverviewGuideModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="bg-[#18181b] border-white/10 text-white font-['Afacad',sans-serif] max-w-md"
+        className="bg-[#18181b] border-white/10 text-white font-sans max-w-md"
         data-testid="dialog-overview-guide"
       >
         <DialogHeader>
           <DialogTitle
-            className="text-white font-['Afacad',sans-serif] text-xl font-bold"
+            className="text-white font-sans text-xl font-bold"
             data-testid="text-overview-guide-title"
           >
             Week {weekNumber}: {weekTheme}

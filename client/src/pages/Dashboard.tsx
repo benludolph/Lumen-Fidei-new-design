@@ -223,7 +223,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="text-white/50" style={{ fontFamily: "'Afacad', sans-serif" }}>Loading...</p>
+          <p className="text-white/50" style={{ fontFamily: "Afacad, sans-serif" }}>Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -236,7 +236,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="text-white/50" style={{ fontFamily: "'Afacad', sans-serif" }}>Loading...</p>
+          <p className="text-white/50" style={{ fontFamily: "Afacad, sans-serif" }}>Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -277,7 +277,7 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="text-white/50" style={{ fontFamily: "'Afacad', sans-serif" }}>Loading program...</p>
+          <p className="text-white/50" style={{ fontFamily: "Afacad, sans-serif" }}>Loading program...</p>
         </div>
       </DashboardLayout>
     );

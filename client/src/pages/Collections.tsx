@@ -225,7 +225,7 @@ function SaintsDivider() {
       />
       <span
         style={{
-          fontFamily: "'Afacad', sans-serif",
+          fontFamily: "Afacad, sans-serif",
           fontSize: "12px",
           fontWeight: 600,
           letterSpacing: "4px",
