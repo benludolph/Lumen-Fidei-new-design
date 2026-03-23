@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Send, RotateCw, ArrowRight } from "lucide-react";
+import { X, Send, RotateCw, ArrowRight, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
@@ -291,9 +291,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [textInput, setTextInput] = useState("");
   const [flowComplete, setFlowComplete] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
+  const [unlockPhase, setUnlockPhase] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True when flowComplete is restored from the server (skip animation, show overlay immediately)
+  const restoredCompletionRef = useRef(false);
   // Set to true to cancel any in-flight reveal chain when the step changes or rewinds
   const revealCancelRef = useRef(false);
   // When navigating back from summary, skip re-revealing messages (they're already shown)
@@ -309,6 +312,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         if (data && typeof data === "object") {
           setAnswers(data as Record<string, string>);
           if ((data as Record<string, string>).__flow_complete === "1") {
+            restoredCompletionRef.current = true; // skip animation on restore
             setFlowComplete(true);
           }
         }
@@ -317,12 +321,42 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       .catch(() => setLoadedFromServer(true));
   }, [contextKey]);
 
+  // Drive the sequential unlock animation when the flow completes
+  useEffect(() => {
+    if (!flowComplete) {
+      setUnlockPhase(0);
+      return;
+    }
+    // Restored from server → jump to fully-revealed immediately (no animation)
+    if (restoredCompletionRef.current) {
+      setUnlockPhase(5);
+      return;
+    }
+    // Fresh completion → stagger each element in
+    const timers = [
+      setTimeout(() => setUnlockPhase(1), 200),   // icon
+      setTimeout(() => setUnlockPhase(2), 900),    // "REFLECTION UNLOCKED" label
+      setTimeout(() => setUnlockPhase(3), 1600),   // title
+      setTimeout(() => setUnlockPhase(4), 2200),   // line + subtitle
+      setTimeout(() => setUnlockPhase(5), 3000),   // continue button + redo
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [flowComplete]);
+
   // Auto-scroll to bottom — scroll the overflow container directly so nested flex
   // layouts don't confuse scrollIntoView (which targets the document viewport).
+  // Uses rAF to wait for the DOM to finish painting the new content before measuring scrollHeight.
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    // First rAF: layout complete. Second rAF: paint complete — scrollHeight is reliable.
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      });
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
   }, [renderedMessages, showTyping, inputReady, flowComplete]);
 
   // Resolve the option list for a step (inline options take priority over optionSets)
@@ -562,6 +596,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   // Reset to the beginning so the user can redo their reflection
   const handleRedo = useCallback(() => {
     saveAnswer("__flow_complete", "0"); // clear completion flag on server
+    restoredCompletionRef.current = false; // next completion should animate
     setFlowComplete(false);
     setCurrentStepIdx(0);
     setRenderedMessages([]);
@@ -1008,6 +1043,174 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           </div>
         </div>
       </div>
+
+      {/* ── Reflection Unlock Overlay ──
+          Covers the entire screen (fixed) when the flow completes.
+          Elements fade in sequentially: icon → label → title → line+text → button */}
+      {flowComplete && (
+        <div
+          className="fixed inset-0 flex flex-col"
+          style={{ zIndex: 500, background: "#0b0b0b" }}
+        >
+          {/* Oil-painting bg at very low opacity for depth */}
+          <img
+            src={candleBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            style={{ opacity: 0.07 }}
+          />
+          {/* Dark gradient — stronger at the bottom so text stays readable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(11,11,11,0.1) 0%, rgba(11,11,11,0.85) 50%, #0b0b0b 100%)",
+            }}
+          />
+
+          {/* Centre content */}
+          <div className="relative flex-1 flex flex-col items-center justify-center px-8">
+
+            {/* Phase 1 — Icon */}
+            <div
+              style={{
+                opacity: unlockPhase >= 1 ? 1 : 0,
+                transform: unlockPhase >= 1 ? "scale(1) translateY(0)" : "scale(0.75) translateY(10px)",
+                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                marginBottom: "28px",
+              }}
+            >
+              <div
+                style={{
+                  width: "72px",
+                  height: "72px",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(240,120,48,0.18) 0%, rgba(240,120,48,0) 70%)",
+                  border: "1px solid rgba(240,120,48,0.15)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Flame style={{ width: "30px", height: "30px", color: "#F07830" }} />
+              </div>
+            </div>
+
+            {/* Phase 2 — REFLECTION UNLOCKED */}
+            <p
+              style={{
+                opacity: unlockPhase >= 2 ? 1 : 0,
+                transform: unlockPhase >= 2 ? "translateY(0)" : "translateY(10px)",
+                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                fontFamily: "Afacad",
+                fontSize: "11px",
+                color: "rgba(240,120,48,0.75)",
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                marginBottom: "14px",
+              }}
+            >
+              Reflection Unlocked
+            </p>
+
+            {/* Phase 3 — Title */}
+            <h2
+              style={{
+                opacity: unlockPhase >= 3 ? 1 : 0,
+                transform: unlockPhase >= 3 ? "translateY(0)" : "translateY(10px)",
+                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                fontFamily: "IvyOra Display",
+                fontStyle: "normal",
+                fontSize: "30px",
+                lineHeight: "36px",
+                color: "rgba(255,255,255,0.95)",
+                marginBottom: "24px",
+                textAlign: "center",
+              }}
+            >
+              Your Reflection
+            </h2>
+
+            {/* Phase 4 — Divider line */}
+            <div
+              style={{
+                opacity: unlockPhase >= 4 ? 1 : 0,
+                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1)",
+                width: "48px",
+                height: "1px",
+                background: "rgba(255,255,255,0.12)",
+                marginBottom: "22px",
+              }}
+            />
+
+            {/* Phase 4 — Summary text */}
+            {summaryText && (
+              <p
+                style={{
+                  opacity: unlockPhase >= 4 ? 1 : 0,
+                  transform: unlockPhase >= 4 ? "translateY(0)" : "translateY(8px)",
+                  transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1)",
+                  fontFamily: "Afacad",
+                  fontSize: "15px",
+                  lineHeight: "24px",
+                  color: "rgba(255,255,255,0.6)",
+                  textAlign: "center",
+                  maxWidth: "300px",
+                }}
+              >
+                {summaryText}
+              </p>
+            )}
+
+            {/* Phase 5 — Redo link */}
+            <button
+              onClick={handleRedo}
+              style={{
+                opacity: unlockPhase >= 5 ? 0.45 : 0,
+                transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1)",
+                marginTop: "24px",
+                fontFamily: "Afacad",
+                fontSize: "13px",
+                color: "rgba(255,255,255,0.5)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+              data-testid="button-redo-reflection"
+            >
+              Redo this reflection
+            </button>
+          </div>
+
+          {/* Phase 5 — Continue button pinned to the bottom */}
+          <div
+            className="relative"
+            style={{
+              opacity: unlockPhase >= 5 ? 1 : 0,
+              transition: "opacity 0.8s cubic-bezier(0.4,0,0.2,1)",
+              padding: "0 24px 52px",
+              zIndex: 1,
+            }}
+          >
+            <button
+              onClick={onComplete}
+              className="w-full flex items-center justify-center gap-2 font-['Afacad'] font-medium text-[#fafafa] rounded-[6px] hover:opacity-90 transition-opacity"
+              style={{
+                background: "#18181b",
+                height: "50px",
+                fontSize: "16px",
+                border: "1px solid rgba(255,255,255,0.08)",
+                boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
+              }}
+              data-testid="button-unlock-continue"
+            >
+              Continue
+              <ArrowRight style={{ width: "16px", height: "16px" }} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
