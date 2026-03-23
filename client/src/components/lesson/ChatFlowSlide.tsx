@@ -58,18 +58,23 @@ interface ChatFlowSlideProps {
 // ============================================================
 
 /**
- * Render the summary template, resolving {{variableName}} tokens.
- * - `answers` maps variableName → stored VALUE (option value or text)
- * - `stepOptions` maps variableName → option list for that step
- * When a value is an option value, look up the option label for display.
- * When a value is empty/missing, the entire clause containing the token is hidden.
+ * Render the summary template using sentence-level clause hiding.
+ *
+ * Algorithm:
+ * 1. Build a resolved display-value map: stored canonical values → human labels.
+ *    - For option-backed variables (single/multi_select): look up label(s) from stepOptions.
+ *    - For text_input variables: display value is the stored text directly.
+ *    - Empty stored values stay empty ("").
+ * 2. Split template into sentences at sentence-ending punctuation (. ! ?) boundaries.
+ * 3. For each sentence, if ANY {{token}} in it resolves to empty → drop the entire sentence.
+ * 4. For surviving sentences, replace tokens with display values and join with a space.
  */
 function renderSummaryTemplate(
   template: string,
   answers: Record<string, string>,
   stepOptions: Record<string, ChatFlowOption[]>
 ): string {
-  // First pass: build a resolved-values map (value → display text)
+  // Step 1: Build resolved display values from canonical stored values
   const resolved: Record<string, string> = {};
   for (const [varName, storedValue] of Object.entries(answers)) {
     if (!storedValue) {
@@ -78,45 +83,39 @@ function renderSummaryTemplate(
     }
     const opts = stepOptions[varName];
     if (opts && opts.length > 0) {
-      // Multi-select: stored as comma-joined values
-      const values = storedValue.split(",").map(v => v.trim());
+      // Multi-select: stored as comma-joined VALUES; map each to its LABEL
+      const values = storedValue.split(",").map(v => v.trim()).filter(Boolean);
       const labels = values.map(v => {
         const found = opts.find(o => o.value === v);
         return found ? found.label : v;
       }).filter(Boolean);
       resolved[varName] = labels.join(", ");
     } else {
+      // text_input: stored value IS the display value
       resolved[varName] = storedValue;
     }
   }
 
-  // Second pass: replace tokens, hiding clauses with empty resolution
-  // Split on sentence boundaries, process each clause
-  let result = template;
+  // Step 2: Split template into sentences including their trailing punctuation.
+  // The regex captures: any text that is NOT sentence-ending punctuation, optionally
+  // followed by one or more sentence-ending punctuation characters.
+  // Example: "Sentence one. Sentence two!" → ["Sentence one.", " Sentence two!"]
+  const clauses = Array.from(template.matchAll(/[^.!?]+[.!?]*/g), m => m[0]);
+  if (clauses.length === 0) return template; // No parseable clauses — return as-is
 
-  // Hide entire quoted strings containing an empty token
-  result = result.replace(/"[^"]*\{\{(\w+)\}\}[^"]*"/g, (match, key) => {
-    return resolved[key] ? match : "";
-  });
+  // Step 3 & 4: For each clause, check tokens; drop if any is empty; otherwise replace.
+  const outputClauses: string[] = [];
+  for (const clause of clauses) {
+    if (!clause.trim()) continue;
+    const tokenNames = Array.from(clause.matchAll(/\{\{(\w+)\}\}/g), m => m[1]);
+    // Drop this clause if any token resolves to empty (covers optional skipped fields)
+    if (tokenNames.some(t => (resolved[t] ?? "") === "")) continue;
+    // Replace tokens with their resolved display values
+    const rendered = clause.replace(/\{\{(\w+)\}\}/g, (_, k) => resolved[k] ?? "");
+    outputClauses.push(rendered.trim());
+  }
 
-  // Hide comma-separated clauses containing an empty token
-  result = result.replace(/,\s*[^,.!?]*\{\{(\w+)\}\}[^,.!?]*/g, (match, key) => {
-    return resolved[key] ? match : "";
-  });
-
-  // Replace remaining tokens
-  result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => resolved[key] || "");
-
-  // Clean up artifacts from hidden clauses
-  result = result
-    .replace(/\.\s*\./g, ".")
-    .replace(/,\s*\./g, ".")
-    .replace(/:\s*\./g, ".")
-    .replace(/\s{2,}/g, " ")
-    .replace(/\.\s*,/g, ".")
-    .trim();
-
-  return result;
+  return outputClauses.join(" ").replace(/\s{2,}/g, " ").trim();
 }
 
 // ============================================================
