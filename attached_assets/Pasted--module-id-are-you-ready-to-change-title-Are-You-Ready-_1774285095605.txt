@@ -1,0 +1,105 @@
+{
+  "module_id": "are_you_ready_to_change",
+  "title": "Are You Ready to Change Your Life?",
+  "steps": [
+    {
+      "id": "intro",
+      "type": "narrator",
+      "messages": [
+        "Let’s keep this simple.",
+        "If nothing changes, nothing changes.",
+        "So let’s be honest about where you are right now."
+      ]
+    },
+    {
+      "id": "q1",
+      "type": "single_select",
+      "question": "When you think about change, what’s your first reaction?",
+      "options": [
+        "I want it",
+        "I’m not sure I can",
+        "Part of me resists it",
+        "I avoid thinking about it"
+      ],
+      "variable": "q1"
+    },
+    {
+      "id": "q2",
+      "type": "single_select",
+      "question": "Is there something you already know needs to change?",
+      "options": [
+        "Yes",
+        "I think so but I avoid it",
+        "I feel stuck but don’t know what",
+        "No"
+      ],
+      "variable": "q2"
+    },
+    {
+      "id": "q3",
+      "type": "open_text",
+      "question": "Be direct.\n\nSometimes I…",
+      "variable": "q3"
+    },
+    {
+      "id": "q4",
+      "type": "open_text",
+      "question": "What happens after?\n\nAfter I do this, the result is…",
+      "variable": "q4"
+    },
+    {
+      "id": "insight",
+      "type": "narrator",
+      "messages": [
+        "That’s a pattern.",
+        "And it’s costing you something."
+      ]
+    },
+    {
+      "id": "q5",
+      "type": "single_select",
+      "question": "What is it giving you, even temporarily?",
+      "options": [
+        "Control",
+        "Relief",
+        "Connection",
+        "Escape"
+      ],
+      "variable": "q5",
+      "allow_other": true
+    },
+    {
+      "id": "q6",
+      "type": "open_text",
+      "question": "What has this cost you?",
+      "variable": "q6"
+    },
+    {
+      "id": "q7",
+      "type": "single_select",
+      "question": "Right now, which is true?",
+      "options": [
+        "I’m ready to change",
+        "I want to but I’m not ready",
+        "Part of me doesn’t want to",
+        "I’m not ready"
+      ],
+      "variable": "q7"
+    },
+    {
+      "id": "q8",
+      "type": "open_text",
+      "question": "If you were free of this, what would be different?",
+      "variable": "q8"
+    },
+    {
+      "id": "final",
+      "type": "final",
+      "messages": [
+        "You already see it.",
+        "You already know the cost.",
+        "Now it comes down to what you do next."
+      ]
+    }
+  ]
+}
