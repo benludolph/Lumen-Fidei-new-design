@@ -826,10 +826,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           className="flex-1 overflow-auto flex flex-col items-center relative"
           style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
         >
-          {/* Chat card — Figma: bg-[#09090b], border, rounded top only, p-24, fills height */}
+          {/* Chat card — Figma: bg-[#09090b], border, rounded top only, p-24, max-w-640 on desktop */}
           <div
             className="flex-1 flex flex-col overflow-hidden relative w-full"
             style={{
+              maxWidth: "640px",
               background: "#09090b",
               border: "1px solid rgba(255,255,255,0.05)",
               borderRadius: "8px 8px 0 0",
