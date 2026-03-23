@@ -922,6 +922,41 @@ export async function registerRoutes(
     res.json({ startDate });
   });
 
+  // === Reflection Overlay Settings ===
+
+  app.get('/api/reflection-overlay', requireAuth, async (req, res) => {
+    const [imageUrl, text, subtext] = await Promise.all([
+      storage.getCohortSetting("reflection_overlay_image"),
+      storage.getCohortSetting("reflection_overlay_text"),
+      storage.getCohortSetting("reflection_overlay_subtext"),
+    ]);
+    res.json({
+      imageUrl: imageUrl ?? "",
+      text: text ?? "Reflection Unlocked",
+      subtext: subtext ?? "",
+    });
+  });
+
+  app.post('/api/admin/reflection-overlay', requireRole('admin'), async (req, res) => {
+    const schema = z.object({
+      imageUrl: z.string(),
+      text: z.string(),
+      subtext: z.string(),
+    });
+    try {
+      const { imageUrl, text, subtext } = schema.parse(req.body);
+      await Promise.all([
+        storage.setCohortSetting("reflection_overlay_image", imageUrl),
+        storage.setCohortSetting("reflection_overlay_text", text),
+        storage.setCohortSetting("reflection_overlay_subtext", subtext),
+      ]);
+      res.json({ imageUrl, text, subtext });
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
   // === Start New Cohort ===
   
   app.post(api.admin.startNewCohort.path, async (req, res) => {

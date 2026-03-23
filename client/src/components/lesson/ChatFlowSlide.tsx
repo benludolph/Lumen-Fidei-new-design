@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { X, Send, RotateCw, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
 import bgMusicSrc from "@assets/BG_Msic_1774239770169.mp3";
 import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
-import crossParticleImg from "@assets/Cross_Particle_1774243395977.webp";
 import reflectionUnlockSound from "@assets/Reflection_Unlock_Sound_1774243654585.mp3";
 
 // ============================================================
@@ -389,6 +389,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [isRestoredFlow, setIsRestoredFlow] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
   const [unlockPhase, setUnlockPhase] = useState(0);
+  const [overlayDismissed, setOverlayDismissed] = useState(false);
+
+  const { data: overlayConfig } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
+    queryKey: ["/api/reflection-overlay"],
+  });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -429,18 +434,17 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
   // ── Unlock animation on fresh completion ──
   useEffect(() => {
-    if (!flowComplete) { setUnlockPhase(0); return; }
+    if (!flowComplete) { setUnlockPhase(0); setOverlayDismissed(false); return; }
     if (restoredCompletionRef.current) return;
     const audio = new Audio(reflectionUnlockSound);
     audio.volume = 0.8;
     audio.play().catch(() => {});
     const timers = [
-      setTimeout(() => setUnlockPhase(1), 400),
-      setTimeout(() => setUnlockPhase(2), 2000),
-      setTimeout(() => setUnlockPhase(3), 2320),
-      setTimeout(() => setUnlockPhase(4), 2640),
-      setTimeout(() => setUnlockPhase(5), 3000),
-      setTimeout(() => setUnlockPhase(6), 3600),
+      setTimeout(() => setUnlockPhase(1), 300),   // overlay bg + header
+      setTimeout(() => setUnlockPhase(2), 900),   // reflection card
+      setTimeout(() => setUnlockPhase(3), 1500),  // image
+      setTimeout(() => setUnlockPhase(4), 2000),  // headline
+      setTimeout(() => setUnlockPhase(5), 2400),  // subtext + close btn
     ];
     return () => timers.forEach(clearTimeout);
   }, [flowComplete]);
@@ -1188,57 +1192,213 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         </div>
       )}
 
-      {/* ── Completion Unlock Animation ── */}
-      {flowComplete && !isRestoredFlow && unlockPhase > 0 && (
+      {/* ── Completion Unlock Overlay ── */}
+      {flowComplete && !isRestoredFlow && !overlayDismissed && unlockPhase > 0 && (
         <div
-          className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none"
-          style={{ zIndex: 400, background: "rgba(0,0,0,0)" }}
+          className="fixed inset-0 flex flex-col"
+          style={{
+            zIndex: 400,
+            background: "#111",
+            transition: "opacity 500ms ease-out",
+            opacity: unlockPhase >= 1 ? 1 : 0,
+          }}
         >
-          {/* Particles */}
-          {unlockPhase >= 2 && (
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(8)].map((_, i) => (
-                <img
-                  key={i}
-                  src={crossParticleImg}
-                  alt=""
-                  className={`absolute rp-float-${i + 1}`}
-                  style={{
-                    width: `${18 + (i % 3) * 6}px`,
-                    opacity: 0.15 + (i % 4) * 0.08,
-                    left: `${10 + (i * 11) % 80}%`,
-                    top: `${15 + (i * 13) % 70}%`,
-                  }}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="flex flex-col items-center" style={{ gap: "24px" }}>
-            {/* Cross icon */}
+          {/* Oil painting background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <img
+              src={candleBg}
+              alt=""
+              style={{ position: "absolute", top: "-8%", left: 0, width: "100%", height: "117%", objectFit: "cover", opacity: 0.55 }}
+            />
             <div
               style={{
-                transition: "opacity 700ms ease-out, transform 700ms ease-out",
-                opacity: unlockPhase >= 1 ? 1 : 0,
-                transform: unlockPhase >= 1 ? "scale(1) translateY(0)" : "scale(0.7) translateY(12px)",
+                position: "absolute", inset: 0,
+                background: "linear-gradient(90deg, rgba(0,0,0,0) 10.8%, rgba(0,0,0,0.85) 27.8%, rgba(0,0,0,0.85) 72.5%, rgba(0,0,0,0) 90.7%)",
               }}
-            >
-              <img src={crossDividerImg} alt="" style={{ width: "64px", opacity: 0.7 }} />
-            </div>
+            />
+          </div>
 
-            {/* REFLECTION UNLOCKED label */}
-            <p
-              className="font-['Afacad'] font-medium uppercase"
+          {/* Header bar */}
+          <div
+            className="relative shrink-0 flex items-center justify-between"
+            style={{ padding: "24px 24px 0" }}
+          >
+            <div style={{ width: 42 }} />
+            {/* COMPLETE badge */}
+            <div
+              className="flex items-center justify-center"
               style={{
-                fontSize: "11px",
-                letterSpacing: "3px",
-                color: "rgba(255,255,255,0.45)",
-                transition: "opacity 600ms ease-out",
-                opacity: unlockPhase >= 2 ? 1 : 0,
+                background: "#202020",
+                borderRadius: 36,
+                padding: "12px 16px",
+                transition: "opacity 400ms ease-out",
+                opacity: unlockPhase >= 1 ? 1 : 0,
               }}
             >
-              Reflection Unlocked
-            </p>
+              <span
+                className="font-['Afacad'] font-medium uppercase"
+                style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef" }}
+              >
+                COMPLETE
+              </span>
+            </div>
+            {/* Close button — appears with subtext */}
+            <div
+              style={{
+                width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "opacity 400ms ease-out",
+                opacity: unlockPhase >= 5 ? 1 : 0,
+                pointerEvents: unlockPhase >= 5 ? "auto" : "none",
+              }}
+            >
+              <button
+                onClick={() => setOverlayDismissed(true)}
+                style={{
+                  width: 40, height: 40,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(42,42,42,0.5)",
+                  backdropFilter: "blur(9px)",
+                  borderRadius: 20,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                data-testid="button-reflection-overlay-close"
+              >
+                <X style={{ width: 16, height: 16, color: "rgba(255,255,255,0.8)" }} />
+              </button>
+            </div>
+          </div>
+
+          {/* Main scrollable card area */}
+          <div className="flex-1 relative overflow-auto" style={{ paddingTop: 24 }}>
+            <div
+              className="relative flex flex-col items-center"
+              style={{
+                background: "#010101",
+                borderRadius: "24px 24px 0 0",
+                minHeight: "100%",
+                paddingTop: 32,
+                paddingBottom: 48,
+                paddingLeft: 24,
+                paddingRight: 24,
+                overflow: "hidden",
+              }}
+            >
+              {/* Oil painting in this card area */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ borderRadius: "inherit" }}>
+                <img
+                  src={candleBg}
+                  alt=""
+                  style={{ position: "absolute", top: "-8%", left: 0, width: "100%", height: "117%", objectFit: "cover", opacity: 0.55 }}
+                />
+                <div
+                  style={{
+                    position: "absolute", inset: 0,
+                    background: "linear-gradient(90deg, rgba(0,0,0,0) 10.8%, rgba(0,0,0,0.85) 27.8%, rgba(0,0,0,0.85) 72.5%, rgba(0,0,0,0) 90.7%)",
+                  }}
+                />
+              </div>
+
+              {/* Inner reflection summary card */}
+              <div
+                className="relative w-full"
+                style={{
+                  maxWidth: 640,
+                  transition: "opacity 600ms ease-out, transform 600ms ease-out",
+                  opacity: unlockPhase >= 2 ? 1 : 0,
+                  transform: unlockPhase >= 2 ? "translateY(0)" : "translateY(16px)",
+                }}
+              >
+                {summaryText ? (
+                  <div
+                    style={{
+                      background: "#0f1116",
+                      border: "1px solid rgba(255,255,255,0.05)",
+                      borderRadius: 8,
+                      padding: "21px",
+                    }}
+                  >
+                    <p
+                      className="font-['Afacad'] font-normal uppercase"
+                      style={{ fontSize: "13px", letterSpacing: "1.3px", color: "rgba(255,255,255,0.4)", marginBottom: 12 }}
+                    >
+                      Your Reflection
+                    </p>
+                    <p
+                      className="font-['IvyOra_Display'] font-normal"
+                      style={{ fontSize: "18px", lineHeight: 1.55, color: "rgba(255,255,255,0.82)" }}
+                    >
+                      {summaryText}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Featured image, headline, subtext */}
+              <div className="relative flex flex-col items-center" style={{ marginTop: summaryText ? 40 : 0, gap: 20, maxWidth: 480, width: "100%" }}>
+
+                {/* Image */}
+                {overlayConfig?.imageUrl && (
+                  <div
+                    style={{
+                      transition: "opacity 700ms ease-out, transform 700ms ease-out",
+                      opacity: unlockPhase >= 3 ? 1 : 0,
+                      transform: unlockPhase >= 3 ? "scale(1) translateY(0)" : "scale(0.85) translateY(10px)",
+                    }}
+                  >
+                    <img
+                      src={overlayConfig.imageUrl}
+                      alt=""
+                      style={{ width: 96, height: 96, objectFit: "cover", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.08)" }}
+                    />
+                  </div>
+                )}
+
+                {/* Cross divider (shown when no image is configured) */}
+                {!overlayConfig?.imageUrl && (
+                  <div
+                    style={{
+                      transition: "opacity 700ms ease-out, transform 700ms ease-out",
+                      opacity: unlockPhase >= 3 ? 1 : 0,
+                      transform: unlockPhase >= 3 ? "scale(1) translateY(0)" : "scale(0.85) translateY(10px)",
+                    }}
+                  >
+                    <img src={crossDividerImg} alt="" style={{ width: 64, opacity: 0.65 }} />
+                  </div>
+                )}
+
+                {/* Headline */}
+                <p
+                  className="font-['Afacad'] font-medium uppercase text-center"
+                  style={{
+                    fontSize: "11px",
+                    letterSpacing: "3px",
+                    color: "rgba(255,255,255,0.45)",
+                    transition: "opacity 600ms ease-out",
+                    opacity: unlockPhase >= 4 ? 1 : 0,
+                  }}
+                >
+                  {overlayConfig?.text || "Reflection Unlocked"}
+                </p>
+
+                {/* Subtext */}
+                {overlayConfig?.subtext && (
+                  <p
+                    className="font-['Afacad'] font-normal text-center"
+                    style={{
+                      fontSize: "14px",
+                      lineHeight: 1.6,
+                      color: "rgba(255,255,255,0.35)",
+                      transition: "opacity 600ms ease-out",
+                      opacity: unlockPhase >= 5 ? 1 : 0,
+                      maxWidth: 360,
+                    }}
+                  >
+                    {overlayConfig.subtext}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

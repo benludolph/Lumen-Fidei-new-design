@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { Shell } from "@/components/layout/Shell";
@@ -1112,8 +1112,145 @@ function CohortSettingsView() {
 
       <Day0SettingsCard />
 
+      <ReflectionOverlaySettingsCard />
+
       <DataExportCard />
     </div>
+  );
+}
+
+function ReflectionOverlaySettingsCard() {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [text, setText] = useState("Reflection Unlocked");
+  const [subtext, setSubtext] = useState("");
+
+  const { data, isLoading } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
+    queryKey: ["/api/reflection-overlay"],
+  });
+
+  useEffect(() => {
+    if (data) {
+      setImageUrl(data.imageUrl ?? "");
+      setText(data.text ?? "Reflection Unlocked");
+      setSubtext(data.subtext ?? "");
+    }
+  }, [data]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/reflection-overlay", { imageUrl, text, subtext });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/reflection-overlay"] });
+      toast({ title: "Reflection overlay saved" });
+    },
+    onError: () => {
+      toast({ title: "Failed to save overlay settings", variant: "destructive" });
+    },
+  });
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      setImageUrl(url);
+    } catch {
+      toast({ title: "Upload failed", variant: "destructive" });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [toast]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <MessageSquare className="w-5 h-5" />
+          Reflection Overlay Template
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <p className="text-sm text-muted-foreground">
+          This overlay appears when a participant completes a chat flow reflection. It shows their personal reflection summary and the image, headline, and subtext you set here.
+        </p>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Featured Image</label>
+              <div className="flex items-center gap-3">
+                {imageUrl && (
+                  <img src={imageUrl} alt="Overlay image" className="w-16 h-16 object-cover rounded border" />
+                )}
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    value={imageUrl}
+                    onChange={e => setImageUrl(e.target.value)}
+                    placeholder="https://... or /api/images/..."
+                    className="flex-1 text-sm"
+                    data-testid="input-reflection-overlay-image"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    data-testid="button-reflection-overlay-upload"
+                  >
+                    {uploading ? "Uploading..." : <><Upload className="w-3 h-3 mr-1" />Upload</>}
+                  </Button>
+                </div>
+              </div>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Headline</label>
+              <Input
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder="Reflection Unlocked"
+                data-testid="input-reflection-overlay-text"
+              />
+              <p className="text-xs text-muted-foreground">Shown in uppercase with letter-spacing below the image. Defaults to "Reflection Unlocked".</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subtext</label>
+              <Textarea
+                value={subtext}
+                onChange={e => setSubtext(e.target.value)}
+                placeholder="Take a moment to sit with what the Lord has revealed..."
+                rows={3}
+                data-testid="textarea-reflection-overlay-subtext"
+              />
+              <p className="text-xs text-muted-foreground">Optional descriptive text shown below the headline.</p>
+            </div>
+
+            <Button
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
+              data-testid="button-reflection-overlay-save"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saveMutation.isPending ? "Saving..." : "Save Overlay Settings"}
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
