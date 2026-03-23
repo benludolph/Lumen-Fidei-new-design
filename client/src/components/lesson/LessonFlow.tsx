@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
-import { LessonProgressBar } from "./LessonProgressBar";
 import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
+import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
 import { playClickContinue } from "@/lib/sounds";
 
@@ -205,6 +205,7 @@ export function LessonFlow({
         dayNumber={dayNumber}
         theme={content.centralTheme}
         onContinue={handleContinue}
+        onBack={() => setFlowState("slides")}
       />,
       document.body
     );
@@ -238,52 +239,160 @@ export function LessonFlow({
   const surveyBlocked = currentSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = currentSlideData.type === "chat_flow";
 
+  const lessonSlideEl = (
+    <LessonSlide
+      key={`slide-${animKey}`}
+      type={currentSlideData.type}
+      content={currentSlideData.content}
+      dayNumber={dayNumber}
+      existingAnswer={currentSlideData.type === "text_input" ? journalDraft : undefined}
+      onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
+      direction={direction}
+      mentorId={mentorId}
+      onTimerComplete={currentSlideData.type === "timer" ? handleTimerComplete : undefined}
+      timerAlreadyDone={currentSlideData.type === "timer" ? completedTimerSlides.has(currentSlide) : undefined}
+      onKnowledgeCheckAnswered={currentSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
+      onKnowledgeCheckNext={currentSlideData.type === "knowledge_check" ? handleNext : undefined}
+      quizData={currentSlideData.quizData}
+      quizQuestionIndex={currentSlideData.quizQuestionIndex}
+      quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}
+      onQuizAnswer={currentSlideData.quizId !== undefined && currentSlideData.quizQuestionIndex !== undefined
+        ? (letter: string) => handleQuizAnswer(currentSlideData.quizId!, currentSlideData.quizQuestionIndex!, letter)
+        : undefined
+      }
+      onInteracted={handleSlideInteracted}
+      onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
+      surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
+      scenarioRevealCount={currentSlideData.type === "scenario" ? scenarioRevealCount : undefined}
+      chatFlowContextKey={currentSlideData.type === "chat_flow"
+        ? (dayNumber < 0
+            ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
+            : `track_a-day${dayNumber}-slide${currentSlide}`)
+        : undefined}
+      chatFlowTotalSlides={slides.length}
+      chatFlowSlideIndex={currentSlide}
+      onChatFlowComplete={currentSlideData.type === "chat_flow" ? handleNext : undefined}
+      onChatFlowExit={currentSlideData.type === "chat_flow" ? onExit : undefined}
+    />
+  );
+
+  if (isChatFlow) {
+    return createPortal(
+      <div className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden bg-[#111]" data-testid="lesson-flow">
+        {lessonSlideEl}
+      </div>,
+      document.body
+    );
+  }
+
+  const navBlocked = (currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction || surveyBlocked;
+
   return createPortal(
-    <div className={cn("fixed inset-0 z-[200] flex flex-col overflow-x-hidden", isChatFlow ? "bg-[#111]" : "bg-white")} data-testid="lesson-flow">
-      {!isChatFlow && (
-        <LessonProgressBar
-          currentStep={currentSlide}
-          totalSteps={slides.length}
-          onExit={onExit}
-        />
-      )}
+    <div
+      className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden bg-[#111]"
+      data-testid="lesson-flow"
+      style={{ paddingTop: "24px" }}
+    >
+      {/* ── Header: back | REFLECTION pill | exit ── */}
+      <div
+        className="shrink-0 flex items-center justify-between"
+        style={{ paddingLeft: "24px", paddingRight: "24px", paddingBottom: "24px" }}
+      >
+        {/* Left: Back / Exit button */}
+        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+          <button
+            onClick={handlePrev}
+            className="flex items-center justify-center rounded-[20px] transition-colors hover:bg-[rgba(52,52,52,0.6)]"
+            style={{
+              width: "40px",
+              height: "40px",
+              background: "rgba(42,42,42,0.5)",
+              backdropFilter: "blur(18px)",
+            }}
+            data-testid="button-lesson-header-back"
+          >
+            <ArrowLeft className="w-4 h-4 text-white" />
+          </button>
+        </div>
 
-      <LessonSlide
-        key={`slide-${animKey}`}
-        type={currentSlideData.type}
-        content={currentSlideData.content}
-        dayNumber={dayNumber}
-        existingAnswer={currentSlideData.type === "text_input" ? journalDraft : undefined}
-        onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
-        direction={direction}
-        mentorId={mentorId}
-        onTimerComplete={currentSlideData.type === "timer" ? handleTimerComplete : undefined}
-        timerAlreadyDone={currentSlideData.type === "timer" ? completedTimerSlides.has(currentSlide) : undefined}
-        onKnowledgeCheckAnswered={currentSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
-        onKnowledgeCheckNext={currentSlideData.type === "knowledge_check" ? handleNext : undefined}
-        quizData={currentSlideData.quizData}
-        quizQuestionIndex={currentSlideData.quizQuestionIndex}
-        quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}
-        onQuizAnswer={currentSlideData.quizId !== undefined && currentSlideData.quizQuestionIndex !== undefined
-          ? (letter: string) => handleQuizAnswer(currentSlideData.quizId!, currentSlideData.quizQuestionIndex!, letter)
-          : undefined
-        }
-        onInteracted={handleSlideInteracted}
-        onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
-        surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
-        scenarioRevealCount={currentSlideData.type === "scenario" ? scenarioRevealCount : undefined}
-        chatFlowContextKey={currentSlideData.type === "chat_flow"
-          ? (dayNumber < 0
-              ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
-              : `track_a-day${dayNumber}-slide${currentSlide}`)
-          : undefined}
-        chatFlowTotalSlides={slides.length}
-        chatFlowSlideIndex={currentSlide}
-        onChatFlowComplete={currentSlideData.type === "chat_flow" ? handleNext : undefined}
-        onChatFlowExit={currentSlideData.type === "chat_flow" ? onExit : undefined}
-      />
+        {/* Center: Progress pill */}
+        <div
+          className="flex items-center justify-center"
+          style={{
+            background: "#202020",
+            borderRadius: "36px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "12px",
+            paddingBottom: "12px",
+            maxHeight: "42px",
+          }}
+        >
+          <span
+            className="font-['Afacad'] font-medium whitespace-nowrap uppercase"
+            style={{ fontSize: "14px", letterSpacing: "2.8px", color: "#efefef", lineHeight: "18px" }}
+          >
+            REFLECTION
+          </span>
+          <span
+            className="font-['Afacad'] font-normal whitespace-nowrap"
+            style={{ fontSize: "13.9px", color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
+          >
+            {currentSlide + 1} of {slides.length}
+          </span>
+        </div>
 
-      {(isValidKc && kcAnswered) || isChatFlow ? null : (
+        {/* Right: Exit button */}
+        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+          <button
+            onClick={onExit}
+            className="flex items-center justify-center rounded-[20px] transition-colors hover:bg-[rgba(52,52,52,0.6)]"
+            style={{
+              width: "40px",
+              height: "40px",
+              background: "rgba(42,42,42,0.5)",
+              backdropFilter: "blur(18px)",
+            }}
+            data-testid="button-lesson-exit"
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Content area: bg image behind, white card on top ── */}
+      <div className="flex-1 relative flex flex-col overflow-hidden">
+        {/* Background image + gradient (absolute, fills this area) */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none overflow-hidden"
+        >
+          <img
+            src={candleBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.6 }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(0,0,0,0) 10.822%, rgb(0,0,0) 27.813%, rgb(0,0,0) 72.453%, rgba(0,0,0,0) 90.68%)",
+            }}
+          />
+        </div>
+
+        {/* White card: 32px gap at top shows bg image, then fills remaining space */}
+        <div
+          className="absolute left-0 right-0 bottom-0 flex flex-col overflow-hidden bg-white"
+          style={{ top: "32px", borderRadius: "24px 24px 0 0" }}
+        >
+          {lessonSlideEl}
+        </div>
+      </div>
+
+      {/* ── Bottom nav ── */}
+      {!(isValidKc && kcAnswered) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#e4e4e7] px-6 py-8 z-[210]">
           <div className="max-w-[540px] mx-auto flex items-center justify-between">
             <Button
@@ -299,10 +408,10 @@ export function LessonFlow({
             <Button
               variant="default"
               onClick={handleNext}
-              disabled={(currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction || surveyBlocked}
+              disabled={navBlocked}
               className={cn(
                 "gap-2",
-                (currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction || surveyBlocked
+                navBlocked
                   ? "bg-black/30 text-white/50 cursor-not-allowed"
                   : "bg-black text-white hover:bg-black/90"
               )}
