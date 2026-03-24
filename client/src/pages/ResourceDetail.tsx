@@ -327,14 +327,14 @@ export default function ResourceDetail() {
                 background: "linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)",
                 pointerEvents: "none",
               }} />
-              {/* Bottom fade — dissolves into black card bg */}
+              {/* Bottom fade — dissolves into card bg */}
               <div style={{
                 position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
                 height: "335px",
-                background: "linear-gradient(to bottom, transparent, black)",
+                background: "linear-gradient(to bottom, transparent, var(--surface-ground))",
                 pointerEvents: "none",
               }} />
             </div>

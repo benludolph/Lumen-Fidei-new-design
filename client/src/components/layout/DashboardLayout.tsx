@@ -78,7 +78,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
           background:
-            "linear-gradient(to bottom, rgba(11,11,11,0.8) 0%, rgba(11,11,11,0.76) 100%)",
+            "linear-gradient(to bottom, var(--black-80) 0%, var(--black-70) 100%)",
           borderBottom: "1px solid var(--white-8)",
         }}
       >
@@ -90,7 +90,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             left: 0,
             right: 0,
             height: "0.5px",
-            background: "linear-gradient(to bottom, #08090a, transparent)",
+            background: "linear-gradient(to bottom, var(--surface-ground), transparent)",
             pointerEvents: "none",
           }}
         />
