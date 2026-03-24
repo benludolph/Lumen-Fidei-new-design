@@ -32,7 +32,7 @@ export function OverviewGuideModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="bg-[var(--surface-float)] border-white/10 text-white font-sans max-w-md"
+        className="bg-[var(--surface-float)] border-[var(--white-10)] text-white font-sans max-w-md"
         data-testid="dialog-overview-guide"
       >
         <DialogHeader>
@@ -46,19 +46,19 @@ export function OverviewGuideModal({
 
         <div className="space-y-5 mt-2">
           <div className="flex items-start gap-3" data-testid="section-week-description">
-            <BookOpen className="w-5 h-5 text-white/60 mt-0.5 shrink-0" />
-            <p className="type-body-lg text-white/80">
+            <BookOpen className="w-5 h-5 text-[var(--white-60)] mt-0.5 shrink-0" />
+            <p className="type-body-lg text-[var(--white-80)]">
               {description}
             </p>
           </div>
 
-          <div className="border-t border-white/10" />
+          <div className="border-t border-[var(--white-10)]" />
 
           <div className="flex items-start gap-3" data-testid="section-how-it-works">
-            <Lightbulb className="w-5 h-5 text-white/60 mt-0.5 shrink-0" />
+            <Lightbulb className="w-5 h-5 text-[var(--white-60)] mt-0.5 shrink-0" />
             <div>
               <p className="type-body-lg text-white font-bold mb-1">How It Works</p>
-              <p className="type-body-md text-white/80">
+              <p className="type-body-md text-[var(--white-80)]">
                 Each day has a short lesson. Tap a day to begin. You'll move
                 through several screens — a question to reflect on, a short
                 teaching, scripture, an activity, and a closing thought. Complete

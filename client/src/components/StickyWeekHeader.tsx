@@ -15,7 +15,7 @@ export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelim
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-sans font-bold text-white/70 type-body-md leading-6">
+          <p className="font-sans font-bold text-[var(--white-70)] type-body-md leading-6">
             Initial 30 Days
           </p>
           <p className="type-display-sm font-bold text-white truncate">
@@ -28,8 +28,8 @@ export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelim
             className="flex items-center gap-2 shrink-0 mt-1 group"
             data-testid="button-overview-guide"
           >
-            <BookOpen className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
-            <span className="font-sans font-bold text-white/80 type-caption-sm group-hover:text-white transition-colors">
+            <BookOpen className="w-4 h-4 text-[var(--white-70)] group-hover:text-white transition-colors" />
+            <span className="font-sans font-bold text-[var(--white-80)] type-caption-sm group-hover:text-white transition-colors">
               Overview & Guide
             </span>
           </button>

@@ -51,7 +51,7 @@ export function LessonLoadingScreen({
             height="40"
             viewBox="0 0 48 48"
             fill="none"
-            className="text-white/80 sm:w-12 sm:h-12"
+            className="text-[var(--white-80)] sm:w-12 sm:h-12"
           >
             <rect x="21" y="4" width="6" height="40" rx="3" fill="currentColor" />
             <rect x="8" y="17" width="32" height="6" rx="3" fill="currentColor" />
@@ -59,7 +59,7 @@ export function LessonLoadingScreen({
         </div>
 
         <div className="space-y-2 sm:space-y-3">
-          <p className="type-caption-md text-white/60">
+          <p className="type-caption-md text-[var(--white-60)]">
             {dayNumber < 0 ? `Module ${Math.abs(dayNumber)}` : dayNumber === 0 ? "Introduction" : `Day ${dayNumber}`}
           </p>
           <h1 className="type-display-md font-serif max-w-[340px] sm:max-w-lg" style={{ fontWeight: 500, color: "white" }}>
@@ -68,9 +68,9 @@ export function LessonLoadingScreen({
         </div>
 
         <div className="flex items-center gap-2 mt-4">
-          <div className="w-1.5 h-1.5 rounded-full bg-white/40 lesson-loading-dot" style={{ animationDelay: "0s" }} />
-          <div className="w-1.5 h-1.5 rounded-full bg-white/40 lesson-loading-dot" style={{ animationDelay: "0.2s" }} />
-          <div className="w-1.5 h-1.5 rounded-full bg-white/40 lesson-loading-dot" style={{ animationDelay: "0.4s" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--white-40)] lesson-loading-dot" style={{ animationDelay: "0s" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--white-40)] lesson-loading-dot" style={{ animationDelay: "0.2s" }} />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--white-40)] lesson-loading-dot" style={{ animationDelay: "0.4s" }} />
         </div>
       </div>
     </div>

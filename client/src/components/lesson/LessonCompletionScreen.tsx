@@ -150,7 +150,7 @@ export function LessonCompletionScreen({
             className="absolute inset-0 pointer-events-none"
             style={{
               borderRadius: "inherit",
-              background: "radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 60%)",
+              background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
 
@@ -181,7 +181,7 @@ export function LessonCompletionScreen({
 
             {/* Day · Theme tag */}
             <p
-              className="type-body-sm text-white/40 text-center"
+              className="type-body-sm text-[var(--white-40)] text-center"
             >
               {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
             </p>

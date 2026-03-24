@@ -215,7 +215,7 @@ export function LessonFlow({
   if (slides.length === 0) {
     return createPortal(
       <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 p-6 bg-[var(--surface-base)]">
-        <p className="type-body-lg text-white/60">No content available for this day.</p>
+        <p className="type-body-lg text-[var(--white-60)]">No content available for this day.</p>
         <Button variant="outline" onClick={onExit} data-testid="button-exit-empty">
           Back to Overview
         </Button>
@@ -422,7 +422,7 @@ export function LessonFlow({
             className="absolute inset-0 pointer-events-none"
             style={{
               borderRadius: "inherit",
-              background: "radial-gradient(ellipse at 0% 0%, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 60%)",
+              background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
           <div className="relative flex-1 overflow-y-auto">

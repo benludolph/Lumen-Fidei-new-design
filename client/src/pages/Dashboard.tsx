@@ -222,8 +222,8 @@ export default function Dashboard() {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="type-body-md text-white/50">Loading...</p>
+          <div className="w-8 h-8 border-4 border-[var(--white-30)] border-t-[var(--white-80)] rounded-full animate-spin mb-4" />
+          <p className="type-body-md text-[var(--white-50)]">Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -235,8 +235,8 @@ export default function Dashboard() {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="type-body-md text-white/50">Loading...</p>
+          <div className="w-8 h-8 border-4 border-[var(--white-30)] border-t-[var(--white-80)] rounded-full animate-spin mb-4" />
+          <p className="type-body-md text-[var(--white-50)]">Loading...</p>
         </div>
       </DashboardLayout>
     );
@@ -246,9 +246,9 @@ export default function Dashboard() {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <AlertCircle className="w-12 h-12 text-white/60 mb-4" />
+          <AlertCircle className="w-12 h-12 text-[var(--white-60)] mb-4" />
           <h2 className="type-display-sm font-medium mb-2 text-white">Unable to Load</h2>
-          <p className="text-white/50">Please refresh the page or try again later.</p>
+          <p className="text-[var(--white-50)]">Please refresh the page or try again later.</p>
         </div>
       </DashboardLayout>
     );
@@ -276,8 +276,8 @@ export default function Dashboard() {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-          <div className="w-8 h-8 border-4 border-white/30 border-t-white/80 rounded-full animate-spin mb-4" />
-          <p className="type-body-md text-white/50">Loading program...</p>
+          <div className="w-8 h-8 border-4 border-[var(--white-30)] border-t-[var(--white-80)] rounded-full animate-spin mb-4" />
+          <p className="type-body-md text-[var(--white-50)]">Loading program...</p>
         </div>
       </DashboardLayout>
     );

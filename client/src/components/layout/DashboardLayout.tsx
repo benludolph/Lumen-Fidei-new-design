@@ -205,7 +205,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Mobile hamburger */}
           <button
             data-testid="button-hamburger-menu"
-            className="sm:hidden flex items-center justify-center text-white/80 hover:text-white transition-colors"
+            className="sm:hidden flex items-center justify-center text-[var(--white-80)] hover:text-white transition-colors"
             style={{ width: "40px", height: "40px" }}
             onClick={() => setDrawerOpen(true)}
             aria-label="Open menu"
@@ -251,7 +251,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           />
           <button
             data-testid="button-close-drawer"
-            className="text-white/60 hover:text-white transition-colors"
+            className="text-[var(--white-60)] hover:text-white transition-colors"
             onClick={closeDrawer}
             aria-label="Close menu"
           >
@@ -323,7 +323,7 @@ function NavLink({
   return (
     <Link href={href}>
       <span
-        className={cn("flex items-center cursor-pointer type-body-md", active ? "text-white" : "text-white/70 hover:text-white")}
+        className={cn("flex items-center cursor-pointer type-body-md", active ? "text-white" : "text-[var(--white-70)] hover:text-white")}
         style={{
           height: "32px",
           padding: "0 12px",
@@ -354,7 +354,7 @@ function DrawerLink({
         onClick={onClick}
         className={cn(
           "flex items-center cursor-pointer transition-colors type-body-lg",
-          active ? "text-white font-medium" : "text-white/60 hover:text-white font-normal"
+          active ? "text-white font-medium" : "text-[var(--white-60)] hover:text-white font-normal"
         )}
         style={{
           padding: "14px 20px",
