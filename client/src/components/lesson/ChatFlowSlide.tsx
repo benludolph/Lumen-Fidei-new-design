@@ -824,7 +824,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   // ── Loading state ──
   if (!loadedFromServer) {
     return (
-      <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--surface-base)", paddingTop: "24px" }}>
+      <div className="flex-1 flex flex-col overflow-hidden pt-6" style={{ background: "var(--surface-base)" }}>
         <div className="flex-1 relative overflow-hidden" style={{ background: "var(--surface-ground)", borderRadius: "24px 24px 0 0" }}>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="type-body-sm" style={{ color: "var(--white-30)" }}>Loading…</div>
@@ -835,25 +835,20 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--surface-base)", paddingTop: "24px" }}>
+    <div className="flex-1 flex flex-col overflow-hidden pt-6" style={{ background: "var(--surface-base)" }}>
 
       {/* ── Header ── */}
       <div
-        className="flex items-center justify-between shrink-0"
-        style={{ paddingLeft: "24px", paddingRight: "24px", paddingBottom: "24px" }}
+        className="flex items-center justify-between shrink-0 px-6 pb-6"
       >
-        <div style={{ width: "42px", height: "42px", flexShrink: 0 }} />
+        <div className="w-[42px] h-[42px] shrink-0" />
 
         <div className="flex items-center justify-center" style={{ width: "168px" }}>
           <div
-            className="flex items-center justify-center"
+            className="flex items-center justify-center px-4 py-3"
             style={{
               background: "var(--surface-float)",
               borderRadius: "36px",
-              paddingLeft: "16px",
-              paddingRight: "16px",
-              paddingTop: "12px",
-              paddingBottom: "12px",
               maxHeight: "42px",
             }}
           >
@@ -865,8 +860,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             </span>
             {!flowComplete && (
               <span
-                className="type-body-sm whitespace-nowrap"
-                style={{ color: "#8b8b8b", lineHeight: "18px", paddingLeft: "8px" }}
+                className="type-body-sm whitespace-nowrap pl-2"
+                style={{ color: "#8b8b8b", lineHeight: "18px" }}
               >
                 {stepNumber} of {totalSteps}
               </span>
@@ -905,8 +900,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
         </div>
 
         <div
-          className="flex-1 overflow-auto flex flex-col items-center relative"
-          style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
+          className="flex-1 overflow-auto flex flex-col items-center relative pt-4 px-4"
         >
           <div
             className="flex-1 flex flex-col overflow-hidden relative w-full"
@@ -1179,13 +1173,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   </button>
                   <button
                     onClick={onComplete}
-                    className="flex items-center gap-2 type-body-md font-medium text-white transition-opacity hover:opacity-80"
+                    className="flex items-center gap-2 type-body-md font-medium text-white transition-opacity hover:opacity-80 px-4 h-9"
                     style={{
                       background: "var(--surface-float)",
                       borderRadius: "6px",
-                      height: "36px",
-                      paddingLeft: "16px",
-                      paddingRight: "16px",
                       border: "1px solid var(--white-8)",
                     }}
                     data-testid="button-review-continue"

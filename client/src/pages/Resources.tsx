@@ -158,31 +158,20 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
           }} />
         )}
 
-        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
-          <div style={{
-            width: "24px",
-            height: "24px",
-            borderRadius: "4px",
-            background: "var(--white-5)",
-            boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}>
+        <div className="flex items-start relative z-[3]">
+          <div
+            className="w-6 h-6 rounded flex items-center justify-center shrink-0"
+            style={{ background: "var(--white-5)", boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)" }}
+          >
             <Icon style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 3 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="type-display-sm" style={{
+        <div className="flex items-end justify-between w-full relative z-[3]">
+          <div className="flex-1 min-w-0">
+            <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{
               color: "#f7f8f8",
               letterSpacing: "-0.1402px",
-              marginBottom: "8px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
             }}>
               {resource.name}
             </p>
@@ -190,7 +179,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
               {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
             </p>
           </div>
-          <div style={{ color: "var(--white-35)", marginLeft: "8px", flexShrink: 0 }}>
+          <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
             <ArrowRight style={{ width: "14px", height: "14px" }} />
           </div>
         </div>
@@ -228,22 +217,11 @@ function ExternalCard({
       style={{ gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined, textDecoration: "none" }}
     >
       <div
-        className="resource-card-hover"
+        className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
         style={{
-          position: "relative",
           backgroundColor: "var(--surface-base)",
           border: "0.5px solid var(--white-5)",
           borderRadius: "6px",
-          overflow: "hidden",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          height: "126px",
-          paddingTop: "12px",
-          paddingLeft: "12px",
-          paddingRight: "12px",
-          paddingBottom: "14px",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -285,31 +263,20 @@ function ExternalCard({
           }} />
         )}
 
-        <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
-          <div style={{
-            width: "24px",
-            height: "24px",
-            borderRadius: "4px",
-            background: "var(--white-5)",
-            boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}>
+        <div className="flex items-start relative z-[3]">
+          <div
+            className="w-6 h-6 rounded flex items-center justify-center shrink-0"
+            style={{ background: "var(--white-5)", boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)" }}
+          >
             <Icon style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", position: "relative", zIndex: 3 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="type-display-sm" style={{
+        <div className="flex items-end justify-between w-full relative z-[3]">
+          <div className="flex-1 min-w-0">
+            <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{
               color: "#f7f8f8",
               letterSpacing: "-0.1402px",
-              marginBottom: "8px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
             }}>
               {name}
             </p>
@@ -317,7 +284,7 @@ function ExternalCard({
               {description}
             </p>
           </div>
-          <div style={{ color: "var(--white-35)", marginLeft: "8px", flexShrink: 0 }}>
+          <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
             <ExternalLink style={{ width: "14px", height: "14px" }} />
           </div>
         </div>

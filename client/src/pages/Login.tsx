@@ -160,10 +160,10 @@ export default function Login() {
 
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+                className="flex flex-col gap-3"
               >
                 {/* Email */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "5px" }}>
+                <div className="flex flex-col gap-2 pt-[5px]">
                   <label
                     htmlFor="email"
                     className="type-body-md"
@@ -200,7 +200,7 @@ export default function Login() {
                 </div>
 
                 {/* Password */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "5px" }}>
+                <div className="flex flex-col gap-2 pt-[5px]">
                   <label
                     htmlFor="password"
                     className="type-body-md"

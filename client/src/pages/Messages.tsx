@@ -105,13 +105,11 @@ export default function Messages() {
   return (
     <DashboardLayout>
       <div
+        className="flex px-0 sm:px-[107px]"
         style={{
-          display: "flex",
           height: "calc(100vh - 72px)",
           backgroundColor: "var(--surface-ground)",
           overflow: "hidden",
-          paddingLeft: isMobile ? "0" : "107px",
-          paddingRight: isMobile ? "0" : "107px",
         }}
       >
         {/* ── Left panel: contacts ─────────────────────────── */}
