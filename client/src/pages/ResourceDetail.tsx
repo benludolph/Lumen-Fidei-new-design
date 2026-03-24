@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "wouter";
 import { ChevronRight, Play, Pause, Clock } from "lucide-react";
@@ -42,10 +43,7 @@ function Breadcrumb({ name }: { name: string }) {
         boxShadow: "0px 25px 50px 0px rgba(0,0,0,0.25), 0px 5px 25px 0px rgba(0,0,0,0.5)",
       }}
     >
-      <div
-        className="px-4 sm:px-[107px]"
-        style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px" }}
-      >
+      <PageContainer variant="full" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <Link href="/resources">
           <span
             data-testid="breadcrumb-resources"
@@ -73,7 +71,7 @@ function Breadcrumb({ name }: { name: string }) {
         >
           {name}
         </span>
-      </div>
+      </PageContainer>
     </div>
   );
 }

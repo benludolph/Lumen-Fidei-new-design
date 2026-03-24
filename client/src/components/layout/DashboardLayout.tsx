@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { PageContainer } from "./PageContainer";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Menu, X, LogOut } from "lucide-react";
@@ -96,7 +97,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
 
         {/* Navbar inner row */}
-        <div className="flex items-center justify-between h-full px-4 sm:px-[107px]">
+        <PageContainer variant="full" className="flex items-center justify-between h-full">
           {/* Logo */}
           <Link href="/dashboard">
             <div className="flex items-center cursor-pointer select-none">
@@ -212,7 +213,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           >
             <Menu size={22} />
           </button>
-        </div>
+        </PageContainer>
       </nav>
 
       {/* Mobile drawer backdrop */}
