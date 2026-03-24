@@ -214,7 +214,7 @@ export function LessonFlow({
 
   if (slides.length === 0) {
     return createPortal(
-      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 p-6 bg-[#111]">
+      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-4 p-6 bg-[var(--surface-base)]">
         <p className="type-body-lg text-white/60">No content available for this day.</p>
         <Button variant="outline" onClick={onExit} data-testid="button-exit-empty">
           Back to Overview
@@ -278,7 +278,7 @@ export function LessonFlow({
 
   if (isChatFlow) {
     return createPortal(
-      <div className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden bg-[#111]" data-testid="lesson-flow">
+      <div className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden bg-[var(--surface-base)]" data-testid="lesson-flow">
         {lessonSlideEl}
       </div>,
       document.body

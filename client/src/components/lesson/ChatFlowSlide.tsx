@@ -253,7 +253,7 @@ const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 px-3 py-2 rounded-[6px] w-[52px]" style={{ background: "#181818" }}>
+    <div className="flex items-center gap-1 px-3 py-2 rounded-[6px] w-[52px]" style={{ background: "var(--surface-float)" }}>
       {[0, 1, 2].map(i => (
         <span
           key={i}
@@ -314,7 +314,7 @@ function MessageBubble({
           role === "system" ? "max-w-[210px]" : "max-w-[270px]",
         )}
         style={{
-          background: role === "system" ? "#181818" : "#4c2913",
+          background: role === "system" ? "var(--surface-float)" : "#4c2913",
           color: "var(--white-90)",
         }}
       >
@@ -338,7 +338,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
         borderColor: "#4c2913",
         color: "var(--white-90)",
       } : {
-        background: "#181818",
+        background: "var(--surface-float)",
         borderColor: "var(--white-8)",
         color: "var(--white-70)",
       }}
@@ -824,8 +824,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   // ── Loading state ──
   if (!loadedFromServer) {
     return (
-      <div className="flex-1 flex flex-col bg-[#111] overflow-hidden" style={{ paddingTop: "24px" }}>
-        <div className="flex-1 relative overflow-hidden" style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}>
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--surface-base)", paddingTop: "24px" }}>
+        <div className="flex-1 relative overflow-hidden" style={{ background: "var(--surface-ground)", borderRadius: "24px 24px 0 0" }}>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="type-body-sm" style={{ color: "var(--white-30)" }}>Loading…</div>
           </div>
@@ -835,7 +835,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#111] overflow-hidden" style={{ paddingTop: "24px" }}>
+    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--surface-base)", paddingTop: "24px" }}>
 
       {/* ── Header ── */}
       <div
@@ -848,7 +848,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           <div
             className="flex items-center justify-center"
             style={{
-              background: "#202020",
+              background: "var(--surface-float)",
               borderRadius: "36px",
               paddingLeft: "16px",
               paddingRight: "16px",
@@ -971,7 +971,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         onKeyDown={e => e.key === "Enter" && otherText.trim() && advanceToNext(otherText.trim(), otherText.trim())}
                         placeholder={currentStep.otherPlaceholder || "Or type your own…"}
                         className="flex-1 px-3 rounded-[6px] type-body-md outline-none transition-colors"
-                        style={{ height: "36px", background: "#181818", border: "1px solid var(--white-5)", color: "var(--white-90)" }}
+                        style={{ height: "36px", background: "var(--surface-float)", border: "1px solid var(--white-5)", color: "var(--white-90)" }}
                         data-testid="input-chat-other"
                       />
                       <button
@@ -1045,7 +1045,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 {flowComplete || currentStep?.inputType === "none" ? (
                   <button
                     onClick={handleSubmit}
-                    className="w-full flex items-center justify-center gap-2 type-body-lg font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
+                    className="w-full flex items-center justify-center gap-2 type-body-lg font-medium text-white rounded-[6px] transition-opacity hover:opacity-90"
                     style={{
                       background: "var(--surface-float)",
                       height: "42px",
@@ -1067,7 +1067,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         onKeyDown={e => e.key === "Enter" && !isSendDisabled && handleSubmit()}
                         placeholder="Type your answer here…"
                         className="flex-1 px-3 rounded-[6px] type-body-md outline-none transition-colors"
-                        style={{ height: "36px", background: "#181818", border: "1px solid var(--white-5)", color: "var(--white-90)" }}
+                        style={{ height: "36px", background: "var(--surface-float)", border: "1px solid var(--white-5)", color: "var(--white-90)" }}
                         data-testid="input-chat-text"
                       />
                     )}
@@ -1093,7 +1093,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       {flowComplete && isRestoredFlow && (
         <div
           className="fixed inset-0 flex flex-col"
-          style={{ zIndex: 500, background: "#111", animation: "rp-overlay-in 0.35s ease-out both" }}
+          style={{ zIndex: 500, background: "var(--surface-base)", animation: "rp-overlay-in 0.35s ease-out both" }}
         >
           <div
             className="relative shrink-0 flex items-center justify-between w-full"
@@ -1103,7 +1103,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             <div
               className="type-caption-md"
               style={{
-                background: "#202020",
+                background: "var(--surface-float)",
                 borderRadius: "36px",
                 padding: "12px 16px",
                 color: "#efefef",
@@ -1133,7 +1133,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
 
           <div
             className="relative flex-1 flex flex-col min-h-0 overflow-clip"
-            style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}
+            style={{ background: "var(--surface-ground)", borderRadius: "24px 24px 0 0" }}
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ borderRadius: "24px 24px 0 0" }}>
               <img src={candleBg} alt="" className="absolute w-full max-w-none" style={{ opacity: 0.6, top: "-8.53%", height: "117.06%", left: 0 }} />
@@ -1179,7 +1179,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   </button>
                   <button
                     onClick={onComplete}
-                    className="flex items-center gap-2 type-body-md font-medium text-[#fafafa] transition-opacity hover:opacity-80"
+                    className="flex items-center gap-2 type-body-md font-medium text-white transition-opacity hover:opacity-80"
                     style={{
                       background: "var(--surface-float)",
                       borderRadius: "6px",
@@ -1331,13 +1331,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 }}
                 data-testid="button-reflection-overlay-continue"
               >
-                <span
-                  className="type-body-lg font-medium text-center"
-                  style={{ color: "#fafafa" }}
-                >
+                <span className="type-body-lg font-medium text-center text-white">
                   Continue
                 </span>
-                <ArrowRight style={{ width: 16, height: 16, color: "#fafafa" }} />
+                <ArrowRight style={{ width: 16, height: 16, color: "white" }} />
               </button>
 
             </div>

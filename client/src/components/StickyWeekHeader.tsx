@@ -10,7 +10,7 @@ interface StickyWeekHeaderProps {
 export function StickyWeekHeader({ weekNumber, weekTheme, onGuideClick, inPrelimSection }: StickyWeekHeaderProps) {
   return (
     <div
-      className="sticky top-0 z-20 bg-[--surface-float] rounded-lg p-4 shadow-lg"
+      className="sticky top-0 z-20 bg-[var(--surface-float)] rounded-lg p-4 shadow-lg"
       data-testid="sticky-week-header"
     >
       <div className="flex items-start justify-between gap-4">
