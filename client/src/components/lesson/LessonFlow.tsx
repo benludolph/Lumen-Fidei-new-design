@@ -313,8 +313,8 @@ export function LessonFlow({
         style={{
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
-          background: "rgba(0,0,0,0.6)",
-          borderBottom: "1px solid rgba(255,255,255,0.05)",
+          background: "var(--black-60)",
+          borderBottom: "1px solid var(--white-5)",
           boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
           paddingLeft: "16px",
           paddingRight: "16px",

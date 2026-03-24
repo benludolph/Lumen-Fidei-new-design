@@ -253,7 +253,7 @@ const rand = (min: number, max: number) => min + Math.random() * (max - min);
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 px-3 py-2 bg-[#181818] rounded-[6px] w-[52px]">
+    <div className="flex items-center gap-1 px-3 py-2 rounded-[6px] w-[52px]" style={{ background: "#181818" }}>
       {[0, 1, 2].map(i => (
         <span
           key={i}
@@ -298,7 +298,10 @@ function MessageBubble({
       {role === "user" && onRewind && (
         <button
           onClick={onRewind}
-          className="shrink-0 text-[rgba(255,255,255,0.3)] hover:text-[rgba(255,255,255,0.7)] transition-colors"
+          className="shrink-0 transition-colors"
+          style={{ color: "var(--white-30)" }}
+          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = "var(--white-70)"}
+          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = "var(--white-30)"}
           data-testid="button-chat-rewind"
           title="Go back and change answer"
         >
@@ -307,9 +310,13 @@ function MessageBubble({
       )}
       <div
         className={cn(
-          "px-3 py-2 rounded-[6px] type-body-md leading-[20px] text-[rgba(255,255,255,0.9)]",
-          role === "system" ? "bg-[#181818] max-w-[210px]" : "bg-[#4c2913] max-w-[270px]",
+          "px-3 py-2 rounded-[6px] type-body-md leading-[20px]",
+          role === "system" ? "max-w-[210px]" : "max-w-[270px]",
         )}
+        style={{
+          background: role === "system" ? "#181818" : "#4c2913",
+          color: "var(--white-90)",
+        }}
       >
         {text}
       </div>
@@ -325,12 +332,16 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
   return (
     <button
       onClick={onClick}
-      className={cn(
-        "text-left px-3 py-2 rounded-[6px] type-body-md leading-[20px] border transition-colors",
-        selected
-          ? "bg-[#4c2913] border-[#4c2913] text-[rgba(255,255,255,0.95)]"
-          : "bg-[#181818] border-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.2)] hover:text-[rgba(255,255,255,0.9)]",
-      )}
+      className="text-left px-3 py-2 rounded-[6px] type-body-md leading-[20px] border transition-colors"
+      style={selected ? {
+        background: "#4c2913",
+        borderColor: "#4c2913",
+        color: "var(--white-90)",
+      } : {
+        background: "#181818",
+        borderColor: "var(--white-8)",
+        color: "var(--white-70)",
+      }}
       data-testid={`button-chat-option-${label}`}
     >
       {label}
@@ -816,7 +827,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       <div className="flex-1 flex flex-col bg-[#111] overflow-hidden" style={{ paddingTop: "24px" }}>
         <div className="flex-1 relative overflow-hidden" style={{ background: "#010101", borderRadius: "24px 24px 0 0" }}>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="type-body-sm text-[rgba(255,255,255,0.3)]">Loading…</div>
+            <div className="type-body-sm" style={{ color: "var(--white-30)" }}>Loading…</div>
           </div>
         </div>
       </div>
@@ -959,15 +970,15 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         onChange={e => setOtherText(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && otherText.trim() && advanceToNext(otherText.trim(), otherText.trim())}
                         placeholder={currentStep.otherPlaceholder || "Or type your own…"}
-                        className="flex-1 px-3 rounded-[6px] type-body-md bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
-                        style={{ height: "36px" }}
+                        className="flex-1 px-3 rounded-[6px] type-body-md outline-none transition-colors"
+                        style={{ height: "36px", background: "#181818", border: "1px solid var(--white-5)", color: "var(--white-90)" }}
                         data-testid="input-chat-other"
                       />
                       <button
                         onClick={() => otherText.trim() && advanceToNext(otherText.trim(), otherText.trim())}
                         disabled={!otherText.trim()}
-                        className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 transition-colors shrink-0"
-                        style={{ width: "36px", height: "36px" }}
+                        className="flex items-center justify-center rounded-[6px] transition-colors shrink-0 disabled:opacity-30"
+                        style={{ width: "36px", height: "36px", background: "var(--surface-float)", border: "1px solid var(--white-5)", color: "var(--white-70)" }}
                         data-testid="button-chat-other-send"
                       >
                         <Send className="w-4 h-4" />
@@ -1055,8 +1066,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                         onChange={e => setTextInput(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && !isSendDisabled && handleSubmit()}
                         placeholder="Type your answer here…"
-                        className="flex-1 px-3 rounded-[6px] type-body-md bg-[#181818] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.9)] placeholder-[#71717a] outline-none focus:border-[rgba(255,255,255,0.15)] transition-colors"
-                        style={{ height: "36px" }}
+                        className="flex-1 px-3 rounded-[6px] type-body-md outline-none transition-colors"
+                        style={{ height: "36px", background: "#181818", border: "1px solid var(--white-5)", color: "var(--white-90)" }}
                         data-testid="input-chat-text"
                       />
                     )}
@@ -1064,8 +1075,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     <button
                       onClick={handleSubmit}
                       disabled={isSendDisabled}
-                      className="flex items-center justify-center rounded-[6px] bg-[#18181b] border border-[rgba(255,255,255,0.05)] text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
-                      style={{ width: "36px", height: "36px" }}
+                      className="flex items-center justify-center rounded-[6px] transition-colors shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+                      style={{ width: "36px", height: "36px", background: "var(--surface-float)", border: "1px solid var(--white-5)", color: "var(--white-70)" }}
                       data-testid="button-chat-send"
                     >
                       <Send className="w-4 h-4" />
