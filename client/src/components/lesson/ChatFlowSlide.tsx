@@ -720,7 +720,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
     setOtherText("");
     setInputReady(false);
     setShowTyping(false);
-    skipRevealRef.current = false;
+    skipRevealRef.current = true;
   }, [historyStack, answers, clearAnswer]);
 
   // ── Redo (restart flow) ──
