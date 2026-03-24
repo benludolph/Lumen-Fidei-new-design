@@ -174,7 +174,7 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
         <div style={{ position: "relative", paddingTop: "56.25%", width: "100%" }}>
           <iframe
             ref={iframeRef}
-            src="https://player.vimeo.com/video/1176037760?badge=0&autopause=0&player_id=0&app_id=58479"
+            src="https://player.vimeo.com/video/1176422917?badge=0&autopause=0&player_id=0&app_id=58479"
             allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
             style={{
               position: "absolute",
