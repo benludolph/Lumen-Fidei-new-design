@@ -14,7 +14,7 @@ export function formatInlineStyles(text: string): (string | JSX.Element)[] {
     ) {
       if (boldMatch.index > 0) parts.push(remaining.slice(0, boldMatch.index));
       parts.push(
-        <strong key={key++} style={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+        <strong key={key++} style={{ fontWeight: 600, color: "var(--white-90)" }}>
           {boldMatch[1]}
         </strong>
       );
@@ -22,7 +22,7 @@ export function formatInlineStyles(text: string): (string | JSX.Element)[] {
     } else if (italicMatch && italicMatch.index !== undefined) {
       if (italicMatch.index > 0) parts.push(remaining.slice(0, italicMatch.index));
       parts.push(
-        <em key={key++} style={{ fontStyle: "italic", color: "rgba(255,255,255,0.7)" }}>
+        <em key={key++} style={{ fontStyle: "italic", color: "var(--white-70)" }}>
           {italicMatch[1]}
         </em>
       );
@@ -52,7 +52,7 @@ export function formatContent(content: string): JSX.Element[] {
       result.push(
         <ol key={result.length} style={{ listStyleType: "decimal", paddingLeft: "20px", margin: "10px 0" }}>
           {listItems.map((item, idx) => (
-            <li key={idx} className="type-body-lg" style={{ marginBottom: "6px", color: "rgba(255,255,255,0.75)" }}>
+            <li key={idx} className="type-body-lg" style={{ marginBottom: "6px", color: "var(--white-70)" }}>
               {formatInlineStyles(item)}
             </li>
           ))}
@@ -75,7 +75,7 @@ export function formatContent(content: string): JSX.Element[] {
       const inner = line.slice(1, -1);
       if (!inner.includes("*")) {
         result.push(
-          <p key={result.length} className="type-body-lg" style={{ color: "rgba(255,255,255,0.5)", fontStyle: "italic", margin: "8px 0" }}>
+          <p key={result.length} className="type-body-lg" style={{ color: "var(--white-50)", fontStyle: "italic", margin: "8px 0" }}>
             {inner}
           </p>
         );
@@ -85,7 +85,7 @@ export function formatContent(content: string): JSX.Element[] {
     }
 
     if (line.startsWith("---")) {
-      result.push(<hr key={result.length} style={{ border: "none", borderTop: "0.5px solid rgba(255,255,255,0.1)", margin: "16px 0" }} />);
+      result.push(<hr key={result.length} style={{ border: "none", borderTop: "0.5px solid var(--white-10)", margin: "16px 0" }} />);
       i++;
       continue;
     }
@@ -97,7 +97,7 @@ export function formatContent(content: string): JSX.Element[] {
     }
 
     result.push(
-      <p key={result.length} className="type-body-lg" style={{ color: "rgba(255,255,255,0.78)", margin: "4px 0" }}>
+      <p key={result.length} className="type-body-lg" style={{ color: "var(--white-80)", margin: "4px 0" }}>
         {formatInlineStyles(line)}
       </p>
     );

@@ -140,7 +140,7 @@ function MediaContent({ text }: { text: string }) {
     );
   }
 
-  return <p className="type-body-xl whitespace-pre-wrap text-[rgba(255,255,255,0.8)]">{text}</p>;
+  return <p className="type-body-xl whitespace-pre-wrap text-white/80">{text}</p>;
 }
 
 function parseMediaContent(content: string): { url: string; text: string } {
@@ -224,7 +224,7 @@ function MultiSelectList({ content, onInteracted }: { content: string; onInterac
   }, []);
 
   if (options.length === 0) {
-    return <p className="type-body-xl whitespace-pre-wrap text-[rgba(255,255,255,0.8)]">{content}</p>;
+    return <p className="type-body-xl whitespace-pre-wrap text-white/80">{content}</p>;
   }
 
   return (
@@ -241,15 +241,15 @@ function MultiSelectList({ content, onInteracted }: { content: string; onInterac
             className={cn(
               "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors border",
               checked[idx]
-                ? "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] text-white"
-                : "bg-transparent border-transparent text-[rgba(255,255,255,0.7)] hover:bg-[rgba(255,255,255,0.04)]"
+                ? "bg-white/[0.06] border-white/10 text-white"
+                : "bg-transparent border-transparent text-white/70 hover:bg-white/[0.04]"
             )}
             data-testid={`checkbox-option-${idx}`}
           >
             {checked[idx] ? (
               <CheckSquare className="w-5 h-5 text-[#00b57a] shrink-0 mt-0.5" />
             ) : (
-              <Square className="w-5 h-5 shrink-0 mt-0.5 text-[rgba(255,255,255,0.3)]" />
+              <Square className="w-5 h-5 shrink-0 mt-0.5 text-white/30" />
             )}
             <span className="type-body-xl leading-[1.4]">{option}</span>
           </button>
@@ -269,7 +269,7 @@ function SingleSelectList({ content, onInteracted }: { content: string; onIntera
   }, []);
 
   if (options.length === 0) {
-    return <p className="type-body-xl whitespace-pre-wrap text-[rgba(255,255,255,0.8)]">{content}</p>;
+    return <p className="type-body-xl whitespace-pre-wrap text-white/80">{content}</p>;
   }
 
   return (
@@ -292,15 +292,15 @@ function SingleSelectList({ content, onInteracted }: { content: string; onIntera
             className={cn(
               "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors border",
               selected === idx
-                ? "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] text-white"
-                : "bg-transparent border-transparent text-[rgba(255,255,255,0.7)] hover:bg-[rgba(255,255,255,0.04)]"
+                ? "bg-white/[0.06] border-white/10 text-white"
+                : "bg-transparent border-transparent text-white/70 hover:bg-white/[0.04]"
             )}
             data-testid={`radio-option-${idx}`}
           >
             {selected === idx ? (
               <CheckCircle2 className="w-5 h-5 text-[#00b57a] shrink-0 mt-0.5" />
             ) : (
-              <Circle className="w-5 h-5 shrink-0 mt-0.5 text-[rgba(255,255,255,0.3)]" />
+              <Circle className="w-5 h-5 shrink-0 mt-0.5 text-white/30" />
             )}
             <span className="type-body-xl leading-[1.4]">{option}</span>
           </button>
@@ -493,22 +493,22 @@ function ScenarioSlide({ content, revealedCount }: { content: string; revealedCo
                     data-testid={`scenario-step-img-${i}`}
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-xl bg-[rgba(255,255,255,0.08)] shrink-0 flex items-center justify-center">
-                    <User className="w-5 h-5 text-[rgba(255,255,255,0.4)]" />
+                  <div className="w-12 h-12 rounded-xl bg-white/[0.08] shrink-0 flex items-center justify-center">
+                    <User className="w-5 h-5 text-white/40" />
                   </div>
                 )}
-                <p className="type-body-xl font-medium text-[rgba(255,255,255,0.8)] pt-2">
+                <p className="type-body-xl font-medium text-white/80 pt-2">
                   {step.text}
                 </p>
               </div>
             </RevealStep>
             {i < shown.length - 1 && (
               <div className="flex flex-col items-start ml-5 py-2 gap-[5px]">
-                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
-                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
-                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
-                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
-                <div className="w-[3px] h-[5px] rounded-full bg-[rgba(255,255,255,0.2)]" />
+                <div className="w-[3px] h-[5px] rounded-full bg-white/20" />
+                <div className="w-[3px] h-[5px] rounded-full bg-white/20" />
+                <div className="w-[3px] h-[5px] rounded-full bg-white/20" />
+                <div className="w-[3px] h-[5px] rounded-full bg-white/20" />
+                <div className="w-[3px] h-[5px] rounded-full bg-white/20" />
               </div>
             )}
           </div>
@@ -552,9 +552,9 @@ function ActionSlide({ content, onInteracted }: { content: string; onInteracted?
   return (
     <div className="space-y-6 flex flex-col items-center justify-center min-h-[200px]" data-testid="slide-action">
       {isHtml ? (
-        <HtmlContent content={content} className="type-body-xl text-[rgba(255,255,255,0.8)] text-center leading-[1.4]" />
+        <HtmlContent content={content} className="type-body-xl text-white/80 text-center leading-[1.4]" />
       ) : (
-        <p className="type-body-xl text-[rgba(255,255,255,0.8)] text-center whitespace-pre-wrap leading-[1.4]">
+        <p className="type-body-xl text-white/80 text-center whitespace-pre-wrap leading-[1.4]">
           {content}
         </p>
       )}
@@ -568,7 +568,7 @@ function ActionSlide({ content, onInteracted }: { content: string; onInteracted?
           "gap-2 font-sans",
           done
             ? "bg-[#00b57a]/10 text-[#00b57a] border border-[#00b57a]/30 hover:bg-[#00b57a]/20"
-            : "bg-[#18181b] text-white border border-[rgba(255,255,255,0.1)] hover:bg-[#27272a]"
+            : "bg-[var(--surface-float)] text-white border border-white/10 hover:bg-[var(--surface-raised)]"
         )}
         data-testid="button-action-done"
       >
@@ -643,9 +643,9 @@ function TextInputSlide({
   return (
     <div className="space-y-6" data-testid="slide-text-input">
       {isHtmlContent(prompt) ? (
-        <HtmlContent content={prompt} className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)]" />
+        <HtmlContent content={prompt} className="type-body-xl leading-[1.4] text-white/80" />
       ) : (
-        <p className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)]">
+        <p className="type-body-xl leading-[1.4] text-white/80">
           {prompt}
         </p>
       )}
@@ -653,14 +653,14 @@ function TextInputSlide({
         value={journalContent}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Write your response here..."
-        className="min-h-[150px] w-full bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] type-body-lg focus:border-[rgba(255,255,255,0.2)]"
+        className="min-h-[150px] w-full bg-white/5 border-white/10 text-white placeholder:text-white/30 type-body-lg focus:border-white/20"
         data-testid="input-text-response"
       />
       <div className="flex justify-end">
         <Button
           onClick={handleSave}
           disabled={isPending || !journalContent.trim() || saved}
-          className="bg-[#18181b] text-white hover:bg-[#27272a] border border-[rgba(255,255,255,0.1)]"
+          className="bg-[var(--surface-float)] text-white hover:bg-[var(--surface-raised)] border border-white/10"
           data-testid="button-save-response"
         >
           {isPending ? "Saving..." : saved ? "Saved" : "Save Response"}
@@ -700,9 +700,9 @@ function MentorMessageSlide({
       <div className="space-y-4" data-testid="slide-mentor-message">
         <div className="overflow-y-auto max-h-[50vh]" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
           {isHtmlContent(content) ? (
-            <HtmlContent content={content} className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)] break-words" />
+            <HtmlContent content={content} className="type-body-xl leading-[1.4] text-white/80 break-words" />
           ) : (
-            <p className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)] break-words">{content}</p>
+            <p className="type-body-xl leading-[1.4] text-white/80 break-words">{content}</p>
           )}
         </div>
         <p className="type-body-sm text-[#6a6a6a]">No mentor assigned yet.</p>
@@ -726,23 +726,23 @@ function MentorMessageSlide({
     <div className="space-y-6" data-testid="slide-mentor-message">
       <div className="overflow-y-auto max-h-[40vh]" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
         {isHtmlContent(content) ? (
-          <HtmlContent content={content} className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)] break-words" />
+          <HtmlContent content={content} className="type-body-xl leading-[1.4] text-white/80 break-words" />
         ) : (
-          <p className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)] break-words">{content}</p>
+          <p className="type-body-xl leading-[1.4] text-white/80 break-words">{content}</p>
         )}
       </div>
       <Textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Type your message to your mentor..."
-        className="min-h-[150px] w-full bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] type-body-lg focus:border-[rgba(255,255,255,0.2)]"
+        className="min-h-[150px] w-full bg-white/5 border-white/10 text-white placeholder:text-white/30 type-body-lg focus:border-white/20"
         data-testid="input-mentor-message"
       />
       <div className="flex justify-end">
         <Button
           onClick={handleSend}
           disabled={isPending || !message.trim()}
-          className="gap-2 bg-[#18181b] text-white hover:bg-[#27272a] border border-[rgba(255,255,255,0.1)]"
+          className="gap-2 bg-[var(--surface-float)] text-white hover:bg-[var(--surface-raised)] border border-white/10"
           data-testid="button-send-mentor"
         >
           <Send className="w-4 h-4" />
@@ -851,10 +851,10 @@ function TimerSlide({
     <div className="flex flex-col items-center space-y-8" data-testid="slide-timer">
       <div className="relative w-[140px] h-[140px] flex items-center justify-center">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
+          <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
           <circle
             cx="60" cy="60" r="54" fill="none"
-            stroke={done ? "#00b57a" : "rgba(255,255,255,0.7)"}
+            stroke={done ? "#00b57a" : "var(--white-70)"}
             strokeWidth="6"
             strokeLinecap="round"
             strokeDasharray={circumference}
@@ -885,8 +885,8 @@ function TimerSlide({
           className={cn(
             "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
             isPlaying
-              ? "bg-[rgba(255,255,255,0.15)] text-white border-[rgba(255,255,255,0.2)] shadow-md"
-              : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.7)] border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.1)]"
+              ? "bg-white/15 text-white border-white/20 shadow-md"
+              : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
           )}
           data-testid="button-audio-toggle"
         >
@@ -985,8 +985,8 @@ function KnowledgeCheckSlide({
             const isThis = selectedIndex === idx;
             const isCorrectOption = idx === data.correctIndex;
 
-            let optionStyle = "bg-transparent border border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)]";
-            let circleStyle = "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.5)] border-2 border-transparent";
+            let optionStyle = "bg-transparent border border-white/[0.08] hover:bg-white/[0.04]";
+            let circleStyle = "bg-white/[0.08] text-white/50 border-2 border-transparent";
 
             if (answered) {
               if (isThis && isCorrect) {
@@ -999,7 +999,7 @@ function KnowledgeCheckSlide({
                 optionStyle = "bg-[#00b57a]/5 ring-1 ring-[#00b57a]/40 border-transparent";
                 circleStyle = "bg-[#00b57a]/20 text-[#00b57a] border-2 border-[#00b57a]/40";
               } else {
-                optionStyle = "bg-transparent opacity-40 border border-[rgba(255,255,255,0.08)]";
+                optionStyle = "bg-transparent opacity-40 border border-white/[0.08]";
               }
             }
 
@@ -1028,7 +1028,7 @@ function KnowledgeCheckSlide({
                     <Circle className="w-4 h-4" />
                   )}
                 </span>
-                <span className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)] pt-1">
+                <span className="type-body-xl leading-[1.4] text-white/80 pt-1">
                   {option}
                 </span>
               </button>
@@ -1069,9 +1069,9 @@ function KnowledgeCheckSlide({
                     Explanation:
                   </p>
                   {isHtmlContent(data.explanation) ? (
-                    <HtmlContent content={data.explanation} className="type-body-sm text-[rgba(255,255,255,0.7)] leading-relaxed" />
+                    <HtmlContent content={data.explanation} className="type-body-sm text-white/70 leading-relaxed" />
                   ) : (
-                    <p className="type-body-sm text-[rgba(255,255,255,0.7)] leading-relaxed" data-testid="kc-explanation">
+                    <p className="type-body-sm text-white/70 leading-relaxed" data-testid="kc-explanation">
                       {data.explanation}
                     </p>
                   )}
@@ -1244,7 +1244,7 @@ function SurveySlide({
   if (data.questions.length === 0) {
     return (
       <div className="slide-text-content" data-testid="slide-survey-empty">
-        <p className="text-[rgba(255,255,255,0.4)] italic">Survey not configured.</p>
+        <p className="text-white/40 italic">Survey not configured.</p>
       </div>
     );
   }
@@ -1271,7 +1271,7 @@ function SurveySlide({
       <div className="space-y-8">
         {data.questions.map((q, idx) => (
           <div key={q.id} className="space-y-3" data-testid={`survey-question-${idx}`}>
-            <p className="type-body-xl font-semibold text-[rgba(255,255,255,0.9)]">
+            <p className="type-body-xl font-semibold text-white/90">
               <span className="text-[#00b57a] mr-1.5">{idx + 1}.</span>
               {q.label}
             </p>
@@ -1289,13 +1289,13 @@ function SurveySlide({
                         "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-sans type-body-lg",
                         selected
                           ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
-                          : "border-[rgba(255,255,255,0.1)] bg-transparent text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.2)]"
+                          : "border-white/10 bg-transparent text-white/70 hover:border-white/20"
                       )}
                       data-testid={`survey-option-${idx}-${opt}`}
                     >
                       <span className={cn(
                         "shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-[rgba(255,255,255,0.3)]"
+                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-white/30"
                       )}>
                         {selected && <span className="w-2 h-2 rounded-full bg-white block" />}
                       </span>
@@ -1320,13 +1320,13 @@ function SurveySlide({
                         "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-sans type-body-lg",
                         selected
                           ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
-                          : "border-[rgba(255,255,255,0.1)] bg-transparent text-[rgba(255,255,255,0.7)] hover:border-[rgba(255,255,255,0.2)]"
+                          : "border-white/10 bg-transparent text-white/70 hover:border-white/20"
                       )}
                       data-testid={`survey-option-${idx}-${opt}`}
                     >
                       <span className={cn(
                         "shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors",
-                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-[rgba(255,255,255,0.3)]"
+                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-white/30"
                       )}>
                         {selected && (
                           <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -1355,7 +1355,7 @@ function SurveySlide({
                           "flex-1 h-12 rounded-xl border-2 font-bold font-sans type-body-lg transition-all duration-150",
                           selected
                             ? "border-[#00b57a] bg-[#00b57a] text-white shadow-sm"
-                            : "border-[rgba(255,255,255,0.1)] bg-transparent text-[rgba(255,255,255,0.5)] hover:border-[rgba(255,255,255,0.25)] hover:text-[rgba(255,255,255,0.8)]"
+                            : "border-white/10 bg-transparent text-white/50 hover:border-white/25 hover:text-white/80"
                         )}
                         data-testid={`survey-rating-${idx}-${n}`}
                       >
@@ -1377,7 +1377,7 @@ function SurveySlide({
                 onChange={e => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
                 placeholder="Write your response here..."
                 rows={3}
-                className="font-sans type-body-lg resize-none bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-white placeholder:text-[rgba(255,255,255,0.3)] focus:border-[#00b57a] focus:ring-[#00b57a]/20"
+                className="font-sans type-body-lg resize-none bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#00b57a] focus:ring-[#00b57a]/20"
                 data-testid={`survey-text-${idx}`}
               />
             )}
@@ -1393,7 +1393,7 @@ function SurveySlide({
           "w-full h-12 font-sans font-semibold type-body-lg transition-all",
           allAnswered
             ? "bg-[#00b57a] hover:bg-[#00a06a] text-white"
-            : "bg-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.2)] cursor-not-allowed"
+            : "bg-white/5 text-white/20 cursor-not-allowed"
         )}
         data-testid="button-survey-submit"
       >
@@ -1439,8 +1439,8 @@ function QuizQuestionSlide({
               className={cn(
                 "flex items-start gap-3 w-full text-left p-4 rounded-xl transition-all duration-200 border",
                 isSelected
-                  ? "bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.1)] ring-2 ring-[#00b57a]"
-                  : "bg-transparent border-[rgba(255,255,255,0.08)] hover:bg-[rgba(255,255,255,0.04)]"
+                  ? "bg-white/[0.06] border-white/10 ring-2 ring-[#00b57a]"
+                  : "bg-transparent border-white/[0.08] hover:bg-white/[0.04]"
               )}
               data-testid={`quiz-option-${letter}`}
             >
@@ -1448,11 +1448,11 @@ function QuizQuestionSlide({
                 "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
                 isSelected
                   ? "bg-[#00b57a] text-white"
-                  : "bg-[rgba(255,255,255,0.08)] text-[rgba(255,255,255,0.5)]"
+                  : "bg-white/[0.08] text-white/50"
               )}>
                 {letter}
               </span>
-              <span className="type-body-xl leading-[1.4] text-[rgba(255,255,255,0.8)] pt-1">
+              <span className="type-body-xl leading-[1.4] text-white/80 pt-1">
                 {option}
               </span>
             </button>
@@ -1504,12 +1504,12 @@ function QuizResultSlide({
           <h2 className="type-display-lg font-bold text-white leading-tight">
             {result.title}
           </h2>
-          <p className="type-body-xl leading-[1.5] text-[rgba(255,255,255,0.7)] max-w-[420px]">
+          <p className="type-body-xl leading-[1.5] text-white/70 max-w-[420px]">
             {result.description}
           </p>
         </>
       ) : (
-        <p className="type-body-xl text-[rgba(255,255,255,0.7)]">
+        <p className="type-body-xl text-white/70">
           You answered {answered} of {total} questions.
         </p>
       )}

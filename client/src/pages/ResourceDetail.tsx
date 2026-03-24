@@ -169,7 +169,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
             width: "62px",
             height: "62px",
             borderRadius: "999px",
-            backgroundColor: "var(--black-35)",
+            backgroundColor: "var(--black-40)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

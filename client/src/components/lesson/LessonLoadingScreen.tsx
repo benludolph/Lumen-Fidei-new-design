@@ -59,7 +59,7 @@ export function LessonLoadingScreen({
         </div>
 
         <div className="space-y-2 sm:space-y-3">
-          <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.6)" }}>
+          <p className="type-caption-md text-white/60">
             {dayNumber < 0 ? `Module ${Math.abs(dayNumber)}` : dayNumber === 0 ? "Introduction" : `Day ${dayNumber}`}
           </p>
           <h1 className="type-display-md font-serif max-w-[340px] sm:max-w-lg" style={{ fontWeight: 500, color: "white" }}>
