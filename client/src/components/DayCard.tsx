@@ -57,25 +57,15 @@ export function DayCard({
       disabled={isLocked}
       title={tooltipTitle}
       data-testid={`card-day-${dayNumber}`}
-      className="day-card-hover"
+      className={cn(
+        "day-card-hover relative text-left overflow-hidden w-full flex flex-col justify-between",
+        "pt-3 px-3 pb-[14px] min-h-[126px]",
+        isLocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+      )}
       style={{
-        position: "relative",
-        textAlign: "left",
-        overflow: "hidden",
-        width: "100%",
         background: "var(--surface-base)",
         border: "0.5px solid var(--white-5)",
         borderRadius: "6px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        paddingTop: "12px",
-        paddingLeft: "12px",
-        paddingRight: "12px",
-        paddingBottom: "14px",
-        minHeight: "126px",
-        opacity: isLocked ? 0.4 : 1,
-        cursor: isLocked ? "not-allowed" : "pointer",
       }}
     >
       {/* Full-span background image */}
@@ -130,7 +120,7 @@ export function DayCard({
       </div>
 
       {/* Text block — bottom of card, hugs title + subtitle with 8px gap */}
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="relative z-[1] flex flex-col gap-2">
         <p
           className="type-display-sm"
           style={{
@@ -158,12 +148,12 @@ export function DayCard({
           </p>
         )}
         {isTrackB && !isLocked && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-[2px]">
               <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "var(--white-30)" }} />
               <span className="type-body-xs" style={{ color: morningCompleted ? "#22c55e" : "var(--white-30)" }}>AM</span>
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+            <span className="flex items-center gap-[2px]">
               <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "var(--white-30)" }} />
               <span className="type-body-xs" style={{ color: eveningCompleted ? "#22c55e" : "var(--white-30)" }}>PM</span>
             </span>

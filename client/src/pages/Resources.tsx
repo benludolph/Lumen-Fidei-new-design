@@ -92,12 +92,12 @@ function getResourceIcon(name: string): LucideIcon {
 
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
-      <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
-      <span className="type-caption-md" style={{ color: "#d0d6e0", whiteSpace: "nowrap" }}>
+    <div className="flex items-center gap-4 mb-4">
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
+      <span className="type-caption-md whitespace-nowrap" style={{ color: "#d0d6e0" }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(180,188,208,0.15))" }} />
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, rgba(180,188,208,0.15))" }} />
     </div>
   );
 }
@@ -112,22 +112,11 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
     <Link href={`/resources/${resource.id}`}>
       <div
         data-testid={`card-resource-${resource.id}`}
-        className="resource-card-hover"
+        className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
         style={{
-          position: "relative",
           backgroundColor: "var(--surface-base)",
           border: "0.5px solid var(--white-5)",
           borderRadius: "6px",
-          overflow: "hidden",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          height: "126px",
-          paddingTop: "12px",
-          paddingLeft: "12px",
-          paddingRight: "12px",
-          paddingBottom: "14px",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -361,13 +350,13 @@ export default function Resources() {
 
   return (
     <DashboardLayout>
-      <PageContainer variant="narrow" style={{ paddingTop: "32px", paddingBottom: "64px" }}>
-        <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
+      <PageContainer variant="narrow" className="pt-8 pb-16">
+        <h1 className="type-display-xl text-center text-white mb-12">
           Resources
         </h1>
 
         {isLoading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "64px" }}>
+          <div className="flex items-center justify-center pt-16">
             <div
               className="animate-spin"
               style={{
@@ -380,13 +369,12 @@ export default function Resources() {
             />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
+          <div className="flex flex-col gap-12">
             {/* PRAYERS — 3 equal columns, exactly 6 cards in 2 rows */}
             <div>
               <SectionDivider label="PRAYERS" />
               <div
-                className="resource-grid-equal"
-                style={{ gap: "8px", width: "100%" }}
+                className="resource-grid-equal gap-2 w-full"
               >
                 <style>{`
                   .resource-grid-equal {
@@ -413,8 +401,7 @@ export default function Resources() {
             <div>
               <SectionDivider label="ADDITIONAL RESOURCES" />
               <div
-                className="resource-grid-additional"
-                style={{ gap: "8px", width: "100%" }}
+                className="resource-grid-additional gap-2 w-full"
               >
                 <style>{`
                   .resource-grid-additional {

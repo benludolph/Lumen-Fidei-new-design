@@ -82,12 +82,12 @@ function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
 
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", margin: "20px 0" }}>
-      <div style={{ flex: 1, height: "1px", background: "var(--white-15)" }} />
-      <span className="type-caption-sm" style={{ color: "var(--white-35)", flexShrink: 0 }}>
+    <div className="flex items-center gap-3 w-full my-5">
+      <div className="flex-1 h-px bg-[var(--white-15)]" />
+      <span className="type-caption-sm shrink-0" style={{ color: "var(--white-35)" }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: "1px", background: "var(--white-15)" }} />
+      <div className="flex-1 h-px bg-[var(--white-15)]" />
     </div>
   );
 }
@@ -194,7 +194,11 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function SundayBanner() {
   return (
-    <div data-testid="banner-sunday" className="type-caption-md" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--white-3)", border: "0.5px solid var(--white-7)", borderRadius: "6px", margin: "12px 0", color: "var(--white-40)" }}>
+    <div
+      data-testid="banner-sunday"
+      className="type-caption-md w-full h-11 flex items-center justify-center my-3"
+      style={{ background: "var(--white-3)", border: "0.5px solid var(--white-7)", borderRadius: "6px", color: "var(--white-40)" }}
+    >
       ✦ Sunday — Rest &amp; Mass ✦
     </div>
   );
@@ -212,8 +216,8 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
       onClick={available ? onClick : undefined}
       disabled={!available}
       data-testid={`card-prelim-${position}`}
-      className="day-card-hover"
-      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "var(--surface-base)", border: "0.5px solid var(--white-5)", borderRadius: "6px", display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "12px", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "14px", minHeight: "126px", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
+      className={`day-card-hover relative text-left overflow-hidden w-full flex flex-col justify-between pt-3 px-3 pb-[14px] min-h-[126px] ${available ? "cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+      style={{ background: "var(--surface-base)", border: "0.5px solid var(--white-5)", borderRadius: "6px" }}
     >
       {imageUrl && (
         <>
@@ -231,7 +235,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
           <Loader style={{ width: "13px", height: "13px", color: "#ffffff", strokeWidth: 1.8 }} />
         )}
       </div>
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="relative z-[1] flex flex-col gap-2">
         <p className="type-display-sm" style={{ letterSpacing: "-0.14px", color: "white", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
         {subtitle && (
           <p className="type-body-xs" style={{ color: "var(--white-45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
@@ -247,19 +251,16 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
   return (
     <div className="sticky z-20" style={{ top: "12px" }}>
       <div
+        className="p-4 flex items-center justify-between"
         style={{
           background: "var(--surface-float)",
           border: "0.5px solid var(--white-5)",
           borderRadius: "8px",
           boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.25), 0px 4px 6px 0px rgba(0,0,0,0.12)",
-          padding: "16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
         }}
       >
         {/* Left: week label + title */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div className="flex flex-col gap-1">
           <p className="type-caption-md" style={{ color: "#d0d6e0" }}>
             Week {weekNumber} of 5
           </p>

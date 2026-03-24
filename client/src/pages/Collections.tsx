@@ -209,31 +209,12 @@ function HoloCard({ saint }: { saint: Saint }) {
 
 function SaintsDivider() {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "16px",
-        marginBottom: "32px",
-      }}
-    >
-      <div
-        style={{
-          flex: 1,
-          height: "1px",
-          background: "var(--white-10)",
-        }}
-      />
-      <span className="type-caption-md" style={{ color: "var(--white-35)", whiteSpace: "nowrap" }}>
+    <div className="flex items-center gap-4 mb-8">
+      <div className="flex-1 h-px bg-[var(--white-10)]" />
+      <span className="type-caption-md whitespace-nowrap" style={{ color: "var(--white-35)" }}>
         SAINTS
       </span>
-      <div
-        style={{
-          flex: 1,
-          height: "1px",
-          background: "var(--white-10)",
-        }}
-      />
+      <div className="flex-1 h-px bg-[var(--white-10)]" />
     </div>
   );
 }
@@ -246,7 +227,7 @@ export default function Collections() {
         className="pt-8 pb-20 min-h-[calc(100vh-72px)]"
       >
         <div data-testid="collections-page">
-          <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
+          <h1 className="type-display-xl text-center text-white mb-12">
             Collection
           </h1>
 

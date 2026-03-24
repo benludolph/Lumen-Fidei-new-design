@@ -43,7 +43,7 @@ function Breadcrumb({ name }: { name: string }) {
         boxShadow: "0px 25px 50px 0px rgba(0,0,0,0.25), 0px 5px 25px 0px rgba(0,0,0,0.5)",
       }}
     >
-      <PageContainer variant="full" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <PageContainer variant="full" className="flex items-center gap-2">
         <Link href="/resources">
           <span
             data-testid="breadcrumb-resources"
