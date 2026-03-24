@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useAllUsers } from "@/hooks/use-users";
 import { useMessages, useSendMessage } from "@/hooks/use-chat";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Send, ArrowLeft, Plus, Search, X } from "lucide-react";
 import { useLocation } from "wouter";
@@ -104,8 +105,9 @@ export default function Messages() {
 
   return (
     <DashboardLayout>
-      <div
-        className="flex px-0 sm:px-[107px]"
+      <PageContainer
+        variant="fullMd"
+        className="flex"
         style={{
           height: "calc(100vh - 72px)",
           backgroundColor: "var(--surface-ground)",
@@ -387,7 +389,7 @@ export default function Messages() {
             )}
           </div>
         )}
-      </div>
+      </PageContainer>
     </DashboardLayout>
   );
 }
