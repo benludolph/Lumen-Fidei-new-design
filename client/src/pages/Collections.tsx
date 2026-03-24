@@ -65,14 +65,14 @@ function HoloCard({ saint }: { saint: Saint }) {
     }
 
     if (overlayRef.current) {
-      overlayRef.current.style.background = `radial-gradient(circle at ${px * 100}% ${py * 100}%, rgba(255,255,255,0.18) 0%, rgba(120,180,255,0.08) 30%, transparent 65%)`;
+      overlayRef.current.style.background = `radial-gradient(circle at ${px * 100}% ${py * 100}%, var(--white-18) 0%, rgba(120,180,255,0.08) 30%, transparent 65%)`;
       overlayRef.current.style.opacity = "1";
     }
 
     if (sheenRef.current) {
       const angle = 120;
       const pos = (px * 100 + py * 100) / 2;
-      sheenRef.current.style.background = `linear-gradient(${angle}deg, transparent ${pos - 25}%, rgba(255,255,255,0.12) ${pos}%, rgba(255,255,255,0.08) ${pos + 5}%, transparent ${pos + 30}%)`;
+      sheenRef.current.style.background = `linear-gradient(${angle}deg, transparent ${pos - 25}%, var(--white-12) ${pos}%, var(--white-8) ${pos + 5}%, transparent ${pos + 30}%)`;
       sheenRef.current.style.opacity = "1";
     }
 
