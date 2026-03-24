@@ -164,6 +164,20 @@ export const cohortSettings = pgTable("cohort_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Per-module reflection overlay configuration
+export const moduleOverlays = pgTable("module_overlays", {
+  contextKey: text("context_key").primaryKey(),
+  enabled: boolean("enabled").notNull().default(false),
+  imageUrl: text("image_url").notNull().default(""),
+  text: text("text").notNull().default("Reflection Unlocked"),
+  subtext: text("subtext").notNull().default(""),
+  label: text("label").notNull().default(""),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ModuleOverlay = typeof moduleOverlays.$inferSelect;
+export type InsertModuleOverlay = typeof moduleOverlays.$inferInsert;
+
 // Prayer completion tracking - records when users complete morning/evening prayers
 export const prayerCompletions = pgTable("prayer_completions", {
   id: serial("id").primaryKey(),

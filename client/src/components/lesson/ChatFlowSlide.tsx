@@ -402,8 +402,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [unlockPhase, setUnlockPhase] = useState(0);
   const [overlayDismissed, setOverlayDismissed] = useState(false);
 
-  const { data: overlayConfig } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
-    queryKey: ["/api/admin/reflection-overlay"],
+  const { data: overlayConfig } = useQuery<{ contextKey: string; enabled: boolean; imageUrl: string; text: string; subtext: string; label: string }>({
+    queryKey: ["/api/admin/module-overlays", contextKey],
     staleTime: 0,
     refetchOnMount: "always",
   });
@@ -445,10 +445,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedFromServer]);
 
-  // ── Unlock animation on fresh completion ──
+  // ── Unlock animation on fresh completion (only when overlay is enabled for this module) ──
   useEffect(() => {
     if (!flowComplete) { setUnlockPhase(0); setOverlayDismissed(false); return; }
     if (restoredCompletionRef.current) return;
+    if (!overlayConfig?.enabled) return;
     const audio = new Audio(reflectionUnlockSound);
     audio.volume = 0.8;
     audio.play().catch(() => {});
@@ -461,7 +462,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       setTimeout(() => setUnlockPhase(6), 3600),  // close btn
     ];
     return () => timers.forEach(clearTimeout);
-  }, [flowComplete]);
+  }, [flowComplete, overlayConfig?.enabled]);
 
   // ── Auto-scroll ──
   useEffect(() => {
@@ -1192,7 +1193,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       )}
 
       {/* ── Completion Unlock Overlay ── */}
-      {flowComplete && !isRestoredFlow && !overlayDismissed && unlockPhase > 0 && (
+      {flowComplete && !isRestoredFlow && !overlayDismissed && unlockPhase > 0 && overlayConfig?.enabled && (
         <div
           className="fixed inset-0 flex items-center justify-center"
           style={{

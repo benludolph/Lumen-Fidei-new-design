@@ -125,7 +125,7 @@ export default function Admin() {
             <TrackAContentManagementView />
           </div>
           <div className="mt-8">
-            <ReflectionOverlaySettingsCard />
+            <ModuleOverlaySettingsCard />
           </div>
         </TabsContent>
 
@@ -1120,37 +1120,55 @@ function CohortSettingsView() {
   );
 }
 
-function ReflectionOverlaySettingsCard() {
+interface ModuleOverlayRow {
+  contextKey: string;
+  enabled: boolean;
+  imageUrl: string;
+  text: string;
+  subtext: string;
+  label: string;
+}
+
+function ModuleOverlayEditor({
+  overlay,
+  onSaved,
+  onRemove,
+}: {
+  overlay: ModuleOverlayRow;
+  onSaved: () => void;
+  onRemove?: () => void;
+}) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [text, setText] = useState("Reflection Unlocked");
-  const [subtext, setSubtext] = useState("");
-
-  const { data, isLoading } = useQuery<{ imageUrl: string; text: string; subtext: string }>({
-    queryKey: ["/api/admin/reflection-overlay"],
-  });
+  const [enabled, setEnabled] = useState(overlay.enabled);
+  const [label, setLabel] = useState(overlay.label || "");
+  const [imageUrl, setImageUrl] = useState(overlay.imageUrl || "");
+  const [text, setText] = useState(overlay.text || "Reflection Unlocked");
+  const [subtext, setSubtext] = useState(overlay.subtext || "");
 
   useEffect(() => {
-    if (data) {
-      setImageUrl(data.imageUrl ?? "");
-      setText(data.text ?? "Reflection Unlocked");
-      setSubtext(data.subtext ?? "");
-    }
-  }, [data]);
+    setEnabled(overlay.enabled);
+    setLabel(overlay.label || "");
+    setImageUrl(overlay.imageUrl || "");
+    setText(overlay.text || "Reflection Unlocked");
+    setSubtext(overlay.subtext || "");
+  }, [overlay.contextKey]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/reflection-overlay", { imageUrl, text, subtext });
+      const res = await apiRequest("POST", `/api/admin/module-overlays/${encodeURIComponent(overlay.contextKey)}`, {
+        enabled, imageUrl, text, subtext, label,
+      });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/reflection-overlay"] });
-      toast({ title: "Reflection overlay saved" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/module-overlays"] });
+      toast({ title: "Overlay saved" });
+      onSaved();
     },
     onError: () => {
-      toast({ title: "Failed to save overlay settings", variant: "destructive" });
+      toast({ title: "Failed to save overlay", variant: "destructive" });
     },
   });
 
@@ -1174,81 +1192,224 @@ function ReflectionOverlaySettingsCard() {
   }, [toast]);
 
   return (
+    <div className="space-y-4 pt-4 border-t">
+      {/* Toggle row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">Show overlay on completion</p>
+          <p className="text-xs text-muted-foreground">Context key: <code className="bg-muted px-1 rounded">{overlay.contextKey}</code></p>
+        </div>
+        <button
+          onClick={() => setEnabled(v => !v)}
+          data-testid={`toggle-overlay-enabled-${overlay.contextKey}`}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none ${enabled ? "bg-primary" : "bg-muted"}`}
+        >
+          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${enabled ? "translate-x-6" : "translate-x-1"}`} />
+        </button>
+      </div>
+
+      {/* Label */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Display label (admin only)</label>
+        <Input
+          value={label}
+          onChange={e => setLabel(e.target.value)}
+          placeholder="e.g. Day 1 – Healing Reflection"
+          className="text-sm"
+          data-testid={`input-overlay-label-${overlay.contextKey}`}
+        />
+      </div>
+
+      {/* Image */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Circular image (106px)</label>
+        <div className="flex items-center gap-3">
+          {imageUrl && (
+            <img src={imageUrl} alt="" className="w-12 h-12 object-cover rounded-full border" />
+          )}
+          <div className="flex-1 flex gap-2">
+            <Input
+              value={imageUrl}
+              onChange={e => setImageUrl(e.target.value)}
+              placeholder="https://... or /api/images/..."
+              className="flex-1 text-sm"
+              data-testid={`input-overlay-image-${overlay.contextKey}`}
+            />
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}
+              data-testid={`button-overlay-upload-${overlay.contextKey}`}>
+              {uploading ? "Uploading..." : <><Upload className="w-3 h-3 mr-1" />Upload</>}
+            </Button>
+          </div>
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+      </div>
+
+      {/* Headline */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Headline</label>
+        <Input
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="He Was There"
+          data-testid={`input-overlay-text-${overlay.contextKey}`}
+        />
+        <p className="text-xs text-muted-foreground">Large display text shown below "REFLECTION UNLOCKED".</p>
+      </div>
+
+      {/* Subtext */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium">Subtext</label>
+        <Textarea
+          value={subtext}
+          onChange={e => setSubtext(e.target.value)}
+          placeholder="Invite Jesus into the moment — and see it as He does."
+          rows={2}
+          data-testid={`textarea-overlay-subtext-${overlay.contextKey}`}
+        />
+        <p className="text-xs text-muted-foreground">Shown below the cross divider.</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}
+          data-testid={`button-overlay-save-${overlay.contextKey}`}>
+          <Save className="w-4 h-4 mr-2" />
+          {saveMutation.isPending ? "Saving..." : "Save"}
+        </Button>
+        {onRemove && (
+          <Button variant="ghost" size="sm" onClick={onRemove} className="text-destructive hover:text-destructive">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ModuleOverlaySettingsCard() {
+  const { toast } = useToast();
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [addingNew, setAddingNew] = useState(false);
+  const [newContextKey, setNewContextKey] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+
+  const { data: overlays = [], isLoading, refetch } = useQuery<ModuleOverlayRow[]>({
+    queryKey: ["/api/admin/module-overlays"],
+  });
+
+  const handleAddNew = async () => {
+    const key = newContextKey.trim();
+    if (!key) return;
+    try {
+      await apiRequest("POST", `/api/admin/module-overlays/${encodeURIComponent(key)}`, {
+        enabled: false, imageUrl: "", text: "Reflection Unlocked", subtext: "", label: newLabel.trim(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/module-overlays"] });
+      setExpandedKey(key);
+      setAddingNew(false);
+      setNewContextKey("");
+      setNewLabel("");
+      toast({ title: "Module overlay created" });
+    } catch {
+      toast({ title: "Failed to create overlay", variant: "destructive" });
+    }
+  };
+
+  return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
-          Reflection Overlay Template
+          Reflection Overlays (per module)
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          This overlay appears when a participant completes a chat flow reflection. It shows a 106px circular image, a large 48px headline, a cross divider, and a subtext line — all configurable here.
+          Configure a completion overlay for any chat-flow module. Each overlay can be toggled on/off independently. The overlay is off by default and will only appear for that specific module's chat flow.
         </p>
+
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : overlays.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">No overlays configured yet. Add one below.</p>
         ) : (
-          <>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Featured Image</label>
-              <div className="flex items-center gap-3">
-                {imageUrl && (
-                  <img src={imageUrl} alt="Overlay image" className="w-16 h-16 object-cover rounded border" />
+          <div className="space-y-2">
+            {overlays.map(overlay => (
+              <div key={overlay.contextKey} className="border rounded-lg overflow-hidden">
+                {/* Header row */}
+                <button
+                  className="w-full flex items-center justify-between p-3 hover:bg-muted/40 transition-colors text-left"
+                  onClick={() => setExpandedKey(expandedKey === overlay.contextKey ? null : overlay.contextKey)}
+                  data-testid={`button-overlay-expand-${overlay.contextKey}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${overlay.enabled ? "bg-green-500" : "bg-muted-foreground/30"}`} />
+                    <div>
+                      <p className="text-sm font-medium">{overlay.label || overlay.contextKey}</p>
+                      {overlay.label && (
+                        <p className="text-xs text-muted-foreground">{overlay.contextKey}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={overlay.enabled ? "default" : "outline"} className="text-xs">
+                      {overlay.enabled ? "On" : "Off"}
+                    </Badge>
+                    {expandedKey === overlay.contextKey ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </div>
+                </button>
+
+                {/* Expanded editor */}
+                {expandedKey === overlay.contextKey && (
+                  <div className="px-4 pb-4">
+                    <ModuleOverlayEditor
+                      overlay={overlay}
+                      onSaved={() => refetch()}
+                    />
+                  </div>
                 )}
-                <div className="flex-1 flex gap-2">
-                  <Input
-                    value={imageUrl}
-                    onChange={e => setImageUrl(e.target.value)}
-                    placeholder="https://... or /api/images/..."
-                    className="flex-1 text-sm"
-                    data-testid="input-reflection-overlay-image"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    data-testid="button-reflection-overlay-upload"
-                  >
-                    {uploading ? "Uploading..." : <><Upload className="w-3 h-3 mr-1" />Upload</>}
-                  </Button>
-                </div>
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-            </div>
+            ))}
+          </div>
+        )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Headline (48px IvyOra)</label>
+        {/* Add new */}
+        {addingNew ? (
+          <div className="border rounded-lg p-4 space-y-3 bg-muted/20">
+            <p className="text-sm font-medium">New module overlay</p>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Context key — must match the chat flow's context key exactly</label>
               <Input
-                value={text}
-                onChange={e => setText(e.target.value)}
-                placeholder="He Was There"
-                data-testid="input-reflection-overlay-text"
+                value={newContextKey}
+                onChange={e => setNewContextKey(e.target.value)}
+                placeholder="e.g. chat-flow-1 or prelim-module-2"
+                className="text-sm"
+                data-testid="input-new-overlay-context-key"
               />
-              <p className="text-xs text-muted-foreground">Large headline shown below the fixed "REFLECTION UNLOCKED" label. e.g. "He Was There".</p>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Subtext (16px Afacad)</label>
-              <Textarea
-                value={subtext}
-                onChange={e => setSubtext(e.target.value)}
-                placeholder="Invite Jesus into the moment — and see it as He does."
-                rows={3}
-                data-testid="textarea-reflection-overlay-subtext"
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Display label (optional, for your reference)</label>
+              <Input
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                placeholder="e.g. Day 1 Morning Reflection"
+                className="text-sm"
+                data-testid="input-new-overlay-label"
               />
-              <p className="text-xs text-muted-foreground">Shown below the cross divider. e.g. "Invite Jesus into the moment — and see it as He does."</p>
             </div>
-
-            <Button
-              onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
-              data-testid="button-reflection-overlay-save"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {saveMutation.isPending ? "Saving..." : "Save Overlay Settings"}
-            </Button>
-          </>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleAddNew} disabled={!newContextKey.trim()} data-testid="button-add-overlay-confirm">
+                Add
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { setAddingNew(false); setNewContextKey(""); setNewLabel(""); }}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button variant="outline" size="sm" onClick={() => setAddingNew(true)} data-testid="button-add-overlay">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Module Overlay
+          </Button>
         )}
       </CardContent>
     </Card>

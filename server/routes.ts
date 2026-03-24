@@ -922,7 +922,45 @@ export async function registerRoutes(
     res.json({ startDate });
   });
 
-  // === Reflection Overlay Settings ===
+  // === Per-Module Reflection Overlay Settings ===
+
+  app.get('/api/admin/module-overlays', requireAuth, async (req, res) => {
+    const overlays = await storage.listModuleOverlays();
+    res.json(overlays);
+  });
+
+  app.get('/api/admin/module-overlays/:contextKey', requireAuth, async (req, res) => {
+    const overlay = await storage.getModuleOverlay(req.params.contextKey);
+    res.json(overlay ?? { contextKey: req.params.contextKey, enabled: false, imageUrl: "", text: "Reflection Unlocked", subtext: "", label: "" });
+  });
+
+  app.post('/api/admin/module-overlays/:contextKey', requireRole('admin'), async (req, res) => {
+    const schema = z.object({
+      enabled: z.boolean(),
+      imageUrl: z.string(),
+      text: z.string(),
+      subtext: z.string(),
+      label: z.string().optional().default(""),
+    });
+    try {
+      const { enabled, imageUrl, text, subtext, label } = schema.parse(req.body);
+      const overlay = await storage.upsertModuleOverlay({
+        contextKey: req.params.contextKey,
+        enabled,
+        imageUrl,
+        text,
+        subtext,
+        label,
+        updatedAt: new Date(),
+      });
+      res.json(overlay);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  // === Reflection Overlay Settings (legacy global — kept for compatibility) ===
 
   app.get('/api/admin/reflection-overlay', requireAuth, async (req, res) => {
     const [imageUrl, text, subtext] = await Promise.all([

@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
-  prelimModules, prelimCompletions,
+  prelimModules, prelimCompletions, moduleOverlays,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -14,6 +14,7 @@ import {
   type TrackAModule, type InsertTrackAModule,
   type PrelimModule, type InsertPrelimModule,
   type PrelimCompletion,
+  type ModuleOverlay,
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc, isNotNull } from "drizzle-orm";
 
@@ -79,6 +80,11 @@ export interface IStorage {
   // Cohort Settings
   getCohortSetting(key: string): Promise<string | null>;
   setCohortSetting(key: string, value: string): Promise<CohortSetting>;
+
+  // Module Overlays
+  listModuleOverlays(): Promise<ModuleOverlay[]>;
+  getModuleOverlay(contextKey: string): Promise<ModuleOverlay | null>;
+  upsertModuleOverlay(overlay: ModuleOverlay): Promise<ModuleOverlay>;
   
   // Admin message management
   getMessagesBetweenUsers(userId1: number, userId2: number): Promise<Message[]>;
@@ -409,6 +415,35 @@ export class DatabaseStorage implements IStorage {
       )
     );
     return count;
+  }
+
+  // Module Overlays
+  async listModuleOverlays(): Promise<ModuleOverlay[]> {
+    return await db.select().from(moduleOverlays).orderBy(asc(moduleOverlays.contextKey));
+  }
+
+  async getModuleOverlay(contextKey: string): Promise<ModuleOverlay | null> {
+    const [row] = await db.select().from(moduleOverlays).where(eq(moduleOverlays.contextKey, contextKey));
+    return row ?? null;
+  }
+
+  async upsertModuleOverlay(overlay: ModuleOverlay): Promise<ModuleOverlay> {
+    const [row] = await db
+      .insert(moduleOverlays)
+      .values({ ...overlay, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: moduleOverlays.contextKey,
+        set: {
+          enabled: overlay.enabled,
+          imageUrl: overlay.imageUrl,
+          text: overlay.text,
+          subtext: overlay.subtext,
+          label: overlay.label,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return row;
   }
 
   // Cohort Settings
