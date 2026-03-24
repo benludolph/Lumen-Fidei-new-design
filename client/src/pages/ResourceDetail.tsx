@@ -117,7 +117,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
       style={{
         position: "sticky",
         top: "148px",
-        backgroundColor: "black",
+        backgroundColor: "var(--surface-ground)",
         borderRadius: "11px",
         border: "1px solid var(--white-10)",
         boxShadow: "inset 0px 2px 0px 0px var(--white-10)",
@@ -220,7 +220,7 @@ export default function ResourceDetail() {
     return (
       <DashboardLayout>
         <Breadcrumb name="…" />
-        <div style={{ backgroundColor: "black", minHeight: "685px" }}>
+        <div style={{ backgroundColor: "var(--surface-ground)", minHeight: "685px" }}>
           <Spinner />
         </div>
       </DashboardLayout>
@@ -231,7 +231,7 @@ export default function ResourceDetail() {
     return (
       <DashboardLayout>
         <Breadcrumb name="Not found" />
-        <div style={{ backgroundColor: "black", minHeight: "685px", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "80px" }}>
+        <div style={{ backgroundColor: "var(--surface-ground)", minHeight: "685px", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "80px" }}>
           <p className="type-body-md" style={{ color: "var(--white-40)", marginBottom: "20px" }}>
             This resource could not be found.
           </p>
@@ -255,7 +255,7 @@ export default function ResourceDetail() {
       {/* Body — black bg fills below navbar */}
       <div
         style={{
-          backgroundColor: "black",
+          backgroundColor: "var(--surface-ground)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -279,7 +279,7 @@ export default function ResourceDetail() {
             data-testid="hero-card-resource"
             style={{
               position: "relative",
-              backgroundColor: "black",
+              backgroundColor: "var(--surface-ground)",
               border: "1px solid var(--white-5)",
               borderRadius: "8px",
               overflow: "clip",
@@ -301,7 +301,7 @@ export default function ResourceDetail() {
                 right: "-3px",
                 height: "470px",
                 overflow: "hidden",
-                backgroundColor: "black",
+                backgroundColor: "var(--surface-ground)",
               }}
             >
               <img

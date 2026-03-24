@@ -193,7 +193,7 @@ export function LessonCompletionScreen({
       <div
         className="relative shrink-0 flex flex-col items-center justify-center"
         style={{
-          background: "black",
+          background: "var(--surface-ground)",
           borderTop: "1px solid var(--white-5)",
           padding: "32px",
         }}
