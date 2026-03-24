@@ -24,6 +24,61 @@
   font-weight: 600;
 }
 
+/* ── Dark App Color Token Layer ──────────────────────────────────────
+   Linear-style system: 4 surface levels + white opacity tiers.
+   All non-admin pages reference these variables instead of raw rgba/hex.
+   ─────────────────────────────────────────────────────────────────── */
+:root {
+  /* Surface backgrounds — 4 intentional levels (replaces ~12 ad-hoc blacks) */
+  --surface-ground: #0b0b0b;    /* full-bleed app bg, lesson views        */
+  --surface-base:   #0f1011;    /* cards, panels, standard surface         */
+  --surface-raised: #141516;    /* drawers, sidebar, secondary elevated     */
+  --surface-float:  #18181b;    /* dropdowns, dialogs, floating overlays   */
+
+  /* White opacity tiers — borders, text, hover states (no raw rgba() needed) */
+  --white-2:  rgba(255,255,255,0.02);
+  --white-3:  rgba(255,255,255,0.03);
+  --white-4:  rgba(255,255,255,0.04);
+  --white-5:  rgba(255,255,255,0.05);  /* ← standard thin border            */
+  --white-6:  rgba(255,255,255,0.06);
+  --white-7:  rgba(255,255,255,0.07);
+  --white-8:  rgba(255,255,255,0.08);
+  --white-10: rgba(255,255,255,0.10);
+  --white-12: rgba(255,255,255,0.12);
+  --white-15: rgba(255,255,255,0.15);
+  --white-18: rgba(255,255,255,0.18);
+  --white-20: rgba(255,255,255,0.20);
+  --white-30: rgba(255,255,255,0.30);
+  --white-35: rgba(255,255,255,0.35);
+  --white-40: rgba(255,255,255,0.40);
+  --white-45: rgba(255,255,255,0.45);
+  --white-50: rgba(255,255,255,0.50);
+  --white-60: rgba(255,255,255,0.60);
+  --white-65: rgba(255,255,255,0.65);
+  --white-70: rgba(255,255,255,0.70);
+  --white-80: rgba(255,255,255,0.80);
+  --white-85: rgba(255,255,255,0.85);
+  --white-90: rgba(255,255,255,0.90);
+
+  /* Black overlay tiers — glass blur, modal backdrops */
+  --black-35: rgba(0,0,0,0.35);
+  --black-60: rgba(0,0,0,0.60);
+  --black-70: rgba(0,0,0,0.70);
+  --black-80: rgba(0,0,0,0.80);
+  --black-85: rgba(0,0,0,0.85);
+
+  /* Brand colors */
+  --brand:          #F07830;
+  --brand-subtle:   rgba(240,120,48,0.12);  /* icon bg, hover highlight      */
+  --brand-hover:    rgba(240,120,48,0.25);  /* brand button hover            */
+  --brand-border:   rgba(240,120,48,0.30);  /* brand-colored borders         */
+  --brand-focus:    rgba(240,120,48,0.40);  /* focus ring in inputs          */
+
+  /* Message bubble backgrounds */
+  --bubble-sent:     #484D55;   /* sent messages (right-aligned)            */
+  --bubble-received: #292929;   /* received messages (left-aligned)         */
+}
+
 /* LIGHT MODE - Calm spiritual theme */
 :root {
   --button-outline: rgba(0,0,0, .10);
@@ -691,3 +746,24 @@
 }
 
 } /* end @layer utilities */
+
+/* ── Interactive card hover patterns ──────────────────────────────────
+   Pure-CSS lift + border brightening for day/prelim cards.
+   JS onMouseEnter/onMouseLeave removed in favour of these rules.
+   ─────────────────────────────────────────────────────────────────── */
+.day-card-hover {
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.day-card-hover:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: var(--white-12) !important;
+}
+
+/* Resource/External cards: border brightens on hover (image crossfade
+   remains JS-driven since it requires opacity control on child layers) */
+.resource-card-hover {
+  transition: border-color 0.2s ease-out;
+}
+.resource-card-hover:hover {
+  border-color: var(--white-12) !important;
+}

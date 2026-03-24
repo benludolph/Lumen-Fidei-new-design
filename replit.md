@@ -37,7 +37,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Dashboard Architecture
 - **Grid + Detail Pattern**: Dashboard uses a two-mode view:
-  - **Grid mode** (default): Uses `DashboardLayout` — dark gothic cathedral aesthetic with full-page background image (`/dashboard_bg_cathedral.png`), side gradients fading the image to black, and a fixed 72px frosted-glass navbar. 608px centered content column with 2-column card grid (1-column on mobile, <640px). Week section headers with Ivy Ora Display font. Cards: `#0f1011` bg, 0.487px border, 5.842px radius, 126px tall, with images overflowing top-right.
+  - **Grid mode** (default): Uses `DashboardLayout` — dark gothic cathedral aesthetic with full-page background image (`/dashboard_bg_cathedral.png`), side gradients fading the image to black, and a fixed 72px frosted-glass navbar. 608px centered content column with 2-column card grid (1-column on mobile, <640px). Week section headers with Ivy Ora Display font. Cards: `var(--surface-base)` bg, 0.5px border `var(--white-5)`, 6px radius, 126px tall, with images overflowing top-right.
   - **Detail mode (Track B)**: Clicking a day card opens the full content view (wrapped in standard `Shell`) with morning/evening tabs. "Back to Overview" button returns to grid.
   - **Lesson flow (Track A)**: Clicking a day card launches a Duolingo-style multi-screen lesson flow (see below).
 - **Key Components**: `DayCard`, `DayGridView`, `DashboardLayout`, `PeriodSelectionDialog`, `OverviewGuideModal` (all in `client/src/components/`)
@@ -81,6 +81,32 @@ Preferred communication style: Simple, everyday language.
 - **Track A Admin Editor**: Visual slideshow builder in Admin.tsx → TrackAContentManagementView. Day selector with 30-day grid, central theme input, and ordered slide list. Each slide card shows type badge (color-coded), content preview, and action buttons (move up/down, delete, expand/collapse). Add Slide button with type dropdown. Slides saved as JSON array to `/api/admin/track-a-content`.
 - **Mobile Responsiveness**: Full optimization for mobile devices, including adaptive navigation, layouts, and content display.
 - **Theming**: Custom typography with Afacad font (Semibold for headings/titles), and spiritual imagery for login.
+
+## Design Token System (Tasks #22–24)
+
+### Surface Color Tokens (`client/src/index.css` `:root`)
+Four dark surface levels plus white/black opacity tiers replace all raw rgba/hex values sitewide (admin panel excluded):
+- `--surface-ground: #0b0b0b` — deepest background
+- `--surface-base: #0f1011` — card/content surfaces
+- `--surface-raised: #141516` — slightly elevated surfaces
+- `--surface-float: #18181b` — dropdowns, dialogs, frosted buttons
+- `--white-2` through `--white-90` — opacity tiers for borders, text, overlays
+- `--black-35/60/70/80/85` — dark overlay tiers
+
+### PageContainer (`client/src/components/layout/PageContainer.tsx`)
+Centralizes page layout constraints with three variants:
+- `narrow` — 608px max-width, auto-centered, `px-4 sm:px-0`
+- `wide` — 960px max-width, auto-centered, `px-5`
+- `full` — full width with `px-5 sm:px-[107px]` (matches navbar alignment)
+
+Used in: `Resources.tsx`, `Collections.tsx`, `DayGridView.tsx`
+
+### Hover & Border-Radius Normalization
+- `.day-card-hover` CSS class replaces JS `onMouseEnter/Leave` handlers on `DayCard` and `PrelimCard` — CSS `translateY(-2px)` + border brightening on hover
+- `.resource-card-hover` CSS class handles border brightening on `ResourceCard`/`ExternalCard` (image crossfade still JS-driven since it requires child opacity control)
+- All Figma-artifact decimal border-radius values (`5.842px`, `3.894px`) normalized to `6px`/`4px`
+- All Figma-artifact decimal padding values (`12.17px`, `14.118px`) normalized to `12px`/`14px`
+- All border widths normalized from `0.487px` to `0.5px`
 
 ## External Dependencies
 

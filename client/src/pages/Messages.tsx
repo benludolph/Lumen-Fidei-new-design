@@ -22,9 +22,9 @@ function InitialsAvatar({ name, size = 36 }: { name: string; size?: number }) {
         width: size,
         height: size,
         borderRadius: "50%",
-        background: "rgba(240,120,48,0.15)",
-        border: "1px solid rgba(240,120,48,0.3)",
-        color: "#F07830",
+        background: "var(--brand-subtle)",
+        border: "1px solid var(--brand-border)",
+        color: "var(--brand)",
         fontFamily: "Afacad, sans-serif",
         fontSize: size * 0.33, /* approved exception: dynamically computed from avatar size prop */
         fontWeight: 600,
@@ -108,7 +108,7 @@ export default function Messages() {
         style={{
           display: "flex",
           height: "calc(100vh - 72px)",
-          backgroundColor: "#0b0b0b",
+          backgroundColor: "var(--surface-ground)",
           overflow: "hidden",
           paddingLeft: isMobile ? "0" : "107px",
           paddingRight: isMobile ? "0" : "107px",
@@ -122,8 +122,8 @@ export default function Messages() {
               minWidth: isMobile ? undefined : "260px",
               display: "flex",
               flexDirection: "column",
-              borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.03)",
+              borderRight: isMobile ? "none" : "1px solid var(--white-8)",
+              background: "var(--white-3)",
               flexShrink: 0,
             }}
           >
@@ -135,7 +135,7 @@ export default function Messages() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 padding: "0 16px",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                borderBottom: "1px solid var(--white-8)",
                 flexShrink: 0,
               }}
             >
@@ -152,9 +152,9 @@ export default function Messages() {
                         width: "28px",
                         height: "28px",
                         borderRadius: "6px",
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        color: "#F07830",
+                        background: "var(--white-6)",
+                        border: "1px solid var(--white-10)",
+                        color: "var(--brand)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -163,13 +163,13 @@ export default function Messages() {
                       }}
                       onMouseEnter={(e) => {
                         const btn = e.currentTarget as HTMLButtonElement;
-                        btn.style.background = "rgba(240,120,48,0.12)";
-                        btn.style.borderColor = "rgba(240,120,48,0.3)";
+                        btn.style.background = "var(--brand-subtle)";
+                        btn.style.borderColor = "var(--brand-border)";
                       }}
                       onMouseLeave={(e) => {
                         const btn = e.currentTarget as HTMLButtonElement;
-                        btn.style.background = "rgba(255,255,255,0.06)";
-                        btn.style.borderColor = "rgba(255,255,255,0.10)";
+                        btn.style.background = "var(--white-6)";
+                        btn.style.borderColor = "var(--white-10)";
                       }}
                     >
                       <Plus size={14} />
@@ -179,8 +179,8 @@ export default function Messages() {
                   {/* New chat dialog — dark themed */}
                   <DialogContent
                     style={{
-                      background: "#141516",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: "var(--surface-raised)",
+                      border: "1px solid var(--white-8)",
                       borderRadius: "10px",
                       color: "white",
                       maxWidth: "420px",
@@ -203,7 +203,7 @@ export default function Messages() {
                             left: "10px",
                             top: "50%",
                             transform: "translateY(-50%)",
-                            color: "rgba(255,255,255,0.4)",
+                            color: "var(--white-40)",
                             pointerEvents: "none",
                           }}
                         />
@@ -219,8 +219,8 @@ export default function Messages() {
                             paddingRight: "12px",
                             paddingTop: "8px",
                             paddingBottom: "8px",
-                            background: "rgba(255,255,255,0.05)",
-                            border: "1px solid rgba(255,255,255,0.08)",
+                            background: "var(--white-5)",
+                            border: "1px solid var(--white-8)",
                             borderRadius: "6px",
                             color: "white",
                             outline: "none",
@@ -240,7 +240,7 @@ export default function Messages() {
                         }}
                       >
                         {availableUsers.length === 0 ? (
-                          <p className="type-body-md text-center" style={{ color: "rgba(255,255,255,0.4)", padding: "24px 0" }}>
+                          <p className="type-body-md text-center" style={{ color: "var(--white-40)", padding: "24px 0" }}>
                             {searchQuery ? "No users found" : "No new users to message"}
                           </p>
                         ) : (
@@ -263,8 +263,7 @@ export default function Messages() {
                                 width: "100%",
                               }}
                               onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLButtonElement).style.background =
-                                  "rgba(255,255,255,0.05)";
+                                (e.currentTarget as HTMLButtonElement).style.background = "var(--white-5)";
                               }}
                               onMouseLeave={(e) => {
                                 (e.currentTarget as HTMLButtonElement).style.background = "none";
@@ -275,7 +274,7 @@ export default function Messages() {
                                 <p className="type-body-md font-medium" style={{ color: "white", margin: 0 }}>
                                   {u.name}
                                 </p>
-                                <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.4)", margin: 0, textTransform: "capitalize" }}>
+                                <p className="type-body-sm" style={{ color: "var(--white-40)", margin: 0, textTransform: "capitalize" }}>
                                   {u.role}
                                 </p>
                               </div>
@@ -292,7 +291,7 @@ export default function Messages() {
             {/* Contact list */}
             <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
               {contacts?.length === 0 && (
-                <p className="type-body-md text-center" style={{ color: "rgba(255,255,255,0.3)", padding: "32px 16px" }}>
+                <p className="type-body-md text-center" style={{ color: "var(--white-30)", padding: "32px 16px" }}>
                   No contacts available.
                 </p>
               )}
@@ -314,10 +313,10 @@ export default function Messages() {
                       width: "100%",
                       padding: "10px 10px 10px 8px",
                       borderRadius: "6px",
-                      background: isSelected ? "rgba(255,255,255,0.06)" : "none",
+                      background: isSelected ? "var(--white-6)" : "none",
                       border: "none",
                       borderLeft: isSelected
-                        ? "2px solid #F07830"
+                        ? "2px solid var(--brand)"
                         : "2px solid transparent",
                       cursor: "pointer",
                       textAlign: "left",
@@ -326,8 +325,7 @@ export default function Messages() {
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected)
-                        (e.currentTarget as HTMLButtonElement).style.background =
-                          "rgba(255,255,255,0.03)";
+                        (e.currentTarget as HTMLButtonElement).style.background = "var(--white-3)";
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected)
@@ -339,7 +337,7 @@ export default function Messages() {
                       <p className="type-body-md font-medium" style={{ color: "white", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {contact.name}
                       </p>
-                      <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.4)", margin: 0, textTransform: "capitalize" }}>
+                      <p className="type-body-sm" style={{ color: "var(--white-40)", margin: 0, textTransform: "capitalize" }}>
                         {contact.role}
                       </p>
                     </div>
@@ -358,7 +356,7 @@ export default function Messages() {
               display: "flex",
               flexDirection: "column",
               minWidth: 0,
-              background: "#0b0b0b",
+              background: "var(--surface-ground)",
             }}
           >
             {selectedContactId ? (
@@ -380,7 +378,7 @@ export default function Messages() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "rgba(255,255,255,0.3)",
+                  color: "var(--white-30)",
                   padding: "24px",
                   textAlign: "center",
                 }}
@@ -436,8 +434,8 @@ function ChatWindow({
           padding: "0 16px",
           backdropFilter: "blur(5px)",
           WebkitBackdropFilter: "blur(5px)",
-          background: "rgba(0,0,0,0.35)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--black-35)",
+          borderBottom: "1px solid var(--white-8)",
           flexShrink: 0,
         }}
       >
@@ -451,7 +449,7 @@ function ChatWindow({
               borderRadius: "6px",
               background: "none",
               border: "none",
-              color: "rgba(255,255,255,0.6)",
+              color: "var(--white-60)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -463,7 +461,7 @@ function ChatWindow({
               (e.currentTarget as HTMLButtonElement).style.color = "white";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)";
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--white-60)";
             }}
           >
             <ArrowLeft size={16} />
@@ -485,7 +483,7 @@ function ChatWindow({
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
-              color: "rgba(255,255,255,0.3)",
+              color: "var(--white-30)",
             }}
           >
             Loading messages…
@@ -507,7 +505,7 @@ function ChatWindow({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "rgba(255,255,255,0.3)",
+                  color: "var(--white-30)",
                   paddingTop: "40px",
                 }}
               >
@@ -526,8 +524,8 @@ function ChatWindow({
                     maxWidth: "72%",
                     padding: "9px 14px",
                     borderRadius: isMe ? "14px 14px 3px 14px" : "14px 14px 14px 3px",
-                    background: isMe ? "#484D55" : "#292929",
-                    color: "rgba(255,255,255,0.9)",
+                    background: isMe ? "var(--bubble-sent)" : "var(--bubble-received)",
+                    color: "var(--white-90)",
                     wordBreak: "break-word",
                     overflowWrap: "break-word",
                   }}
@@ -548,8 +546,8 @@ function ChatWindow({
         style={{
           flexShrink: 0,
           padding: "12px 16px",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          background: "rgba(255,255,255,0.03)",
+          borderTop: "1px solid var(--white-8)",
+          background: "var(--white-3)",
         }}
       >
         <form
@@ -565,20 +563,18 @@ function ChatWindow({
             style={{
               flex: 1,
               padding: "9px 14px",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "var(--white-5)",
+              border: "1px solid var(--white-8)",
               borderRadius: "8px",
               color: "white",
               outline: "none",
               transition: "border-color 0.15s",
             }}
             onFocus={(e) => {
-              (e.currentTarget as HTMLInputElement).style.borderColor =
-                "rgba(240,120,48,0.4)";
+              (e.currentTarget as HTMLInputElement).style.borderColor = "var(--brand-focus)";
             }}
             onBlur={(e) => {
-              (e.currentTarget as HTMLInputElement).style.borderColor =
-                "rgba(255,255,255,0.08)";
+              (e.currentTarget as HTMLInputElement).style.borderColor = "var(--white-8)";
             }}
           />
           <button
@@ -589,8 +585,7 @@ function ChatWindow({
               width: "38px",
               height: "38px",
               borderRadius: "8px",
-              background:
-                isPending || !content.trim() ? "rgba(240,120,48,0.3)" : "#F07830",
+              background: isPending || !content.trim() ? "var(--brand-border)" : "var(--brand)",
               border: "none",
               color: "white",
               display: "flex",

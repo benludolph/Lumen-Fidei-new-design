@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { DayCard } from "./DayCard";
@@ -82,11 +83,11 @@ function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
 function SectionDivider({ label }: { label: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", margin: "20px 0" }}>
-      <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
-      <span className="type-caption-sm" style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }}>
+      <div style={{ flex: 1, height: "1px", background: "var(--white-15)" }} />
+      <span className="type-caption-sm" style={{ color: "var(--white-35)", flexShrink: 0 }}>
         {label}
       </span>
-      <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
+      <div style={{ flex: 1, height: "1px", background: "var(--white-15)" }} />
     </div>
   );
 }
@@ -128,7 +129,7 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "rgba(0,0,0,0.85)",
+        background: "var(--black-85)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -141,8 +142,8 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           position: "relative",
           width: "100%",
           maxWidth: "860px",
-          background: "#0f1011",
-          border: "1px solid rgba(255,255,255,0.05)",
+          background: "var(--surface-base)",
+          border: "1px solid var(--white-5)",
           borderRadius: "8px",
           overflow: "hidden",
           boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
@@ -159,8 +160,8 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             width: "32px",
             height: "32px",
             borderRadius: "50%",
-            background: "rgba(0,0,0,0.6)",
-            border: "1px solid rgba(255,255,255,0.15)",
+            background: "var(--black-60)",
+            border: "1px solid var(--white-15)",
             color: "white",
             display: "flex",
             alignItems: "center",
@@ -193,7 +194,7 @@ function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 function SundayBanner() {
   return (
-    <div data-testid="banner-sunday" className="type-caption-md" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", border: "0.487px solid rgba(255,255,255,0.07)", borderRadius: "5.842px", margin: "12px 0", color: "rgba(255,255,255,0.4)" }}>
+    <div data-testid="banner-sunday" className="type-caption-md" style={{ width: "100%", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--white-3)", border: "0.5px solid var(--white-7)", borderRadius: "6px", margin: "12px 0", color: "var(--white-40)" }}>
       ✦ Sunday — Rest &amp; Mass ✦
     </div>
   );
@@ -211,9 +212,8 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
       onClick={available ? onClick : undefined}
       disabled={!available}
       data-testid={`card-prelim-${position}`}
-      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "#0f1011", border: "0.487px solid rgba(255,255,255,0.05)", borderRadius: "5.842px", display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "12.17px", paddingLeft: "12.17px", paddingRight: "12.17px", paddingBottom: "14.118px", minHeight: "126px", transition: "transform 0.15s ease, border-color 0.15s ease", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
-      onMouseEnter={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
-      onMouseLeave={(e) => { if (available) { (e.currentTarget as HTMLButtonElement).style.transform = ""; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)"; } }}
+      className="day-card-hover"
+      style={{ position: "relative", textAlign: "left", overflow: "hidden", width: "100%", background: "var(--surface-base)", border: "0.5px solid var(--white-5)", borderRadius: "6px", display: "flex", flexDirection: "column", justifyContent: "space-between", paddingTop: "12px", paddingLeft: "12px", paddingRight: "12px", paddingBottom: "14px", minHeight: "126px", opacity: available ? 1 : 0.4, cursor: available ? "pointer" : "not-allowed" }}
     >
       {imageUrl && (
         <>
@@ -222,9 +222,9 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
         </>
       )}
       {/* State icon — top-left, Figma spec: square box with 5% fill */}
-      <div style={{ position: "relative", zIndex: 1, width: "23.367px", height: "23.367px", borderRadius: "4px", background: !available ? "transparent" : completed ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div style={{ position: "relative", zIndex: 1, width: "24px", height: "24px", borderRadius: "4px", background: !available ? "transparent" : completed ? "rgba(0,255,0,0.05)" : "var(--white-5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
         {!available ? (
-          <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
+          <Lock style={{ width: "10px", height: "10px", color: "var(--white-30)" }} />
         ) : completed ? (
           <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
         ) : (
@@ -234,7 +234,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
         <p className="type-display-sm" style={{ letterSpacing: "-0.14px", color: "white", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{title}</p>
         {subtitle && (
-          <p className="type-body-xs" style={{ color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
+          <p className="type-body-xs" style={{ color: "var(--white-45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subtitle}</p>
         )}
       </div>
     </button>
@@ -248,8 +248,8 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
     <div className="sticky z-20" style={{ top: "12px" }}>
       <div
         style={{
-          background: "#191a1b",
-          border: "0.5px solid rgba(255,255,255,0.05)",
+          background: "var(--surface-float)",
+          border: "0.5px solid var(--white-5)",
           borderRadius: "8px",
           boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.25), 0px 4px 6px 0px rgba(0,0,0,0.12)",
           padding: "16px",
@@ -275,8 +275,8 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
           className="type-body-xs"
           style={{
             color: "white",
-            background: "rgba(255,255,255,0.03)",
-            border: "0.5px solid rgba(255,255,255,0.06)",
+            background: "var(--white-3)",
+            border: "0.5px solid var(--white-6)",
             borderRadius: "4px",
             padding: "8px",
             cursor: "pointer",
@@ -306,7 +306,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         position: "fixed", inset: 0, zIndex: 9999,
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "24px",
-        background: "rgba(0,0,0,0.8)",
+        background: "var(--black-80)",
         backdropFilter: "blur(8px)",
       }}
     >
@@ -315,8 +315,8 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         data-testid="certificate-modal"
         style={{
           position: "relative",
-          background: "#141618",
-          border: "0.5px solid rgba(255,255,255,0.08)",
+          background: "var(--surface-raised)",
+          border: "0.5px solid var(--white-8)",
           borderRadius: "12px",
           maxWidth: "480px",
           width: "100%",
@@ -332,7 +332,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
             position: "absolute", top: "16px", right: "16px",
             background: "none",
             border: "none",
-            cursor: "pointer", color: "rgba(255,255,255,0.4)",
+            cursor: "pointer", color: "var(--white-40)",
             display: "flex", alignItems: "center", justifyContent: "center",
             padding: "4px",
           }}
@@ -351,7 +351,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         {/* Bold subtitle */}
         <p
           className="type-body-md font-semibold"
-          style={{ color: "rgba(255,255,255,0.8)", margin: "0 0 14px" }}
+          style={{ color: "var(--white-80)", margin: "0 0 14px" }}
         >
           This certificate is unlocked after completing all 30 days of the formation program.
         </p>
@@ -359,7 +359,7 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
         {/* Description */}
         <p
           className="type-body-md"
-          style={{ color: "rgba(255,255,255,0.45)", margin: "0 0 28px" }}
+          style={{ color: "var(--white-45)", margin: "0 0 28px" }}
         >
           This marks the completion of your journey through the program — a sign of your commitment to prayer, truth, and healing. Once unlocked, you'll be able to view and download your certificate.
         </p>
@@ -372,8 +372,8 @@ function CertificateModal({ onClose }: { onClose: () => void }) {
             className="type-body-md font-medium"
             style={{
               color: "white",
-              background: "rgba(255,255,255,0.08)",
-              border: "0.5px solid rgba(255,255,255,0.12)",
+              background: "var(--white-8)",
+              border: "0.5px solid var(--white-12)",
               borderRadius: "6px",
               padding: "9px 22px",
               cursor: "pointer",
@@ -416,14 +416,14 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           margin: "28px 0 20px",
         }}
       >
-        <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
+        <div style={{ flex: 1, height: "1px", background: "var(--white-15)" }} />
         <span
           className="type-caption-sm"
-          style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }}
+          style={{ color: "var(--white-35)", flexShrink: 0 }}
         >
           Certificate
         </span>
-        <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.15)" }} />
+        <div style={{ flex: 1, height: "1px", background: "var(--white-15)" }} />
       </div>
 
       {/* Card — backgrounds crossfade on hover */}
@@ -434,16 +434,16 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
         style={{
           position: "relative",
           height: "126px",
-          border: "0.487px solid rgba(255,255,255,0.05)",
-          borderRadius: "5.842px",
+          border: "0.5px solid var(--white-5)",
+          borderRadius: "6px",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          paddingTop: "12.17px",
-          paddingLeft: "12.17px",
-          paddingRight: "12.17px",
-          paddingBottom: "14.118px",
+          paddingTop: "12px",
+          paddingLeft: "12px",
+          paddingRight: "12px",
+          paddingBottom: "14px",
           cursor: isUnlocked ? "pointer" : "default",
           marginBottom: "8px",
         }}
@@ -473,16 +473,16 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           {/* Lock / download icon box */}
           <div
             style={{
-              width: "23.367px", height: "23.367px",
+              width: "24px", height: "24px",
               borderRadius: "4px",
-              background: isUnlocked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.05)",
+              background: isUnlocked ? "var(--white-6)" : "var(--white-5)",
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
             }}
           >
             {isUnlocked
-              ? <Download style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.6)" }} />
-              : <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.45)" }} />
+              ? <Download style={{ width: "10px", height: "10px", color: "var(--white-60)" }} />
+              : <Lock style={{ width: "10px", height: "10px", color: "var(--white-45)" }} />
             }
           </div>
 
@@ -491,23 +491,23 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
             onClick={handleInfoClick}
             data-testid="button-certificate-info"
             style={{
-              width: "23.367px", height: "23.367px",
+              width: "24px", height: "24px",
               borderRadius: "50%",
-              background: "rgba(255,255,255,0.04)",
-              border: "0.487px solid rgba(255,255,255,0.08)",
+              background: "var(--white-4)",
+              border: "0.5px solid var(--white-8)",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer",
-              color: "rgba(255,255,255,0.35)",
+              color: "var(--white-35)",
               flexShrink: 0,
               transition: "background 0.2s, color 0.2s",
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)";
-              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.65)";
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--white-10)";
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--white-65)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
-              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)";
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--white-4)";
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--white-35)";
             }}
           >
             <Info size={11} />
@@ -524,7 +524,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           </p>
           <p
             className="type-body-xs"
-            style={{ color: "rgba(255,255,255,0.45)", margin: 0 }}
+            style={{ color: "var(--white-45)", margin: 0 }}
           >
             {isUnlocked
               ? "You did it! Download the pdf and present to ministry to schedule your prayer session."
@@ -608,7 +608,7 @@ export function DayGridView({
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "12px", position: "relative" }} className="custom-scrollbar">
-        <div className="px-4 sm:px-0" style={{ maxWidth: "608px", margin: "0 auto" }}>
+        <PageContainer variant="narrow">
 
           <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
 
@@ -723,7 +723,7 @@ export function DayGridView({
 
             <CertificateCard prayerCompletions={prayerCompletions} />
           </div>
-        </div>
+        </PageContainer>
       </div>
 
       <OverviewGuideModal

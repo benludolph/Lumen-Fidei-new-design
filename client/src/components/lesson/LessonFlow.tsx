@@ -330,7 +330,7 @@ export function LessonFlow({
             style={{
               width: "40px",
               height: "40px",
-              background: "#18181b",
+              background: "var(--surface-float)",
               backdropFilter: "blur(11px)",
               WebkitBackdropFilter: "blur(11px)",
               borderRadius: "20px",
@@ -347,7 +347,7 @@ export function LessonFlow({
         <div
           className="flex items-center"
           style={{
-            background: "#18181b",
+            background: "var(--surface-float)",
             borderRadius: "36px",
             paddingLeft: "16px",
             paddingRight: "16px",
@@ -386,7 +386,7 @@ export function LessonFlow({
             style={{
               width: "40px",
               height: "40px",
-              background: "#18181b",
+              background: "var(--surface-float)",
               backdropFilter: "blur(18px)",
               WebkitBackdropFilter: "blur(18px)",
               borderRadius: "20px",
@@ -409,8 +409,8 @@ export function LessonFlow({
         <div
           className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px]"
           style={{
-            background: "rgb(15,17,22)",
-            border: "0.5px solid rgba(255,255,255,0.05)",
+            background: "var(--surface-base)",
+            border: "0.5px solid var(--white-5)",
             borderBottom: "none",
             borderRadius: "8px 8px 0 0",
             padding: "48px",
@@ -437,7 +437,7 @@ export function LessonFlow({
           className="relative shrink-0 flex flex-col items-center justify-center"
           style={{
             background: "black",
-            borderTop: "1px solid rgba(255,255,255,0.05)",
+            borderTop: "1px solid var(--white-5)",
             padding: "32px",
           }}
         >
@@ -450,7 +450,7 @@ export function LessonFlow({
                 navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{
-                background: "#18181b",
+                background: "var(--surface-float)",
                 borderRadius: "6px",
                 paddingLeft: "16px",
                 paddingRight: "16px",

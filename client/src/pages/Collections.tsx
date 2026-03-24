@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 import augustineImg from "@assets/Augustine_1773958855879.webp";
 import benedictImg from "@assets/Benedict_1773958855880.webp";
@@ -142,9 +143,9 @@ function HoloCard({ saint }: { saint: Saint }) {
           position: "relative",
           width: "100%",
           aspectRatio: "2/3",
-          borderRadius: "5.84px",
+          borderRadius: "6px",
           overflow: "hidden",
-          border: "0.487px solid rgba(255,255,255,0.05)",
+          border: "0.5px solid var(--white-5)",
           transformStyle: "preserve-3d",
           willChange: "transform",
           boxShadow: "0 4px 24px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.4)",
@@ -220,17 +221,17 @@ function SaintsDivider() {
         style={{
           flex: 1,
           height: "1px",
-          background: "rgba(255,255,255,0.1)",
+          background: "var(--white-10)",
         }}
       />
-      <span className="type-caption-md" style={{ color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>
+      <span className="type-caption-md" style={{ color: "var(--white-35)", whiteSpace: "nowrap" }}>
         SAINTS
       </span>
       <div
         style={{
           flex: 1,
           height: "1px",
-          background: "rgba(255,255,255,0.1)",
+          background: "var(--white-10)",
         }}
       />
     </div>
@@ -240,22 +241,24 @@ function SaintsDivider() {
 export default function Collections() {
   return (
     <DashboardLayout>
-      <div
-        data-testid="collections-page"
-        className="px-5 sm:px-[107px] pt-8 pb-20 min-h-[calc(100vh-72px)]"
+      <PageContainer
+        variant="full"
+        className="pt-8 pb-20 min-h-[calc(100vh-72px)]"
       >
-        <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
-          Collection
-        </h1>
+        <div data-testid="collections-page">
+          <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
+            Collection
+          </h1>
 
-        <SaintsDivider />
+          <SaintsDivider />
 
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
-          {SAINTS.map((saint) => (
-            <HoloCard key={saint.id} saint={saint} />
-          ))}
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+            {SAINTS.map((saint) => (
+              <HoloCard key={saint.id} saint={saint} />
+            ))}
+          </div>
         </div>
-      </div>
+      </PageContainer>
     </DashboardLayout>
   );
 }

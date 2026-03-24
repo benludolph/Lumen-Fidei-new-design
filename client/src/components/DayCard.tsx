@@ -57,35 +57,25 @@ export function DayCard({
       disabled={isLocked}
       title={tooltipTitle}
       data-testid={`card-day-${dayNumber}`}
+      className="day-card-hover"
       style={{
         position: "relative",
         textAlign: "left",
         overflow: "hidden",
         width: "100%",
-        background: "#0f1011",
-        border: "0.487px solid rgba(255,255,255,0.05)",
-        borderRadius: "5.842px",
+        background: "var(--surface-base)",
+        border: "0.5px solid var(--white-5)",
+        borderRadius: "6px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        paddingTop: "12.17px",
-        paddingLeft: "12.17px",
-        paddingRight: "12.17px",
-        paddingBottom: "14.118px",
+        paddingTop: "12px",
+        paddingLeft: "12px",
+        paddingRight: "12px",
+        paddingBottom: "14px",
         minHeight: "126px",
-        transition: "transform 0.15s ease, border-color 0.15s ease",
         opacity: isLocked ? 0.4 : 1,
         cursor: isLocked ? "not-allowed" : "pointer",
-      }}
-      onMouseEnter={(e) => {
-        if (isLocked) return;
-        (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-2px)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)";
-      }}
-      onMouseLeave={(e) => {
-        if (isLocked) return;
-        (e.currentTarget as HTMLButtonElement).style.transform = "";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.05)";
       }}
     >
       {/* Full-span background image */}
@@ -120,10 +110,10 @@ export function DayCard({
         style={{
           position: "relative",
           zIndex: 1,
-          width: "23.367px",
-          height: "23.367px",
+          width: "24px",
+          height: "24px",
           borderRadius: "4px",
-          background: isLocked ? "transparent" : isCompleted ? "rgba(0,255,0,0.05)" : "rgba(255,255,255,0.05)",
+          background: isLocked ? "transparent" : isCompleted ? "rgba(0,255,0,0.05)" : "var(--white-5)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -131,7 +121,7 @@ export function DayCard({
         }}
       >
         {isLocked ? (
-          <Lock style={{ width: "10px", height: "10px", color: "rgba(255,255,255,0.3)" }} />
+          <Lock style={{ width: "10px", height: "10px", color: "var(--white-30)" }} />
         ) : isCompleted ? (
           <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />
         ) : (
@@ -158,7 +148,7 @@ export function DayCard({
           <p
             className="type-body-xs"
             style={{
-              color: "rgba(255,255,255,0.45)",
+              color: "var(--white-45)",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -170,12 +160,12 @@ export function DayCard({
         {isTrackB && !isLocked && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
-              <span className="type-body-xs" style={{ color: morningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>AM</span>
+              <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "var(--white-30)" }} />
+              <span className="type-body-xs" style={{ color: morningCompleted ? "#22c55e" : "var(--white-30)" }}>AM</span>
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-              <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }} />
-              <span className="type-body-xs" style={{ color: eveningCompleted ? "#22c55e" : "rgba(255,255,255,0.3)" }}>PM</span>
+              <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "var(--white-30)" }} />
+              <span className="type-body-xs" style={{ color: eveningCompleted ? "#22c55e" : "var(--white-30)" }}>PM</span>
             </span>
           </div>
         )}

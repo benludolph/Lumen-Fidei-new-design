@@ -46,7 +46,7 @@ export default function Login() {
       <style>{`
         /* ── Outer shell: black, full viewport, horizontal padding only ── */
         .lf-login-outer {
-          background: #000;
+          background: var(--surface-ground);
           min-height: 100vh;
           width: 100%;
           display: flex;
@@ -60,8 +60,8 @@ export default function Login() {
           position: relative;
           width: 100%;
           min-height: 100vh;
-          border-left: 1px solid rgba(255,255,255,0.2);
-          border-right: 1px solid rgba(255,255,255,0.2);
+          border-left: 1px solid var(--white-20);
+          border-right: 1px solid var(--white-20);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -91,8 +91,8 @@ export default function Login() {
 
         /* ── Form card: max 466px, naturally centered ── */
         .lf-login-card {
-          background: #0f1011;
-          border: 1px solid rgba(255,255,255,0.05);
+          background: var(--surface-base);
+          border: 1px solid var(--white-5);
           border-radius: 8px;
           max-width: 466px;
           width: 100%;
@@ -109,8 +109,8 @@ export default function Login() {
             padding: 0;
           }
           .lf-login-inner {
-            border-left-color: rgba(255,255,255,0.1);
-            border-right-color: rgba(255,255,255,0.1);
+            border-left-color: var(--white-10);
+            border-right-color: var(--white-10);
             padding: 145px 20px 161px;
           }
           .lf-login-logo {
@@ -179,8 +179,8 @@ export default function Login() {
                     data-testid="input-email"
                     className="type-body-md"
                     style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.03)",
+                      background: "var(--white-5)",
+                      border: "1px solid var(--white-3)",
                       borderRadius: "6px",
                       height: "36px",
                       width: "100%",
@@ -189,8 +189,8 @@ export default function Login() {
                       outline: "none",
                       boxSizing: "border-box",
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "var(--white-15)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "var(--white-3)"; }}
                   />
                   {form.formState.errors.username && (
                     <p className="type-body-sm" style={{ color: "#ef4444", margin: 0 }}>
@@ -215,8 +215,8 @@ export default function Login() {
                     data-testid="input-password"
                     className="type-body-md"
                     style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.03)",
+                      background: "var(--white-5)",
+                      border: "1px solid var(--white-3)",
                       borderRadius: "6px",
                       height: "36px",
                       width: "100%",
@@ -225,8 +225,8 @@ export default function Login() {
                       outline: "none",
                       boxSizing: "border-box",
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.03)"; }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "var(--white-15)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "var(--white-3)"; }}
                   />
                   {form.formState.errors.password && (
                     <p className="type-body-sm" style={{ color: "#ef4444", margin: 0 }}>
@@ -250,8 +250,8 @@ export default function Login() {
                     marginTop: "4px",
                     width: "100%",
                     height: "36px",
-                    background: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "var(--white-7)",
+                    border: "1px solid var(--white-10)",
                     borderRadius: "6px",
                     color: "white",
                     letterSpacing: "2px",
@@ -262,20 +262,20 @@ export default function Login() {
                   }}
                   onMouseEnter={(e) => {
                     if (!form.formState.isSubmitting) {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+                      e.currentTarget.style.background = "var(--white-12)";
+                      e.currentTarget.style.borderColor = "var(--white-18)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.07)";
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                    e.currentTarget.style.background = "var(--white-7)";
+                    e.currentTarget.style.borderColor = "var(--white-10)";
                   }}
                 >
                   {form.formState.isSubmitting ? "Signing in…" : "Sign in"}
                 </button>
               </form>
 
-              <p className="type-body-sm text-center" style={{ color: "rgba(255,255,255,0.3)", margin: "4px 0 0" }}>
+              <p className="type-body-sm text-center" style={{ color: "var(--white-30)", margin: "4px 0 0" }}>
                 Having trouble? Contact bludolph@archchicago.org
               </p>
             </div>

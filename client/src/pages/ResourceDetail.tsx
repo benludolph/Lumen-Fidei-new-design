@@ -37,8 +37,8 @@ function Breadcrumb({ name }: { name: string }) {
         alignItems: "center",
         backdropFilter: "blur(5px)",
         WebkitBackdropFilter: "blur(5px)",
-        background: "rgba(0,0,0,0.35)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        background: "var(--black-35)",
+        borderBottom: "1px solid var(--white-8)",
         boxShadow: "0px 25px 50px 0px rgba(0,0,0,0.25), 0px 5px 25px 0px rgba(0,0,0,0.5)",
       }}
     >
@@ -50,7 +50,7 @@ function Breadcrumb({ name }: { name: string }) {
           <span
             data-testid="breadcrumb-resources"
             className="type-body-lg"
-            style={{ color: "rgba(255,255,255,0.6)", cursor: "pointer", whiteSpace: "nowrap" }}
+            style={{ color: "var(--white-60)", cursor: "pointer", whiteSpace: "nowrap" }}
           >
             Resources
           </span>
@@ -64,7 +64,7 @@ function Breadcrumb({ name }: { name: string }) {
           data-testid="breadcrumb-current"
           className="type-body-lg"
           style={{
-            color: "rgba(255,255,255,0.6)",
+            color: "var(--white-60)",
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -86,8 +86,8 @@ function Spinner() {
         style={{
           width: "24px",
           height: "24px",
-          border: "2px solid rgba(255,255,255,0.1)",
-          borderTopColor: "rgba(255,255,255,0.5)",
+          border: "2px solid var(--white-10)",
+          borderTopColor: "var(--white-50)",
           borderRadius: "50%",
         }}
       />
@@ -119,8 +119,8 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
         top: "148px",
         backgroundColor: "black",
         borderRadius: "11px",
-        border: "1px solid rgba(255,255,255,0.1)",
-        boxShadow: "inset 0px 2px 0px 0px rgba(255,255,255,0.1)",
+        border: "1px solid var(--white-10)",
+        boxShadow: "inset 0px 2px 0px 0px var(--white-10)",
         overflow: "hidden",
         cursor: "pointer",
         flexShrink: 0,
@@ -169,7 +169,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
             width: "62px",
             height: "62px",
             borderRadius: "999px",
-            backgroundColor: "rgba(0,0,0,0.4)",
+            backgroundColor: "var(--black-35)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -183,7 +183,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
         <div style={{
           position: "absolute",
           inset: 0,
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          borderBottom: "1px solid var(--white-10)",
           pointerEvents: "none",
         }} />
       </div>
@@ -197,7 +197,7 @@ function AudioCard({ imageUrl, audioUrl, duration }: { imageUrl: string; audioUr
         {duration && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Clock style={{ width: "14px", height: "14px", color: "white", flexShrink: 0 }} />
-            <span className="type-body-md font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
+            <span className="type-body-md font-medium" style={{ color: "var(--white-60)" }}>
               {duration}
             </span>
           </div>
@@ -232,11 +232,11 @@ export default function ResourceDetail() {
       <DashboardLayout>
         <Breadcrumb name="Not found" />
         <div style={{ backgroundColor: "black", minHeight: "685px", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "80px" }}>
-          <p className="type-body-md" style={{ color: "rgba(255,255,255,0.4)", marginBottom: "20px" }}>
+          <p className="type-body-md" style={{ color: "var(--white-40)", marginBottom: "20px" }}>
             This resource could not be found.
           </p>
           <Link href="/resources">
-            <span className="type-body-md" style={{ color: "#F07830", cursor: "pointer" }}>
+            <span className="type-body-md" style={{ color: "var(--brand)", cursor: "pointer" }}>
               ← Back to Resources
             </span>
           </Link>
@@ -280,7 +280,7 @@ export default function ResourceDetail() {
             style={{
               position: "relative",
               backgroundColor: "black",
-              border: "1px solid rgba(255,255,255,0.05)",
+              border: "1px solid var(--white-5)",
               borderRadius: "8px",
               overflow: "clip",
               paddingTop: "379.94px",
@@ -383,7 +383,7 @@ export default function ResourceDetail() {
                   data-testid="resource-subtitle"
                   className="type-body-lg"
                   style={{
-                    color: "rgba(255,255,255,0.6)",
+                    color: "var(--white-60)",
                     margin: 0,
                   }}
                 >
@@ -400,7 +400,7 @@ export default function ResourceDetail() {
                 inset: 0,
                 pointerEvents: "none",
                 borderRadius: "inherit",
-                boxShadow: "inset 0px 1px 0px 0px rgba(255,255,255,0.1)",
+                boxShadow: "inset 0px 1px 0px 0px var(--white-10)",
               }}
             />
           </div>

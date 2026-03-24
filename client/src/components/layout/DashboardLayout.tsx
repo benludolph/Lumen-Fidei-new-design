@@ -54,7 +54,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     : "?";
 
   return (
-    <div className="relative min-h-screen bg-[#0b0b0b] overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden" style={{ backgroundColor: "var(--surface-ground)" }}>
       {/* Cathedral background — desktop only */}
       <div
         className="hidden sm:block fixed inset-0 bg-cover bg-center bg-no-repeat"
@@ -79,7 +79,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           WebkitBackdropFilter: "blur(10px)",
           background:
             "linear-gradient(to bottom, rgba(11,11,11,0.8) 0%, rgba(11,11,11,0.76) 100%)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid var(--white-8)",
         }}
       >
         {/* Top gradient strip */}
@@ -125,9 +125,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   width: "32px",
                   height: "32px",
                   borderRadius: "50%",
-                  background: "rgba(240,120,48,0.15)",
-                  border: "1px solid rgba(240,120,48,0.3)",
-                  color: "#F07830",
+                  background: "var(--brand-subtle)",
+                  border: "1px solid var(--brand-border)",
+                  color: "var(--brand)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -135,8 +135,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   flexShrink: 0,
                   transition: "background 0.15s",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(240,120,48,0.25)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(240,120,48,0.15)"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-hover)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-subtle)"; }}
                 aria-label="Profile menu"
               >
                 {initials}
@@ -150,8 +150,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     top: "calc(100% + 8px)",
                     right: 0,
                     minWidth: "180px",
-                    background: "#141516",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "var(--surface-raised)",
+                    border: "1px solid var(--white-8)",
                     borderRadius: "8px",
                     overflow: "hidden",
                     boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
@@ -161,10 +161,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   {user && (
                     <div style={{
                       padding: "12px 14px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
+                      borderBottom: "1px solid var(--white-6)",
                     }}>
                       <p className="type-body-md font-medium" style={{ color: "white", margin: 0 }}>{user.name}</p>
-                      <p className="type-body-xs" style={{ color: "rgba(255,255,255,0.4)", margin: "2px 0 0" }}>{user.email}</p>
+                      <p className="type-body-xs" style={{ color: "var(--white-40)", margin: "2px 0 0" }}>{user.email}</p>
                     </div>
                   )}
                   <button
@@ -180,18 +180,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       padding: "10px 14px",
                       background: "none",
                       border: "none",
-                      color: "rgba(255,255,255,0.7)",
+                      color: "var(--white-70)",
                       cursor: "pointer",
                       transition: "color 0.15s, background 0.15s",
                       textAlign: "left",
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+                      (e.currentTarget as HTMLButtonElement).style.background = "var(--white-5)";
                       (e.currentTarget as HTMLButtonElement).style.color = "white";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLButtonElement).style.background = "none";
-                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "var(--white-70)";
                     }}
                   >
                     <LogOut size={14} />
@@ -228,8 +228,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         className="sm:hidden fixed top-0 right-0 bottom-0 z-[70] flex flex-col"
         style={{
           width: "260px",
-          background: "#0f1011",
-          borderLeft: "0.5px solid rgba(255,255,255,0.08)",
+          background: "var(--surface-base)",
+          borderLeft: "0.5px solid var(--white-8)",
           transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
           transition: "transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
@@ -240,7 +240,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           style={{
             height: "72px",
             padding: "0 20px",
-            borderBottom: "0.5px solid rgba(255,255,255,0.08)",
+            borderBottom: "0.5px solid var(--white-8)",
             flexShrink: 0,
           }}
         >
@@ -277,9 +277,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Drawer sign-out */}
         {user && (
-          <div style={{ borderTop: "0.5px solid rgba(255,255,255,0.08)", padding: "16px 20px" }}>
+          <div style={{ borderTop: "0.5px solid var(--white-8)", padding: "16px 20px" }}>
             <p className="type-body-md font-medium" style={{ color: "white", margin: "0 0 2px" }}>{user.name}</p>
-            <p className="type-body-xs" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 12px" }}>{user.email}</p>
+            <p className="type-body-xs" style={{ color: "var(--white-40)", margin: "0 0 12px" }}>{user.email}</p>
             <button
               data-testid="button-sign-out-mobile"
               onClick={() => { closeDrawer(); logoutMutation.mutate(); }}
@@ -291,7 +291,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 gap: "8px",
                 background: "none",
                 border: "none",
-                color: "rgba(255,255,255,0.5)",
+                color: "var(--white-50)",
                 cursor: "pointer",
                 padding: 0,
               }}
@@ -358,7 +358,7 @@ function DrawerLink({
         )}
         style={{
           padding: "14px 20px",
-          borderLeft: active ? "2px solid #F07830" : "2px solid transparent",
+          borderLeft: active ? "2px solid var(--brand)" : "2px solid transparent",
           transition: "color 0.15s, border-color 0.15s",
         }}
       >

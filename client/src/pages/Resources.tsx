@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
 import {
   FoldVertical,
@@ -111,22 +112,22 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
     <Link href={`/resources/${resource.id}`}>
       <div
         data-testid={`card-resource-${resource.id}`}
+        className="resource-card-hover"
         style={{
           position: "relative",
-          backgroundColor: "#0f1011",
-          border: `0.487px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)"}`,
-          borderRadius: "5.842px",
+          backgroundColor: "var(--surface-base)",
+          border: "0.5px solid var(--white-5)",
+          borderRadius: "6px",
           overflow: "hidden",
           cursor: "pointer",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           height: "126px",
-          paddingTop: "12.17px",
-          paddingLeft: "12.17px",
-          paddingRight: "12.17px",
-          paddingBottom: "14.118px",
-          transition: "border-color 0.2s ease-out",
+          paddingTop: "12px",
+          paddingLeft: "12px",
+          paddingRight: "12px",
+          paddingBottom: "14px",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -170,11 +171,11 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
 
         <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
           <div style={{
-            width: "23.367px",
-            height: "23.367px",
-            borderRadius: "3.894px",
-            background: "rgba(255,255,255,0.05)",
-            boxShadow: "0px 0.974px 1.947px 0px rgba(0,0,0,0.1)",
+            width: "24px",
+            height: "24px",
+            borderRadius: "4px",
+            background: "var(--white-5)",
+            boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -189,7 +190,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
             <p className="type-display-sm" style={{
               color: "#f7f8f8",
               letterSpacing: "-0.1402px",
-              marginBottom: "7.789px",
+              marginBottom: "8px",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -200,7 +201,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
               {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
             </p>
           </div>
-          <div style={{ color: "rgba(255,255,255,0.35)", marginLeft: "8px", flexShrink: 0 }}>
+          <div style={{ color: "var(--white-35)", marginLeft: "8px", flexShrink: 0 }}>
             <ArrowRight style={{ width: "14px", height: "14px" }} />
           </div>
         </div>
@@ -238,22 +239,22 @@ function ExternalCard({
       style={{ gridColumn: colSpan > 1 ? `span ${colSpan}` : undefined, textDecoration: "none" }}
     >
       <div
+        className="resource-card-hover"
         style={{
           position: "relative",
-          backgroundColor: "#0f1011",
-          border: `0.487px solid ${hovered ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.05)"}`,
-          borderRadius: "5.842px",
+          backgroundColor: "var(--surface-base)",
+          border: "0.5px solid var(--white-5)",
+          borderRadius: "6px",
           overflow: "hidden",
           cursor: "pointer",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           height: "126px",
-          paddingTop: "12.17px",
-          paddingLeft: "12.17px",
-          paddingRight: "12.17px",
-          paddingBottom: "14.118px",
-          transition: "border-color 0.2s ease-out",
+          paddingTop: "12px",
+          paddingLeft: "12px",
+          paddingRight: "12px",
+          paddingBottom: "14px",
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -297,11 +298,11 @@ function ExternalCard({
 
         <div style={{ display: "flex", alignItems: "flex-start", position: "relative", zIndex: 3 }}>
           <div style={{
-            width: "23.367px",
-            height: "23.367px",
-            borderRadius: "3.894px",
-            background: "rgba(255,255,255,0.05)",
-            boxShadow: "0px 0.974px 1.947px 0px rgba(0,0,0,0.1)",
+            width: "24px",
+            height: "24px",
+            borderRadius: "4px",
+            background: "var(--white-5)",
+            boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -316,7 +317,7 @@ function ExternalCard({
             <p className="type-display-sm" style={{
               color: "#f7f8f8",
               letterSpacing: "-0.1402px",
-              marginBottom: "7.789px",
+              marginBottom: "8px",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -327,7 +328,7 @@ function ExternalCard({
               {description}
             </p>
           </div>
-          <div style={{ color: "rgba(255,255,255,0.35)", marginLeft: "8px", flexShrink: 0 }}>
+          <div style={{ color: "var(--white-35)", marginLeft: "8px", flexShrink: 0 }}>
             <ExternalLink style={{ width: "14px", height: "14px" }} />
           </div>
         </div>
@@ -360,15 +361,7 @@ export default function Resources() {
 
   return (
     <DashboardLayout>
-      <div
-        className="px-4 sm:px-0"
-        style={{
-          maxWidth: "608px",
-          margin: "0 auto",
-          paddingTop: "32px",
-          paddingBottom: "64px",
-        }}
-      >
+      <PageContainer variant="narrow" style={{ paddingTop: "32px", paddingBottom: "64px" }}>
         <h1 className="type-display-xl text-center text-white" style={{ marginBottom: "48px" }}>
           Resources
         </h1>
@@ -380,8 +373,8 @@ export default function Resources() {
               style={{
                 width: "24px",
                 height: "24px",
-                border: "2px solid rgba(255,255,255,0.1)",
-                borderTopColor: "rgba(255,255,255,0.5)",
+                border: "2px solid var(--white-10)",
+                borderTopColor: "var(--white-50)",
                 borderRadius: "50%",
               }}
             />
@@ -410,7 +403,7 @@ export default function Resources() {
                   resource ? (
                     <ResourceCard key={resource.id} resource={resource} />
                   ) : (
-                    <div key={i} style={{ height: "126px", border: "0.487px solid rgba(255,255,255,0.03)", borderRadius: "5.842px", backgroundColor: "#0a0a0a" }} />
+                    <div key={i} style={{ height: "126px", border: "0.5px solid var(--white-3)", borderRadius: "6px", backgroundColor: "var(--surface-ground)" }} />
                   )
                 )}
               </div>
@@ -456,7 +449,7 @@ export default function Resources() {
             </div>
           </div>
         )}
-      </div>
+      </PageContainer>
     </DashboardLayout>
   );
 }

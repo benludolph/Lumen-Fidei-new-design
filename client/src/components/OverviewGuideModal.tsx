@@ -32,7 +32,7 @@ export function OverviewGuideModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="bg-[#18181b] border-white/10 text-white font-sans max-w-md"
+        className="bg-[--surface-float] border-white/10 text-white font-sans max-w-md"
         data-testid="dialog-overview-guide"
       >
         <DialogHeader>

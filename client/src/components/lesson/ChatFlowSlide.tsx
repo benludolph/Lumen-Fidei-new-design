@@ -901,8 +901,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
             className="flex-1 flex flex-col overflow-hidden relative w-full"
             style={{
               maxWidth: "640px",
-              background: "#09090b",
-              border: "1px solid rgba(255,255,255,0.05)",
+              background: "var(--surface-ground)",
+              border: "1px solid var(--white-5)",
               borderRadius: "8px 8px 0 0",
               padding: "24px",
               boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.05)",
@@ -982,8 +982,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 <div
                   className="relative overflow-hidden"
                   style={{
-                    background: "#0f1116",
-                    border: "1px solid rgba(255,255,255,0.05)",
+                    background: "var(--surface-base)",
+                    border: "1px solid var(--white-5)",
                     borderRadius: "6px",
                     padding: "20px",
                   }}
@@ -1000,23 +1000,23 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   />
                   <p
                     className="type-caption-sm mb-3"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--white-40)" }}
                   >
                     Your Reflection
                   </p>
                   {summaryText ? (
-                    <p className="type-body-lg" style={{ lineHeight: "22px", color: "rgba(255,255,255,0.85)" }}>
+                    <p className="type-body-lg" style={{ lineHeight: "22px", color: "var(--white-85)" }}>
                       {summaryText}
                     </p>
                   ) : (
-                    <p className="type-body-md italic" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <p className="type-body-md italic" style={{ color: "var(--white-50)" }}>
                       Your answers have been recorded.
                     </p>
                   )}
                   <button
                     onClick={handleRedo}
                     className="mt-4 type-body-sm transition-opacity hover:opacity-70"
-                    style={{ color: "rgba(255,255,255,0.35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                    style={{ color: "var(--white-35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                     data-testid="button-redo-reflection"
                   >
                     Redo this reflection
@@ -1036,9 +1036,9 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     onClick={handleSubmit}
                     className="w-full flex items-center justify-center gap-2 type-body-lg font-medium text-[#fafafa] rounded-[6px] transition-opacity hover:opacity-90"
                     style={{
-                      background: "#18181b",
+                      background: "var(--surface-float)",
                       height: "42px",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: "1px solid var(--white-8)",
                       boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
                     }}
                     data-testid="button-chat-continue"
@@ -1115,7 +1115,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 }}
                 data-testid="button-review-close"
               >
-                <X style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.7)" }} />
+                <X style={{ width: "16px", height: "16px", color: "var(--white-70)" }} />
               </button>
             </div>
           </div>
@@ -1138,20 +1138,20 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   style={{
                     background: "rgba(15,17,22,0.85)",
                     borderRadius: "12px",
-                    border: "0.5px solid rgba(255,255,255,0.06)",
+                    border: "0.5px solid var(--white-6)",
                     backdropFilter: "blur(16px)",
                     padding: "28px",
                   }}
                 >
-                  <p className="type-caption-sm mb-4" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="type-caption-sm mb-4" style={{ color: "var(--white-35)" }}>
                     Your Reflection
                   </p>
                   {summaryText ? (
-                    <p className="type-display-sm" style={{ color: "rgba(255,255,255,0.9)" }}>
+                    <p className="type-display-sm" style={{ color: "var(--white-90)" }}>
                       {summaryText}
                     </p>
                   ) : (
-                    <p className="type-body-md italic" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <p className="type-body-md italic" style={{ color: "var(--white-50)" }}>
                       Your answers have been recorded.
                     </p>
                   )}
@@ -1161,7 +1161,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   <button
                     onClick={handleRedo}
                     className="type-body-sm transition-opacity hover:opacity-70"
-                    style={{ color: "rgba(255,255,255,0.35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                    style={{ color: "var(--white-35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                     data-testid="button-redo-reflection-review"
                   >
                     Redo this reflection
@@ -1170,12 +1170,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     onClick={onComplete}
                     className="flex items-center gap-2 type-body-md font-medium text-[#fafafa] transition-opacity hover:opacity-80"
                     style={{
-                      background: "#18181b",
+                      background: "var(--surface-float)",
                       borderRadius: "6px",
                       height: "36px",
                       paddingLeft: "16px",
                       paddingRight: "16px",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: "1px solid var(--white-8)",
                     }}
                     data-testid="button-review-continue"
                   >
@@ -1195,7 +1195,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
           className="fixed inset-0 flex items-center justify-center"
           style={{
             zIndex: 400,
-            background: "rgba(0,0,0,0.7)",
+            background: "var(--black-70)",
             transition: "opacity 500ms ease-out",
             opacity: unlockPhase >= 1 ? 1 : 0,
           }}
@@ -1224,8 +1224,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                     position: "absolute",
                     inset: 0,
                     borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid var(--white-15)",
+                    background: "var(--white-4)",
                   }}
                 />
                 {/* Inner image — 106px, offset 5px from top-left */}
@@ -1302,8 +1302,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               <button
                 onClick={() => setOverlayDismissed(true)}
                 style={{
-                  background: "#18181b",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "var(--surface-float)",
+                  border: "1px solid var(--white-8)",
                   borderRadius: 6,
                   height: 42,
                   width: "100%",
