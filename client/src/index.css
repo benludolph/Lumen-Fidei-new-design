@@ -29,6 +29,9 @@
    All non-admin pages reference these variables instead of raw rgba/hex.
    ─────────────────────────────────────────────────────────────────── */
 :root {
+  /* Layout gutter — desktop horizontal padding (single source of truth) */
+  --page-gutter: 107px;
+
   /* Surface backgrounds — 4 intentional levels (replaces ~12 ad-hoc blacks) */
   --surface-ground: #0b0b0b;    /* full-bleed app bg, lesson views        */
   --surface-base:   #0f1011;    /* cards, panels, standard surface         */
@@ -260,6 +263,30 @@
  * Automatic contrast adjustment.
  */
 @layer utilities {
+
+  /* Page gutter — sm breakpoint (nav, breadcrumb, standard full-width pages) */
+  .page-gutter-sm {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .page-gutter-sm {
+      padding-left: var(--page-gutter);
+      padding-right: var(--page-gutter);
+    }
+  }
+
+  /* Page gutter — md breakpoint (messages layout, 768px threshold) */
+  .page-gutter-md {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  @media (min-width: 768px) {
+    .page-gutter-md {
+      padding-left: var(--page-gutter);
+      padding-right: var(--page-gutter);
+    }
+  }
 
   /* Hide ugly search cancel button in Chrome until we can style it properly */
   input[type="search"]::-webkit-search-cancel-button {
