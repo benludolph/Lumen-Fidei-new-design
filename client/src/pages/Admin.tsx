@@ -38,7 +38,7 @@ export default function Admin() {
 
   return (
     <Shell>
-      <div>
+      <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 pb-16 min-h-screen">
         <div className="flex justify-between items-center mb-8 pt-4">
           <div>
             <h1 className="font-serif text-3xl font-bold">Administration</h1>
