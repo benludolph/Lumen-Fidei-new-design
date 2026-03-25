@@ -1431,9 +1431,7 @@ function ModuleOverlaySettingsCard() {
   );
 }
 
-function OverlayIconButton({ contextKey, label }: { contextKey: string; label: string }) {
-  const [open, setOpen] = useState(false);
-
+function CompletionUnlockSection({ contextKey }: { contextKey: string }) {
   const { data: overlay, refetch } = useQuery<ModuleOverlayRow>({
     queryKey: ["/api/admin/module-overlays", contextKey],
     queryFn: async () => {
@@ -1445,39 +1443,27 @@ function OverlayIconButton({ contextKey, label }: { contextKey: string; label: s
   });
 
   return (
-    <>
-      <button
-        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-        title="Configure completion unlock"
-        data-testid={`button-overlay-icon-${contextKey}`}
-        className="p-1.5 rounded-md hover:bg-muted/80 transition-colors flex-shrink-0"
-      >
-        <Lock
-          className="w-4 h-4"
-          style={{ color: overlay?.enabled ? "hsl(40 95% 38%)" : undefined }}
-          fill={overlay?.enabled ? "hsl(45 95% 65%)" : "none"}
-        />
-      </button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Lock className="w-4 h-4" />
-              Completion Unlock
-            </DialogTitle>
-            <p className="text-sm text-muted-foreground truncate">{label}</p>
-          </DialogHeader>
-          {overlay ? (
-            <ModuleOverlayEditor
-              overlay={overlay}
-              onSaved={() => { refetch(); setOpen(false); }}
-            />
-          ) : (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Lock className="w-4 h-4 text-muted-foreground" />
+          <CardTitle className="text-sm">Completion Unlock</CardTitle>
+          {overlay && (
+            <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-normal ${overlay.enabled ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>
+              {overlay.enabled ? "Enabled" : "Disabled"}
+            </span>
           )}
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+        <p className="text-xs text-muted-foreground">Configure the unlock overlay shown when this lesson is completed.</p>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {overlay ? (
+          <ModuleOverlayEditor overlay={overlay} onSaved={() => refetch()} />
+        ) : (
+          <div className="py-4 text-center text-sm text-muted-foreground">Loading…</div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -3868,10 +3854,6 @@ function TrackAContentManagementView() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <OverlayIconButton
-                        contextKey={`chat-flow-${dayNumber}`}
-                        label={`Day ${dayNumber}${dayContent?.centralTheme ? ` — ${dayContent.centralTheme}` : ""}`}
-                      />
                       {slideCount > 0 ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                       ) : (
@@ -4198,6 +4180,8 @@ function TrackAContentManagementView() {
           </CardContent>
         </Card>
       )}
+
+      <CompletionUnlockSection contextKey={`chat-flow-${selectedDay}`} />
 
     </div>
   );
@@ -4826,10 +4810,6 @@ function PrelimContentManagementView() {
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    <OverlayIconButton
-                      contextKey={`prelim-module-${mod.position}`}
-                      label={mod.title}
-                    />
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
@@ -5068,6 +5048,10 @@ function PrelimContentManagementView() {
             ))
           )}
         </div>
+      )}
+
+      {selectedPosition !== null && (
+        <CompletionUnlockSection contextKey={`prelim-module-${selectedPosition}`} />
       )}
 
     </div>

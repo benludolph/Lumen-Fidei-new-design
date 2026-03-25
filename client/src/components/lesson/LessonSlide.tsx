@@ -453,14 +453,23 @@ export function LessonSlide({
 
 function RevealStep({ children, isNew }: { children: ReactNode; isNew: boolean }) {
   const [visible, setVisible] = useState(!isNew);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (isNew) {
-      const t = setTimeout(() => setVisible(true), 30);
-      return () => clearTimeout(t);
-    }
+    if (!isNew) return;
+    let scrollT: ReturnType<typeof setTimeout>;
+    const t = setTimeout(() => {
+      setVisible(true);
+      scrollT = setTimeout(() => {
+        ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 150);
+    }, 30);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(scrollT);
+    };
   }, [isNew]);
   return (
-    <div className={cn("transition-all duration-500", visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
+    <div ref={ref} className={cn("transition-all duration-500", visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
       {children}
     </div>
   );
