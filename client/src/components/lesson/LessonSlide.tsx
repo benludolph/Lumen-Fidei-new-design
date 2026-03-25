@@ -332,6 +332,7 @@ interface LessonSlideProps {
   scenarioRevealCount?: number;
   // chat_flow specific
   chatFlowContextKey?: string;
+  chatFlowOverlayContextKey?: string;
   chatFlowTotalSlides?: number;
   chatFlowSlideIndex?: number;
   onChatFlowComplete?: () => void;
@@ -359,6 +360,7 @@ export function LessonSlide({
   surveyAlreadySubmitted,
   scenarioRevealCount = 1,
   chatFlowContextKey,
+  chatFlowOverlayContextKey,
   chatFlowTotalSlides = 1,
   chatFlowSlideIndex = 0,
   onChatFlowComplete,
@@ -379,6 +381,7 @@ export function LessonSlide({
         <ChatFlowSlide
           content={content}
           contextKey={chatFlowContextKey || `chat-flow-${dayNumber}`}
+          overlayContextKey={chatFlowOverlayContextKey}
           totalSlides={chatFlowTotalSlides}
           slideIndex={chatFlowSlideIndex}
           onComplete={() => {

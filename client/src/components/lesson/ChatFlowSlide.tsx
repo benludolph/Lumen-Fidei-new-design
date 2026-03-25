@@ -87,6 +87,7 @@ interface FlowSnapshot {
 interface ChatFlowSlideProps {
   content: string;
   contextKey: string;
+  overlayContextKey?: string;
   totalSlides: number;
   slideIndex: number;
   onComplete: () => void;
@@ -353,7 +354,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
 // Main ChatFlowSlide component
 // ============================================================
 
-export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, onComplete, onExit }: ChatFlowSlideProps) {
+export function ChatFlowSlide({ content, contextKey, overlayContextKey, totalSlides, slideIndex, onComplete, onExit }: ChatFlowSlideProps) {
 
   // ── Parse & normalize flow definition ──
   const { flatSteps, optionSets, summaryTemplate, isRich } = useMemo(
@@ -402,8 +403,14 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   const [unlockPhase, setUnlockPhase] = useState(0);
   const [overlayDismissed, setOverlayDismissed] = useState(false);
 
+  const effectiveOverlayKey = overlayContextKey || contextKey;
   const { data: overlayConfig } = useQuery<{ contextKey: string; enabled: boolean; imageUrl: string; text: string; subtext: string; label: string }>({
-    queryKey: ["/api/admin/module-overlays", contextKey],
+    queryKey: ["/api/admin/module-overlays", effectiveOverlayKey],
+    queryFn: async () => {
+      const res = await fetch(`/api/admin/module-overlays/${encodeURIComponent(effectiveOverlayKey)}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
     staleTime: 0,
     refetchOnMount: "always",
   });

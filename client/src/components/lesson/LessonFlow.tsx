@@ -269,6 +269,11 @@ export function LessonFlow({
             ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
             : `track_a-day${dayNumber}-slide${currentSlide}`)
         : undefined}
+      chatFlowOverlayContextKey={currentSlideData.type === "chat_flow"
+        ? (dayNumber < 0
+            ? `prelim-module-${Math.abs(dayNumber)}`
+            : `chat-flow-${dayNumber}`)
+        : undefined}
       chatFlowTotalSlides={slides.length}
       chatFlowSlideIndex={currentSlide}
       onChatFlowComplete={currentSlideData.type === "chat_flow" ? handleNext : undefined}
