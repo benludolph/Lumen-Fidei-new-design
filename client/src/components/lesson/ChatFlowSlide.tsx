@@ -2,11 +2,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { X, Send, RotateCw, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
-import { useQuery } from "@tanstack/react-query";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
 import bgMusicSrc from "@assets/BG_Msic_1774239770169.mp3";
-import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
-import reflectionUnlockSound from "@assets/Reflection_Unlock_Sound_1774243654585.mp3";
 
 // ============================================================
 // Schema Types
@@ -87,7 +84,6 @@ interface FlowSnapshot {
 interface ChatFlowSlideProps {
   content: string;
   contextKey: string;
-  overlayContextKey?: string;
   totalSlides: number;
   slideIndex: number;
   onComplete: () => void;
@@ -354,7 +350,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
 // Main ChatFlowSlide component
 // ============================================================
 
-export function ChatFlowSlide({ content, contextKey, overlayContextKey, totalSlides, slideIndex, onComplete, onExit }: ChatFlowSlideProps) {
+export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, onComplete, onExit }: ChatFlowSlideProps) {
 
   // ── Parse & normalize flow definition ──
   const { flatSteps, optionSets, summaryTemplate, isRich } = useMemo(
@@ -400,20 +396,6 @@ export function ChatFlowSlide({ content, contextKey, overlayContextKey, totalSli
   const [flowComplete, setFlowComplete] = useState(false);
   const [isRestoredFlow, setIsRestoredFlow] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
-  const [unlockPhase, setUnlockPhase] = useState(0);
-  const [overlayDismissed, setOverlayDismissed] = useState(false);
-
-  const effectiveOverlayKey = overlayContextKey || contextKey;
-  const { data: overlayConfig } = useQuery<{ contextKey: string; enabled: boolean; imageUrl: string; text: string; subtext: string; label: string }>({
-    queryKey: ["/api/admin/module-overlays", effectiveOverlayKey],
-    queryFn: async () => {
-      const res = await fetch(`/api/admin/module-overlays/${encodeURIComponent(effectiveOverlayKey)}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
-    },
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -452,24 +434,6 @@ export function ChatFlowSlide({ content, contextKey, overlayContextKey, totalSli
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadedFromServer]);
 
-  // ── Unlock animation on fresh completion (only when overlay is enabled for this module) ──
-  useEffect(() => {
-    if (!flowComplete) { setUnlockPhase(0); setOverlayDismissed(false); return; }
-    if (restoredCompletionRef.current) return;
-    if (!overlayConfig?.enabled) return;
-    const audio = new Audio(reflectionUnlockSound);
-    audio.volume = 0.8;
-    audio.play().catch(() => {});
-    const timers = [
-      setTimeout(() => setUnlockPhase(1), 400),   // overlay bg + header
-      setTimeout(() => setUnlockPhase(2), 2000),  // reflection card
-      setTimeout(() => setUnlockPhase(3), 2320),  // image
-      setTimeout(() => setUnlockPhase(4), 2640),  // headline
-      setTimeout(() => setUnlockPhase(5), 3000),  // subtext
-      setTimeout(() => setUnlockPhase(6), 3600),  // close btn
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, [flowComplete, overlayConfig?.enabled]);
 
   // ── Auto-scroll ──
   useEffect(() => {
@@ -1199,147 +1163,6 @@ export function ChatFlowSlide({ content, contextKey, overlayContextKey, totalSli
         </div>
       )}
 
-      {/* ── Completion Unlock Overlay ── */}
-      {flowComplete && !isRestoredFlow && !overlayDismissed && unlockPhase > 0 && overlayConfig?.enabled && (
-        <div
-          className="fixed inset-0 flex items-center justify-center"
-          style={{
-            zIndex: 400,
-            background: "var(--black-70)",
-            transition: "opacity 500ms ease-out",
-            opacity: unlockPhase >= 1 ? 1 : 0,
-          }}
-        >
-          <div
-            className="flex flex-col items-center"
-            style={{ gap: 48, width: "100%", maxWidth: 480, padding: "0 32px" }}
-          >
-
-            {/* ── Circular image (106px) with outer ring ── */}
-            {overlayConfig?.imageUrl && (
-              <div
-                style={{
-                  position: "relative",
-                  width: 116,
-                  height: 116,
-                  flexShrink: 0,
-                  transition: "opacity 700ms ease-out, transform 700ms ease-out",
-                  opacity: unlockPhase >= 2 ? 1 : 0,
-                  transform: unlockPhase >= 2 ? "scale(1)" : "scale(0.85)",
-                }}
-              >
-                {/* Outer decorative ring */}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: "50%",
-                    border: "1px solid var(--white-15)",
-                    background: "var(--white-4)",
-                  }}
-                />
-                {/* Inner image — 106px, offset 5px from top-left */}
-                <img
-                  src={overlayConfig.imageUrl}
-                  alt=""
-                  style={{
-                    position: "absolute",
-                    top: 5,
-                    left: 5,
-                    width: 106,
-                    height: 106,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
-                />
-              </div>
-            )}
-
-            {/* ── Text section ── */}
-            <div className="flex flex-col items-center w-full" style={{ gap: 20 }}>
-
-              {/* "REFLECTION UNLOCKED" — type-caption-lg, all caps */}
-              <p
-                className="type-caption-lg text-white text-center whitespace-nowrap"
-                style={{
-                  lineHeight: "20px",
-                  transition: "opacity 600ms ease-out",
-                  opacity: unlockPhase >= 3 ? 1 : 0,
-                }}
-              >
-                REFLECTION UNLOCKED
-              </p>
-
-              {/* 48px IvyOra Display headline (admin-configurable) */}
-              <p
-                className="type-display-xl text-white text-center"
-                style={{
-                  letterSpacing: "-0.96px",
-                  transition: "opacity 600ms ease-out",
-                  opacity: unlockPhase >= 3 ? 1 : 0,
-                }}
-              >
-                {overlayConfig?.text || "Reflection Unlocked"}
-              </p>
-
-              {/* Cross divider — always shown */}
-              <div
-                style={{
-                  transition: "opacity 600ms ease-out",
-                  opacity: unlockPhase >= 4 ? 1 : 0,
-                }}
-              >
-                <img
-                  src={crossDividerImg}
-                  alt=""
-                  style={{ width: 264.5, height: 25, objectFit: "contain" }}
-                />
-              </div>
-
-              {/* 16px subtext (admin-configurable) */}
-              <p
-                className="type-body-lg text-white text-center"
-                style={{
-                  lineHeight: "20px",
-                  transition: "opacity 600ms ease-out",
-                  opacity: unlockPhase >= 5 ? 1 : 0,
-                }}
-              >
-                {overlayConfig?.subtext || ""}
-              </p>
-
-              {/* Continue button */}
-              <button
-                onClick={() => setOverlayDismissed(true)}
-                style={{
-                  background: "var(--surface-float)",
-                  border: "1px solid var(--white-8)",
-                  borderRadius: 6,
-                  height: 42,
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  padding: "0 1px",
-                  cursor: "pointer",
-                  boxShadow: "0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px 0px rgba(0,0,0,0.06)",
-                  transition: "opacity 600ms ease-out",
-                  opacity: unlockPhase >= 6 ? 1 : 0,
-                  pointerEvents: unlockPhase >= 6 ? "auto" : "none",
-                }}
-                data-testid="button-reflection-overlay-continue"
-              >
-                <span className="type-body-lg font-medium text-center text-white">
-                  Continue
-                </span>
-                <ArrowRight style={{ width: 16, height: 16, color: "white" }} />
-              </button>
-
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

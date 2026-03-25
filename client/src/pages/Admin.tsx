@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2 } from "lucide-react";
+import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
@@ -1431,42 +1431,53 @@ function ModuleOverlaySettingsCard() {
   );
 }
 
-function DayOverlaySection({ contextKey }: { contextKey: string }) {
-  const [expanded, setExpanded] = useState(false);
+function OverlayIconButton({ contextKey, label }: { contextKey: string; label: string }) {
+  const [open, setOpen] = useState(false);
 
   const { data: overlay, refetch } = useQuery<ModuleOverlayRow>({
     queryKey: ["/api/admin/module-overlays", contextKey],
     queryFn: async () => {
       const res = await fetch(`/api/admin/module-overlays/${encodeURIComponent(contextKey)}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch overlay");
+      if (!res.ok) throw new Error("Failed");
       return res.json();
     },
+    staleTime: 30_000,
   });
 
   return (
-    <div className="rounded-lg border overflow-hidden">
+    <>
       <button
-        className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50"
-        onClick={() => setExpanded(v => !v)}
-        data-testid={`button-overlay-section-${contextKey}`}
+        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        title="Configure completion unlock"
+        data-testid={`button-overlay-icon-${contextKey}`}
+        className="p-1.5 rounded-md hover:bg-muted/80 transition-colors flex-shrink-0"
       >
-        <div className="flex items-center gap-3">
-          <Volume2 className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Completion Overlay</span>
-          {overlay && (
-            <span className={`text-xs px-2 py-0.5 rounded-full ${overlay.enabled ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
-              {overlay.enabled ? "On" : "Off"}
-            </span>
-          )}
-        </div>
-        {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        <Lock
+          className="w-4 h-4"
+          style={{ color: overlay?.enabled ? "hsl(40 95% 38%)" : undefined }}
+          fill={overlay?.enabled ? "hsl(45 95% 65%)" : "none"}
+        />
       </button>
-      {expanded && overlay && (
-        <div className="px-4 pb-4 border-t">
-          <ModuleOverlayEditor overlay={overlay} onSaved={() => refetch()} />
-        </div>
-      )}
-    </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Lock className="w-4 h-4" />
+              Completion Unlock
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground truncate">{label}</p>
+          </DialogHeader>
+          {overlay ? (
+            <ModuleOverlayEditor
+              overlay={overlay}
+              onSaved={() => { refetch(); setOpen(false); }}
+            />
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -3856,7 +3867,11 @@ function TrackAContentManagementView() {
                         {dayContent?.imageUrl ? " · Has image" : ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <OverlayIconButton
+                        contextKey={`chat-flow-${dayNumber}`}
+                        label={`Day ${dayNumber}${dayContent?.centralTheme ? ` — ${dayContent.centralTheme}` : ""}`}
+                      />
                       {slideCount > 0 ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                       ) : (
@@ -4184,7 +4199,6 @@ function TrackAContentManagementView() {
         </Card>
       )}
 
-      <DayOverlaySection contextKey={`chat-flow-${selectedDay}`} />
     </div>
   );
 }
@@ -4811,7 +4825,13 @@ function PrelimContentManagementView() {
                       {mod.slides && mod.slides.length > 0 ? `${mod.slides.length} slide${mod.slides.length !== 1 ? "s" : ""}` : "Empty"}
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex items-center gap-1">
+                    <OverlayIconButton
+                      contextKey={`prelim-module-${mod.position}`}
+                      label={mod.title}
+                    />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -5050,7 +5070,6 @@ function PrelimContentManagementView() {
         </div>
       )}
 
-      <DayOverlaySection contextKey={`prelim-module-${selectedPosition}`} />
     </div>
   );
 }

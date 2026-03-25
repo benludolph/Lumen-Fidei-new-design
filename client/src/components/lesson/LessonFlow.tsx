@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ import { LessonLoadingScreen } from "./LessonLoadingScreen";
 import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
 import slideBg from "@assets/SlideBG_1774302310257.webp";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
+import { CompletionOverlay, type OverlayConfig } from "./CompletionOverlay";
 import { playClickContinue } from "@/lib/sounds";
 
 interface SlideData {
@@ -37,8 +39,9 @@ export function LessonFlow({
   onExit,
   onComplete,
 }: LessonFlowProps) {
-  type FlowState = "loading" | "slides" | "complete";
+  type FlowState = "loading" | "slides" | "overlay" | "complete";
   const [flowState, setFlowState] = useState<FlowState>("loading");
+  const overlayShownRef = useRef(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const [animKey, setAnimKey] = useState(0);
@@ -51,6 +54,23 @@ export function LessonFlow({
   const [slideInteracted, setSlideInteracted] = useState(false);
   const [scenarioRevealCount, setScenarioRevealCount] = useState(1);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const overlayContextKey =
+    dayNumber < 0 ? `prelim-module-${Math.abs(dayNumber)}` : `chat-flow-${dayNumber}`;
+
+  const { data: overlayConfig } = useQuery<OverlayConfig>({
+    queryKey: ["/api/admin/module-overlays", overlayContextKey],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/admin/module-overlays/${encodeURIComponent(overlayContextKey)}`,
+        { credentials: "include" }
+      );
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
 
   const slides = useMemo<SlideData[]>(() => {
     if (!content.slides || content.slides.length === 0) return [];
@@ -117,7 +137,12 @@ export function LessonFlow({
       } catch {}
     }
     if (currentSlide >= slides.length - 1) {
-      setFlowState("complete");
+      if (overlayConfig?.enabled && !overlayShownRef.current) {
+        overlayShownRef.current = true;
+        setFlowState("overlay");
+      } else {
+        setFlowState("complete");
+      }
     } else {
       playClickContinue();
       const nextSlide = currentSlide + 1;
@@ -129,7 +154,7 @@ export function LessonFlow({
       setSlideInteracted(false);
       setScenarioRevealCount(1);
     }
-  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount]);
+  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, overlayConfig]);
 
   const handlePrev = useCallback(() => {
     cancelAutoAdvance();
@@ -178,14 +203,19 @@ export function LessonFlow({
       setDirection("forward");
       setCurrentSlide((prev) => {
         if (prev >= slides.length - 1) {
-          setFlowState("complete");
+          if (overlayConfig?.enabled && !overlayShownRef.current) {
+            overlayShownRef.current = true;
+            setFlowState("overlay");
+          } else {
+            setFlowState("complete");
+          }
           return prev;
         }
         return prev + 1;
       });
       setAnimKey((prev) => prev + 1);
     }, 400);
-  }, [slides.length]);
+  }, [slides.length, overlayConfig]);
 
   if (flowState === "loading") {
     return createPortal(
@@ -196,6 +226,15 @@ export function LessonFlow({
         onComplete={handleLoadingComplete}
       />,
       document.body
+    );
+  }
+
+  if (flowState === "overlay" && overlayConfig?.enabled) {
+    return (
+      <CompletionOverlay
+        overlayConfig={overlayConfig}
+        onDismiss={() => setFlowState("complete")}
+      />
     );
   }
 
@@ -268,11 +307,6 @@ export function LessonFlow({
         ? (dayNumber < 0
             ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
             : `track_a-day${dayNumber}-slide${currentSlide}`)
-        : undefined}
-      chatFlowOverlayContextKey={currentSlideData.type === "chat_flow"
-        ? (dayNumber < 0
-            ? `prelim-module-${Math.abs(dayNumber)}`
-            : `chat-flow-${dayNumber}`)
         : undefined}
       chatFlowTotalSlides={slides.length}
       chatFlowSlideIndex={currentSlide}
