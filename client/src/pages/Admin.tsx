@@ -38,20 +38,17 @@ export default function Admin() {
 
   return (
     <Shell>
-      <div
-        className="dark -mx-4 sm:-mx-8 px-4 sm:px-8 pb-16 min-h-screen"
-        style={{ background: 'var(--surface-base)', colorScheme: 'dark' }}
-      >
+      <div>
         <div className="flex justify-between items-center mb-8 pt-4">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-white">Administration</h1>
-            <p style={{ color: 'var(--white-50)' }}>Manage users and monitor progress</p>
+            <h1 className="font-serif text-3xl font-bold">Administration</h1>
+            <p className="text-muted-foreground">Manage users and monitor progress</p>
           </div>
           <CreateUserDialog />
         </div>
 
         <Tabs defaultValue="users" className="w-full">
-          <TabsList className="mb-6" style={{ background: 'var(--surface-raised)', border: '1px solid var(--white-8)' }}>
+          <TabsList className="mb-6">
             <TabsTrigger value="users" className="gap-2" data-testid="tab-users">
               <Users className="w-4 h-4" /> People
             </TabsTrigger>
@@ -73,16 +70,15 @@ export default function Admin() {
           </TabsList>
 
           <TabsContent value="users">
-            <AdminCard>
+            <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Search className="w-4 h-4" style={{ color: 'var(--white-40)' }} />
+                  <Search className="w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"
-                    style={{ background: 'var(--surface-float)', borderColor: 'var(--white-10)' }}
                     data-testid="input-search-users"
                   />
                 </div>
@@ -90,19 +86,19 @@ export default function Admin() {
               <CardContent>
                 <Table>
                   <TableHeader>
-                    <TableRow style={{ borderColor: 'var(--white-8)' }}>
-                      <TableHead style={{ color: 'var(--white-60)' }}>Name</TableHead>
-                      <TableHead style={{ color: 'var(--white-60)' }}>Role</TableHead>
-                      <TableHead style={{ color: 'var(--white-60)' }}>Track</TableHead>
-                      <TableHead style={{ color: 'var(--white-60)' }}>Mentor</TableHead>
-                      <TableHead style={{ color: 'var(--white-60)' }}>Start Date</TableHead>
-                      <TableHead className="text-right" style={{ color: 'var(--white-60)' }}>Actions</TableHead>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Track</TableHead>
+                      <TableHead>Mentor</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8" style={{ color: 'var(--white-40)' }}>Loading...</TableCell>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
                       </TableRow>
                     ) : filteredUsers?.map((u) => (
                       <UserRow key={u.id} user={u} allUsers={users || []} />
@@ -110,7 +106,7 @@ export default function Admin() {
                   </TableBody>
                 </Table>
               </CardContent>
-            </AdminCard>
+            </Card>
           </TabsContent>
 
           <TabsContent value="progress">
@@ -138,42 +134,23 @@ export default function Admin() {
   );
 }
 
-function AdminCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={`rounded-lg border ${className}`}
-      style={{ background: 'var(--surface-raised)', borderColor: 'var(--white-8)' }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function ContentTabView() {
   const [track, setTrack] = useState<"a" | "b">("a");
 
   return (
     <div className="space-y-5">
-      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ background: 'var(--surface-raised)', border: '1px solid var(--white-8)' }}>
+      <div className="flex gap-1 p-1 rounded-lg w-fit bg-muted border">
         <button
           onClick={() => setTrack("a")}
           data-testid="button-track-a-tab"
-          className="px-5 py-1.5 rounded text-sm font-medium transition-colors"
-          style={track === "a"
-            ? { background: 'var(--surface-float)', color: '#fff' }
-            : { color: 'var(--white-50)' }
-          }
+          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "a" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
         >
           Track A
         </button>
         <button
           onClick={() => setTrack("b")}
           data-testid="button-track-b-tab"
-          className="px-5 py-1.5 rounded text-sm font-medium transition-colors"
-          style={track === "b"
-            ? { background: 'var(--surface-float)', color: '#fff' }
-            : { color: 'var(--white-50)' }
-          }
+          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "b" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
         >
           Track B
         </button>
@@ -1467,31 +1444,25 @@ function DayOverlaySection({ contextKey }: { contextKey: string }) {
   });
 
   return (
-    <div className="rounded-lg border overflow-hidden" style={{ background: 'var(--surface-raised)', borderColor: 'var(--white-8)' }}>
+    <div className="rounded-lg border overflow-hidden">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-white/5"
+        className="w-full flex items-center justify-between px-4 py-3 transition-colors hover:bg-muted/50"
         onClick={() => setExpanded(v => !v)}
         data-testid={`button-overlay-section-${contextKey}`}
       >
         <div className="flex items-center gap-3">
-          <Volume2 className="w-4 h-4" style={{ color: 'var(--white-40)' }} />
-          <span className="text-sm font-medium text-white">Completion Overlay</span>
+          <Volume2 className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Completion Overlay</span>
           {overlay && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={overlay.enabled
-                ? { background: 'rgba(34,197,94,0.15)', color: 'rgb(74,222,128)' }
-                : { background: 'var(--white-5)', color: 'var(--white-40)' }
-              }
-            >
+            <span className={`text-xs px-2 py-0.5 rounded-full ${overlay.enabled ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
               {overlay.enabled ? "On" : "Off"}
             </span>
           )}
         </div>
-        {expanded ? <ChevronUp className="w-4 h-4" style={{ color: 'var(--white-40)' }} /> : <ChevronDown className="w-4 h-4" style={{ color: 'var(--white-40)' }} />}
+        {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {expanded && overlay && (
-        <div className="px-4 pb-4" style={{ borderTop: '1px solid var(--white-8)' }}>
+        <div className="px-4 pb-4 border-t">
           <ModuleOverlayEditor overlay={overlay} onSaved={() => refetch()} />
         </div>
       )}
@@ -2956,7 +2927,7 @@ function KnowledgeCheckEditor({ content, onChange, index }: { content: string; o
               className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
                 data.correctIndex === idx
                   ? "border-green-500 bg-green-500 text-white"
-                  : "border-gray-300 bg-white hover:border-gray-400 dark:border-white/20 dark:bg-white/10 dark:hover:border-white/40"
+                  : "border-gray-300 bg-white hover:border-gray-400"
               }`}
               title={data.correctIndex === idx ? "Correct answer" : "Mark as correct"}
               data-testid={`kc-correct-radio-${index}-${idx}`}
@@ -3701,22 +3672,20 @@ function TrackAContentManagementView() {
       <div className="space-y-8">
         {/* Edit Module Dialog */}
         <Dialog open={editModuleDialogOpen} onOpenChange={(open) => { setEditModuleDialogOpen(open); if (!open) setEditingModule(null); }}>
-          <DialogContent className="max-w-lg" style={{ background: 'var(--surface-float)', borderColor: 'var(--white-10)' }}>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle>
                 Edit Module — Week {editingModule?.weekNumber}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-white">Title</label>
-                <Input value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="e.g., Foundations" data-testid="input-module-title"
-                  style={{ background: 'var(--surface-raised)', borderColor: 'var(--white-10)', color: '#fff' }} />
+                <label className="text-sm font-medium">Title</label>
+                <Input value={moduleTitle} onChange={(e) => setModuleTitle(e.target.value)} placeholder="e.g., Foundations" data-testid="input-module-title" />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-white">Subtitle</label>
-                <Input value={moduleSubtitle} onChange={(e) => setModuleSubtitle(e.target.value)} placeholder="e.g., Who God Is & How We Relate to Him" data-testid="input-module-subtitle"
-                  style={{ background: 'var(--surface-raised)', borderColor: 'var(--white-10)', color: '#fff' }} />
+                <label className="text-sm font-medium">Subtitle</label>
+                <Input value={moduleSubtitle} onChange={(e) => setModuleSubtitle(e.target.value)} placeholder="e.g., Who God Is & How We Relate to Him" data-testid="input-module-subtitle" />
               </div>
               <ModuleImageUpload currentUrl={moduleImageUrl} onUploaded={setModuleImageUrl} />
               <div className="flex gap-2 justify-end pt-2">
@@ -3732,41 +3701,40 @@ function TrackAContentManagementView() {
 
         {/* Pre-Modules section */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--white-40)' }}>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-4 text-muted-foreground">
             Pre-Modules (Pre-Cohort Onboarding)
           </p>
           <PrelimContentManagementView />
         </div>
 
-        <div style={{ borderTop: '1px solid var(--white-8)' }} />
+        <hr className="border-border" />
 
         {/* Weekly modules */}
         <div>
           <div className="flex items-center gap-3 mb-4">
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--white-40)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Weekly Modules
             </p>
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--white-5)', color: 'var(--white-50)' }}>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               {modules?.length || 0}
             </span>
           </div>
 
           <div
             className="cursor-pointer rounded-lg border mb-4 transition-shadow hover:shadow-md"
-            style={{ background: 'var(--surface-raised)', borderColor: 'var(--white-8)' }}
             onClick={() => openDay(0)}
             data-testid="card-day-0-intro"
           >
             <div className="p-4">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(59,130,246,0.15)' }}>
-                  <BookOpen className="w-5 h-5 text-blue-400" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-100">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-white" data-testid="text-day0-admin-title">
+                  <h4 className="font-medium" data-testid="text-day0-admin-title">
                     Introduction — Goal of 30 Days
                   </h4>
-                  <p className="text-xs" style={{ color: 'var(--white-40)' }}>
+                  <p className="text-xs text-muted-foreground">
                     {(() => {
                       const d0 = allContent?.find(c => c.dayNumber === 0);
                       const count = d0?.slides?.length || 0;
@@ -3779,9 +3747,9 @@ function TrackAContentManagementView() {
                     const d0 = allContent?.find(c => c.dayNumber === 0);
                     return d0?.slides && d0.slides.length > 0
                       ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      : <Circle className="w-4 h-4" style={{ color: 'var(--white-20)' }} />;
+                      : <Circle className="w-4 h-4 text-muted-foreground" />;
                   })()}
-                  <ChevronRight className="w-4 h-4" style={{ color: 'var(--white-30)' }} />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
                 </div>
               </div>
             </div>
@@ -3797,7 +3765,6 @@ function TrackAContentManagementView() {
                 <div
                   key={mod.weekNumber}
                   className="rounded-lg border overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                  style={{ background: 'var(--surface-raised)', borderColor: 'var(--white-8)' }}
                   data-testid={`card-module-${mod.weekNumber}`}
                 >
                   <div onClick={() => openModule(mod.weekNumber)}>
@@ -3806,16 +3773,16 @@ function TrackAContentManagementView() {
                         <img src={mod.imageUrl} alt={mod.title} className="w-full h-full object-cover" data-testid={`img-module-${mod.weekNumber}`} />
                       </div>
                     ) : (
-                      <div className="h-36 flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.08)' }}>
-                        <Layers className="w-10 h-10" style={{ color: 'rgba(52,211,153,0.4)' }} />
+                      <div className="h-36 flex items-center justify-center bg-muted">
+                        <Layers className="w-10 h-10 text-muted-foreground/40" />
                       </div>
                     )}
                     <div className="pt-4 pb-3 px-4">
-                      <p className="text-xs font-medium mb-1" style={{ color: 'var(--white-40)' }} data-testid={`text-module-week-${mod.weekNumber}`}>Week {mod.weekNumber}</p>
-                      <h3 className="font-semibold text-base truncate text-white" data-testid={`text-module-title-${mod.weekNumber}`}>{mod.title}</h3>
-                      <p className="text-sm truncate" style={{ color: 'var(--white-50)' }} data-testid={`text-module-subtitle-${mod.weekNumber}`}>{mod.subtitle}</p>
+                      <p className="text-xs font-medium mb-1 text-muted-foreground" data-testid={`text-module-week-${mod.weekNumber}`}>Week {mod.weekNumber}</p>
+                      <h3 className="font-semibold text-base truncate" data-testid={`text-module-title-${mod.weekNumber}`}>{mod.title}</h3>
+                      <p className="text-sm truncate text-muted-foreground" data-testid={`text-module-subtitle-${mod.weekNumber}`}>{mod.subtitle}</p>
                       <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs" style={{ color: 'var(--white-40)' }}>{days.length} lessons · {filledCount} with content</span>
+                        <span className="text-xs text-muted-foreground">{days.length} lessons · {filledCount} with content</span>
                       </div>
                     </div>
                   </div>
