@@ -4136,6 +4136,14 @@ function TrackAContentManagementView() {
                                     updateSlide(index, "content", JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] }));
                                   }
                                 }
+                                if (val === "path_selector") {
+                                  try {
+                                    const p = JSON.parse(slide.content);
+                                    if (!Array.isArray(p.options) || p.options.length === 0) throw new Error();
+                                  } catch {
+                                    updateSlide(index, "content", PATH_SELECTOR_DEFAULT);
+                                  }
+                                }
                               }}>
                                 <SelectTrigger data-testid={`select-slide-type-${index}`}>
                                   <SelectValue />

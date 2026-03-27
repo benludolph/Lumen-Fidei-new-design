@@ -422,7 +422,7 @@ function PathSelectorSlide({
                 "group relative flex-1 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer outline-none",
                 "h-[207px]",
                 "border-2 border-transparent",
-                isSelected && "border-b-[3px] border-white"
+                isSelected ? "border-b-[3px] border-white scale-[1.02]" : "scale-100"
               )}
               style={{ minWidth: 0 }}
             >
