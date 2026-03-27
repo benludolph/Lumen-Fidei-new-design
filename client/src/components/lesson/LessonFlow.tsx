@@ -199,6 +199,8 @@ export function LessonFlow({
       setAnimKey((prev) => prev + 1);
       return;
     }
+    // Clear any stale staged injected slide when navigating away from path_selector
+    if (pendingInjectedSlide) setPendingInjectedSlide(null);
     if (currentSlide <= 0) {
       onExit();
     } else {
@@ -211,7 +213,7 @@ export function LessonFlow({
       setSlideInteracted(false);
       setScenarioRevealCount(1);
     }
-  }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides, isShowingInjected]);
+  }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides, isShowingInjected, pendingInjectedSlide]);
 
   const handleTimerComplete = useCallback(() => {
     setTimerDone(true);

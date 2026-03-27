@@ -2888,16 +2888,23 @@ const PATH_SELECTOR_DEFAULT = JSON.stringify({
   ],
 }, null, 2);
 
+const DEFAULT_PATH_OPTIONS = [
+  { id: "answers", label: "Seeking Answers", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci" } },
+  { id: "control", label: "Seeking Control", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177815632?fl=ip&fe=ec" } },
+  { id: "loved", label: "Seeking to be Loved", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" } },
+];
+
 function PathSelectorSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: { headline: string; options: { id: string; label: string; imageUrl: string; nextContent: { type: string; content: string } }[] };
   try {
     const parsed = JSON.parse(content || "{}");
+    const rawOpts = Array.isArray(parsed.options) && parsed.options.length > 0 ? parsed.options : DEFAULT_PATH_OPTIONS;
     data = {
       headline: parsed.headline || "",
-      options: Array.isArray(parsed.options) ? parsed.options : [],
+      options: rawOpts,
     };
   } catch {
-    data = { headline: "", options: [] };
+    data = { headline: "", options: DEFAULT_PATH_OPTIONS };
   }
 
   const update = (next: typeof data) => onChange(JSON.stringify(next, null, 2));
