@@ -372,6 +372,7 @@ const PATH_SELECTOR_ASSET_MAP: Record<string, string> = {
 interface PathSelectorOption {
   id: string;
   label: string;
+  description?: string;
   imageUrl?: string;
   nextContent: {
     type: string;
@@ -411,9 +412,9 @@ function PathSelectorSlide({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       {data.headline ? (
-        <p className="type-body-xl text-[var(--white-80)]" data-testid="path-selector-headline">
+        <p className="type-display-md text-white" data-testid="path-selector-headline">
           {data.headline}
         </p>
       ) : null}
@@ -429,30 +430,63 @@ function PathSelectorSlide({
               data-testid={`path-card-${option.id}`}
               onClick={() => handleSelect(option)}
               className={cn(
-                "group relative flex-1 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer outline-none",
-                "h-[207px]",
-                isSelected ? "scale-[1.02]" : "scale-100"
+                "relative flex-1 overflow-hidden cursor-pointer outline-none",
+                "aspect-[200/207] rounded-[3.952px] border border-white",
+                "transition-all duration-300",
+                isSelected
+                  ? "opacity-100 mix-blend-normal scale-[1.02]"
+                  : "opacity-40 mix-blend-luminosity hover:opacity-60"
               )}
-              style={isSelected ? { minWidth: 0, boxShadow: "inset 0 -3px 0 0 #ffffff" } : { minWidth: 0 }}
+              style={{ minWidth: 0 }}
             >
               {imgSrc && (
                 <img
                   src={imgSrc}
                   alt={option.label}
-                  className={cn(
-                    "absolute inset-0 w-full h-full object-cover transition-all duration-300",
-                    isSelected ? "grayscale-0" : "grayscale group-hover:grayscale-0"
-                  )}
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+              {/* Radial gradient — dark at bottom-left, fades to transparent (matches Figma) */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at 4% 110%, rgba(15,16,17,1) 0%, rgba(15,16,17,0) 65%)",
+                }}
+              />
+              {/* Video icon badge — top left, matches Figma size & style */}
+              <div
+                className="absolute flex items-center justify-center rounded-[2.634px]"
+                style={{
+                  top: "7.903px",
+                  left: "7.903px",
+                  width: "15.807px",
+                  height: "15.807px",
+                  background: "rgba(0,0,0,0.1)",
+                  boxShadow: "0px 0.659px 1.317px 0px rgba(0,0,0,0.1)",
+                }}
+              >
+                <Play size={7} fill="white" color="white" />
+              </div>
+              {/* Bottom content — title + optional description */}
+              <div
+                className="absolute bottom-0 left-0 right-0 flex flex-col"
+                style={{ padding: "7.903px", paddingBottom: "9.221px", gap: "5.269px" }}
+              >
                 <span
-                  className="type-body-sm font-semibold text-white"
+                  className="type-display-sm text-[#f7f8f8] leading-[1.2]"
                   data-testid={`path-card-label-${option.id}`}
                 >
                   {option.label}
                 </span>
+                {option.description ? (
+                  <span
+                    className="text-[rgba(255,255,255,0.5)] leading-[1.2]"
+                    style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px" }}
+                  >
+                    {option.description}
+                  </span>
+                ) : null}
               </div>
             </button>
           );

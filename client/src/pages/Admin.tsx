@@ -2870,18 +2870,21 @@ const PATH_SELECTOR_DEFAULT = JSON.stringify({
     {
       id: "answers",
       label: "Seeking Answers",
+      description: "You were looking for answers. What you found felt real. But something shifted.",
       imageUrl: "",
       nextContent: { type: "media", content: "https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci" },
     },
     {
       id: "control",
       label: "Seeking Control",
+      description: "The world is loud. You seek calm in breath and focus to gain power over your day. Yet, the unrest remains.",
       imageUrl: "",
       nextContent: { type: "media", content: "https://vimeo.com/1177815632?fl=ip&fe=ec" },
     },
     {
       id: "loved",
       label: "Seeking to be Loved",
+      description: "You long to be seen, known, and cherished. But love has felt distant or out of reach.",
       imageUrl: "",
       nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" },
     },
@@ -2889,9 +2892,9 @@ const PATH_SELECTOR_DEFAULT = JSON.stringify({
 }, null, 2);
 
 const DEFAULT_PATH_OPTIONS = [
-  { id: "answers", label: "Seeking Answers", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci" } },
-  { id: "control", label: "Seeking Control", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177815632?fl=ip&fe=ec" } },
-  { id: "loved", label: "Seeking to be Loved", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" } },
+  { id: "answers", label: "Seeking Answers", description: "You were looking for answers. What you found felt real. But something shifted.", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci" } },
+  { id: "control", label: "Seeking Control", description: "The world is loud. You seek calm in breath and focus to gain power over your day. Yet, the unrest remains.", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177815632?fl=ip&fe=ec" } },
+  { id: "loved", label: "Seeking to be Loved", description: "You long to be seen, known, and cherished. But love has felt distant or out of reach.", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" } },
 ];
 
 function PathSelectorSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
@@ -2946,6 +2949,17 @@ function PathSelectorSlideEditor({ content, onChange, index }: { content: string
               onChange={(e) => updateOption(i, "label", e.target.value)}
               className="w-full px-3 py-2 text-sm border rounded-md bg-background"
               data-testid={`input-path-label-${index}-${i}`}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Description (shown on card)</label>
+            <textarea
+              value={(opt as any).description || ""}
+              onChange={(e) => updateOption(i, "description", e.target.value)}
+              rows={2}
+              placeholder="Short description shown beneath the card label"
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-none"
+              data-testid={`input-path-description-${index}-${i}`}
             />
           </div>
           <div className="space-y-1">
