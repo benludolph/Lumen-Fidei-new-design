@@ -69,8 +69,16 @@ function extractYouTubeId(url: string): string | null {
 }
 
 function extractVimeoId(url: string): string | null {
-  const match = url.match(/vimeo\.com\/(\d+)/);
-  return match ? match[1] : null;
+  const patterns = [
+    /vimeo\.com\/video\/(\d+)/,
+    /player\.vimeo\.com\/video\/(\d+)/,
+    /vimeo\.com\/(\d+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
 }
 
 function VimeoEmbed({ videoId, originalUrl }: { videoId: string; originalUrl: string }) {
