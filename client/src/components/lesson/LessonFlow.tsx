@@ -127,6 +127,14 @@ export function LessonFlow({
 
   const handleNext = useCallback(() => {
     cancelAutoAdvance();
+    // If currently on path_selector with a staged injected slide, show the injected slide
+    if (!isShowingInjected && pendingInjectedSlide && slides[currentSlide]?.type === "path_selector") {
+      playClickContinue();
+      setIsShowingInjected(true);
+      setDirection("forward");
+      setAnimKey((prev) => prev + 1);
+      return;
+    }
     if (isShowingInjected) {
       setIsShowingInjected(false);
       setPendingInjectedSlide(null);
@@ -179,7 +187,7 @@ export function LessonFlow({
       setSlideInteracted(false);
       setScenarioRevealCount(1);
     }
-  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, overlayConfig, isShowingInjected]);
+  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, overlayConfig, isShowingInjected, pendingInjectedSlide]);
 
   const handlePrev = useCallback(() => {
     cancelAutoAdvance();
@@ -224,9 +232,7 @@ export function LessonFlow({
 
   const handlePathSelected = useCallback((nextType: SlideType, nextContent: string) => {
     setPendingInjectedSlide({ type: nextType, content: nextContent });
-    setIsShowingInjected(true);
-    setAnimKey((prev) => prev + 1);
-    setDirection("forward");
+    // Do NOT set isShowingInjected here — the user must press CONTINUE to proceed
   }, []);
 
   const handleContinue = useCallback(() => {
