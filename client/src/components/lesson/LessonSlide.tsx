@@ -419,7 +419,7 @@ function PathSelectorSlide({
         {data.options.map((option) => {
           const isSelected = selectedId === option.id;
           const assetImg = PATH_SELECTOR_ASSET_MAP[option.id];
-          const imgSrc = assetImg || option.imageUrl || "";
+          const imgSrc = option.imageUrl || assetImg || "";
 
           return (
             <button
@@ -429,10 +429,9 @@ function PathSelectorSlide({
               className={cn(
                 "group relative flex-1 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer outline-none",
                 "h-[207px]",
-                "border-2 border-transparent",
-                isSelected ? "border-b-[3px] border-white scale-[1.02]" : "scale-100"
+                isSelected ? "scale-[1.02]" : "scale-100"
               )}
-              style={{ minWidth: 0 }}
+              style={isSelected ? { minWidth: 0, boxShadow: "inset 0 -3px 0 0 #ffffff" } : { minWidth: 0 }}
             >
               {imgSrc && (
                 <img

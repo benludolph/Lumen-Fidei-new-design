@@ -5029,6 +5029,14 @@ function PrelimContentManagementView() {
                                     updateSlide(index, "content", defaultContent);
                                   }
                                 }
+                                if (val === "path_selector") {
+                                  try {
+                                    const p = JSON.parse(slide.content);
+                                    if (!Array.isArray(p.options) || p.options.length === 0) throw new Error();
+                                  } catch {
+                                    updateSlide(index, "content", PATH_SELECTOR_DEFAULT);
+                                  }
+                                }
                               }}>
                                 <SelectTrigger data-testid={`select-prelim-slide-type-${index}`}>
                                   <SelectValue />
