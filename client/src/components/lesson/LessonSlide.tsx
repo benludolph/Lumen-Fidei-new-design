@@ -12,6 +12,10 @@ import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage 
 import { HtmlContent } from "@/components/ui/html-content";
 import { ChatFlowSlide } from "./ChatFlowSlide";
 
+import answersImg from "@assets/Answers_Image_1774645623506.webp";
+import controlImg from "@assets/Control_Image_1774645623507.webp";
+import lovedImg from "@assets/Loved_Image_1774645623507.webp";
+
 import audioDay0 from "@assets/Day_0_1772743901058.mp3";
 import audioDay1 from "@assets/Day_1_1772743901058.mp3";
 import audioDay2 from "@assets/Day_2_1772743901058.mp3";
@@ -44,7 +48,8 @@ export type SlideType =
   | "knowledge_check"
   | "survey"
   | "scenario"
-  | "chat_flow";
+  | "chat_flow"
+  | "path_selector";
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -61,6 +66,40 @@ function extractYouTubeId(url: string): string | null {
     if (match) return match[1];
   }
   return null;
+}
+
+function extractVimeoId(url: string): string | null {
+  const match = url.match(/vimeo\.com\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+function VimeoEmbed({ videoId, originalUrl }: { videoId: string; originalUrl: string }) {
+  return (
+    <div className="space-y-2">
+      <div className="aspect-video rounded-lg overflow-hidden">
+        <iframe
+          width="100%"
+          height="100%"
+          src={`https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+          title="Video"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+          allowFullScreen
+          className="w-full h-full"
+        />
+      </div>
+      <a
+        href={originalUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center gap-1.5 text-[var(--white-50)] hover:text-[var(--white-80)] transition-colors"
+        data-testid="link-vimeo-external"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+        <span className="type-caption-sm">If video doesn't load, watch on Vimeo</span>
+      </a>
+    </div>
+  );
 }
 
 function YouTubeEmbed({ videoId, originalUrl }: { videoId: string; originalUrl: string }) {
@@ -106,6 +145,12 @@ function MediaContent({ text }: { text: string }) {
   }
 
   const trimmed = text.trim();
+
+  const vimeoId = extractVimeoId(trimmed);
+  if (vimeoId) {
+    return <VimeoEmbed videoId={vimeoId} originalUrl={trimmed} />;
+  }
+
   if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
     return (
       <img
@@ -310,6 +355,104 @@ function SingleSelectList({ content, onInteracted }: { content: string; onIntera
   );
 }
 
+const PATH_SELECTOR_ASSET_MAP: Record<string, string> = {
+  answers: answersImg,
+  control: controlImg,
+  loved: lovedImg,
+};
+
+interface PathSelectorOption {
+  id: string;
+  label: string;
+  imageUrl?: string;
+  nextContent: {
+    type: string;
+    content: string;
+  };
+}
+
+interface PathSelectorData {
+  headline: string;
+  options: PathSelectorOption[];
+}
+
+function PathSelectorSlide({
+  content,
+  onPathSelected,
+  onInteracted,
+}: {
+  content: string;
+  onPathSelected?: (nextType: SlideType, nextContent: string) => void;
+  onInteracted?: () => void;
+}) {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  let data: PathSelectorData = { headline: "", options: [] };
+  try {
+    data = JSON.parse(content);
+  } catch {
+    /* noop */
+  }
+
+  const handleSelect = (option: PathSelectorOption) => {
+    setSelectedId(option.id);
+    onInteracted?.();
+    onPathSelected?.(option.nextContent.type as SlideType, option.nextContent.content);
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      {data.headline ? (
+        <p className="type-body-xl text-[var(--white-80)]" data-testid="path-selector-headline">
+          {data.headline}
+        </p>
+      ) : null}
+      <div className="flex gap-3" data-testid="path-selector-cards">
+        {data.options.map((option) => {
+          const isSelected = selectedId === option.id;
+          const assetImg = PATH_SELECTOR_ASSET_MAP[option.id];
+          const imgSrc = assetImg || option.imageUrl || "";
+
+          return (
+            <button
+              key={option.id}
+              data-testid={`path-card-${option.id}`}
+              onClick={() => handleSelect(option)}
+              className={cn(
+                "group relative flex-1 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer outline-none",
+                "h-[207px]",
+                "border-2 border-transparent",
+                isSelected && "border-b-[3px] border-white"
+              )}
+              style={{ minWidth: 0 }}
+            >
+              {imgSrc && (
+                <img
+                  src={imgSrc}
+                  alt={option.label}
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover transition-all duration-300",
+                    isSelected ? "grayscale-0" : "grayscale group-hover:grayscale-0"
+                  )}
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+                <span
+                  className="type-body-sm font-semibold text-white"
+                  data-testid={`path-card-label-${option.id}`}
+                >
+                  {option.label}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface LessonSlideProps {
   type: SlideType;
   content: string;
@@ -336,6 +479,8 @@ interface LessonSlideProps {
   chatFlowSlideIndex?: number;
   onChatFlowComplete?: () => void;
   onChatFlowExit?: () => void;
+  // path_selector specific
+  onPathSelected?: (nextType: SlideType, nextContent: string) => void;
 }
 
 export function LessonSlide({
@@ -363,6 +508,7 @@ export function LessonSlide({
   chatFlowSlideIndex = 0,
   onChatFlowComplete,
   onChatFlowExit,
+  onPathSelected,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -443,6 +589,12 @@ export function LessonSlide({
           />
         ) : type === "scenario" ? (
           <ScenarioSlide content={content} revealedCount={scenarioRevealCount} />
+        ) : type === "path_selector" ? (
+          <PathSelectorSlide
+            content={content}
+            onPathSelected={onPathSelected}
+            onInteracted={onInteracted}
+          />
         ) : (
           <TextSlide content={content} />
         )}

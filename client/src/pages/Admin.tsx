@@ -2128,7 +2128,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario", "chat_flow"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector"] as const;
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -2144,6 +2144,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   survey: "Survey",
   scenario: "Scenario Stepper",
   chat_flow: "Chat Flow",
+  path_selector: "Path Selector",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2160,6 +2161,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   survey: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
   scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
   chat_flow: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
+  path_selector: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
 };
 
 // ============================================================
@@ -2858,6 +2860,111 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
           onChange={(val) => updateData({ ...data, text: val })}
         />
       </div>
+    </div>
+  );
+}
+
+const PATH_SELECTOR_DEFAULT = JSON.stringify({
+  headline: "Pick a pathway to explore",
+  options: [
+    {
+      id: "answers",
+      label: "Seeking Answers",
+      imageUrl: "",
+      nextContent: { type: "media", content: "https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci" },
+    },
+    {
+      id: "control",
+      label: "Seeking Control",
+      imageUrl: "",
+      nextContent: { type: "media", content: "https://vimeo.com/1177815632?fl=ip&fe=ec" },
+    },
+    {
+      id: "loved",
+      label: "Seeking to be Loved",
+      imageUrl: "",
+      nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" },
+    },
+  ],
+}, null, 2);
+
+function PathSelectorSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { headline: string; options: { id: string; label: string; imageUrl: string; nextContent: { type: string; content: string } }[] };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      headline: parsed.headline || "",
+      options: Array.isArray(parsed.options) ? parsed.options : [],
+    };
+  } catch {
+    data = { headline: "", options: [] };
+  }
+
+  const update = (next: typeof data) => onChange(JSON.stringify(next, null, 2));
+
+  const updateOption = (i: number, field: string, value: string) => {
+    const opts = data.options.map((o, idx) => idx === i ? { ...o, [field]: value } : o);
+    update({ ...data, options: opts });
+  };
+
+  const updateNextContent = (i: number, field: string, value: string) => {
+    const opts = data.options.map((o, idx) => idx === i
+      ? { ...o, nextContent: { ...o.nextContent, [field]: value } }
+      : o
+    );
+    update({ ...data, options: opts });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Headline</label>
+        <input
+          type="text"
+          value={data.headline}
+          onChange={(e) => update({ ...data, headline: e.target.value })}
+          placeholder="Pick a pathway to explore"
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-path-headline-${index}`}
+        />
+      </div>
+      {data.options.map((opt, i) => (
+        <div key={opt.id || i} className="border rounded-lg p-3 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Card {i + 1}: {opt.id || "—"}</p>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Label</label>
+            <input
+              type="text"
+              value={opt.label}
+              onChange={(e) => updateOption(i, "label", e.target.value)}
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-path-label-${index}-${i}`}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Image URL (optional override)</label>
+            <input
+              type="text"
+              value={opt.imageUrl || ""}
+              onChange={(e) => updateOption(i, "imageUrl", e.target.value)}
+              placeholder="Leave blank to use built-in image"
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-path-image-${index}-${i}`}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Video URL (Vimeo)</label>
+            <input
+              type="text"
+              value={opt.nextContent?.content || ""}
+              onChange={(e) => updateNextContent(i, "content", e.target.value)}
+              placeholder="https://vimeo.com/..."
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-path-video-${index}-${i}`}
+            />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -3619,6 +3726,7 @@ function TrackAContentManagementView() {
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
+    if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
     return "";
   };
 
@@ -4078,6 +4186,12 @@ function TrackAContentManagementView() {
                               />
                             ) : slide.type === "chat_flow" ? (
                               <ChatFlowSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "path_selector" ? (
+                              <PathSelectorSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -4732,6 +4846,7 @@ function PrelimContentManagementView() {
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
+    if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
     return "";
   };
 
@@ -4955,6 +5070,12 @@ function PrelimContentManagementView() {
                               />
                             ) : slide.type === "chat_flow" ? (
                               <ChatFlowSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "path_selector" ? (
+                              <PathSelectorSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}

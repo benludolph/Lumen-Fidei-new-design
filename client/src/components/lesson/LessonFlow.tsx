@@ -53,6 +53,8 @@ export function LessonFlow({
   const [kcAnswered, setKcAnswered] = useState(false);
   const [slideInteracted, setSlideInteracted] = useState(false);
   const [scenarioRevealCount, setScenarioRevealCount] = useState(1);
+  const [pendingInjectedSlide, setPendingInjectedSlide] = useState<{ type: SlideType; content: string } | null>(null);
+  const [isShowingInjected, setIsShowingInjected] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const overlayContextKey =
@@ -125,6 +127,29 @@ export function LessonFlow({
 
   const handleNext = useCallback(() => {
     cancelAutoAdvance();
+    if (isShowingInjected) {
+      setIsShowingInjected(false);
+      setPendingInjectedSlide(null);
+      setSlideInteracted(false);
+      if (currentSlide >= slides.length - 1) {
+        if (overlayConfig?.enabled && !overlayShownRef.current) {
+          overlayShownRef.current = true;
+          setFlowState("overlay");
+        } else {
+          setFlowState("complete");
+        }
+      } else {
+        playClickContinue();
+        const nextSlide = currentSlide + 1;
+        setDirection("forward");
+        setCurrentSlide(nextSlide);
+        setAnimKey((prev) => prev + 1);
+        setTimerDone(completedTimerSlides.has(nextSlide));
+        setKcAnswered(false);
+        setScenarioRevealCount(1);
+      }
+      return;
+    }
     const currentSlideData = slides[currentSlide];
     if (currentSlideData?.type === "scenario") {
       try {
@@ -154,10 +179,18 @@ export function LessonFlow({
       setSlideInteracted(false);
       setScenarioRevealCount(1);
     }
-  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, overlayConfig]);
+  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, overlayConfig, isShowingInjected]);
 
   const handlePrev = useCallback(() => {
     cancelAutoAdvance();
+    if (isShowingInjected) {
+      setIsShowingInjected(false);
+      setPendingInjectedSlide(null);
+      setSlideInteracted(false);
+      setDirection("backward");
+      setAnimKey((prev) => prev + 1);
+      return;
+    }
     if (currentSlide <= 0) {
       onExit();
     } else {
@@ -170,7 +203,7 @@ export function LessonFlow({
       setSlideInteracted(false);
       setScenarioRevealCount(1);
     }
-  }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides]);
+  }, [currentSlide, onExit, cancelAutoAdvance, completedTimerSlides, isShowingInjected]);
 
   const handleTimerComplete = useCallback(() => {
     setTimerDone(true);
@@ -187,6 +220,13 @@ export function LessonFlow({
 
   const handleSlideInteracted = useCallback(() => {
     setSlideInteracted(true);
+  }, []);
+
+  const handlePathSelected = useCallback((nextType: SlideType, nextContent: string) => {
+    setPendingInjectedSlide({ type: nextType, content: nextContent });
+    setIsShowingInjected(true);
+    setAnimKey((prev) => prev + 1);
+    setDirection("forward");
   }, []);
 
   const handleContinue = useCallback(() => {
@@ -264,54 +304,58 @@ export function LessonFlow({
   }
 
   const currentSlideData = slides[currentSlide];
+  const effectiveSlideData = isShowingInjected && pendingInjectedSlide
+    ? { ...pendingInjectedSlide, quizId: undefined, quizQuestionIndex: undefined, quizData: undefined }
+    : currentSlideData;
   const isLastSlide = currentSlide === slides.length - 1;
 
-  const isValidKc = currentSlideData.type === "knowledge_check" && (() => {
+  const isValidKc = effectiveSlideData.type === "knowledge_check" && (() => {
     try {
-      const d = JSON.parse(currentSlideData.content);
+      const d = JSON.parse(effectiveSlideData.content);
       return Array.isArray(d.options) && d.options.length > 0;
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow"]);
-  const requiresInteraction = INTERACTIVE_TYPES.has(currentSlideData.type) && !slideInteracted;
-  const surveyBlocked = currentSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
-  const isChatFlow = currentSlideData.type === "chat_flow";
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector"]);
+  const requiresInteraction = INTERACTIVE_TYPES.has(effectiveSlideData.type) && !slideInteracted;
+  const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
+  const isChatFlow = effectiveSlideData.type === "chat_flow";
 
   const lessonSlideEl = (
     <LessonSlide
       key={`slide-${animKey}`}
-      type={currentSlideData.type}
-      content={currentSlideData.content}
+      type={effectiveSlideData.type}
+      content={effectiveSlideData.content}
       dayNumber={dayNumber}
-      existingAnswer={currentSlideData.type === "text_input" ? journalDraft : undefined}
-      onJournalChange={currentSlideData.type === "text_input" ? setJournalDraft : undefined}
+      existingAnswer={effectiveSlideData.type === "text_input" ? journalDraft : undefined}
+      onJournalChange={effectiveSlideData.type === "text_input" ? setJournalDraft : undefined}
       direction={direction}
       mentorId={mentorId}
-      onTimerComplete={currentSlideData.type === "timer" ? handleTimerComplete : undefined}
-      timerAlreadyDone={currentSlideData.type === "timer" ? completedTimerSlides.has(currentSlide) : undefined}
-      onKnowledgeCheckAnswered={currentSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
-      onKnowledgeCheckNext={currentSlideData.type === "knowledge_check" ? handleNext : undefined}
-      quizData={currentSlideData.quizData}
-      quizQuestionIndex={currentSlideData.quizQuestionIndex}
-      quizAnswers={currentSlideData.quizId !== undefined ? quizAnswers[currentSlideData.quizId] : undefined}
-      onQuizAnswer={currentSlideData.quizId !== undefined && currentSlideData.quizQuestionIndex !== undefined
-        ? (letter: string) => handleQuizAnswer(currentSlideData.quizId!, currentSlideData.quizQuestionIndex!, letter)
+      onTimerComplete={effectiveSlideData.type === "timer" ? handleTimerComplete : undefined}
+      timerAlreadyDone={effectiveSlideData.type === "timer" ? completedTimerSlides.has(currentSlide) : undefined}
+      onKnowledgeCheckAnswered={effectiveSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
+      onKnowledgeCheckNext={effectiveSlideData.type === "knowledge_check" ? handleNext : undefined}
+      quizData={effectiveSlideData.quizData}
+      quizQuestionIndex={effectiveSlideData.quizQuestionIndex}
+      quizAnswers={effectiveSlideData.quizId !== undefined ? quizAnswers[effectiveSlideData.quizId] : undefined}
+      onQuizAnswer={effectiveSlideData.quizId !== undefined && effectiveSlideData.quizQuestionIndex !== undefined
+        ? (letter: string) => handleQuizAnswer(effectiveSlideData.quizId!, effectiveSlideData.quizQuestionIndex!, letter)
         : undefined
       }
       onInteracted={handleSlideInteracted}
-      onSurveySubmitted={currentSlideData.type === "survey" ? handleSurveySubmitted : undefined}
-      surveyAlreadySubmitted={currentSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
-      scenarioRevealCount={currentSlideData.type === "scenario" ? scenarioRevealCount : undefined}
-      chatFlowContextKey={currentSlideData.type === "chat_flow"
+      onSurveySubmitted={effectiveSlideData.type === "survey" ? handleSurveySubmitted : undefined}
+      surveyAlreadySubmitted={effectiveSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
+      scenarioRevealCount={effectiveSlideData.type === "scenario" ? scenarioRevealCount : undefined}
+      chatFlowContextKey={effectiveSlideData.type === "chat_flow"
         ? (dayNumber < 0
             ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
             : `track_a-day${dayNumber}-slide${currentSlide}`)
         : undefined}
       chatFlowTotalSlides={slides.length}
       chatFlowSlideIndex={currentSlide}
-      onChatFlowComplete={currentSlideData.type === "chat_flow" ? handleNext : undefined}
-      onChatFlowExit={currentSlideData.type === "chat_flow" ? onExit : undefined}
+      onChatFlowComplete={effectiveSlideData.type === "chat_flow" ? handleNext : undefined}
+      onChatFlowExit={effectiveSlideData.type === "chat_flow" ? onExit : undefined}
+      onPathSelected={currentSlideData.type === "path_selector" && !isShowingInjected ? handlePathSelected : undefined}
     />
   );
 
@@ -446,7 +490,7 @@ export function LessonFlow({
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
-          className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px]"
+          className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[780px]"
           style={{
             background: "var(--surface-base)",
             border: "0.5px solid var(--white-5)",
@@ -480,7 +524,7 @@ export function LessonFlow({
             padding: "32px",
           }}
         >
-          <div className="max-w-[640px] w-full flex items-center justify-end">
+          <div className="max-w-[780px] w-full flex items-center justify-end">
             <button
               onClick={handleNext}
               disabled={navBlocked}
