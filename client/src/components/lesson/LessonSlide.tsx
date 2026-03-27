@@ -405,7 +405,9 @@ function PathSelectorSlide({
   const handleSelect = (option: PathSelectorOption) => {
     setSelectedId(option.id);
     onInteracted?.();
-    onPathSelected?.(option.nextContent.type as SlideType, option.nextContent.content);
+    if (option.nextContent?.type && option.nextContent?.content) {
+      onPathSelected?.(option.nextContent.type as SlideType, option.nextContent.content);
+    }
   };
 
   return (
