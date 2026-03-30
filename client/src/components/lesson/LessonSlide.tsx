@@ -12,9 +12,9 @@ import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage 
 import { HtmlContent } from "@/components/ui/html-content";
 import { ChatFlowSlide } from "./ChatFlowSlide";
 
-import answersImg from "@assets/Answers_1774839080495.webp";
-import controlImg from "@assets/Control_1774839080494.webp";
-import lovedImg from "@assets/Love_1774839080495.webp";
+import answersImg from "@assets/Answers_1774839886153.webp";
+import controlImg from "@assets/Control_1774839886152.webp";
+import lovedImg from "@assets/Love_1774839886153.webp";
 
 import audioDay0 from "@assets/Day_0_1772743901058.mp3";
 import audioDay1 from "@assets/Day_1_1772743901058.mp3";
@@ -429,7 +429,7 @@ function PathSelectorSlide({
               data-testid={`path-card-${option.id}`}
               onClick={() => handleSelect(option)}
               className={cn(
-                "relative flex-1 min-w-0 aspect-[10/13] cursor-pointer outline-none overflow-hidden",
+                "relative flex-1 min-w-0 aspect-[200/232] cursor-pointer outline-none overflow-hidden bg-black",
                 "transition-all duration-300 ease-out",
                 isSelected
                   ? "grayscale-0"
@@ -441,7 +441,7 @@ function PathSelectorSlide({
                   src={imgSrc}
                   alt={option.label}
                   data-testid={`path-card-label-${option.id}`}
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                 />
               ) : (
                 <div className="absolute inset-0 bg-[#0f1011]" />
