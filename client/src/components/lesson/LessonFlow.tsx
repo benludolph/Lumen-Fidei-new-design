@@ -516,7 +516,7 @@ export function LessonFlow({
               background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
-          <div className="relative flex-1 overflow-y-auto" style={{ padding: "4px", margin: "-4px" }}>
+          <div className="relative flex-1 overflow-y-auto">
             {lessonSlideEl}
           </div>
         </div>

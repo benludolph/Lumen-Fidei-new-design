@@ -433,7 +433,7 @@ function PathSelectorSlide({
                 "rounded-[3.952px] border border-[rgba(255,255,255,0.15)]",
                 "transition-all duration-300",
                 isSelected
-                  ? "opacity-100 mix-blend-normal scale-[1.02]"
+                  ? "opacity-100 mix-blend-normal"
                   : "opacity-40 mix-blend-luminosity hover:opacity-60"
               )}
               style={{ minWidth: 0 }}
