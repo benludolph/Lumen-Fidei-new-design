@@ -493,12 +493,12 @@ export function LessonFlow({
 
       {/* ── Content area ── */}
       <div
-        className="relative flex-1 flex flex-col items-center overflow-hidden"
+        className="relative flex-1 flex flex-col items-center"
         style={{ paddingTop: "32px", paddingLeft: "20px", paddingRight: "20px" }}
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
-          className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[780px]"
+          className="relative flex-1 flex flex-col w-full max-w-[780px]"
           style={{
             background: "var(--surface-base)",
             border: "0.5px solid var(--white-5)",
@@ -516,7 +516,7 @@ export function LessonFlow({
               background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
-          <div className="relative flex-1 overflow-y-auto">
+          <div className="relative flex-1 overflow-y-auto" style={{ padding: "4px", margin: "-4px" }}>
             {lessonSlideEl}
           </div>
         </div>
