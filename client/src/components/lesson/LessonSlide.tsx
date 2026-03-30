@@ -425,28 +425,7 @@ function PathSelectorSlide({
           const imgSrc = option.imageUrl || assetImg || "";
 
           return (
-            <button
-              key={option.id}
-              data-testid={`path-card-${option.id}`}
-              onClick={() => handleSelect(option)}
-              className={cn(
-                "relative flex-1 overflow-hidden cursor-pointer outline-none",
-                "aspect-[200/207] rounded-[3.952px] border border-white",
-                "transition-all duration-300",
-                isSelected
-                  ? "opacity-100 mix-blend-normal scale-[1.02]"
-                  : "opacity-40 mix-blend-luminosity hover:opacity-60"
-              )}
-              style={{ minWidth: 0 }}
-            >
-              {imgSrc && (
-                <img
-                  src={imgSrc}
-                  alt={option.label}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )}
-              {/* Radial gradient — dark at bottom-left, fades to transparent (matches Figma) */}
+/* Radial gradient — dark at bottom-left, fades to transparent (matches Figma) */}
               <div
                 className="absolute inset-0"
                 style={{
