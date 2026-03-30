@@ -438,51 +438,28 @@ function PathSelectorSlide({
               )}
               style={{ minWidth: 0 }}
             >
-              {/* Layer 1: Dark base */}
-              <div
-                className="absolute inset-0 rounded-[3.952px]"
-                style={{ background: "#0f1011" }}
-              />
-
-              {/* Layer 2: Background image — fills card exactly, clipped to border-radius, no gaps, no bleed */}
-              <div className="absolute inset-0 rounded-[3.952px] overflow-hidden">
+              {/* Layer 1: Image fill — covers card exactly, clipped hard to border-radius */}
+              <div className="absolute inset-0 overflow-hidden rounded-[3.952px]">
                 {imgSrc ? (
                   <img
                     src={imgSrc}
                     alt={option.label}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                ) : null}
-              </div>
-
-              {/* Layer 3: Foreground image — overflows card top only, bottom anchored flush to card bottom */}
-              <div
-                className="absolute overflow-hidden rounded-[3.952px]"
-                style={{
-                  top: "-12.3%",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                }}
-              >
-                {imgSrc ? (
-                  <img
-                    src={imgSrc}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover object-top"
-                  />
-                ) : null}
+                ) : (
+                  <div className="absolute inset-0" style={{ background: "#0f1011" }} />
+                )}
+                {/* Gradient overlay — dark at bottom-left for text legibility */}
                 <div
                   className="absolute inset-0"
                   style={{
                     background:
-                      "radial-gradient(ellipse at 4% 110%, rgba(15,16,17,0.9) 0%, rgba(15,16,17,0) 60%)",
+                      "radial-gradient(ellipse at 4% 110%, rgba(15,16,17,0.85) 0%, rgba(15,16,17,0) 60%)",
                   }}
                 />
               </div>
 
-              {/* Layer 4: Video icon badge — anchored top-left inside card */}
+              {/* Layer 2: Video icon badge — anchored top-left inside card */}
               <div
                 className="absolute z-10 flex items-center justify-center rounded-[2.634px]"
                 style={{
@@ -497,7 +474,7 @@ function PathSelectorSlide({
                 <Play size={7} fill="white" color="white" />
               </div>
 
-              {/* Layer 4: Text — anchored bottom-left, IvyOra Display + Afacad */}
+              {/* Layer 3: Text — anchored bottom-left, IvyOra Display + Afacad */}
               <div
                 className="absolute z-10 bottom-0 left-0 right-0 flex flex-col"
                 style={{ padding: "7.903px", paddingBottom: "9.221px", gap: "5.269px" }}
