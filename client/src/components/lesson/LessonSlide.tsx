@@ -421,21 +421,59 @@ function PathSelectorSlide({
       <div className="flex gap-3" data-testid="path-selector-cards">
         {data.options.map((option) => {
           const isSelected = selectedId === option.id;
-          const assetImg = PATH_SELECTOR_ASSET_MAP[option.id];
-          const imgSrc = option.imageUrl || assetImg || "";
+          const imgSrc = option.imageUrl || PATH_SELECTOR_ASSET_MAP[option.id] || "";
 
           return (
-/* Radial gradient — dark at bottom-left, fades to transparent (matches Figma) */}
+            <button
+              key={option.id}
+              data-testid={`path-card-${option.id}`}
+              onClick={() => handleSelect(option)}
+              className={cn(
+                "relative flex-1 aspect-[200/207] cursor-pointer outline-none",
+                "rounded-[3.952px] border border-[rgba(255,255,255,0.15)]",
+                "transition-all duration-300",
+                isSelected
+                  ? "opacity-100 mix-blend-normal scale-[1.02]"
+                  : "opacity-40 mix-blend-luminosity hover:opacity-60"
+              )}
+              style={{ minWidth: 0 }}
+            >
+              {/* Layer 1: Dark base — stays within card, respects border-radius */}
               <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at 4% 110%, rgba(15,16,17,1) 0%, rgba(15,16,17,0) 65%)",
-                }}
+                className="absolute inset-0 rounded-[3.952px]"
+                style={{ background: "#0f1011" }}
               />
-              {/* Video icon badge — top left, matches Figma size & style */}
+
+              {/* Layer 2: Subject image — overflows card top by ~12%, not clipped by card */}
               <div
-                className="absolute flex items-center justify-center rounded-[2.634px]"
+                className="absolute rounded-[4px]"
+                style={{
+                  top: "-12.3%",
+                  left: 0,
+                  width: "100%",
+                  height: "112%",
+                  overflow: "hidden",
+                }}
+              >
+                {imgSrc ? (
+                  <img
+                    src={imgSrc}
+                    alt={option.label}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : null}
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at 4% 110%, rgba(15,16,17,0.95) 0%, rgba(15,16,17,0) 60%)",
+                  }}
+                />
+              </div>
+
+              {/* Layer 3: Video icon badge — anchored top-left inside card */}
+              <div
+                className="absolute z-10 flex items-center justify-center rounded-[2.634px]"
                 style={{
                   top: "7.903px",
                   left: "7.903px",
@@ -447,9 +485,10 @@ function PathSelectorSlide({
               >
                 <Play size={7} fill="white" color="white" />
               </div>
-              {/* Bottom content — title + optional description */}
+
+              {/* Layer 4: Text — anchored bottom-left, IvyOra Display + Afacad */}
               <div
-                className="absolute bottom-0 left-0 right-0 flex flex-col"
+                className="absolute z-10 bottom-0 left-0 right-0 flex flex-col"
                 style={{ padding: "7.903px", paddingBottom: "9.221px", gap: "5.269px" }}
               >
                 <span
@@ -460,7 +499,7 @@ function PathSelectorSlide({
                 </span>
                 {option.description ? (
                   <span
-                    className="text-[rgba(255,255,255,0.5)] leading-[1.2]"
+                    className="leading-[1.2] text-[rgba(255,255,255,0.5)]"
                     style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px" }}
                   >
                     {option.description}
