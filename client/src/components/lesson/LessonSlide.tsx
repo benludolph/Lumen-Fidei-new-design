@@ -418,7 +418,7 @@ function PathSelectorSlide({
           {data.headline}
         </p>
       ) : null}
-      <div className="flex gap-3" data-testid="path-selector-cards">
+      <div className="flex gap-3" style={{ paddingTop: "40px" }} data-testid="path-selector-cards">
         {data.options.map((option) => {
           const isSelected = selectedId === option.id;
           const imgSrc = option.imageUrl || PATH_SELECTOR_ASSET_MAP[option.id] || "";
@@ -430,67 +430,108 @@ function PathSelectorSlide({
               onClick={() => handleSelect(option)}
               className={cn(
                 "relative flex-1 aspect-[200/207] cursor-pointer outline-none",
-                "rounded-[3.952px] overflow-hidden",
-                "transition-all duration-300",
-                isSelected
-                  ? "opacity-100 mix-blend-normal"
-                  : "opacity-40 mix-blend-luminosity hover:opacity-60"
+                "rounded-[8px] transition-all duration-300"
               )}
-              style={{ minWidth: 0, background: "#0f1011" }}
+              style={{
+                minWidth: 0,
+                mixBlendMode: isSelected ? "normal" : "luminosity",
+                opacity: isSelected ? 1 : 0.4,
+              }}
             >
-              {/* Layer 1: Image fill — button's overflow-hidden clips this to the card border-radius */}
-              <div className="absolute inset-0">
+              {/* Card Base: background image clipped exactly to card boundary */}
+              <div className="absolute inset-0 overflow-hidden rounded-[8px]">
                 {imgSrc ? (
                   <img
                     src={imgSrc}
                     alt={option.label}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
+                ) : (
+                  <div className="absolute inset-0" style={{ background: "#0f1011" }} />
+                )}
+              </div>
+
+              {/* Front Image: overflows 32/207 = ~15.5% above card top, anchored to card bottom */}
+              <div
+                className="absolute overflow-hidden rounded-[8px]"
+                style={{ top: "-15.46%", left: 0, right: 0, height: "115.46%" }}
+              >
+                {imgSrc ? (
+                  <img
+                    src={imgSrc}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
                 ) : null}
-                {/* Gradient overlay — dark at bottom-left for text legibility */}
+                {/* Radial gradient: dark at bottom-left (3.5% 98.6%), Figma-accurate */}
                 <div
                   className="absolute inset-0"
                   style={{
                     background:
-                      "radial-gradient(ellipse at 4% 110%, rgba(15,16,17,0.85) 0%, rgba(15,16,17,0) 60%)",
+                      "radial-gradient(ellipse at 3.5% 98.6%, rgba(15,16,17,1) 37%, rgba(15,16,17,0) 100%)",
                   }}
                 />
               </div>
 
-              {/* Layer 2: Video icon badge — anchored top-left inside card */}
+              {/* Border overlay: 0.5px white at 10% opacity, renders above images */}
               <div
-                className="absolute z-10 flex items-center justify-center rounded-[2.634px]"
+                className="absolute inset-0 rounded-[8px] pointer-events-none"
+                style={{ boxShadow: "inset 0 0 0 0.5px rgba(255,255,255,0.1)" }}
+              />
+
+              {/* Text Layer: icon at top, title+description at bottom — centered in card */}
+              <div
+                className="absolute flex flex-col items-start justify-between"
                 style={{
-                  top: "7.903px",
-                  left: "7.903px",
-                  width: "15.807px",
-                  height: "15.807px",
-                  background: "rgba(0,0,0,0.1)",
-                  boxShadow: "0px 0.659px 1.317px 0px rgba(0,0,0,0.1)",
+                  top: "3.86%",
+                  bottom: "3.86%",
+                  left: "4%",
+                  right: "4%",
                 }}
               >
-                <Play size={7} fill="white" color="white" />
-              </div>
-
-              {/* Layer 3: Text — anchored bottom-left, IvyOra Display + Afacad */}
-              <div
-                className="absolute z-10 bottom-0 left-0 right-0 flex flex-col"
-                style={{ padding: "7.903px", paddingBottom: "9.221px", gap: "5.269px" }}
-              >
-                <span
-                  className="type-display-sm text-[#f7f8f8] leading-[1.2]"
-                  data-testid={`path-card-label-${option.id}`}
+                {/* Video icon badge */}
+                <div
+                  className="flex items-center justify-center rounded-[2.634px] shrink-0"
+                  style={{
+                    width: "15.807px",
+                    height: "15.807px",
+                    background: "rgba(0,0,0,0.05)",
+                    boxShadow: "0px 0.659px 1.317px 0px rgba(0,0,0,0.1)",
+                  }}
                 >
-                  {option.label}
-                </span>
-                {option.description ? (
+                  <Play size={7} fill="white" color="white" />
+                </div>
+
+                {/* Title + description */}
+                <div className="flex flex-col w-full" style={{ gap: "4px" }}>
                   <span
-                    className="leading-[1.2] text-[rgba(255,255,255,0.5)]"
-                    style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px" }}
+                    data-testid={`path-card-label-${option.id}`}
+                    style={{
+                      fontFamily: "'IvyOra Display', serif",
+                      fontWeight: 500,
+                      color: "#f7f8f8",
+                      fontSize: "16.235px",
+                      letterSpacing: "-0.0948px",
+                      lineHeight: 1.2,
+                    }}
                   >
-                    {option.description}
+                    {option.label}
                   </span>
-                ) : null}
+                  {option.description ? (
+                    <span
+                      style={{
+                        fontFamily: "'Afacad', sans-serif",
+                        fontWeight: 400,
+                        color: "rgba(255,255,255,0.5)",
+                        fontSize: "6.765px",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {option.description}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             </button>
           );
