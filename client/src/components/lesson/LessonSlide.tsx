@@ -429,13 +429,13 @@ function PathSelectorSlide({
               data-testid={`path-card-${option.id}`}
               onClick={() => handleSelect(option)}
               className={cn(
-                "relative flex-1 aspect-[4/5] overflow-hidden rounded-2xl cursor-pointer outline-none",
+                "relative shrink-0 cursor-pointer outline-none overflow-hidden rounded-none",
                 "transition-all duration-300 ease-out",
                 isSelected
-                  ? "grayscale-0 scale-[1.04]"
-                  : "grayscale hover:grayscale-0 hover:scale-[1.04]"
+                  ? "grayscale-0 scale-[1.04] z-10"
+                  : "grayscale hover:grayscale-0 hover:scale-[1.04] hover:z-10"
               )}
-              style={{ minWidth: 0, transformOrigin: "center" }}
+              style={{ width: "200px", height: "260px" }}
             >
               {imgSrc ? (
                 <img
