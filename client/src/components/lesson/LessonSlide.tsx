@@ -430,7 +430,7 @@ function PathSelectorSlide({
               onClick={() => handleSelect(option)}
               className={cn(
                 "relative flex-1 aspect-[200/207] cursor-pointer outline-none",
-                "rounded-[3.952px] border border-[rgba(255,255,255,0.15)] overflow-hidden",
+                "rounded-[3.952px] overflow-hidden",
                 "transition-all duration-300",
                 isSelected
                   ? "opacity-100 mix-blend-normal"
