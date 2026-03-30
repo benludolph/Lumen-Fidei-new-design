@@ -429,7 +429,7 @@ function PathSelectorSlide({
               data-testid={`path-card-${option.id}`}
               onClick={() => handleSelect(option)}
               className={cn(
-                "relative flex-1 min-w-0 aspect-[200/232] cursor-pointer outline-none overflow-hidden bg-black",
+                "relative flex-1 min-w-0 aspect-[200/232] cursor-pointer outline-none overflow-hidden",
                 "transition-all duration-300 ease-out",
                 isSelected
                   ? "grayscale-0"
