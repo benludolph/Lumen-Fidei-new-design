@@ -12,9 +12,9 @@ import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage 
 import { HtmlContent } from "@/components/ui/html-content";
 import { ChatFlowSlide } from "./ChatFlowSlide";
 
-import answersImg from "@assets/Answers_Image_1774645623506.webp";
-import controlImg from "@assets/Control_Image_1774645623507.webp";
-import lovedImg from "@assets/Loved_Image_1774645623507.webp";
+import answersImg from "@assets/Answers_1774839080495.webp";
+import controlImg from "@assets/Control_1774839080494.webp";
+import lovedImg from "@assets/Love_1774839080495.webp";
 
 import audioDay0 from "@assets/Day_0_1772743901058.mp3";
 import audioDay1 from "@assets/Day_1_1772743901058.mp3";
@@ -418,7 +418,7 @@ function PathSelectorSlide({
           {data.headline}
         </p>
       ) : null}
-      <div className="flex gap-3" style={{ paddingTop: "40px" }} data-testid="path-selector-cards">
+      <div className="flex gap-3" data-testid="path-selector-cards">
         {data.options.map((option) => {
           const isSelected = selectedId === option.id;
           const imgSrc = option.imageUrl || PATH_SELECTOR_ASSET_MAP[option.id] || "";
@@ -429,110 +429,24 @@ function PathSelectorSlide({
               data-testid={`path-card-${option.id}`}
               onClick={() => handleSelect(option)}
               className={cn(
-                "relative flex-1 aspect-[200/207] cursor-pointer outline-none",
-                "rounded-[8px] transition-all duration-300"
+                "relative flex-1 aspect-[4/5] overflow-hidden rounded-2xl cursor-pointer outline-none",
+                "transition-all duration-300 ease-out",
+                isSelected
+                  ? "grayscale-0 scale-[1.04]"
+                  : "grayscale hover:grayscale-0 hover:scale-[1.04]"
               )}
-              style={{
-                minWidth: 0,
-                mixBlendMode: isSelected ? "normal" : "luminosity",
-                opacity: isSelected ? 1 : 0.4,
-              }}
+              style={{ minWidth: 0, transformOrigin: "center" }}
             >
-              {/* Card Base: background image clipped exactly to card boundary */}
-              <div className="absolute inset-0 overflow-hidden rounded-[8px]">
-                {imgSrc ? (
-                  <img
-                    src={imgSrc}
-                    alt={option.label}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0" style={{ background: "#0f1011" }} />
-                )}
-              </div>
-
-              {/* Front Image: overflows 32/207 = ~15.5% above card top, anchored to card bottom */}
-              <div
-                className="absolute overflow-hidden rounded-[8px]"
-                style={{ top: "-15.46%", left: 0, right: 0, height: "115.46%" }}
-              >
-                {imgSrc ? (
-                  <img
-                    src={imgSrc}
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                  />
-                ) : null}
-                {/* Radial gradient: dark at bottom-left (3.5% 98.6%), Figma-accurate */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "radial-gradient(ellipse at 3.5% 98.6%, rgba(15,16,17,1) 37%, rgba(15,16,17,0) 100%)",
-                  }}
+              {imgSrc ? (
+                <img
+                  src={imgSrc}
+                  alt={option.label}
+                  data-testid={`path-card-label-${option.id}`}
+                  className="w-full h-full object-cover pointer-events-none"
                 />
-              </div>
-
-              {/* Border overlay: 0.5px white at 10% opacity, renders above images */}
-              <div
-                className="absolute inset-0 rounded-[8px] pointer-events-none"
-                style={{ boxShadow: "inset 0 0 0 0.5px rgba(255,255,255,0.1)" }}
-              />
-
-              {/* Text Layer: icon at top, title+description at bottom — centered in card */}
-              <div
-                className="absolute flex flex-col items-start justify-between"
-                style={{
-                  top: "3.86%",
-                  bottom: "3.86%",
-                  left: "4%",
-                  right: "4%",
-                }}
-              >
-                {/* Video icon badge */}
-                <div
-                  className="flex items-center justify-center rounded-[2.634px] shrink-0"
-                  style={{
-                    width: "15.807px",
-                    height: "15.807px",
-                    background: "rgba(0,0,0,0.05)",
-                    boxShadow: "0px 0.659px 1.317px 0px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <Play size={7} fill="white" color="white" />
-                </div>
-
-                {/* Title + description */}
-                <div className="flex flex-col w-full" style={{ gap: "4px" }}>
-                  <span
-                    data-testid={`path-card-label-${option.id}`}
-                    style={{
-                      fontFamily: "'IvyOra Display', serif",
-                      fontWeight: 500,
-                      color: "#f7f8f8",
-                      fontSize: "16.235px",
-                      letterSpacing: "-0.0948px",
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {option.label}
-                  </span>
-                  {option.description ? (
-                    <span
-                      style={{
-                        fontFamily: "'Afacad', sans-serif",
-                        fontWeight: 400,
-                        color: "rgba(255,255,255,0.5)",
-                        fontSize: "6.765px",
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {option.description}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
+              ) : (
+                <div className="w-full h-full bg-[#0f1011]" />
+              )}
             </button>
           );
         })}
