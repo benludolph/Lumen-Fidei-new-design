@@ -430,25 +430,23 @@ function PathSelectorSlide({
               onClick={() => handleSelect(option)}
               className={cn(
                 "relative flex-1 aspect-[200/207] cursor-pointer outline-none",
-                "rounded-[3.952px] border border-[rgba(255,255,255,0.15)]",
+                "rounded-[3.952px] border border-[rgba(255,255,255,0.15)] overflow-hidden",
                 "transition-all duration-300",
                 isSelected
                   ? "opacity-100 mix-blend-normal"
                   : "opacity-40 mix-blend-luminosity hover:opacity-60"
               )}
-              style={{ minWidth: 0 }}
+              style={{ minWidth: 0, background: "#0f1011" }}
             >
-              {/* Layer 1: Image fill — covers card exactly, clipped hard to border-radius */}
-              <div className="absolute inset-0 overflow-hidden rounded-[3.952px]">
+              {/* Layer 1: Image fill — button's overflow-hidden clips this to the card border-radius */}
+              <div className="absolute inset-0">
                 {imgSrc ? (
                   <img
                     src={imgSrc}
                     alt={option.label}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                ) : (
-                  <div className="absolute inset-0" style={{ background: "#0f1011" }} />
-                )}
+                ) : null}
                 {/* Gradient overlay — dark at bottom-left for text legibility */}
                 <div
                   className="absolute inset-0"
