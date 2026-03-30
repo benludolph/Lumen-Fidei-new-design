@@ -380,7 +380,7 @@ export function LessonFlow({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden"
+      className="fixed inset-0 z-[200] flex flex-col overflow-hidden"
       data-testid="lesson-flow"
     >
       {/* ── Full-screen background: painting + radial vignette ── */}
@@ -493,12 +493,12 @@ export function LessonFlow({
 
       {/* ── Content area ── */}
       <div
-        className="relative flex-1 flex flex-col items-center"
+        className="relative flex-1 min-h-0 flex flex-col items-center"
         style={{ paddingTop: "32px", paddingLeft: "20px", paddingRight: "20px" }}
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
-          className="relative flex-1 flex flex-col w-full max-w-[780px]"
+          className="relative flex-1 min-h-0 flex flex-col w-full max-w-[780px]"
           style={{
             background: "var(--surface-base)",
             border: "0.5px solid var(--white-5)",
