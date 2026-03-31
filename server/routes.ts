@@ -2902,85 +2902,72 @@ As you move into Week 2, continue these daily practices. They are building a fou
     ]).onConflictDoNothing();
     console.log("Prelim modules seeded (ON CONFLICT DO NOTHING).");
 
-    // Seed default 5 testimonies (ON CONFLICT DO NOTHING)
+    // Canonical default testimony parts map (position → parts with correct unlock keys per spec)
+    // Person 1: prelim + week-1-last
+    // Person 2: week-2-first + week-2-last
+    // Person 3: week-3-first + week-3-last
+    // Person 4: week-4-first + week-4-last
+    // Person 5: week-5-first + week-5-last
+    const canonicalPartsMap: Record<number, Array<{ partNumber: number; title: string; unlockKey: string }>> = {
+      1: [
+        { partNumber: 1, title: "Before the Program", unlockKey: "prelim" },
+        { partNumber: 2, title: "After Week 1", unlockKey: "week-1-last" },
+      ],
+      2: [
+        { partNumber: 1, title: "Beginning Week 2", unlockKey: "week-2-first" },
+        { partNumber: 2, title: "Completing Week 2", unlockKey: "week-2-last" },
+      ],
+      3: [
+        { partNumber: 1, title: "Beginning Week 3", unlockKey: "week-3-first" },
+        { partNumber: 2, title: "Completing Week 3", unlockKey: "week-3-last" },
+      ],
+      4: [
+        { partNumber: 1, title: "Beginning Week 4", unlockKey: "week-4-first" },
+        { partNumber: 2, title: "Completing Week 4", unlockKey: "week-4-last" },
+      ],
+      5: [
+        { partNumber: 1, title: "Beginning Week 5", unlockKey: "week-5-first" },
+        { partNumber: 2, title: "Completing Week 5", unlockKey: "week-5-last" },
+      ],
+    };
+
     const defaultTestimonies = [
-      {
-        position: 1,
-        personName: "Person 1",
-        description: "A story of healing and hope through the preliminary formation.",
-        thumbnailUrl: "",
-        fullVideoUrl: "",
-      },
-      {
-        position: 2,
-        personName: "Person 2",
-        description: "Encountering God's mercy in the first week of the program.",
-        thumbnailUrl: "",
-        fullVideoUrl: "",
-      },
-      {
-        position: 3,
-        personName: "Person 3",
-        description: "Finding freedom through Week 2 of the journey.",
-        thumbnailUrl: "",
-        fullVideoUrl: "",
-      },
-      {
-        position: 4,
-        personName: "Person 4",
-        description: "Transformation through surrender in Week 3.",
-        thumbnailUrl: "",
-        fullVideoUrl: "",
-      },
-      {
-        position: 5,
-        personName: "Person 5",
-        description: "Walking in renewed life through the final weeks.",
-        thumbnailUrl: "",
-        fullVideoUrl: "",
-      },
+      { position: 1, personName: "Person 1", description: "A story of healing and hope through the preliminary formation.", thumbnailUrl: "", fullVideoUrl: "" },
+      { position: 2, personName: "Person 2", description: "Encountering God's mercy through Week 2 of the program.", thumbnailUrl: "", fullVideoUrl: "" },
+      { position: 3, personName: "Person 3", description: "Finding freedom through Week 3 of the journey.", thumbnailUrl: "", fullVideoUrl: "" },
+      { position: 4, personName: "Person 4", description: "Transformation through surrender in Week 4.", thumbnailUrl: "", fullVideoUrl: "" },
+      { position: 5, personName: "Person 5", description: "Walking in renewed life through Week 5.", thumbnailUrl: "", fullVideoUrl: "" },
     ];
 
     for (const t of defaultTestimonies) {
-      const existing = await db.select().from(testimonies).where(eq(testimonies.position, t.position));
-      if (existing.length === 0) {
-        const [created] = await db.insert(testimonies).values(t).returning();
-        // Seed parts for each testimony
-        const partsMap: Record<number, Array<{ partNumber: number; title: string; unlockKey: string }>> = {
-          1: [
-            { partNumber: 1, title: "Before the Program", unlockKey: "prelim" },
-            { partNumber: 2, title: "After Week 1", unlockKey: "week-1-last" },
-          ],
-          2: [
-            { partNumber: 1, title: "Beginning Week 1", unlockKey: "week-1-first" },
-            { partNumber: 2, title: "Completing Week 1", unlockKey: "week-1-last" },
-          ],
-          3: [
-            { partNumber: 1, title: "Beginning Week 2", unlockKey: "week-2-first" },
-            { partNumber: 2, title: "Completing Week 2", unlockKey: "week-2-last" },
-          ],
-          4: [
-            { partNumber: 1, title: "Beginning Week 3", unlockKey: "week-3-first" },
-            { partNumber: 2, title: "Completing Week 3", unlockKey: "week-3-last" },
-          ],
-          5: [
-            { partNumber: 1, title: "Beginning Week 4", unlockKey: "week-4-first" },
-            { partNumber: 2, title: "Completing Week 4", unlockKey: "week-4-last" },
-          ],
-        };
-        const parts = partsMap[t.position] ?? [];
-        for (const part of parts) {
+      let [record] = await db.select().from(testimonies).where(eq(testimonies.position, t.position));
+      if (!record) {
+        [record] = await db.insert(testimonies).values(t).returning();
+      }
+
+      // Always ensure parts match canonical map — upsert by partNumber
+      const canonical = canonicalPartsMap[t.position] ?? [];
+      const existingParts = await db.select().from(testimonyParts).where(eq(testimonyParts.testimonyId, record.id));
+
+      for (const cp of canonical) {
+        const match = existingParts.find(p => p.partNumber === cp.partNumber);
+        if (!match) {
           await db.insert(testimonyParts).values({
-            testimonyId: created.id,
-            partNumber: part.partNumber,
-            title: part.title,
+            testimonyId: record.id,
+            partNumber: cp.partNumber,
+            title: cp.title,
             videoUrl: "",
-            unlockKey: part.unlockKey,
+            unlockKey: cp.unlockKey,
           });
+        } else if (match.unlockKey !== cp.unlockKey) {
+          // Correct any previously wrong unlock key
+          await db.update(testimonyParts)
+            .set({ unlockKey: cp.unlockKey, title: cp.title })
+            .where(eq(testimonyParts.id, match.id));
         }
       }
     }
-    console.log("Testimonies seeded (ON CONFLICT skip).");
+    console.log("Testimonies seeded/corrected.");
 
     console.log("Seeding complete.");
 }
