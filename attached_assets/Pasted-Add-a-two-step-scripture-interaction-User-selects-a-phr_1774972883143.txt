@@ -1,0 +1,132 @@
+Add a two-step scripture interaction:
+
+User selects a phrase directly from the verse
+User sits with that phrase in silence with a timer
+
+This trains users to:
+
+slow down
+notice
+stay with Scripture
+Done looks like (refined)
+A scripture_select slide type
+Displays verse as inline text broken into selectable phrase spans
+User taps a phrase → it highlights (soft background)
+Only one phrase can be selected at a time
+Continue button is disabled until selection is made
+
+On Continue:
+
+Transition to a scripture_reflection slide
+Same verse is shown
+Selected phrase remains highlighted
+Timer runs (no interaction)
+4. Data structure (keep it simple)
+
+Do NOT overcomplicate parsing.
+
+scripture_select JSON
+{
+  "type": "scripture_select",
+  "reference": "John 8:31–32",
+  "chunks": [
+    "If you remain in my word,",
+    "you are truly my disciples,",
+    "and you will know the truth,",
+    "and the truth will set you free."
+  ],
+  "reflectionDuration": 60
+}
+5. Component behavior (clean)
+ScriptureSelectSlide
+Render chunks inline
+Each chunk = clickable span
+State: selectedIndex
+On click:
+update selectedIndex
+apply highlight style
+Continue:
+pass:
+chunks
+selectedIndex
+reference
+reflectionDuration
+6. Reflection slide (simplify your approach)
+IMPORTANT CHANGE
+
+Do NOT inject a slide via path system.
+
+Just:
+
+navigate normally with props
+
+ScriptureReflectionSlide
+
+Props:
+
+chunks
+selectedIndex
+reflectionDuration
+Render:
+full verse (same chunks)
+highlight only selectedIndex
+Timer:
+
+Reuse your existing timer UI
+
+But:
+
+no interaction
+no chunk clicks
+7. Styling rules (this matters more than logic)
+Highlight style
+background: soft gold / muted yellow
+not bright
+opacity ~20–30%
+slight text color shift
+Spacing
+chunks should feel like a sentence
+not separated like buttons
+8. Microinteraction
+
+On tap:
+
+150ms fade in
+no bounce
+no sound
+9. What to REMOVE from your spec
+
+Remove:
+
+“pill buttons”
+“onPathSelected”
+“injection system reuse”
+
+These add:
+
+complexity
+bugs
+wrong UX feel
+10. Final simplified task list (use this)
+Tasks (clean)
+1. Add scripture_select
+Render verse as inline clickable spans
+Single selection
+Highlight selected span
+Disable Continue until selected
+2. Add scripture_reflection
+Render same verse
+Highlight selected span
+Display timer
+No interaction
+3. Navigation
+On Continue → navigate to reflection slide
+Pass selectedIndex + chunks
+11. One subtle but important upgrade
+
+Instead of highlighting whole chunk block:
+
+Allow:
+
+line-wrapping highlight (like real text)
+not boxy
