@@ -18,9 +18,20 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+// Larger body limit for admin content restore (includes base64 images)
 app.use(
+  '/api/admin/restore',
   express.json({
     limit: '50mb',
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
+
+// Default body limit for all other routes
+app.use(
+  express.json({
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },

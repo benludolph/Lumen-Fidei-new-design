@@ -396,14 +396,40 @@ export const api = {
       method: 'GET' as const,
       path: '/api/admin/backup',
       responses: {
-        200: z.object({ version: z.number(), exportedAt: z.string(), data: z.any() }),
+        200: z.object({
+          version: z.literal(1),
+          exportedAt: z.string(),
+          data: z.object({
+            prelim_modules: z.array(z.record(z.string(), z.unknown())),
+            track_a_content: z.array(z.record(z.string(), z.unknown())),
+            track_a_modules: z.array(z.record(z.string(), z.unknown())),
+            daily_content: z.array(z.record(z.string(), z.unknown())),
+            module_overlays: z.array(z.record(z.string(), z.unknown())),
+            practice_resources: z.array(z.record(z.string(), z.unknown())),
+            cohort_settings: z.array(z.record(z.string(), z.unknown())),
+            uploaded_images: z.array(z.record(z.string(), z.unknown())),
+          }),
+        }),
         403: errorSchemas.forbidden,
       },
     },
     restore: {
       method: 'POST' as const,
       path: '/api/admin/restore',
-      input: z.object({ version: z.number(), exportedAt: z.string(), data: z.any() }),
+      input: z.object({
+        version: z.literal(1),
+        exportedAt: z.string(),
+        data: z.object({
+          prelim_modules: z.array(z.record(z.string(), z.unknown())),
+          track_a_content: z.array(z.record(z.string(), z.unknown())),
+          track_a_modules: z.array(z.record(z.string(), z.unknown())),
+          daily_content: z.array(z.record(z.string(), z.unknown())),
+          module_overlays: z.array(z.record(z.string(), z.unknown())),
+          practice_resources: z.array(z.record(z.string(), z.unknown())),
+          cohort_settings: z.array(z.record(z.string(), z.unknown())),
+          uploaded_images: z.array(z.record(z.string(), z.unknown())),
+        }),
+      }),
       responses: {
         200: z.object({ message: z.string(), counts: z.record(z.number()) }),
         400: errorSchemas.validation,
