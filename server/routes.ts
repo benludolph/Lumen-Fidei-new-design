@@ -1694,14 +1694,18 @@ export async function registerRoutes(
 
       const font = await pdfDoc.embedFont(fontBytes);
 
-      let fontSize = 70;
-      while (fontSize > 50 && font.widthOfTextAtSize(safeName, fontSize) > width * 0.7) {
-        fontSize -= 2;
+      // Scale font proportionally to the certificate height, then shrink to fit within 60% of width
+      const maxFontSize = Math.round(height * 0.052);
+      const minFontSize = Math.round(height * 0.025);
+      let fontSize = maxFontSize;
+      while (fontSize > minFontSize && font.widthOfTextAtSize(safeName, fontSize) > width * 0.60) {
+        fontSize -= 1;
       }
 
       const textWidth = font.widthOfTextAtSize(safeName, fontSize);
       const x = (width - textWidth) / 2;
-      const y = height * 0.43;
+      // Name sits just below "PROUDLY PRESENTED TO :" — roughly 56% from top = 44% from bottom
+      const y = height * 0.44;
 
       page.drawText(safeName, {
         x,
