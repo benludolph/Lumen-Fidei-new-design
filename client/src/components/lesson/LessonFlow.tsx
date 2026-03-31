@@ -55,7 +55,7 @@ export function LessonFlow({
   const [scenarioRevealCount, setScenarioRevealCount] = useState(1);
   const [pendingInjectedSlide, setPendingInjectedSlide] = useState<{ type: SlideType; content: string } | null>(null);
   const [isShowingInjected, setIsShowingInjected] = useState(false);
-  const [scriptureSelection, setScriptureSelection] = useState<ScriptureSelection | null>(null);
+  const [scriptureSelections, setScriptureSelections] = useState<Record<number, ScriptureSelection>>({});
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const overlayContextKey =
@@ -239,8 +239,8 @@ export function LessonFlow({
   }, []);
 
   const handleScriptureSelect = useCallback((selection: ScriptureSelection) => {
-    setScriptureSelection(selection);
-  }, []);
+    setScriptureSelections((prev) => ({ ...prev, [currentSlide]: selection }));
+  }, [currentSlide]);
 
   const handleContinue = useCallback(() => {
     onComplete();
@@ -334,6 +334,19 @@ export function LessonFlow({
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
 
+  const currentScriptureSelection = effectiveSlideData.type === "scripture_select"
+    ? (scriptureSelections[currentSlide] ?? null)
+    : effectiveSlideData.type === "scripture_reflection"
+    ? (() => {
+        for (let i = currentSlide - 1; i >= 0; i--) {
+          if (slides[i]?.type === "scripture_select" && scriptureSelections[i]) {
+            return scriptureSelections[i];
+          }
+        }
+        return null;
+      })()
+    : null;
+
   const lessonSlideEl = (
     <LessonSlide
       key={`slide-${animKey}`}
@@ -378,11 +391,7 @@ export function LessonFlow({
       onChatFlowExit={effectiveSlideData.type === "chat_flow" ? onExit : undefined}
       onPathSelected={currentSlideData.type === "path_selector" && !isShowingInjected ? handlePathSelected : undefined}
       onScriptureSelect={effectiveSlideData.type === "scripture_select" ? handleScriptureSelect : undefined}
-      scriptureSelection={
-        effectiveSlideData.type === "scripture_select" || effectiveSlideData.type === "scripture_reflection"
-          ? scriptureSelection
-          : undefined
-      }
+      scriptureSelection={currentScriptureSelection ?? undefined}
     />
   );
 
@@ -398,7 +407,7 @@ export function LessonFlow({
   const navBlocked =
     (currentSlideData.type === "timer" && !timerDone) ||
     (effectiveSlideData.type === "scripture_reflection" && !timerDone) ||
-    (effectiveSlideData.type === "scripture_select" && !scriptureSelection) ||
+    (effectiveSlideData.type === "scripture_select" && !currentScriptureSelection) ||
     isValidKc ||
     requiresInteraction ||
     surveyBlocked;

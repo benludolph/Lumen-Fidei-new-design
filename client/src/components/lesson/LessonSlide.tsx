@@ -537,46 +537,45 @@ function ScriptureSelectSlide({
         style={{
           borderLeft: "3px solid rgba(255,255,255,0.15)",
           paddingLeft: "20px",
+          fontFamily: "'Afacad', sans-serif",
+          fontStyle: "italic",
+          fontSize: "1.5rem",
+          color: "rgba(255,255,255,0.8)",
+          lineHeight: "1.65",
         }}
       >
-        <div
-          className="flex flex-wrap items-start"
-          style={{ gap: "4px 6px", fontFamily: "'Afacad', sans-serif", fontStyle: "italic", fontSize: "1.5rem", color: "rgba(255,255,255,0.8)" }}
-        >
-          {data.chunks.map((chunk, i) => {
-            const isSelected = selectedIndex === i;
-            const isHovered = hoveredIndex === i && selectedIndex !== i;
-            return (
-              <span
-                key={i}
-                onClick={() => handleSelect(i)}
-                onMouseEnter={() => setHoveredIndex(i)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                data-testid={`scripture-chunk-${i}`}
-                style={{
-                  cursor: "pointer",
-                  display: "inline-block",
-                  background: isSelected
-                    ? "rgba(212, 175, 55, 0.22)"
-                    : isHovered
-                    ? "rgba(255,255,255,0.07)"
-                    : "transparent",
-                  color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
-                  transition: "background 150ms ease, color 150ms ease",
-                  borderRadius: "3px",
-                  padding: "2px 4px",
-                  textDecoration: isSelected ? "none" : "underline",
-                  textDecorationStyle: isSelected ? undefined : "dotted",
-                  textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
-                  WebkitBoxDecorationBreak: "clone",
-                  boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
-                }}
-              >
-                {chunk}
-              </span>
-            );
-          })}
-        </div>
+        {data.chunks.map((chunk, i) => {
+          const isSelected = selectedIndex === i;
+          const isHovered = hoveredIndex === i && !isSelected;
+          return (
+            <span
+              key={i}
+              onClick={() => handleSelect(i)}
+              onMouseEnter={() => setHoveredIndex(i)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              data-testid={`scripture-chunk-${i}`}
+              style={{
+                cursor: "pointer",
+                background: isSelected
+                  ? "rgba(212, 175, 55, 0.22)"
+                  : isHovered
+                  ? "rgba(255,255,255,0.07)"
+                  : "transparent",
+                color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
+                transition: "background 150ms ease, color 150ms ease",
+                borderRadius: "3px",
+                padding: "1px 3px",
+                textDecoration: isSelected ? "none" : "underline",
+                textDecorationStyle: isSelected ? undefined : "dotted",
+                textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
+                WebkitBoxDecorationBreak: "clone",
+                boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+              }}
+            >
+              {chunk}
+            </span>
+          );
+        })}
       </div>
 
       {data.reference && (
@@ -705,35 +704,34 @@ function ScriptureReflectionSlide({
           style={{
             borderLeft: "3px solid rgba(255,255,255,0.15)",
             paddingLeft: "20px",
+            fontFamily: "'Afacad', sans-serif",
+            fontStyle: "italic",
+            fontSize: "1.5rem",
+            color: "rgba(255,255,255,0.8)",
+            lineHeight: "1.65",
           }}
         >
-          <div
-            className="flex flex-wrap items-start"
-            style={{ gap: "4px 6px", fontFamily: "'Afacad', sans-serif", fontStyle: "italic", fontSize: "1.5rem", color: "rgba(255,255,255,0.8)" }}
-          >
-            {chunks.map((chunk, i) => {
-              const isSelected = i === selectedIndex;
-              return (
-                <span
-                  key={i}
-                  style={{
-                    display: "inline-block",
-                    background: isSelected ? "rgba(212, 175, 55, 0.22)" : "transparent",
-                    color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
-                    borderRadius: "3px",
-                    padding: "2px 4px",
-                    textDecoration: isSelected ? "none" : "underline",
-                    textDecorationStyle: isSelected ? undefined : "dotted",
-                    textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
-                    WebkitBoxDecorationBreak: "clone",
-                    boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
-                  }}
-                >
-                  {chunk}
-                </span>
-              );
-            })}
-          </div>
+          {chunks.map((chunk, i) => {
+            const isSelected = i === selectedIndex;
+            return (
+              <span
+                key={i}
+                style={{
+                  background: isSelected ? "rgba(212, 175, 55, 0.22)" : "transparent",
+                  color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
+                  borderRadius: "3px",
+                  padding: "1px 3px",
+                  textDecoration: isSelected ? "none" : "underline",
+                  textDecorationStyle: isSelected ? undefined : "dotted",
+                  textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
+                  WebkitBoxDecorationBreak: "clone",
+                  boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+                }}
+              >
+                {chunk}
+              </span>
+            );
+          })}
         </div>
 
         {reference && (
