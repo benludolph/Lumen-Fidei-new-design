@@ -907,7 +907,18 @@ export function LessonSlide({
           />
         ) : type === "scripture_reflection" && scriptureSelection ? (
           <ScriptureReflectionSlide
-            selection={scriptureSelection}
+            selection={(() => {
+              try {
+                const parsed = JSON.parse(content || "{}");
+                return {
+                  ...scriptureSelection,
+                  reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
+                  reflectionTitle: typeof parsed.reflectionTitle === "string" && parsed.reflectionTitle ? parsed.reflectionTitle : scriptureSelection.reflectionTitle,
+                };
+              } catch {
+                return scriptureSelection;
+              }
+            })()}
             onTimerComplete={onTimerComplete}
             alreadyDone={timerAlreadyDone}
           />
