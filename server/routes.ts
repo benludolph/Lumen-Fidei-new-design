@@ -1665,7 +1665,7 @@ export async function registerRoutes(
 
   // === Certificate Generation ===
 
-  app.post('/generate-certificate', requireAuth, async (req, res) => {
+  app.post('/api/generate-certificate', requireAuth, async (req, res) => {
     try {
       const { name } = req.body;
       if (!name || typeof name !== 'string' || name.trim().length === 0) {
