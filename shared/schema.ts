@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, uniqueIndex, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -177,13 +177,15 @@ export const testimonies = pgTable("testimonies", {
 // Parts of a testimony — each part has its own video and unlock key
 export const testimonyParts = pgTable("testimony_parts", {
   id: serial("id").primaryKey(),
-  testimonyId: integer("testimony_id").notNull(),
+  testimonyId: integer("testimony_id").notNull().references(() => testimonies.id, { onDelete: "cascade" }),
   partNumber: integer("part_number").notNull(),
   title: text("title").notNull().default(""),
   videoUrl: text("video_url").notNull().default(""),
   // "prelim" | "week-1-first" | "week-1-last" | "week-2-first" | "week-2-last" | ...
   unlockKey: text("unlock_key").notNull(),
-});
+}, (table) => ({
+  uniqueTestimonyPart: unique().on(table.testimonyId, table.partNumber),
+}));
 
 export type Testimony = typeof testimonies.$inferSelect;
 export type InsertTestimony = typeof testimonies.$inferInsert;
