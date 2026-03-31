@@ -58,6 +58,7 @@ export interface ScriptureSelection {
   selectedIndex: number;
   reference: string;
   reflectionDuration: number;
+  reflectionTitle?: string;
 }
 
 export interface QuizData {
@@ -476,18 +477,27 @@ function ScriptureSelectSlide({
     try {
       const parsed = JSON.parse(content);
       return {
+        title: parsed.title || "Now read it again\nThis time, notice if anything stands out, or evokes an emotion.\nThen tap the word or phrase that stands out to you.",
         reference: parsed.reference || "",
         chunks: Array.isArray(parsed.chunks) ? parsed.chunks : [content],
         reflectionDuration: parsed.reflectionDuration ?? 60,
+        reflectionTitle: parsed.reflectionTitle || "Stay with this and bring it to God.\nExplore the thoughts that come up.",
       };
     } catch {
-      return { reference: "", chunks: [content], reflectionDuration: 60 };
+      return {
+        title: "Now read it again\nThis time, notice if anything stands out, or evokes an emotion.\nThen tap the word or phrase that stands out to you.",
+        reference: "",
+        chunks: [content],
+        reflectionDuration: 60,
+        reflectionTitle: "Stay with this and bring it to God.\nExplore the thoughts that come up.",
+      };
     }
   }, [content]);
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(
     existingSelection != null ? existingSelection.selectedIndex : null
   );
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const handleSelect = (index: number) => {
     setSelectedIndex(index);
@@ -496,50 +506,93 @@ function ScriptureSelectSlide({
       selectedIndex: index,
       reference: data.reference,
       reflectionDuration: data.reflectionDuration,
+      reflectionTitle: data.reflectionTitle,
     });
   };
 
+  const titleLines = data.title.split("\n");
+
   return (
-    <div className="flex flex-col gap-6" data-testid="slide-scripture-select">
-      {data.reference && (
-        <p
-          className="type-caption-lg uppercase tracking-wider"
-          style={{ color: "var(--white-40)" }}
-          data-testid="scripture-reference"
-        >
-          {data.reference}
-        </p>
-      )}
-      <p className="leading-[1.9]" style={{ fontSize: "1.2rem", color: "var(--white-80)" }}>
-        {data.chunks.map((chunk, i) => (
-          <span
+    <div className="flex flex-col gap-5" data-testid="slide-scripture-select">
+      <div className="flex flex-col gap-0">
+        {titleLines.map((line, i) => (
+          <h2
             key={i}
-            onClick={() => handleSelect(i)}
-            data-testid={`scripture-chunk-${i}`}
+            className="leading-[1.3]"
             style={{
-              cursor: "pointer",
-              background: selectedIndex === i ? "rgba(212, 175, 55, 0.22)" : "transparent",
-              color: selectedIndex === i ? "#e8d5a3" : "inherit",
-              transition: "background 150ms ease, color 150ms ease",
-              borderRadius: "3px",
-              padding: "2px 3px",
-              WebkitBoxDecorationBreak: "clone",
-              boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+              fontFamily: "'IvyOra Display', serif",
+              fontStyle: "italic",
+              fontWeight: 500,
+              fontSize: "1.625rem",
+              color: "rgba(255,255,255,1)",
+              margin: 0,
             }}
           >
-            {chunk}
-            {i < data.chunks.length - 1 ? " " : ""}
-          </span>
+            {line}
+          </h2>
         ))}
-      </p>
-      {selectedIndex === null && (
-        <p
-          className="type-body-sm italic"
-          style={{ color: "var(--white-30)" }}
-          data-testid="scripture-select-hint"
+      </div>
+
+      <div
+        style={{
+          borderLeft: "3px solid rgba(255,255,255,0.15)",
+          paddingLeft: "20px",
+        }}
+      >
+        <div
+          className="flex flex-wrap items-start"
+          style={{ gap: "4px 6px", fontFamily: "'Afacad', sans-serif", fontStyle: "italic", fontSize: "1.5rem", color: "rgba(255,255,255,0.8)" }}
         >
-          Tap a phrase that speaks to you.
-        </p>
+          {data.chunks.map((chunk, i) => {
+            const isSelected = selectedIndex === i;
+            const isHovered = hoveredIndex === i && selectedIndex !== i;
+            return (
+              <span
+                key={i}
+                onClick={() => handleSelect(i)}
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                data-testid={`scripture-chunk-${i}`}
+                style={{
+                  cursor: "pointer",
+                  display: "inline-block",
+                  background: isSelected
+                    ? "rgba(212, 175, 55, 0.22)"
+                    : isHovered
+                    ? "rgba(255,255,255,0.07)"
+                    : "transparent",
+                  color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
+                  transition: "background 150ms ease, color 150ms ease",
+                  borderRadius: "3px",
+                  padding: "2px 4px",
+                  textDecoration: isSelected ? "none" : "underline",
+                  textDecorationStyle: isSelected ? undefined : "dotted",
+                  textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
+                  WebkitBoxDecorationBreak: "clone",
+                  boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+                }}
+              >
+                {chunk}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+
+      {data.reference && (
+        <div className="flex justify-end w-full" data-testid="scripture-reference">
+          <span
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontWeight: 700,
+              fontSize: "1.15rem",
+              color: "rgba(255,255,255,0.8)",
+              letterSpacing: "0.01em",
+            }}
+          >
+            — {data.reference}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -554,7 +607,7 @@ function ScriptureReflectionSlide({
   onTimerComplete?: () => void;
   alreadyDone?: boolean;
 }) {
-  const { chunks, selectedIndex, reference, reflectionDuration } = selection;
+  const { chunks, selectedIndex, reference, reflectionDuration, reflectionTitle } = selection;
   const [remaining, setRemaining] = useState(alreadyDone ? 0 : reflectionDuration);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completedRef = useRef(!!alreadyDone);
@@ -599,8 +652,11 @@ function ScriptureReflectionSlide({
   const strokeOffset = circumference * (1 - progress);
   const done = remaining === 0;
 
+  const titleText = reflectionTitle || "Stay with this and bring it to God.\nExplore the thoughts that come up.";
+  const titleLines = titleText.split("\n");
+
   return (
-    <div className="flex flex-col items-center gap-10" data-testid="slide-scripture-reflection">
+    <div className="flex flex-col items-center gap-8" data-testid="slide-scripture-reflection">
       <div className="relative w-[140px] h-[140px] flex items-center justify-center">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
@@ -625,36 +681,75 @@ function ScriptureReflectionSlide({
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-4">
-        {reference && (
-          <p
-            className="type-caption-lg uppercase tracking-wider text-center"
-            style={{ color: "var(--white-40)" }}
+      <div className="w-full flex flex-col gap-0">
+        {titleLines.map((line, i) => (
+          <h2
+            key={i}
+            className="leading-[1.3] text-left"
+            style={{
+              fontFamily: "'IvyOra Display', serif",
+              fontStyle: "italic",
+              fontWeight: 500,
+              fontSize: "1.625rem",
+              color: "rgba(255,255,255,1)",
+              margin: 0,
+            }}
           >
-            {reference}
-          </p>
-        )}
-        <p
-          className="leading-[1.9] text-center"
-          style={{ fontSize: "1.2rem", color: "var(--white-80)" }}
+            {line}
+          </h2>
+        ))}
+      </div>
+
+      <div className="w-full flex flex-col gap-4">
+        <div
+          style={{
+            borderLeft: "3px solid rgba(255,255,255,0.15)",
+            paddingLeft: "20px",
+          }}
         >
-          {chunks.map((chunk, i) => (
+          <div
+            className="flex flex-wrap items-start"
+            style={{ gap: "4px 6px", fontFamily: "'Afacad', sans-serif", fontStyle: "italic", fontSize: "1.5rem", color: "rgba(255,255,255,0.8)" }}
+          >
+            {chunks.map((chunk, i) => {
+              const isSelected = i === selectedIndex;
+              return (
+                <span
+                  key={i}
+                  style={{
+                    display: "inline-block",
+                    background: isSelected ? "rgba(212, 175, 55, 0.22)" : "transparent",
+                    color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
+                    borderRadius: "3px",
+                    padding: "2px 4px",
+                    textDecoration: isSelected ? "none" : "underline",
+                    textDecorationStyle: isSelected ? undefined : "dotted",
+                    textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
+                    WebkitBoxDecorationBreak: "clone",
+                    boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+                  }}
+                >
+                  {chunk}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        {reference && (
+          <div className="flex justify-end w-full">
             <span
-              key={i}
               style={{
-                background: i === selectedIndex ? "rgba(212, 175, 55, 0.22)" : "transparent",
-                color: i === selectedIndex ? "#e8d5a3" : "inherit",
-                borderRadius: "3px",
-                padding: "2px 3px",
-                WebkitBoxDecorationBreak: "clone",
-                boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+                fontFamily: "'Afacad', sans-serif",
+                fontWeight: 700,
+                fontSize: "1.15rem",
+                color: "rgba(255,255,255,0.8)",
               }}
             >
-              {chunk}
-              {i < chunks.length - 1 ? " " : ""}
+              — {reference}
             </span>
-          ))}
-        </p>
+          </div>
+        )}
       </div>
     </div>
   );
