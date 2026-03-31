@@ -126,8 +126,8 @@ export function CompletionOverlay({ overlayConfig, onDismiss }: CompletionOverla
           <div
             style={{
               position: "relative",
-              width: 116,
-              height: 116,
+              width: 220,
+              height: 220,
               flexShrink: 0,
               transition: "opacity 700ms ease-out, transform 700ms ease-out",
               opacity: unlockPhase >= 2 ? 1 : 0,
@@ -137,15 +137,15 @@ export function CompletionOverlay({ overlayConfig, onDismiss }: CompletionOverla
             {/* Particle canvas — behind the circle */}
             <canvas
               ref={canvasRef}
-              width={240}
-              height={240}
+              width={440}
+              height={440}
               style={{
                 position: "absolute",
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: 240,
-                height: 240,
+                width: 440,
+                height: 440,
                 zIndex: 0,
                 pointerEvents: "none",
               }}
@@ -167,10 +167,10 @@ export function CompletionOverlay({ overlayConfig, onDismiss }: CompletionOverla
               alt=""
               style={{
                 position: "absolute",
-                top: 5,
-                left: 5,
-                width: 106,
-                height: 106,
+                top: 6,
+                left: 6,
+                width: 208,
+                height: 208,
                 borderRadius: "50%",
                 objectFit: "cover",
                 zIndex: 2,
