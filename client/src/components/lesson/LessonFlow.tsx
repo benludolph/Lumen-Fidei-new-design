@@ -141,12 +141,7 @@ export function LessonFlow({
       setPendingInjectedSlide(null);
       setSlideInteracted(false);
       if (currentSlide >= slides.length - 1) {
-        if (overlayConfig?.enabled && !overlayShownRef.current) {
-          overlayShownRef.current = true;
-          setFlowState("overlay");
-        } else {
-          setFlowState("complete");
-        }
+        setFlowState("complete");
       } else {
         playClickContinue();
         const nextSlide = currentSlide + 1;
@@ -171,12 +166,7 @@ export function LessonFlow({
       } catch {}
     }
     if (currentSlide >= slides.length - 1) {
-      if (overlayConfig?.enabled && !overlayShownRef.current) {
-        overlayShownRef.current = true;
-        setFlowState("overlay");
-      } else {
-        setFlowState("complete");
-      }
+      setFlowState("complete");
     } else {
       playClickContinue();
       const nextSlide = currentSlide + 1;
@@ -188,7 +178,7 @@ export function LessonFlow({
       setSlideInteracted(false);
       setScenarioRevealCount(1);
     }
-  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, overlayConfig, isShowingInjected, pendingInjectedSlide]);
+  }, [currentSlide, slides, cancelAutoAdvance, completedTimerSlides, scenarioRevealCount, isShowingInjected, pendingInjectedSlide]);
 
   const handlePrev = useCallback(() => {
     cancelAutoAdvance();
@@ -243,8 +233,13 @@ export function LessonFlow({
   }, [currentSlide]);
 
   const handleContinue = useCallback(() => {
-    onComplete();
-  }, [onComplete]);
+    if (overlayConfig?.enabled && !overlayShownRef.current) {
+      overlayShownRef.current = true;
+      setFlowState("overlay");
+    } else {
+      onComplete();
+    }
+  }, [onComplete, overlayConfig]);
 
   const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
     setQuizAnswers((prev) => ({
@@ -256,19 +251,14 @@ export function LessonFlow({
       setDirection("forward");
       setCurrentSlide((prev) => {
         if (prev >= slides.length - 1) {
-          if (overlayConfig?.enabled && !overlayShownRef.current) {
-            overlayShownRef.current = true;
-            setFlowState("overlay");
-          } else {
-            setFlowState("complete");
-          }
+          setFlowState("complete");
           return prev;
         }
         return prev + 1;
       });
       setAnimKey((prev) => prev + 1);
     }, 400);
-  }, [slides.length, overlayConfig]);
+  }, [slides.length]);
 
   if (flowState === "loading") {
     return createPortal(
@@ -286,7 +276,7 @@ export function LessonFlow({
     return (
       <CompletionOverlay
         overlayConfig={overlayConfig}
-        onDismiss={() => setFlowState("complete")}
+        onDismiss={onComplete}
       />
     );
   }
