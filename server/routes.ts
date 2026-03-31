@@ -1704,8 +1704,8 @@ export async function registerRoutes(
 
       const textWidth = font.widthOfTextAtSize(safeName, fontSize);
       const x = (width - textWidth) / 2;
-      // Name sits just below "PROUDLY PRESENTED TO :" — roughly 56% from top = 44% from bottom
-      const y = height * 0.44;
+      // Name sits in the blank space — roughly 59% from top = 41% from bottom
+      const y = height * 0.41;
 
       page.drawText(safeName, {
         x,
