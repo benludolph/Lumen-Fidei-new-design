@@ -164,6 +164,35 @@ export const cohortSettings = pgTable("cohort_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Testimonies — each entry is one person's testimony story
+export const testimonies = pgTable("testimonies", {
+  id: serial("id").primaryKey(),
+  position: integer("position").notNull().unique(),
+  personName: text("person_name").notNull(),
+  description: text("description").notNull().default(""),
+  thumbnailUrl: text("thumbnail_url").notNull().default(""),
+  fullVideoUrl: text("full_video_url").notNull().default(""),
+});
+
+// Parts of a testimony — each part has its own video and unlock key
+export const testimonyParts = pgTable("testimony_parts", {
+  id: serial("id").primaryKey(),
+  testimonyId: integer("testimony_id").notNull(),
+  partNumber: integer("part_number").notNull(),
+  title: text("title").notNull().default(""),
+  videoUrl: text("video_url").notNull().default(""),
+  // "prelim" | "week-1-first" | "week-1-last" | "week-2-first" | "week-2-last" | ...
+  unlockKey: text("unlock_key").notNull(),
+});
+
+export type Testimony = typeof testimonies.$inferSelect;
+export type InsertTestimony = typeof testimonies.$inferInsert;
+export type TestimonyPart = typeof testimonyParts.$inferSelect;
+export type InsertTestimonyPart = typeof testimonyParts.$inferInsert;
+
+export const insertTestimonySchema = createInsertSchema(testimonies).omit({ id: true });
+export const insertTestimonyPartSchema = createInsertSchema(testimonyParts).omit({ id: true });
+
 // Per-module reflection overlay configuration
 export const moduleOverlays = pgTable("module_overlays", {
   contextKey: text("context_key").primaryKey(),

@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
-  prelimModules, prelimCompletions, moduleOverlays,
+  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -15,8 +15,10 @@ import {
   type PrelimModule, type InsertPrelimModule,
   type PrelimCompletion,
   type ModuleOverlay,
+  type Testimony, type InsertTestimony,
+  type TestimonyPart, type InsertTestimonyPart,
 } from "@shared/schema";
-import { eq, and, or, lt, desc, asc, isNotNull } from "drizzle-orm";
+import { eq, and, or, lt, desc, asc, isNotNull, min, max, count, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -97,6 +99,19 @@ export interface IStorage {
   deletePrelimModule(position: number): Promise<void>;
   getUserPrelimCompletions(userId: number): Promise<PrelimCompletion[]>;
   completePrelimModule(userId: number, modulePosition: number): Promise<PrelimCompletion>;
+
+  // Testimonies
+  getTestimonies(): Promise<Testimony[]>;
+  getTestimony(id: number): Promise<Testimony | undefined>;
+  createTestimony(data: InsertTestimony): Promise<Testimony>;
+  updateTestimony(id: number, data: Partial<InsertTestimony>): Promise<Testimony>;
+  deleteTestimony(id: number): Promise<void>;
+  getTestimonyParts(testimonyId: number): Promise<TestimonyPart[]>;
+  createTestimonyPart(data: InsertTestimonyPart): Promise<TestimonyPart>;
+  updateTestimonyPart(id: number, data: Partial<InsertTestimonyPart>): Promise<TestimonyPart>;
+  deleteTestimonyPart(id: number): Promise<void>;
+  // Unlock derivation: returns a set of unlockKeys that are unlocked for this user
+  getUnlockedKeysForUser(userId: number): Promise<Set<string>>;
 
   // session store
   sessionStore: any;
@@ -513,6 +528,92 @@ export class DatabaseStorage implements IStorage {
       .values({ userId, modulePosition })
       .returning();
     return completion;
+  }
+
+  // Testimonies
+  async getTestimonies(): Promise<Testimony[]> {
+    return await db.select().from(testimonies).orderBy(asc(testimonies.position));
+  }
+
+  async getTestimony(id: number): Promise<Testimony | undefined> {
+    const [t] = await db.select().from(testimonies).where(eq(testimonies.id, id));
+    return t;
+  }
+
+  async createTestimony(data: InsertTestimony): Promise<Testimony> {
+    const [t] = await db.insert(testimonies).values(data).returning();
+    return t;
+  }
+
+  async updateTestimony(id: number, data: Partial<InsertTestimony>): Promise<Testimony> {
+    const [t] = await db.update(testimonies).set(data).where(eq(testimonies.id, id)).returning();
+    return t;
+  }
+
+  async deleteTestimony(id: number): Promise<void> {
+    await db.delete(testimonyParts).where(eq(testimonyParts.testimonyId, id));
+    await db.delete(testimonies).where(eq(testimonies.id, id));
+  }
+
+  async getTestimonyParts(testimonyId: number): Promise<TestimonyPart[]> {
+    return await db.select().from(testimonyParts)
+      .where(eq(testimonyParts.testimonyId, testimonyId))
+      .orderBy(asc(testimonyParts.partNumber));
+  }
+
+  async createTestimonyPart(data: InsertTestimonyPart): Promise<TestimonyPart> {
+    const [p] = await db.insert(testimonyParts).values(data).returning();
+    return p;
+  }
+
+  async updateTestimonyPart(id: number, data: Partial<InsertTestimonyPart>): Promise<TestimonyPart> {
+    const [p] = await db.update(testimonyParts).set(data).where(eq(testimonyParts.id, id)).returning();
+    return p;
+  }
+
+  async deleteTestimonyPart(id: number): Promise<void> {
+    await db.delete(testimonyParts).where(eq(testimonyParts.id, id));
+  }
+
+  async getUnlockedKeysForUser(userId: number): Promise<Set<string>> {
+    const unlockedKeys = new Set<string>();
+
+    // 1. Check prelim completion — user must have completed ALL prelim modules
+    const [totalPrelimResult] = await db.select({ cnt: count() }).from(prelimModules);
+    const [userPrelimResult] = await db.select({ cnt: count() }).from(prelimCompletions)
+      .where(eq(prelimCompletions.userId, userId));
+    const totalPrelim = Number(totalPrelimResult?.cnt ?? 0);
+    const userPrelim = Number(userPrelimResult?.cnt ?? 0);
+    if (totalPrelim > 0 && userPrelim >= totalPrelim) {
+      unlockedKeys.add("prelim");
+    }
+
+    // 2. For each week 1-5, find min and max day in that week, check prayer completions
+    const userCompletions = await db.select({ dayNumber: prayerCompletions.dayNumber })
+      .from(prayerCompletions)
+      .where(eq(prayerCompletions.userId, userId));
+    const completedDays = new Set(userCompletions.map(c => c.dayNumber));
+
+    for (let week = 1; week <= 5; week++) {
+      const weekDays = await db.select({ dayNumber: trackAContent.dayNumber })
+        .from(trackAContent)
+        .where(eq(trackAContent.weekNumber, week));
+
+      if (weekDays.length === 0) continue;
+
+      const dayNumbers = weekDays.map(d => d.dayNumber).sort((a, b) => a - b);
+      const firstDay = dayNumbers[0];
+      const lastDay = dayNumbers[dayNumbers.length - 1];
+
+      if (completedDays.has(firstDay)) {
+        unlockedKeys.add(`week-${week}-first`);
+      }
+      if (completedDays.has(lastDay)) {
+        unlockedKeys.add(`week-${week}-last`);
+      }
+    }
+
+    return unlockedKeys;
   }
 }
 

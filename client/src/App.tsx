@@ -16,6 +16,7 @@ import Admin from "@/pages/Admin";
 import Resources from "@/pages/Resources";
 import ResourceDetail from "@/pages/ResourceDetail";
 import Collections from "@/pages/Collections";
+import TestimoniesPage from "@/pages/Testimonies";
 
 // Protected Route Wrapper
 function ProtectedRoute({ 
@@ -97,6 +98,10 @@ function Router() {
 
       <Route path="/collections">
         <ProtectedRoute component={Collections} allowedRoles={['participant']} />
+      </Route>
+
+      <Route path="/testimonies">
+        <ProtectedRoute component={TestimoniesPage} allowedRoles={['participant']} />
       </Route>
 
       <Route component={NotFound} />
