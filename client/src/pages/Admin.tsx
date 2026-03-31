@@ -5500,6 +5500,18 @@ function PrelimContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : slide.type === "scripture_select" ? (
+                              <ScriptureSelectEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "scripture_reflection" ? (
+                              <ScriptureReflectionEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
