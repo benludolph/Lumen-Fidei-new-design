@@ -3293,21 +3293,20 @@ function KnowledgeCheckEditor({ content, onChange, index }: { content: string; o
 }
 
 function ScriptureSelectEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  let data: { title: string; reference: string; chunks: string[]; reflectionDuration: number };
+  let data: { title: string; reference: string; chunks: string[] };
   try {
     const parsed = JSON.parse(content || "{}");
     data = {
       title: typeof parsed.title === "string" ? parsed.title : "",
       reference: typeof parsed.reference === "string" ? parsed.reference : "",
       chunks: Array.isArray(parsed.chunks) ? parsed.chunks : [""],
-      reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
     };
   } catch {
-    data = { title: "", reference: "", chunks: [""], reflectionDuration: 120 };
+    data = { title: "", reference: "", chunks: [""] };
   }
 
   const update = (next: typeof data) => {
-    onChange(JSON.stringify(next));
+    onChange(JSON.stringify({ ...next, reflectionDuration: 0 }));
   };
 
   const updateChunk = (idx: number, value: string) => {
@@ -3381,19 +3380,6 @@ function ScriptureSelectEditor({ content, onChange, index }: { content: string; 
           <Plus className="w-3.5 h-3.5" />
           Add phrase
         </button>
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Reflection Duration (seconds)</label>
-        <input
-          type="number"
-          min={0}
-          max={600}
-          value={data.reflectionDuration}
-          onChange={(e) => update({ ...data, reflectionDuration: parseInt(e.target.value) || 0 })}
-          className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
-          data-testid={`input-scripture-duration-${index}`}
-        />
-        <p className="text-xs text-muted-foreground">Set to 0 to skip the reflection timer entirely.</p>
       </div>
     </div>
   );
