@@ -446,6 +446,21 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
   return url;
 }
 
+export type ContentBackup = {
+  version: 1;
+  exportedAt: string;
+  data: {
+    prelim_modules: Record<string, unknown>[];
+    track_a_content: Record<string, unknown>[];
+    track_a_modules: Record<string, unknown>[];
+    daily_content: Record<string, unknown>[];
+    module_overlays: Record<string, unknown>[];
+    practice_resources: Record<string, unknown>[];
+    cohort_settings: Record<string, unknown>[];
+    uploaded_images: Record<string, unknown>[];
+  };
+};
+
 // Type exports
 export type LoginRequest = z.infer<typeof api.auth.login.input>;
 export type User = typeof users.$inferSelect;

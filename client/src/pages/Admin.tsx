@@ -20,7 +20,7 @@ import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { api } from "@shared/routes";
+import { api, type ContentBackup } from "@shared/routes";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1140,7 +1140,7 @@ function CohortSettingsView() {
 function BackupRestoreCard() {
   const { toast } = useToast();
   const [showRestoreDialog, setShowRestoreDialog] = useState(false);
-  const [pendingFile, setPendingFile] = useState<{ name: string; content: any } | null>(null);
+  const [pendingFile, setPendingFile] = useState<{ name: string; content: ContentBackup } | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1173,12 +1173,18 @@ function BackupRestoreCard() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const content = JSON.parse(ev.target?.result as string);
-        if (!content?.version || !content?.data) {
+        const parsed: unknown = JSON.parse(ev.target?.result as string);
+        if (
+          typeof parsed !== 'object' ||
+          parsed === null ||
+          !('version' in parsed) ||
+          !('data' in parsed) ||
+          (parsed as { version: unknown }).version !== 1
+        ) {
           toast({ title: 'Invalid backup file', description: 'This file does not appear to be a valid Lumen Fidei backup.', variant: 'destructive' });
           return;
         }
-        setPendingFile({ name: file.name, content });
+        setPendingFile({ name: file.name, content: parsed as ContentBackup });
         setShowRestoreDialog(true);
       } catch {
         toast({ title: 'Invalid file', description: 'Could not read the selected file.', variant: 'destructive' });
@@ -1189,7 +1195,7 @@ function BackupRestoreCard() {
   };
 
   const restoreMutation = useMutation({
-    mutationFn: async (backup: any) => {
+    mutationFn: async (backup: ContentBackup) => {
       const res = await apiRequest('POST', '/api/admin/restore', backup);
       if (!res.ok) {
         const err = await res.json();

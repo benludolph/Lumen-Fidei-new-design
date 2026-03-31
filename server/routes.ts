@@ -1423,17 +1423,17 @@ export async function registerRoutes(
   });
 
   const backupRestoreSchema = z.object({
-    version: z.number(),
+    version: z.literal(1),
     exportedAt: z.string(),
     data: z.object({
-      prelim_modules: z.array(z.any()),
-      track_a_content: z.array(z.any()),
-      track_a_modules: z.array(z.any()),
-      daily_content: z.array(z.any()),
-      module_overlays: z.array(z.any()),
-      practice_resources: z.array(z.any()),
-      cohort_settings: z.array(z.any()),
-      uploaded_images: z.array(z.any()),
+      prelim_modules: z.array(z.object({ position: z.number(), title: z.string() }).passthrough()),
+      track_a_content: z.array(z.object({ dayNumber: z.number(), weekNumber: z.number(), centralTheme: z.string() }).passthrough()),
+      track_a_modules: z.array(z.object({ weekNumber: z.number(), title: z.string(), subtitle: z.string() }).passthrough()),
+      daily_content: z.array(z.object({ dayNumber: z.number(), weekNumber: z.number(), weekTitle: z.string() }).passthrough()),
+      module_overlays: z.array(z.object({ contextKey: z.string() }).passthrough()),
+      practice_resources: z.array(z.object({ name: z.string(), type: z.string(), content: z.string() }).passthrough()),
+      cohort_settings: z.array(z.object({ key: z.string(), value: z.string() }).passthrough()),
+      uploaded_images: z.array(z.object({ filename: z.string(), mimeType: z.string(), data: z.string() }).passthrough()),
     }),
   });
 
@@ -1447,92 +1447,54 @@ export async function registerRoutes(
       const { data } = parsed.data;
 
       await db.transaction(async (tx) => {
-        if (data.uploaded_images.length > 0) {
-          await tx.delete(uploadedImages);
-          for (const row of data.uploaded_images) {
-            const { id: _id, createdAt: _ca, ...rest } = row;
-            await tx.insert(uploadedImages).values(rest).onConflictDoUpdate({
-              target: uploadedImages.filename,
-              set: { mimeType: rest.mimeType, data: rest.data },
-            });
-          }
+        // Always delete all content tables first so restore is exact regardless of array length
+        await tx.delete(uploadedImages);
+        await tx.delete(prelimModules);
+        await tx.delete(trackAContent);
+        await tx.delete(trackAModules);
+        await tx.delete(dailyContent);
+        await tx.delete(moduleOverlays);
+        await tx.delete(practiceResources);
+        await tx.delete(cohortSettings);
+
+        for (const row of data.uploaded_images) {
+          const { id: _id, createdAt: _ca, ...rest } = row;
+          await tx.insert(uploadedImages).values(rest);
         }
 
-        if (data.prelim_modules.length > 0) {
-          await tx.delete(prelimModules);
-          for (const row of data.prelim_modules) {
-            const { id: _id, ...rest } = row;
-            await tx.insert(prelimModules).values(rest).onConflictDoUpdate({
-              target: prelimModules.position,
-              set: rest,
-            });
-          }
+        for (const row of data.prelim_modules) {
+          const { id: _id, ...rest } = row;
+          await tx.insert(prelimModules).values(rest);
         }
 
-        if (data.track_a_content.length > 0) {
-          await tx.delete(trackAContent);
-          for (const row of data.track_a_content) {
-            const { id: _id, ...rest } = row;
-            await tx.insert(trackAContent).values(rest).onConflictDoUpdate({
-              target: trackAContent.dayNumber,
-              set: rest,
-            });
-          }
+        for (const row of data.track_a_content) {
+          const { id: _id, ...rest } = row;
+          await tx.insert(trackAContent).values(rest);
         }
 
-        if (data.track_a_modules.length > 0) {
-          await tx.delete(trackAModules);
-          for (const row of data.track_a_modules) {
-            const { id: _id, ...rest } = row;
-            await tx.insert(trackAModules).values(rest).onConflictDoUpdate({
-              target: trackAModules.weekNumber,
-              set: rest,
-            });
-          }
+        for (const row of data.track_a_modules) {
+          const { id: _id, ...rest } = row;
+          await tx.insert(trackAModules).values(rest);
         }
 
-        if (data.daily_content.length > 0) {
-          await tx.delete(dailyContent);
-          for (const row of data.daily_content) {
-            const { id: _id, ...rest } = row;
-            await tx.insert(dailyContent).values(rest).onConflictDoUpdate({
-              target: dailyContent.dayNumber,
-              set: rest,
-            });
-          }
+        for (const row of data.daily_content) {
+          const { id: _id, ...rest } = row;
+          await tx.insert(dailyContent).values(rest);
         }
 
-        if (data.module_overlays.length > 0) {
-          await tx.delete(moduleOverlays);
-          for (const row of data.module_overlays) {
-            const { updatedAt: _ua, ...rest } = row;
-            await tx.insert(moduleOverlays).values(rest).onConflictDoUpdate({
-              target: moduleOverlays.contextKey,
-              set: rest,
-            });
-          }
+        for (const row of data.module_overlays) {
+          const { updatedAt: _ua, ...rest } = row;
+          await tx.insert(moduleOverlays).values(rest);
         }
 
-        if (data.practice_resources.length > 0) {
-          await tx.delete(practiceResources);
-          for (const row of data.practice_resources) {
-            const { id: _id, ...rest } = row;
-            await tx.insert(practiceResources).values(rest).onConflictDoUpdate({
-              target: practiceResources.name,
-              set: rest,
-            });
-          }
+        for (const row of data.practice_resources) {
+          const { id: _id, ...rest } = row;
+          await tx.insert(practiceResources).values(rest);
         }
 
-        if (data.cohort_settings.length > 0) {
-          await tx.delete(cohortSettings);
-          for (const row of data.cohort_settings) {
-            const { id: _id, updatedAt: _ua, ...rest } = row;
-            await tx.insert(cohortSettings).values(rest).onConflictDoUpdate({
-              target: cohortSettings.key,
-              set: rest,
-            });
-          }
+        for (const row of data.cohort_settings) {
+          const { id: _id, updatedAt: _ua, ...rest } = row;
+          await tx.insert(cohortSettings).values(rest);
         }
       });
 
