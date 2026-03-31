@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
@@ -2306,7 +2306,9 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector"] as const;
+const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "scripture_select", "scripture_reflection"] as const;
+
+const PRELIM_SLIDE_TYPES = SLIDE_TYPES.filter(t => t !== "scripture_select" && t !== "scripture_reflection");
 
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
@@ -2323,6 +2325,8 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   scenario: "Scenario Stepper",
   chat_flow: "Chat Flow",
   path_selector: "Path Selector",
+  scripture_select: "Scripture Select",
+  scripture_reflection: "Scripture Reflection",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2340,6 +2344,8 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
   chat_flow: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   path_selector: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+  scripture_select: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
+  scripture_reflection: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
 };
 
 // ============================================================
@@ -3286,6 +3292,157 @@ function KnowledgeCheckEditor({ content, onChange, index }: { content: string; o
   );
 }
 
+function ScriptureSelectEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { title: string; reference: string; chunks: string[]; reflectionDuration: number };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      title: typeof parsed.title === "string" ? parsed.title : "",
+      reference: typeof parsed.reference === "string" ? parsed.reference : "",
+      chunks: Array.isArray(parsed.chunks) ? parsed.chunks : [""],
+      reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
+    };
+  } catch {
+    data = { title: "", reference: "", chunks: [""], reflectionDuration: 120 };
+  }
+
+  const update = (next: typeof data) => {
+    onChange(JSON.stringify(next));
+  };
+
+  const updateChunk = (idx: number, value: string) => {
+    const chunks = [...data.chunks];
+    chunks[idx] = value;
+    update({ ...data, chunks });
+  };
+
+  const addChunk = () => {
+    update({ ...data, chunks: [...data.chunks, ""] });
+  };
+
+  const removeChunk = (idx: number) => {
+    if (data.chunks.length <= 1) return;
+    update({ ...data, chunks: data.chunks.filter((_, i) => i !== idx) });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Title (instructional text shown to participant)</label>
+        <textarea
+          value={data.title}
+          onChange={(e) => update({ ...data, title: e.target.value })}
+          placeholder="e.g. Choose a phrase that speaks to you"
+          rows={2}
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-none"
+          data-testid={`input-scripture-title-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Scripture Reference</label>
+        <input
+          type="text"
+          value={data.reference}
+          onChange={(e) => update({ ...data, reference: e.target.value })}
+          placeholder="e.g. Matthew 11:28-30"
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-scripture-reference-${index}`}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Scripture Chunks (one phrase per entry)</label>
+        {data.chunks.map((chunk, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={chunk}
+              onChange={(e) => updateChunk(idx, e.target.value)}
+              placeholder={`Phrase ${idx + 1}`}
+              className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-scripture-chunk-${index}-${idx}`}
+            />
+            <button
+              type="button"
+              onClick={() => removeChunk(idx)}
+              disabled={data.chunks.length <= 1}
+              className="shrink-0 p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              data-testid={`button-scripture-remove-chunk-${index}-${idx}`}
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addChunk}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
+          data-testid={`button-scripture-add-chunk-${index}`}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add phrase
+        </button>
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Reflection Duration (seconds)</label>
+        <input
+          type="number"
+          min={10}
+          max={600}
+          value={data.reflectionDuration}
+          onChange={(e) => update({ ...data, reflectionDuration: parseInt(e.target.value) || 120 })}
+          className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-scripture-duration-${index}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ScriptureReflectionEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { reflectionDuration: number; reflectionTitle: string };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
+      reflectionTitle: typeof parsed.reflectionTitle === "string" ? parsed.reflectionTitle : "",
+    };
+  } catch {
+    data = { reflectionDuration: 120, reflectionTitle: "" };
+  }
+
+  const update = (next: typeof data) => {
+    onChange(JSON.stringify(next));
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Duration (seconds)</label>
+        <input
+          type="number"
+          min={10}
+          max={600}
+          value={data.reflectionDuration}
+          onChange={(e) => update({ ...data, reflectionDuration: parseInt(e.target.value) || 120 })}
+          className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-reflection-duration-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Reflection Title (optional)</label>
+        <input
+          type="text"
+          value={data.reflectionTitle}
+          onChange={(e) => update({ ...data, reflectionTitle: e.target.value })}
+          placeholder="e.g. Sit with what you chose"
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-reflection-title-${index}`}
+        />
+      </div>
+    </div>
+  );
+}
+
 function TimerSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: { duration: number; text: string; audioUrl?: string };
   try {
@@ -3926,6 +4083,8 @@ function TrackAContentManagementView() {
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
+    if (type === "scripture_select") return JSON.stringify({ title: "Choose a phrase that speaks to you", reference: "Matthew 11:28-30", chunks: ["Come to me, all you who are weary and burdened", "and I will give you rest", "Take my yoke upon you and learn from me", "for I am gentle and humble in heart"], reflectionDuration: 120 }, null, 2);
+    if (type === "scripture_reflection") return JSON.stringify({ reflectionDuration: 120, reflectionTitle: "" }, null, 2);
     return "";
   };
 
@@ -4304,7 +4463,19 @@ function TrackAContentManagementView() {
                           <SlideTypeBadge type={slide.type} />
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate" data-testid={`text-slide-preview-${index}`}>
-                              {slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
+                              {slide.type === "scripture_select" ? (() => {
+                                try {
+                                  const d = JSON.parse(slide.content);
+                                  const ref = d.reference || "(no reference)";
+                                  const count = Array.isArray(d.chunks) ? d.chunks.length : 0;
+                                  return `${ref} \u00b7 ${count} chunk${count !== 1 ? "s" : ""}`;
+                                } catch { return slide.content || "(empty)"; }
+                              })() : slide.type === "scripture_reflection" ? (() => {
+                                try {
+                                  const d = JSON.parse(slide.content);
+                                  return `${d.reflectionDuration || 120}s reflection${d.reflectionTitle ? ` — "${d.reflectionTitle}"` : ""}`;
+                                } catch { return slide.content || "(empty)"; }
+                              })() : slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
                         </div>
@@ -4341,6 +4512,16 @@ function TrackAContentManagementView() {
                                     if (!Array.isArray(p.options) || p.options.length === 0) throw new Error();
                                   } catch {
                                     updateSlide(index, "content", PATH_SELECTOR_DEFAULT);
+                                  }
+                                }
+                                if (val === "scripture_select") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ title: "Choose a phrase that speaks to you", reference: "", chunks: [""], reflectionDuration: 120 }));
+                                  }
+                                }
+                                if (val === "scripture_reflection") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ reflectionDuration: 120, reflectionTitle: "" }));
                                   }
                                 }
                               }}>
@@ -4399,6 +4580,18 @@ function TrackAContentManagementView() {
                               />
                             ) : slide.type === "path_selector" ? (
                               <PathSelectorSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "scripture_select" ? (
+                              <ScriptureSelectEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "scripture_reflection" ? (
+                              <ScriptureReflectionEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -4484,6 +4677,18 @@ function TrackAContentManagementView() {
                           try {
                             const d = JSON.parse(slide.content);
                             return `${d.duration || 60}s timer${d.audioUrl ? " 🔊" : ""}`;
+                          } catch { return slide.content || "(empty)"; }
+                        })() : slide.type === "scripture_select" ? (() => {
+                          try {
+                            const d = JSON.parse(slide.content);
+                            const ref = d.reference || "(no reference)";
+                            const count = Array.isArray(d.chunks) ? d.chunks.length : 0;
+                            return `${ref} \u00b7 ${count} chunk${count !== 1 ? "s" : ""}`;
+                          } catch { return slide.content || "(empty)"; }
+                        })() : slide.type === "scripture_reflection" ? (() => {
+                          try {
+                            const d = JSON.parse(slide.content);
+                            return `${d.reflectionDuration || 120}s reflection${d.reflectionTitle ? ` — "${d.reflectionTitle}"` : ""}`;
                           } catch { return slide.content || "(empty)"; }
                         })() : (slide.content || "(empty)")}
                       </p>
@@ -5241,7 +5446,7 @@ function PrelimContentManagementView() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {SLIDE_TYPES.map(t => (
+                                  {PRELIM_SLIDE_TYPES.map(t => (
                                     <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
                                   ))}
                                 </SelectContent>
@@ -5336,7 +5541,7 @@ function PrelimContentManagementView() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SLIDE_TYPES.map(t => (
+                    {PRELIM_SLIDE_TYPES.map(t => (
                       <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
                     ))}
                   </SelectContent>
