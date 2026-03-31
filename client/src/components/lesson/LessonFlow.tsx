@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
-import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
+import { LessonSlide, type SlideType, type QuizData, type ScriptureSelection } from "./LessonSlide";
 import slideBg from "@assets/SlideBG_1774302310257.webp";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
 import { CompletionOverlay, type OverlayConfig } from "./CompletionOverlay";
@@ -55,6 +55,7 @@ export function LessonFlow({
   const [scenarioRevealCount, setScenarioRevealCount] = useState(1);
   const [pendingInjectedSlide, setPendingInjectedSlide] = useState<{ type: SlideType; content: string } | null>(null);
   const [isShowingInjected, setIsShowingInjected] = useState(false);
+  const [scriptureSelection, setScriptureSelection] = useState<ScriptureSelection | null>(null);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const overlayContextKey =
@@ -237,6 +238,10 @@ export function LessonFlow({
     // Do NOT set isShowingInjected here — the user must press CONTINUE to proceed
   }, []);
 
+  const handleScriptureSelect = useCallback((selection: ScriptureSelection) => {
+    setScriptureSelection(selection);
+  }, []);
+
   const handleContinue = useCallback(() => {
     onComplete();
   }, [onComplete]);
@@ -339,8 +344,16 @@ export function LessonFlow({
       onJournalChange={effectiveSlideData.type === "text_input" ? setJournalDraft : undefined}
       direction={direction}
       mentorId={mentorId}
-      onTimerComplete={effectiveSlideData.type === "timer" ? handleTimerComplete : undefined}
-      timerAlreadyDone={effectiveSlideData.type === "timer" ? completedTimerSlides.has(currentSlide) : undefined}
+      onTimerComplete={
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection"
+          ? handleTimerComplete
+          : undefined
+      }
+      timerAlreadyDone={
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection"
+          ? completedTimerSlides.has(currentSlide)
+          : undefined
+      }
       onKnowledgeCheckAnswered={effectiveSlideData.type === "knowledge_check" ? handleKcAnswered : undefined}
       onKnowledgeCheckNext={effectiveSlideData.type === "knowledge_check" ? handleNext : undefined}
       quizData={effectiveSlideData.quizData}
@@ -364,6 +377,12 @@ export function LessonFlow({
       onChatFlowComplete={effectiveSlideData.type === "chat_flow" ? handleNext : undefined}
       onChatFlowExit={effectiveSlideData.type === "chat_flow" ? onExit : undefined}
       onPathSelected={currentSlideData.type === "path_selector" && !isShowingInjected ? handlePathSelected : undefined}
+      onScriptureSelect={effectiveSlideData.type === "scripture_select" ? handleScriptureSelect : undefined}
+      scriptureSelection={
+        effectiveSlideData.type === "scripture_select" || effectiveSlideData.type === "scripture_reflection"
+          ? scriptureSelection
+          : undefined
+      }
     />
   );
 
@@ -376,7 +395,13 @@ export function LessonFlow({
     );
   }
 
-  const navBlocked = (currentSlideData.type === "timer" && !timerDone) || isValidKc || requiresInteraction || surveyBlocked;
+  const navBlocked =
+    (currentSlideData.type === "timer" && !timerDone) ||
+    (effectiveSlideData.type === "scripture_reflection" && !timerDone) ||
+    (effectiveSlideData.type === "scripture_select" && !scriptureSelection) ||
+    isValidKc ||
+    requiresInteraction ||
+    surveyBlocked;
 
   return createPortal(
     <div

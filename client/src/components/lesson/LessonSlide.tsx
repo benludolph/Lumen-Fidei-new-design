@@ -49,7 +49,16 @@ export type SlideType =
   | "survey"
   | "scenario"
   | "chat_flow"
-  | "path_selector";
+  | "path_selector"
+  | "scripture_select"
+  | "scripture_reflection";
+
+export interface ScriptureSelection {
+  chunks: string[];
+  selectedIndex: number;
+  reference: string;
+  reflectionDuration: number;
+}
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -454,6 +463,203 @@ function PathSelectorSlide({
   );
 }
 
+function ScriptureSelectSlide({
+  content,
+  existingSelection,
+  onScriptureSelect,
+}: {
+  content: string;
+  existingSelection?: ScriptureSelection | null;
+  onScriptureSelect?: (sel: ScriptureSelection) => void;
+}) {
+  const data = useMemo(() => {
+    try {
+      const parsed = JSON.parse(content);
+      return {
+        reference: parsed.reference || "",
+        chunks: Array.isArray(parsed.chunks) ? parsed.chunks : [content],
+        reflectionDuration: parsed.reflectionDuration ?? 60,
+      };
+    } catch {
+      return { reference: "", chunks: [content], reflectionDuration: 60 };
+    }
+  }, [content]);
+
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(
+    existingSelection != null ? existingSelection.selectedIndex : null
+  );
+
+  const handleSelect = (index: number) => {
+    setSelectedIndex(index);
+    onScriptureSelect?.({
+      chunks: data.chunks,
+      selectedIndex: index,
+      reference: data.reference,
+      reflectionDuration: data.reflectionDuration,
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-6" data-testid="slide-scripture-select">
+      {data.reference && (
+        <p
+          className="type-caption-lg uppercase tracking-wider"
+          style={{ color: "var(--white-40)" }}
+          data-testid="scripture-reference"
+        >
+          {data.reference}
+        </p>
+      )}
+      <p className="leading-[1.9]" style={{ fontSize: "1.2rem", color: "var(--white-80)" }}>
+        {data.chunks.map((chunk, i) => (
+          <span
+            key={i}
+            onClick={() => handleSelect(i)}
+            data-testid={`scripture-chunk-${i}`}
+            style={{
+              cursor: "pointer",
+              background: selectedIndex === i ? "rgba(212, 175, 55, 0.22)" : "transparent",
+              color: selectedIndex === i ? "#e8d5a3" : "inherit",
+              transition: "background 150ms ease, color 150ms ease",
+              borderRadius: "3px",
+              padding: "2px 3px",
+              WebkitBoxDecorationBreak: "clone",
+              boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+            }}
+          >
+            {chunk}
+            {i < data.chunks.length - 1 ? " " : ""}
+          </span>
+        ))}
+      </p>
+      {selectedIndex === null && (
+        <p
+          className="type-body-sm italic"
+          style={{ color: "var(--white-30)" }}
+          data-testid="scripture-select-hint"
+        >
+          Tap a phrase that speaks to you.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ScriptureReflectionSlide({
+  selection,
+  onTimerComplete,
+  alreadyDone,
+}: {
+  selection: ScriptureSelection;
+  onTimerComplete?: () => void;
+  alreadyDone?: boolean;
+}) {
+  const { chunks, selectedIndex, reference, reflectionDuration } = selection;
+  const [remaining, setRemaining] = useState(alreadyDone ? 0 : reflectionDuration);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const completedRef = useRef(!!alreadyDone);
+
+  useEffect(() => {
+    if (alreadyDone) {
+      setRemaining(0);
+      completedRef.current = true;
+      return;
+    }
+    if (reflectionDuration <= 0) {
+      setRemaining(0);
+      completedRef.current = true;
+      onTimerComplete?.();
+      return;
+    }
+    setRemaining(reflectionDuration);
+    completedRef.current = false;
+    timerRef.current = setInterval(() => {
+      setRemaining((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          if (!completedRef.current) {
+            completedRef.current = true;
+            playTimerComplete();
+            onTimerComplete?.();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [reflectionDuration, onTimerComplete]);
+
+  const progress = reflectionDuration > 0 ? (reflectionDuration - remaining) / reflectionDuration : 1;
+  const minutes = Math.floor(remaining / 60);
+  const seconds = remaining % 60;
+  const circumference = 2 * Math.PI * 54;
+  const strokeOffset = circumference * (1 - progress);
+  const done = remaining === 0;
+
+  return (
+    <div className="flex flex-col items-center gap-10" data-testid="slide-scripture-reflection">
+      <div className="relative w-[140px] h-[140px] flex items-center justify-center">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
+          <circle
+            cx="60" cy="60" r="54" fill="none"
+            stroke={done ? "#00b57a" : "var(--white-70)"}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeOffset}
+            className="transition-all duration-1000 ease-linear"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {done ? (
+            <CheckCircle className="w-10 h-10 text-[#00b57a]" />
+          ) : (
+            <span className="type-display-lg font-bold text-white tabular-nums">
+              {minutes}:{seconds.toString().padStart(2, "0")}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="w-full flex flex-col gap-4">
+        {reference && (
+          <p
+            className="type-caption-lg uppercase tracking-wider text-center"
+            style={{ color: "var(--white-40)" }}
+          >
+            {reference}
+          </p>
+        )}
+        <p
+          className="leading-[1.9] text-center"
+          style={{ fontSize: "1.2rem", color: "var(--white-80)" }}
+        >
+          {chunks.map((chunk, i) => (
+            <span
+              key={i}
+              style={{
+                background: i === selectedIndex ? "rgba(212, 175, 55, 0.22)" : "transparent",
+                color: i === selectedIndex ? "#e8d5a3" : "inherit",
+                borderRadius: "3px",
+                padding: "2px 3px",
+                WebkitBoxDecorationBreak: "clone",
+                boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+              }}
+            >
+              {chunk}
+              {i < chunks.length - 1 ? " " : ""}
+            </span>
+          ))}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface LessonSlideProps {
   type: SlideType;
   content: string;
@@ -482,6 +688,10 @@ interface LessonSlideProps {
   onChatFlowExit?: () => void;
   // path_selector specific
   onPathSelected?: (nextType: SlideType, nextContent: string) => void;
+  // scripture_select specific
+  onScriptureSelect?: (selection: ScriptureSelection) => void;
+  // scripture_reflection specific
+  scriptureSelection?: ScriptureSelection | null;
 }
 
 export function LessonSlide({
@@ -510,6 +720,8 @@ export function LessonSlide({
   onChatFlowComplete,
   onChatFlowExit,
   onPathSelected,
+  onScriptureSelect,
+  scriptureSelection,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -595,6 +807,18 @@ export function LessonSlide({
             content={content}
             onPathSelected={onPathSelected}
             onInteracted={onInteracted}
+          />
+        ) : type === "scripture_select" ? (
+          <ScriptureSelectSlide
+            content={content}
+            existingSelection={scriptureSelection}
+            onScriptureSelect={onScriptureSelect}
+          />
+        ) : type === "scripture_reflection" && scriptureSelection ? (
+          <ScriptureReflectionSlide
+            selection={scriptureSelection}
+            onTimerComplete={onTimerComplete}
+            alreadyDone={timerAlreadyDone}
           />
         ) : (
           <TextSlide content={content} />
