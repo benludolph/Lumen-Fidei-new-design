@@ -5607,6 +5607,49 @@ function PrelimContentManagementView() {
 
 // === Testimonies Admin ===
 
+function TestimonyImageUpload({ currentUrl, onUploaded }: { currentUrl: string; onUploaded: (url: string) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      onUploaded(url);
+    } catch (err) {
+      console.error("Thumbnail upload error:", err instanceof Error ? err.message : err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [onUploaded]);
+
+  return (
+    <div className="space-y-2">
+      {currentUrl ? (
+        <div className="relative w-16 h-16 rounded-full overflow-hidden bg-muted border">
+          <img src={currentUrl} alt="Thumbnail" className="w-full h-full object-cover" data-testid="img-testimony-thumbnail-preview" />
+        </div>
+      ) : (
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border" data-testid="placeholder-testimony-thumbnail">
+          <ImageIcon className="w-6 h-6 text-muted-foreground" />
+        </div>
+      )}
+      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleUpload} data-testid="input-testimony-thumbnail-file" />
+      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-testimony-thumbnail">
+        <Upload className="w-3.5 h-3.5 mr-1.5" />
+        {uploading ? "Uploading..." : currentUrl ? "Change Photo" : "Upload Photo"}
+      </Button>
+    </div>
+  );
+}
+
 interface AdminTestimonyPart {
   id: number;
   testimonyId: number;
@@ -5753,7 +5796,10 @@ function TestimonyRow({ testimony, onSaved }: { testimony: AdminTestimony; onSav
                   <Input placeholder="Person name" value={personName} onChange={e => setPersonName(e.target.value)} className="flex-1" data-testid="input-testimony-name" />
                 </div>
                 <Input placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} data-testid="input-testimony-description" />
-                <Input placeholder="Thumbnail URL" value={thumbnailUrl} onChange={e => setThumbnailUrl(e.target.value)} data-testid="input-testimony-thumbnail" />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Thumbnail Photo</p>
+                  <TestimonyImageUpload currentUrl={thumbnailUrl} onUploaded={setThumbnailUrl} />
+                </div>
                 <Input placeholder="Full video URL (optional)" value={fullVideoUrl} onChange={e => setFullVideoUrl(e.target.value)} data-testid="input-testimony-full-video" />
                 <div className="flex gap-2 justify-end">
                   <Button size="sm" variant="ghost" onClick={() => setEditing(false)} data-testid="button-cancel-testimony">Cancel</Button>
@@ -5840,7 +5886,10 @@ function TestimoniesAdminView() {
               <Input placeholder="Person name" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1" data-testid="input-new-testimony-name" />
             </div>
             <Input placeholder="Description" value={newDescription} onChange={e => setNewDescription(e.target.value)} data-testid="input-new-testimony-description" />
-            <Input placeholder="Thumbnail URL" value={newThumbnailUrl} onChange={e => setNewThumbnailUrl(e.target.value)} data-testid="input-new-testimony-thumbnail" />
+            <div>
+              <p className="text-xs text-muted-foreground mb-1.5">Thumbnail Photo</p>
+              <TestimonyImageUpload currentUrl={newThumbnailUrl} onUploaded={setNewThumbnailUrl} />
+            </div>
             <Input placeholder="Full video URL (optional)" value={newFullVideoUrl} onChange={e => setNewFullVideoUrl(e.target.value)} data-testid="input-new-testimony-full-video" />
             <div className="flex gap-2 justify-end">
               <Button variant="ghost" onClick={() => setAddingNew(false)} data-testid="button-cancel-new-testimony">Cancel</Button>

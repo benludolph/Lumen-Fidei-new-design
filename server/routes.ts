@@ -2945,13 +2945,14 @@ As you move into Week 2, continue these daily practices. They are building a fou
         [record] = await db.insert(testimonies).values(t).returning();
       }
 
-      // Always ensure parts match canonical map — upsert by partNumber
+      // Seed default parts only if they don't already exist — never overwrite admin edits
       const canonical = canonicalPartsMap[t.position] ?? [];
       const existingParts = await db.select().from(testimonyParts).where(eq(testimonyParts.testimonyId, record.id));
 
       for (const cp of canonical) {
         const match = existingParts.find(p => p.partNumber === cp.partNumber);
         if (!match) {
+          // Only insert if the part doesn't exist yet — never overwrite admin edits
           await db.insert(testimonyParts).values({
             testimonyId: record.id,
             partNumber: cp.partNumber,
@@ -2959,11 +2960,6 @@ As you move into Week 2, continue these daily practices. They are building a fou
             videoUrl: "",
             unlockKey: cp.unlockKey,
           });
-        } else if (match.unlockKey !== cp.unlockKey) {
-          // Correct any previously wrong unlock key
-          await db.update(testimonyParts)
-            .set({ unlockKey: cp.unlockKey, title: cp.title })
-            .where(eq(testimonyParts.id, match.id));
         }
       }
     }
