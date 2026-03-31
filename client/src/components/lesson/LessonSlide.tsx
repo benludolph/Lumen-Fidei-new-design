@@ -521,7 +521,6 @@ function ScriptureSelectSlide({
             className="leading-[1.3]"
             style={{
               fontFamily: "'IvyOra Display', serif",
-              fontStyle: "italic",
               fontWeight: 500,
               fontSize: "1.625rem",
               color: "rgba(255,255,255,1)",
@@ -687,7 +686,6 @@ function ScriptureReflectionSlide({
             className="leading-[1.3] text-left"
             style={{
               fontFamily: "'IvyOra Display', serif",
-              fontStyle: "italic",
               fontWeight: 500,
               fontSize: "1.625rem",
               color: "rgba(255,255,255,1)",
