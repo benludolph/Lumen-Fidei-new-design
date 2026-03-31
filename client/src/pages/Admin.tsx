@@ -2306,7 +2306,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "multi_select", "single_select", "media", "text_input", "action", "mentor_message", "timer", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "scripture_select", "scripture_reflection"] as const;
+const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES.filter(t => t !== "scripture_select" && t !== "scripture_reflection");
 
