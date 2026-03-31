@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight } from "lucide-react";
 import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
-import reflectionUnlockSound from "@assets/Reflection_Unlock_Sound_1774243654585.mp3";
+import reflectionUnlockSound from "@assets/SoundCrib_-_Dramatic_Game_-_Angelic_Achievement__1774989633053.wav";
 
 export interface OverlayConfig {
   enabled: boolean;
