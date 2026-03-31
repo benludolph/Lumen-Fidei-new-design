@@ -3386,13 +3386,14 @@ function ScriptureSelectEditor({ content, onChange, index }: { content: string; 
         <label className="text-xs font-medium text-muted-foreground">Reflection Duration (seconds)</label>
         <input
           type="number"
-          min={10}
+          min={0}
           max={600}
           value={data.reflectionDuration}
-          onChange={(e) => update({ ...data, reflectionDuration: parseInt(e.target.value) || 120 })}
+          onChange={(e) => update({ ...data, reflectionDuration: parseInt(e.target.value) || 0 })}
           className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
           data-testid={`input-scripture-duration-${index}`}
         />
+        <p className="text-xs text-muted-foreground">Set to 0 to skip the reflection timer entirely.</p>
       </div>
     </div>
   );
