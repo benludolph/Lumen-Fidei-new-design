@@ -247,7 +247,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
 
 
 
-function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: number; title: string; onGuideClick: () => void }) {
+function StickyWeekBanner({ weekNumber, title, onGuideClick, inPrelimSection }: { weekNumber: number; title: string; onGuideClick: () => void; inPrelimSection?: boolean }) {
   return (
     <div className="sticky z-20" style={{ top: "12px" }}>
       <div
@@ -262,31 +262,33 @@ function StickyWeekBanner({ weekNumber, title, onGuideClick }: { weekNumber: num
         {/* Left: week label + title */}
         <div className="flex flex-col gap-1">
           <p className="type-caption-md" style={{ color: "#d0d6e0" }}>
-            Week {weekNumber} of 5
+            {inPrelimSection ? "Getting Started" : `Week ${weekNumber} of 5`}
           </p>
           <p className="type-display-sm" style={{ color: "white" }}>
-            {title}
+            {inPrelimSection ? "Foundation & Formation" : title}
           </p>
         </div>
 
         {/* Right: Overview & Guide button */}
-        <button
-          data-testid="button-week-guide"
-          onClick={onGuideClick}
-          className="type-body-xs"
-          style={{
-            color: "white",
-            background: "var(--white-3)",
-            border: "0.5px solid var(--white-6)",
-            borderRadius: "4px",
-            padding: "8px",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-          }}
-        >
-          Overview &amp; Guide
-        </button>
+        {!inPrelimSection && (
+          <button
+            data-testid="button-week-guide"
+            onClick={onGuideClick}
+            className="type-body-xs"
+            style={{
+              color: "white",
+              background: "var(--white-3)",
+              border: "0.5px solid var(--white-6)",
+              borderRadius: "4px",
+              padding: "8px",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            Overview &amp; Guide
+          </button>
+        )}
       </div>
     </div>
   );
@@ -557,11 +559,14 @@ export function DayGridView({
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prelimSectionRef = useRef<HTMLDivElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedDayForDialog, setSelectedDayForDialog] = useState(0);
   const [guideModalOpen, setGuideModalOpen] = useState(false);
   const [activeWeek, setActiveWeek] = useState(1);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const hasPrelims = !!(prelimModulesData && prelimModulesData.length > 0);
+  const [inPrelimSection, setInPrelimSection] = useState(hasPrelims);
 
   const allDays = Array.from({ length: 30 }, (_, i) => i + 1);
   const weekGroups = groupDaysByWeek(allDays);
@@ -590,6 +595,22 @@ export function DayGridView({
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const container = scrollRef.current;
+    const prelimEl = prelimSectionRef.current;
+    if (!container || !prelimEl || !hasPrelims) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          setInPrelimSection(entry.isIntersecting);
+        }
+      },
+      { root: container, rootMargin: "0px 0px -50% 0px", threshold: 0 },
+    );
+    observer.observe(prelimEl);
+    return () => observer.disconnect();
+  }, [hasPrelims]);
+
   const handleCardClick = (day: number) => {
     if (isTrackA) {
       onDaySelect(day);
@@ -611,11 +632,11 @@ export function DayGridView({
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "12px", position: "relative" }} className="custom-scrollbar">
         <PageContainer variant="narrow">
 
-          <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} />
+          <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} inPrelimSection={inPrelimSection} />
 
           <div style={{ paddingTop: "24px" }}>
             {prelimModulesData && prelimModulesData.length > 0 && (
-              <>
+              <div ref={prelimSectionRef}>
                 <VideoModal open={videoModalOpen} onClose={() => setVideoModalOpen(false)} />
                 <SectionDivider label="Pre-Modules" />
                 <ThreeColGrid>
@@ -646,7 +667,7 @@ export function DayGridView({
                     );
                   })}
                 </ThreeColGrid>
-              </>
+              </div>
             )}
 
             {weekGroups.map(({ week, days }, groupIdx) => {
