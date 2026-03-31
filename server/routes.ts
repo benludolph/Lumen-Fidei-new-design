@@ -4,7 +4,7 @@ import { setupAuth, hashPassword } from "./auth";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, surveyResponses, prelimModules, practiceResources, chatFlowResponses, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -1373,6 +1373,187 @@ export async function registerRoutes(
     res.send(csv);
   });
   
+  // === Admin Content Backup & Restore ===
+
+  app.get('/api/admin/backup', requireRole('admin'), async (req, res) => {
+    try {
+      const [
+        dbPrelimModules,
+        dbTrackAContent,
+        dbTrackAModules,
+        dbDailyContent,
+        dbModuleOverlays,
+        dbPracticeResources,
+        dbCohortSettings,
+        dbUploadedImages,
+      ] = await Promise.all([
+        db.select().from(prelimModules),
+        db.select().from(trackAContent),
+        db.select().from(trackAModules),
+        db.select().from(dailyContent),
+        db.select().from(moduleOverlays),
+        db.select().from(practiceResources),
+        db.select().from(cohortSettings),
+        db.select().from(uploadedImages),
+      ]);
+
+      const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data: {
+          prelim_modules: dbPrelimModules,
+          track_a_content: dbTrackAContent,
+          track_a_modules: dbTrackAModules,
+          daily_content: dbDailyContent,
+          module_overlays: dbModuleOverlays,
+          practice_resources: dbPracticeResources,
+          cohort_settings: dbCohortSettings,
+          uploaded_images: dbUploadedImages,
+        },
+      };
+
+      const filename = `lumen-fidei-backup-${new Date().toISOString().split('T')[0]}.json`;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.json(backup);
+    } catch (error) {
+      console.error("Backup error:", error);
+      res.status(500).json({ message: "Failed to create backup" });
+    }
+  });
+
+  const backupRestoreSchema = z.object({
+    version: z.number(),
+    exportedAt: z.string(),
+    data: z.object({
+      prelim_modules: z.array(z.any()),
+      track_a_content: z.array(z.any()),
+      track_a_modules: z.array(z.any()),
+      daily_content: z.array(z.any()),
+      module_overlays: z.array(z.any()),
+      practice_resources: z.array(z.any()),
+      cohort_settings: z.array(z.any()),
+      uploaded_images: z.array(z.any()),
+    }),
+  });
+
+  app.post('/api/admin/restore', requireRole('admin'), async (req, res) => {
+    try {
+      const parsed = backupRestoreSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid backup file format", errors: parsed.error.errors });
+      }
+
+      const { data } = parsed.data;
+
+      await db.transaction(async (tx) => {
+        if (data.uploaded_images.length > 0) {
+          await tx.delete(uploadedImages);
+          for (const row of data.uploaded_images) {
+            const { id: _id, createdAt: _ca, ...rest } = row;
+            await tx.insert(uploadedImages).values(rest).onConflictDoUpdate({
+              target: uploadedImages.filename,
+              set: { mimeType: rest.mimeType, data: rest.data },
+            });
+          }
+        }
+
+        if (data.prelim_modules.length > 0) {
+          await tx.delete(prelimModules);
+          for (const row of data.prelim_modules) {
+            const { id: _id, ...rest } = row;
+            await tx.insert(prelimModules).values(rest).onConflictDoUpdate({
+              target: prelimModules.position,
+              set: rest,
+            });
+          }
+        }
+
+        if (data.track_a_content.length > 0) {
+          await tx.delete(trackAContent);
+          for (const row of data.track_a_content) {
+            const { id: _id, ...rest } = row;
+            await tx.insert(trackAContent).values(rest).onConflictDoUpdate({
+              target: trackAContent.dayNumber,
+              set: rest,
+            });
+          }
+        }
+
+        if (data.track_a_modules.length > 0) {
+          await tx.delete(trackAModules);
+          for (const row of data.track_a_modules) {
+            const { id: _id, ...rest } = row;
+            await tx.insert(trackAModules).values(rest).onConflictDoUpdate({
+              target: trackAModules.weekNumber,
+              set: rest,
+            });
+          }
+        }
+
+        if (data.daily_content.length > 0) {
+          await tx.delete(dailyContent);
+          for (const row of data.daily_content) {
+            const { id: _id, ...rest } = row;
+            await tx.insert(dailyContent).values(rest).onConflictDoUpdate({
+              target: dailyContent.dayNumber,
+              set: rest,
+            });
+          }
+        }
+
+        if (data.module_overlays.length > 0) {
+          await tx.delete(moduleOverlays);
+          for (const row of data.module_overlays) {
+            const { updatedAt: _ua, ...rest } = row;
+            await tx.insert(moduleOverlays).values(rest).onConflictDoUpdate({
+              target: moduleOverlays.contextKey,
+              set: rest,
+            });
+          }
+        }
+
+        if (data.practice_resources.length > 0) {
+          await tx.delete(practiceResources);
+          for (const row of data.practice_resources) {
+            const { id: _id, ...rest } = row;
+            await tx.insert(practiceResources).values(rest).onConflictDoUpdate({
+              target: practiceResources.name,
+              set: rest,
+            });
+          }
+        }
+
+        if (data.cohort_settings.length > 0) {
+          await tx.delete(cohortSettings);
+          for (const row of data.cohort_settings) {
+            const { id: _id, updatedAt: _ua, ...rest } = row;
+            await tx.insert(cohortSettings).values(rest).onConflictDoUpdate({
+              target: cohortSettings.key,
+              set: rest,
+            });
+          }
+        }
+      });
+
+      const counts = {
+        prelim_modules: data.prelim_modules.length,
+        track_a_content: data.track_a_content.length,
+        track_a_modules: data.track_a_modules.length,
+        daily_content: data.daily_content.length,
+        module_overlays: data.module_overlays.length,
+        practice_resources: data.practice_resources.length,
+        cohort_settings: data.cohort_settings.length,
+        uploaded_images: data.uploaded_images.length,
+      };
+
+      res.json({ message: "Restore completed successfully", counts });
+    } catch (error) {
+      console.error("Restore error:", error);
+      res.status(500).json({ message: "Restore failed. No changes were saved." });
+    }
+  });
+
   // === Admin Message Management ===
 
   app.get('/api/admin/messages/:userId1/:userId2', requireRole('admin'), async (req, res) => {
