@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { DayCard } from "./DayCard";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
@@ -397,6 +398,8 @@ interface CertificateCardProps {
 function CertificateCard({ prayerCompletions }: CertificateCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { user } = useAuth();
 
   const completedDayNumbers = new Set(prayerCompletions?.map((c) => c.dayNumber) ?? []);
   const isUnlocked = Array.from({ length: 30 }, (_, i) => i + 1).every((d) =>
@@ -406,6 +409,34 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
   const handleInfoClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowModal(true);
+  };
+
+  const handleDownload = async () => {
+    if (!isUnlocked || isDownloading) return;
+    setIsDownloading(true);
+    try {
+      const res = await fetch("/api/generate-certificate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: user?.name ?? "Participant" }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to generate certificate");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safeName = (user?.name ?? "participant").replace(/[^a-zA-Z0-9 ]/g, "").trim();
+      a.download = `certificate-${safeName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // silently fail — user can retry by clicking again
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -433,6 +464,7 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
       <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={isUnlocked ? handleDownload : undefined}
         data-testid="certificate-card"
         style={{
           position: "relative",
@@ -447,8 +479,10 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
           paddingLeft: "12px",
           paddingRight: "12px",
           paddingBottom: "14px",
-          cursor: isUnlocked ? "pointer" : "default",
+          cursor: isUnlocked ? (isDownloading ? "wait" : "pointer") : "default",
           marginBottom: "8px",
+          opacity: isDownloading ? 0.75 : 1,
+          transition: "opacity 0.2s",
         }}
       >
         {/* Normal (grayscale) background — always visible */}
@@ -483,9 +517,11 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
               flexShrink: 0,
             }}
           >
-            {isUnlocked
-              ? <Download style={{ width: "10px", height: "10px", color: "var(--white-60)" }} />
-              : <Lock style={{ width: "10px", height: "10px", color: "var(--white-45)" }} />
+            {isDownloading
+              ? <Loader className="animate-spin" style={{ width: "10px", height: "10px", color: "var(--white-60)" }} />
+              : isUnlocked
+                ? <Download style={{ width: "10px", height: "10px", color: "var(--white-60)" }} />
+                : <Lock style={{ width: "10px", height: "10px", color: "var(--white-45)" }} />
             }
           </div>
 
