@@ -101,7 +101,7 @@ function Router() {
       </Route>
 
       <Route path="/testimonies">
-        <ProtectedRoute component={TestimoniesPage} allowedRoles={['participant']} />
+        <ProtectedRoute component={TestimoniesPage} />
       </Route>
 
       <Route component={NotFound} />
