@@ -77,10 +77,9 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           <>
             <NavItem href="/dashboard" icon={BookOpen} label="My Journey" onClick={onNavClick} />
             <NavItem href="/collections" icon={Trophy} label="Collection" onClick={onNavClick} />
+            <NavItem href="/testimonies" icon={Video} label="Testimonies" onClick={onNavClick} />
           </>
         )}
-
-        <NavItem href="/testimonies" icon={Video} label="Testimonies" onClick={onNavClick} />
         
         {(user.role === 'mentor' || user.role === 'admin') && (
           <NavItem href="/mentor" icon={Users} label="Mentorship" onClick={onNavClick} />
