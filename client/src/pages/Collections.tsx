@@ -224,7 +224,7 @@ export default function Collections() {
     <DashboardLayout>
       <PageContainer
         variant="full"
-        className="pt-8 pb-20 min-h-[calc(100vh-72px)]"
+        className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]"
       >
         <div data-testid="collections-page">
           <h1 className="type-display-xl text-center text-white mb-12">

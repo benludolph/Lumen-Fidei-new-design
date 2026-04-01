@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Lock, Play, X } from "lucide-react";
+import { Lock, Play, X, CircleUser } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface TestimonyPartWithStatus {
@@ -29,12 +29,12 @@ interface TestimonyWithStatus {
 }
 
 function unlockHintText(unlockKey: string): string {
-  if (unlockKey === "prelim") return "Complete Preliminary Modules to unlock";
+  if (unlockKey === "prelim") return "Complete Preliminary Modules";
   const weekFirstMatch = unlockKey.match(/^week-(\d+)-first$/);
-  if (weekFirstMatch) return `Complete your first Week ${weekFirstMatch[1]} lesson to unlock`;
+  if (weekFirstMatch) return `Complete Week ${weekFirstMatch[1]} first lesson`;
   const weekLastMatch = unlockKey.match(/^week-(\d+)-last$/);
-  if (weekLastMatch) return `Complete Week ${weekLastMatch[1]} to unlock`;
-  return "Complete more lessons to unlock";
+  if (weekLastMatch) return `Complete Week ${weekLastMatch[1]}`;
+  return "Complete more lessons";
 }
 
 function getEmbedUrl(raw: string): string {
@@ -66,7 +66,10 @@ function VideoModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-3xl w-full p-0 overflow-hidden bg-black border-0" data-testid="dialog-video-modal">
+      <DialogContent
+        className="max-w-3xl w-full p-0 overflow-hidden bg-black border-0"
+        data-testid="dialog-video-modal"
+      >
         <div className="relative">
           <button
             onClick={onClose}
@@ -102,12 +105,13 @@ function TestimonyCard({
   testimony: TestimonyWithStatus;
   onPlay: (url: string, title: string) => void;
 }) {
-  const isFullyLocked = testimony.unlockedCount === 0;
+  const [hovered, setHovered] = useState(false);
+  const isLocked = testimony.unlockedCount === 0;
   const firstUnlockedPart = testimony.parts.find(p => p.unlocked);
-  const lockHint = testimony.parts[0] ? unlockHintText(testimony.parts[0].unlockKey) : "Complete more lessons to unlock";
+  const lockHint = testimony.parts[0] ? unlockHintText(testimony.parts[0].unlockKey) : "Complete more lessons";
 
   const handleClick = () => {
-    if (isFullyLocked) return;
+    if (isLocked) return;
     if (testimony.fullyUnlocked && testimony.fullVideoUrl) {
       onPlay(testimony.fullVideoUrl, `${testimony.personName} — Full Testimony`);
     } else if (firstUnlockedPart) {
@@ -118,110 +122,84 @@ function TestimonyCard({
     }
   };
 
+  const INFO_H = 62;
+
   return (
     <div
       data-testid={`card-testimony-${testimony.id}`}
       onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         position: "relative",
-        flex: "1 0 0",
-        minWidth: "200px",
-        height: "298px",
-        background: "var(--surface-raised)",
-        border: "1.25px solid rgba(255,255,255,0.1)",
+        width: "100%",
+        aspectRatio: "3/4",
+        background: "#101217",
+        border: `1px solid ${hovered && !isLocked ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.1)"}`,
         borderRadius: "6px",
         overflow: "hidden",
-        cursor: isFullyLocked ? "default" : "pointer",
+        cursor: isLocked ? "default" : "pointer",
         transition: "border-color 0.2s",
       }}
-      onMouseEnter={e => {
-        if (!isFullyLocked) {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.22)";
-        }
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.1)";
-      }}
     >
-      {/* Thumbnail */}
-      {testimony.thumbnailUrl ? (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: "0 0 56px 0",
-            mixBlendMode: "luminosity",
-            opacity: isFullyLocked ? 0.35 : 0.6,
-            transition: "opacity 0.2s",
-          }}
-        >
-          <div style={{ position: "absolute", inset: 0, background: "#0f1011" }} />
+      {/* Image area — mix-blend-luminosity */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: `${INFO_H}px`,
+          mixBlendMode: "luminosity",
+          opacity: isLocked ? 0.3 : hovered ? 0.65 : 0.5,
+          transition: "opacity 0.2s",
+        }}
+      >
+        <div style={{ position: "absolute", inset: 0, background: "#0f1011" }} />
+        {testimony.thumbnailUrl ? (
           <img
             alt={testimony.personName}
             src={testimony.thumbnailUrl}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: 0.7,
+            }}
           />
-        </div>
-      ) : (
-        <div
-          style={{
-            position: "absolute",
-            inset: "0 0 56px 0",
-            background: "var(--surface-base)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <span style={{ fontSize: "40px", color: "var(--white-20)", fontFamily: "'IvyOra Display', serif", fontWeight: 500 }}>
-            {testimony.personName.charAt(0)}
-          </span>
-        </div>
-      )}
-
-      {/* Lock overlay */}
-      {isFullyLocked && (
-        <div
-          style={{
-            position: "absolute",
-            inset: "0 0 56px 0",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-          }}
-        >
+        ) : (
           <div
             style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              background: "rgba(0,0,0,0.55)",
-              border: "1px solid rgba(255,255,255,0.12)",
+              position: "absolute",
+              inset: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Lock size={16} style={{ color: "rgba(255,255,255,0.5)" }} />
+            <CircleUser size={48} style={{ color: "rgba(255,255,255,0.12)" }} />
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Play icon overlay for unlocked cards (hover) */}
-      {!isFullyLocked && (
+      {/* Hover play overlay (unlocked only) */}
+      {!isLocked && (
         <div
-          className="play-overlay"
           style={{
             position: "absolute",
-            inset: "0 0 56px 0",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: `${INFO_H}px`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            opacity: 0,
+            opacity: hovered ? 1 : 0,
+            background: "rgba(0,0,0,0.2)",
             transition: "opacity 0.2s",
-            background: "rgba(0,0,0,0.25)",
           }}
         >
           <div
@@ -229,7 +207,7 @@ function TestimonyCard({
               width: "44px",
               height: "44px",
               borderRadius: "50%",
-              background: "rgba(0,0,0,0.6)",
+              background: "rgba(0,0,0,0.55)",
               border: "1px solid rgba(255,255,255,0.2)",
               display: "flex",
               alignItems: "center",
@@ -248,93 +226,114 @@ function TestimonyCard({
           bottom: 0,
           left: 0,
           right: 0,
-          height: "56px",
-          background: "var(--surface-raised)",
-          borderTop: "0.5px solid rgba(255,255,255,0.06)",
-          padding: "10px 10px 8px",
+          height: `${INFO_H}px`,
+          background: "#101217",
+          borderTop: "0.5px solid rgba(255,255,255,0.05)",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          paddingBottom: "14px",
+          paddingLeft: "8px",
+          paddingRight: "8px",
           gap: "3px",
         }}
       >
-        {isFullyLocked ? (
-          <p
-            className="type-caption-sm"
-            style={{
-              color: "rgba(255,255,255,0.35)",
-              letterSpacing: "1.2px",
-              textTransform: "uppercase",
-              margin: 0,
-              lineHeight: 1.3,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {lockHint}
-          </p>
-        ) : testimony.description ? (
-          <p
-            className="type-caption-sm"
-            style={{
-              color: "rgba(255,255,255,0.45)",
-              letterSpacing: "1.4px",
-              textTransform: "uppercase",
-              margin: 0,
-              lineHeight: 1.3,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {testimony.description}
-          </p>
-        ) : null}
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
-          <p
-            className="type-body-sm"
-            data-testid={`text-testimony-name-${testimony.id}`}
-            style={{
-              color: isFullyLocked ? "rgba(255,255,255,0.4)" : "white",
-              margin: 0,
-              lineHeight: 1.2,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              flex: 1,
-              fontWeight: 500,
-            }}
-          >
-            {testimony.personName}
-          </p>
-          {!isFullyLocked && (
-            <Play
-              size={12}
-              style={{ color: "var(--brand)", fill: "var(--brand)", flexShrink: 0 }}
-            />
-          )}
-          {isFullyLocked && (
-            <Lock
-              size={11}
-              style={{ color: "rgba(255,255,255,0.25)", flexShrink: 0 }}
-            />
-          )}
+        {/* Floating badge — centered, spans from top of strip into image */}
+        <div
+          style={{
+            position: "absolute",
+            top: "-10px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "20px",
+            height: "20px",
+            borderRadius: "10px",
+            background: "#1b1c1d",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+          }}
+        >
+          {isLocked
+            ? <Lock size={8} style={{ color: "rgba(255,255,255,0.4)" }} />
+            : <CircleUser size={8} style={{ color: "rgba(255,255,255,0.5)" }} />
+          }
         </div>
+
+        {/* Subtitle / lock hint */}
+        <p
+          className="type-caption-sm"
+          style={{
+            color: "rgba(255,255,255,0.45)",
+            letterSpacing: "1.2px",
+            textTransform: "uppercase",
+            margin: 0,
+            lineHeight: 1,
+            textAlign: "center",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: "100%",
+          }}
+        >
+          {isLocked ? lockHint : (testimony.description || "\u00A0")}
+        </p>
+
+        {/* Person name — IvyOra Display */}
+        <p
+          data-testid={`text-testimony-name-${testimony.id}`}
+          style={{
+            fontFamily: "'IvyOra Display', serif",
+            fontWeight: 500,
+            fontSize: "15px",
+            lineHeight: 1,
+            color: isLocked ? "rgba(255,255,255,0.35)" : "white",
+            margin: 0,
+            textAlign: "center",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: "100%",
+          }}
+        >
+          {testimony.personName}
+        </p>
       </div>
+
+      {/* Inset highlight border (top edge glow) */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: "-1px",
+          pointerEvents: "none",
+          borderRadius: "inherit",
+          boxShadow: "inset 0px 1px 0px 0px rgba(255,255,255,0.1)",
+        }}
+      />
     </div>
   );
 }
 
 function Divider() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "16px", width: "100%", maxWidth: "608px", margin: "0 auto" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        width: "100%",
+        maxWidth: "608px",
+        margin: "0 auto",
+      }}
+    >
       <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)", borderRadius: "9999px" }} />
       <span
         className="type-caption-sm"
         style={{
-          color: "var(--white-40, rgba(255,255,255,0.4))",
+          color: "rgba(255,255,255,0.35)",
           letterSpacing: "2.4px",
           textTransform: "uppercase",
           whiteSpace: "nowrap",
@@ -352,13 +351,11 @@ function SkeletonCard() {
     <div
       className="animate-pulse"
       style={{
-        flex: "1 0 0",
-        minWidth: "200px",
-        height: "298px",
+        width: "100%",
+        aspectRatio: "3/4",
         background: "var(--surface-raised)",
-        border: "1.25px solid rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.06)",
         borderRadius: "6px",
-        overflow: "hidden",
       }}
     />
   );
@@ -389,66 +386,47 @@ export default function TestimoniesPage() {
 
       <PageContainer
         variant="full"
-        className="pt-[80px] pb-16 min-h-[calc(100vh-72px)]"
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "48px" }}
+        className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]"
       >
-        {/* Page title */}
-        <h1
-          className="type-display-xl text-white text-center"
-          data-testid="text-testimonies-title"
-        >
-          Testimonies
-        </h1>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "48px" }}>
 
-        {/* Divider */}
-        <Divider />
-
-        {/* Cards */}
-        {isLoading ? (
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              width: "100%",
-              maxWidth: "960px",
-            }}
+          {/* Page title */}
+          <h1
+            className="type-display-xl text-white text-center"
+            data-testid="text-testimonies-title"
           >
-            {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
-          </div>
-        ) : testimonies.length === 0 ? (
-          <div style={{ textAlign: "center", paddingTop: "60px" }}>
-            <p className="type-body-md" style={{ color: "var(--white-40)" }}>
+            Testimonies
+          </h1>
+
+          {/* Divider */}
+          <Divider />
+
+          {/* 3×3 grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+              {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+            </div>
+          ) : testimonies.length === 0 ? (
+            <p className="type-body-md" style={{ color: "var(--white-40)", textAlign: "center", paddingTop: "40px" }}>
               No testimonies have been added yet.
             </p>
-          </div>
-        ) : (
-          <div
-            data-testid="testimonies-grid"
-            style={{
-              display: "flex",
-              gap: "20px",
-              width: "100%",
-              maxWidth: "960px",
-              overflowX: "auto",
-              paddingBottom: "4px",
-            }}
-          >
-            {testimonies.map(testimony => (
-              <TestimonyCard
-                key={testimony.id}
-                testimony={testimony}
-                onPlay={openVideo}
-              />
-            ))}
-          </div>
-        )}
-      </PageContainer>
+          ) : (
+            <div
+              data-testid="testimonies-grid"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full"
+            >
+              {testimonies.map(testimony => (
+                <TestimonyCard
+                  key={testimony.id}
+                  testimony={testimony}
+                  onPlay={openVideo}
+                />
+              ))}
+            </div>
+          )}
 
-      <style>{`
-        [data-testid^="card-testimony-"]:hover .play-overlay {
-          opacity: 1 !important;
-        }
-      `}</style>
+        </div>
+      </PageContainer>
     </DashboardLayout>
   );
 }

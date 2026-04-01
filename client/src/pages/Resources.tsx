@@ -317,7 +317,7 @@ export default function Resources() {
 
   return (
     <DashboardLayout>
-      <PageContainer variant="narrow" className="pt-8 pb-16">
+      <PageContainer variant="narrow" className="pt-[80px] pb-16">
         <h1 className="type-display-xl text-center text-white mb-12">
           Resources
         </h1>
