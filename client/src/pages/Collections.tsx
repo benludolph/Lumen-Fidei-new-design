@@ -233,7 +233,7 @@ export default function Collections() {
 
           <SaintsDivider />
 
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {SAINTS.map((saint) => (
               <HoloCard key={saint.id} saint={saint} />
             ))}
