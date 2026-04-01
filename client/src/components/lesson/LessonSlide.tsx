@@ -405,6 +405,8 @@ function PathSelectorSlide({
   onInteracted?: () => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   let data: PathSelectorData = { headline: "", options: [] };
   try {
@@ -421,6 +423,14 @@ function PathSelectorSlide({
     }
   };
 
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || data.options.length === 0) return;
+    const cardWidth = el.scrollWidth / data.options.length;
+    const idx = Math.round(el.scrollLeft / cardWidth);
+    setActiveIdx(Math.min(Math.max(idx, 0), data.options.length - 1));
+  }, [data.options.length]);
+
   return (
     <div className="flex flex-col gap-5">
       {data.headline ? (
@@ -428,7 +438,14 @@ function PathSelectorSlide({
           {data.headline}
         </p>
       ) : null}
-      <div className="flex gap-3" data-testid="path-selector-cards">
+
+      {/* Mobile: peek-scroll carousel. Desktop: side-by-side flex. */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex gap-3 overflow-x-auto sm:overflow-x-visible snap-x snap-mandatory sm:snap-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        data-testid="path-selector-cards"
+      >
         {data.options.map((option) => {
           const isSelected = selectedId === option.id;
           const imgSrc = option.imageUrl || PATH_SELECTOR_ASSET_MAP[option.id] || "";
@@ -439,7 +456,7 @@ function PathSelectorSlide({
               data-testid={`path-card-${option.id}`}
               onClick={() => handleSelect(option)}
               className={cn(
-                "relative flex-1 min-w-0 aspect-[200/232] cursor-pointer outline-none overflow-hidden",
+                "relative w-[85%] shrink-0 snap-start sm:w-auto sm:flex-1 sm:min-w-0 aspect-[200/232] cursor-pointer outline-none overflow-hidden",
                 "transition-all duration-300 ease-out",
                 isSelected
                   ? "grayscale-0"
@@ -460,6 +477,23 @@ function PathSelectorSlide({
           );
         })}
       </div>
+
+      {/* Dot indicators — mobile only */}
+      {data.options.length > 1 && (
+        <div className="flex sm:hidden justify-center gap-2">
+          {data.options.map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "rounded-full transition-all duration-300",
+                i === activeIdx
+                  ? "w-4 h-1.5 bg-white"
+                  : "w-1.5 h-1.5 bg-white/30"
+              )}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
