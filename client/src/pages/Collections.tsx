@@ -209,12 +209,12 @@ function HoloCard({ saint }: { saint: Saint }) {
 
 function SaintsDivider() {
   return (
-    <div className="flex items-center gap-4 mb-8">
-      <div className="flex-1 h-px bg-[var(--white-10)]" />
-      <span className="type-caption-md whitespace-nowrap" style={{ color: "var(--white-35)" }}>
+    <div className="flex items-center gap-4 w-full">
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
+      <span className="type-caption-md whitespace-nowrap" style={{ color: "#d0d6e0" }}>
         SAINTS
       </span>
-      <div className="flex-1 h-px bg-[var(--white-10)]" />
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, rgba(180,188,208,0.15))" }} />
     </div>
   );
 }
@@ -226,14 +226,14 @@ export default function Collections() {
         variant="narrow"
         className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]"
       >
-        <div data-testid="collections-page">
-          <h1 className="type-display-xl text-center text-white mb-12">
+        <div data-testid="collections-page" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "48px" }}>
+          <h1 className="type-display-xl text-center text-white">
             Collection
           </h1>
 
           <SaintsDivider />
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4 w-full">
             {SAINTS.map((saint) => (
               <HoloCard key={saint.id} saint={saint} />
             ))}

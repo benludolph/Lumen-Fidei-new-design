@@ -319,29 +319,12 @@ function TestimonyCard({
 
 function Divider() {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "16px",
-        width: "100%",
-        maxWidth: "608px",
-        margin: "0 auto",
-      }}
-    >
-      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)", borderRadius: "9999px" }} />
-      <span
-        className="type-caption-sm"
-        style={{
-          color: "rgba(255,255,255,0.35)",
-          letterSpacing: "2.4px",
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-        }}
-      >
+    <div className="flex items-center gap-4 w-full">
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
+      <span className="type-caption-md whitespace-nowrap" style={{ color: "#d0d6e0" }}>
         COMPLETE LESSONS TO UNLOCK
       </span>
-      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)", borderRadius: "9999px" }} />
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, rgba(180,188,208,0.15))" }} />
     </div>
   );
 }
