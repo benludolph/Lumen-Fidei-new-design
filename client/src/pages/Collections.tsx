@@ -223,7 +223,7 @@ export default function Collections() {
   return (
     <DashboardLayout>
       <PageContainer
-        variant="full"
+        variant="narrow"
         className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]"
       >
         <div data-testid="collections-page">

@@ -385,7 +385,7 @@ export default function TestimoniesPage() {
       />
 
       <PageContainer
-        variant="full"
+        variant="narrow"
         className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]"
       >
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "48px" }}>
