@@ -115,6 +115,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
             <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
+            {user?.role === 'participant' && (
+              <NavLink href="/testimonies" active={location === "/testimonies"}>Testimonies</NavLink>
+            )}
 
             {/* Profile / sign-out button */}
             <div ref={profileRef} style={{ position: "relative", marginLeft: "8px" }}>
@@ -274,6 +277,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <DrawerLink href="/collections" active={location === "/collections"} onClick={closeDrawer}>
             Collection
           </DrawerLink>
+          {user?.role === 'participant' && (
+            <DrawerLink href="/testimonies" active={location === "/testimonies"} onClick={closeDrawer}>
+              Testimonies
+            </DrawerLink>
+          )}
         </nav>
 
         {/* Drawer sign-out */}
