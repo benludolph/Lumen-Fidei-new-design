@@ -92,7 +92,7 @@ function getResourceIcon(name: string): LucideIcon {
 
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-4 mb-4">
+    <div className="flex items-center gap-4 mb-12">
       <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(180,188,208,0.15))" }} />
       <span className="type-caption-md whitespace-nowrap" style={{ color: "#d0d6e0" }}>
         {label}
