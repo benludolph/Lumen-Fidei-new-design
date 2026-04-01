@@ -49,6 +49,22 @@ function getEmbedUrl(raw: string): string {
       const id = u.pathname.split("/").filter(Boolean).pop() ?? "";
       return `https://player.vimeo.com/video/${id}?autoplay=1`;
     }
+    // Cloudinary player embed URL — already embeddable, just ensure autoplay
+    if (u.hostname === "player.cloudinary.com") {
+      u.searchParams.set("autoplay", "true");
+      u.searchParams.set("controls", "true");
+      return u.toString();
+    }
+    // Cloudinary direct video URL — convert to player embed
+    if (u.hostname === "res.cloudinary.com") {
+      const parts = u.pathname.split("/").filter(Boolean);
+      const cloudName = parts[0];
+      const uploadIdx = parts.indexOf("upload");
+      if (uploadIdx >= 0) {
+        const publicId = parts.slice(uploadIdx + 1).join("/").replace(/\.[^.]+$/, "");
+        return `https://player.cloudinary.com/embed/?cloud_name=${cloudName}&public_id=${encodeURIComponent(publicId)}&autoplay=true&controls=true`;
+      }
+    }
   } catch (_) {}
   return raw;
 }
