@@ -90,6 +90,20 @@ function getResourceIcon(name: string): LucideIcon {
   return entry?.icon ?? Church;
 }
 
+const RESOURCE_SUBTEXTS: { match: string; subtext: string }[] = [
+  { match: "retaliation", subtext: "Renouncing past spiritual ties" },
+  { match: "miracle", subtext: "Asking God to intervene" },
+  { match: "examen", subtext: "Daily review with God" },
+  { match: "lectio", subtext: "Slow, prayerful Scripture reading" },
+  { match: "rosary", subtext: "Meditation on Christ's life" },
+  { match: "divine mercy", subtext: "Prayer of trust in mercy" },
+];
+
+function getResourceSubtext(name: string): string {
+  const lower = name.toLowerCase();
+  return RESOURCE_SUBTEXTS.find((m) => lower.includes(m.match))?.subtext ?? "";
+}
+
 function SectionDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-4 mb-12">
@@ -176,7 +190,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
               {resource.name}
             </p>
             <p className="type-body-xs" style={{ color: "#8a8f98" }}>
-              {resource.duration ?? (resource.type === "prayer" ? "A prayer" : "A practice")}
+              {getResourceSubtext(resource.name) || resource.duration || ""}
             </p>
           </div>
           <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
@@ -383,7 +397,7 @@ export default function Resources() {
                 `}</style>
                 <ExternalCard
                   name="Baltimore Catechism"
-                  description="Classic Catholic reference"
+                  description="Foundations of Church teaching"
                   href="https://www.catechism.cc/catechisms/Baltimore_Catechism.pdf"
                   bgImage={catechismImg}
                   hoverBgImage={catechismHoverImg}
@@ -392,7 +406,7 @@ export default function Resources() {
                 />
                 <ExternalCard
                   name="Penitent Soldiers of Mary"
-                  description="Marian devotion community"
+                  description="Marian apostolate + community"
                   href="https://penitentsoldiersofmary.org/"
                   bgImage={penitentImg}
                   hoverBgImage={penitentHoverImg}
