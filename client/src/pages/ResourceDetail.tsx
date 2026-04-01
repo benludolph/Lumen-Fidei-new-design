@@ -10,7 +10,7 @@ import { formatContent } from "@/lib/formatContent";
 import divineMercyDetailImg from "@assets/Divine_Mercy_(1)_1773954727973.webp";
 import retaliationDetailImg from "@assets/Retaliation_image_1773954733102.webp";
 import miracleDetailImg from "@assets/Miracle_1773955016570.jpg";
-import lectioDetailImg from "@assets/LectoDivina_1773955016570.png";
+import lectioDetailImg from "@assets/u8467352577_Oil_painting._A_wise_elderly_man_in_biblical_robe_1775059011679.webp";
 import examenDetailImg from "@assets/Examenn_1773955016571.png";
 
 const DETAIL_IMAGE_MAP: Array<{ match: string; img: string }> = [
