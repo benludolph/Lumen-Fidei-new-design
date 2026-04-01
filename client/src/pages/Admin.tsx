@@ -1238,8 +1238,12 @@ function BackupRestoreCard() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Export all lesson content (modules, slides, resources, images) to a single JSON file. Use it to restore your content if something goes wrong, or to migrate content to another instance.
+            Export all lesson content (modules, slides, resources, overlays, and settings) to a single JSON file. Use it to restore your content if something goes wrong, or to migrate content to another instance.
           </p>
+          <div className="flex items-center gap-2 p-3 rounded-md bg-muted/50 border text-sm text-muted-foreground">
+            <ImageIcon className="w-4 h-4 shrink-0" />
+            <span>Uploaded images are not included in the backup and must be re-uploaded separately if needed.</span>
+          </div>
           <div className="flex flex-wrap gap-3">
             <Button
               variant="outline"
@@ -1291,7 +1295,7 @@ function BackupRestoreCard() {
               </p>
             </div>
             <p className="text-sm text-muted-foreground">
-              This action will overwrite all prelim modules, track content, daily content, practice resources, module overlays, and uploaded images. This cannot be undone. User accounts and progress data will not be affected.
+              This action will overwrite all prelim modules, track content, daily content, practice resources, and module overlays. Uploaded images are not affected. This cannot be undone. User accounts and progress data will not be affected.
             </p>
             <div className="flex gap-2">
               <Button

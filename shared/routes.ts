@@ -407,7 +407,7 @@ export const api = {
             module_overlays: z.array(z.record(z.string(), z.unknown())),
             practice_resources: z.array(z.record(z.string(), z.unknown())),
             cohort_settings: z.array(z.record(z.string(), z.unknown())),
-            uploaded_images: z.array(z.record(z.string(), z.unknown())),
+            uploaded_images: z.array(z.record(z.string(), z.unknown())).optional(),
           }),
         }),
         403: errorSchemas.forbidden,
@@ -427,7 +427,7 @@ export const api = {
           module_overlays: z.array(z.record(z.string(), z.unknown())),
           practice_resources: z.array(z.record(z.string(), z.unknown())),
           cohort_settings: z.array(z.record(z.string(), z.unknown())),
-          uploaded_images: z.array(z.record(z.string(), z.unknown())),
+          uploaded_images: z.array(z.record(z.string(), z.unknown())).optional(),
         }),
       }),
       responses: {
@@ -483,7 +483,7 @@ export type ContentBackup = {
     module_overlays: Record<string, unknown>[];
     practice_resources: Record<string, unknown>[];
     cohort_settings: Record<string, unknown>[];
-    uploaded_images: Record<string, unknown>[];
+    uploaded_images?: Record<string, unknown>[];
   };
 };
 

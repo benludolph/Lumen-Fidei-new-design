@@ -1385,7 +1385,6 @@ export async function registerRoutes(
         dbModuleOverlays,
         dbPracticeResources,
         dbCohortSettings,
-        dbUploadedImages,
       ] = await Promise.all([
         db.select().from(prelimModules),
         db.select().from(trackAContent),
@@ -1394,7 +1393,6 @@ export async function registerRoutes(
         db.select().from(moduleOverlays),
         db.select().from(practiceResources),
         db.select().from(cohortSettings),
-        db.select().from(uploadedImages),
       ]);
 
       const backup = {
@@ -1408,7 +1406,6 @@ export async function registerRoutes(
           module_overlays: dbModuleOverlays,
           practice_resources: dbPracticeResources,
           cohort_settings: dbCohortSettings,
-          uploaded_images: dbUploadedImages,
         },
       };
 
@@ -1433,7 +1430,7 @@ export async function registerRoutes(
       module_overlays: z.array(z.object({ contextKey: z.string() }).passthrough()),
       practice_resources: z.array(z.object({ name: z.string(), type: z.string(), content: z.string() }).passthrough()),
       cohort_settings: z.array(z.object({ key: z.string(), value: z.string() }).passthrough()),
-      uploaded_images: z.array(z.object({ filename: z.string(), mimeType: z.string(), data: z.string() }).passthrough()),
+      uploaded_images: z.array(z.object({ filename: z.string(), mimeType: z.string(), data: z.string() }).passthrough()).optional(),
     }),
   });
 
@@ -1448,7 +1445,6 @@ export async function registerRoutes(
 
       await db.transaction(async (tx) => {
         // Always delete all content tables first so restore is exact regardless of array length
-        await tx.delete(uploadedImages);
         await tx.delete(prelimModules);
         await tx.delete(trackAContent);
         await tx.delete(trackAModules);
@@ -1456,11 +1452,6 @@ export async function registerRoutes(
         await tx.delete(moduleOverlays);
         await tx.delete(practiceResources);
         await tx.delete(cohortSettings);
-
-        for (const row of data.uploaded_images) {
-          const { id: _id, createdAt: _ca, ...rest } = row;
-          await tx.insert(uploadedImages).values(rest);
-        }
 
         for (const row of data.prelim_modules) {
           const { id: _id, ...rest } = row;
@@ -1506,7 +1497,6 @@ export async function registerRoutes(
         module_overlays: data.module_overlays.length,
         practice_resources: data.practice_resources.length,
         cohort_settings: data.cohort_settings.length,
-        uploaded_images: data.uploaded_images.length,
       };
 
       res.json({ message: "Restore completed successfully", counts });
