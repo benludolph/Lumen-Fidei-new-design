@@ -522,7 +522,7 @@ function ScriptureSelectSlide({
             style={{
               fontFamily: "'IvyOra Display', serif",
               fontWeight: 500,
-              fontSize: "1.625rem",
+              fontSize: "clamp(1.15rem, 4vw, 1.625rem)",
               color: "rgba(255,255,255,1)",
               margin: 0,
             }}
@@ -538,7 +538,7 @@ function ScriptureSelectSlide({
           paddingLeft: "20px",
           fontFamily: "'Afacad', sans-serif",
           fontStyle: "italic",
-          fontSize: "1.5rem",
+          fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
           color: "rgba(255,255,255,0.8)",
           lineHeight: "1.65",
         }}
@@ -655,7 +655,7 @@ function ScriptureReflectionSlide({
 
   return (
     <div className="flex flex-col items-center gap-8" data-testid="slide-scripture-reflection">
-      <div className="relative w-[140px] h-[140px] flex items-center justify-center">
+      <div className="relative w-[100px] h-[100px] sm:w-[140px] sm:h-[140px] flex items-center justify-center">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
           <circle
@@ -687,7 +687,7 @@ function ScriptureReflectionSlide({
             style={{
               fontFamily: "'IvyOra Display', serif",
               fontWeight: 500,
-              fontSize: "1.625rem",
+              fontSize: "clamp(1.15rem, 4vw, 1.625rem)",
               color: "rgba(255,255,255,1)",
               margin: 0,
             }}
@@ -704,7 +704,7 @@ function ScriptureReflectionSlide({
             paddingLeft: "20px",
             fontFamily: "'Afacad', sans-serif",
             fontStyle: "italic",
-            fontSize: "1.5rem",
+            fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
             color: "rgba(255,255,255,0.8)",
             lineHeight: "1.65",
           }}
@@ -1337,7 +1337,7 @@ function TimerSlide({
 
   return (
     <div className="flex flex-col items-center space-y-8" data-testid="slide-timer">
-      <div className="relative w-[140px] h-[140px] flex items-center justify-center">
+      <div className="relative w-[100px] h-[100px] sm:w-[140px] sm:h-[140px] flex items-center justify-center">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
           <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
           <circle

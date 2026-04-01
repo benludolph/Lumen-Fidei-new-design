@@ -135,13 +135,12 @@ export function LessonCompletionScreen({
       >
         {/* Dark card — identical structure to slide screens */}
         <div
-          className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px]"
+          className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px] p-5 sm:p-12"
           style={{
             background: "var(--surface-base)",
             border: "0.5px solid var(--white-5)",
             borderBottom: "none",
             borderRadius: "8px 8px 0 0",
-            padding: "48px",
           }}
         >
           {/* Subtle radial highlight at top-left corner */}
@@ -191,11 +190,10 @@ export function LessonCompletionScreen({
 
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
       <div
-        className="relative shrink-0 flex flex-col items-center justify-center"
+        className="relative shrink-0 flex flex-col items-center justify-center p-4 sm:p-8"
         style={{
           background: "var(--surface-ground)",
           borderTop: "1px solid var(--white-5)",
-          padding: "32px",
         }}
       >
         <div className="max-w-[640px] w-full flex items-center justify-end">
