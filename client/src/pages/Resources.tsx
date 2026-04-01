@@ -128,7 +128,7 @@ function ResourceCard({ resource }: { resource: PracticeResource }) {
         data-testid={`card-resource-${resource.id}`}
         className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
         style={{
-          backgroundColor: "var(--surface-base)",
+          backgroundColor: "#0F1011",
           border: "0.5px solid var(--white-5)",
           borderRadius: "6px",
         }}
@@ -233,7 +233,7 @@ function ExternalCard({
       <div
         className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
         style={{
-          backgroundColor: "var(--surface-base)",
+          backgroundColor: "#0F1011",
           border: "0.5px solid var(--white-5)",
           borderRadius: "6px",
         }}
