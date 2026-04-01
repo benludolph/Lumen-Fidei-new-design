@@ -402,6 +402,13 @@ export function LessonFlow({
     requiresInteraction ||
     surveyBlocked;
 
+  // Slides that have their own in-card CTA button — hide the footer CONTINUE
+  // while they still need interaction (avoids two stacked buttons on mobile)
+  const SELF_CTA_TYPES = new Set(["action", "text_input", "mentor_message"]);
+  const hideFooter =
+    (isValidKc && kcAnswered) ||
+    (requiresInteraction && SELF_CTA_TYPES.has(effectiveSlideData.type));
+
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex flex-col overflow-hidden"
@@ -546,7 +553,7 @@ export function LessonFlow({
       </div>
 
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
-      {!(isValidKc && kcAnswered) && (
+      {!hideFooter && (
         <div
           className="relative shrink-0 flex flex-col items-center justify-center p-4 sm:p-8"
           style={{
