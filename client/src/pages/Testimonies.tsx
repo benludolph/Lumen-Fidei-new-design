@@ -2,10 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Lock, Play, ChevronDown, ChevronUp, X, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Lock, Play, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface TestimonyPartWithStatus {
   id: number;
@@ -97,10 +95,282 @@ function VideoModal({
   );
 }
 
-function TestimonyCard({ testimony }: { testimony: TestimonyWithStatus }) {
-  const [expanded, setExpanded] = useState(false);
+function TestimonyCard({
+  testimony,
+  onPlay,
+}: {
+  testimony: TestimonyWithStatus;
+  onPlay: (url: string, title: string) => void;
+}) {
+  const isFullyLocked = testimony.unlockedCount === 0;
+  const firstUnlockedPart = testimony.parts.find(p => p.unlocked);
+  const lockHint = testimony.parts[0] ? unlockHintText(testimony.parts[0].unlockKey) : "Complete more lessons to unlock";
+
+  const handleClick = () => {
+    if (isFullyLocked) return;
+    if (testimony.fullyUnlocked && testimony.fullVideoUrl) {
+      onPlay(testimony.fullVideoUrl, `${testimony.personName} — Full Testimony`);
+    } else if (firstUnlockedPart) {
+      onPlay(
+        firstUnlockedPart.videoUrl,
+        `${testimony.personName}${firstUnlockedPart.title ? ` — ${firstUnlockedPart.title}` : ` — Part ${firstUnlockedPart.partNumber}`}`
+      );
+    }
+  };
+
+  return (
+    <div
+      data-testid={`card-testimony-${testimony.id}`}
+      onClick={handleClick}
+      style={{
+        position: "relative",
+        flex: "1 0 0",
+        minWidth: "200px",
+        height: "298px",
+        background: "var(--surface-raised)",
+        border: "1.25px solid rgba(255,255,255,0.1)",
+        borderRadius: "6px",
+        overflow: "hidden",
+        cursor: isFullyLocked ? "default" : "pointer",
+        transition: "border-color 0.2s",
+      }}
+      onMouseEnter={e => {
+        if (!isFullyLocked) {
+          (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.22)";
+        }
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.1)";
+      }}
+    >
+      {/* Thumbnail */}
+      {testimony.thumbnailUrl ? (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: "0 0 56px 0",
+            mixBlendMode: "luminosity",
+            opacity: isFullyLocked ? 0.35 : 0.6,
+            transition: "opacity 0.2s",
+          }}
+        >
+          <div style={{ position: "absolute", inset: 0, background: "#0f1011" }} />
+          <img
+            alt={testimony.personName}
+            src={testimony.thumbnailUrl}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      ) : (
+        <div
+          style={{
+            position: "absolute",
+            inset: "0 0 56px 0",
+            background: "var(--surface-base)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span style={{ fontSize: "40px", color: "var(--white-20)", fontFamily: "'IvyOra Display', serif", fontWeight: 500 }}>
+            {testimony.personName.charAt(0)}
+          </span>
+        </div>
+      )}
+
+      {/* Lock overlay */}
+      {isFullyLocked && (
+        <div
+          style={{
+            position: "absolute",
+            inset: "0 0 56px 0",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+          }}
+        >
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              background: "rgba(0,0,0,0.55)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Lock size={16} style={{ color: "rgba(255,255,255,0.5)" }} />
+          </div>
+        </div>
+      )}
+
+      {/* Play icon overlay for unlocked cards (hover) */}
+      {!isFullyLocked && (
+        <div
+          className="play-overlay"
+          style={{
+            position: "absolute",
+            inset: "0 0 56px 0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: 0,
+            transition: "opacity 0.2s",
+            background: "rgba(0,0,0,0.25)",
+          }}
+        >
+          <div
+            style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              background: "rgba(0,0,0,0.6)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Play size={18} style={{ color: "white", fill: "white", marginLeft: "2px" }} />
+          </div>
+        </div>
+      )}
+
+      {/* Bottom info strip */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "56px",
+          background: "var(--surface-raised)",
+          borderTop: "0.5px solid rgba(255,255,255,0.06)",
+          padding: "10px 10px 8px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: "3px",
+        }}
+      >
+        {isFullyLocked ? (
+          <p
+            className="type-caption-sm"
+            style={{
+              color: "rgba(255,255,255,0.35)",
+              letterSpacing: "1.2px",
+              textTransform: "uppercase",
+              margin: 0,
+              lineHeight: 1.3,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {lockHint}
+          </p>
+        ) : testimony.description ? (
+          <p
+            className="type-caption-sm"
+            style={{
+              color: "rgba(255,255,255,0.45)",
+              letterSpacing: "1.4px",
+              textTransform: "uppercase",
+              margin: 0,
+              lineHeight: 1.3,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {testimony.description}
+          </p>
+        ) : null}
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px" }}>
+          <p
+            className="type-body-sm"
+            data-testid={`text-testimony-name-${testimony.id}`}
+            style={{
+              color: isFullyLocked ? "rgba(255,255,255,0.4)" : "white",
+              margin: 0,
+              lineHeight: 1.2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              flex: 1,
+              fontWeight: 500,
+            }}
+          >
+            {testimony.personName}
+          </p>
+          {!isFullyLocked && (
+            <Play
+              size={12}
+              style={{ color: "var(--brand)", fill: "var(--brand)", flexShrink: 0 }}
+            />
+          )}
+          {isFullyLocked && (
+            <Lock
+              size={11}
+              style={{ color: "rgba(255,255,255,0.25)", flexShrink: 0 }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "16px", width: "100%", maxWidth: "608px", margin: "0 auto" }}>
+      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)", borderRadius: "9999px" }} />
+      <span
+        className="type-caption-sm"
+        style={{
+          color: "var(--white-40, rgba(255,255,255,0.4))",
+          letterSpacing: "2.4px",
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+        }}
+      >
+        COMPLETE LESSONS TO UNLOCK
+      </span>
+      <div style={{ flex: 1, height: "1px", background: "rgba(180,188,208,0.1)", borderRadius: "9999px" }} />
+    </div>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div
+      className="animate-pulse"
+      style={{
+        flex: "1 0 0",
+        minWidth: "200px",
+        height: "298px",
+        background: "var(--surface-raised)",
+        border: "1.25px solid rgba(255,255,255,0.06)",
+        borderRadius: "6px",
+        overflow: "hidden",
+      }}
+    />
+  );
+}
+
+export default function TestimoniesPage() {
   const [modalUrl, setModalUrl] = useState<string | null>(null);
   const [modalTitle, setModalTitle] = useState<string>("");
+
+  const { data: testimonies = [], isLoading } = useQuery<TestimonyWithStatus[]>({
+    queryKey: ["/api/testimonies"],
+  });
 
   const openVideo = (url: string, title: string) => {
     setModalUrl(url);
@@ -108,14 +378,8 @@ function TestimonyCard({ testimony }: { testimony: TestimonyWithStatus }) {
   };
   const closeModal = () => setModalUrl(null);
 
-  const progressPct = testimony.totalParts > 0
-    ? Math.round((testimony.unlockedCount / testimony.totalParts) * 100)
-    : 0;
-
-  const firstUnlockedPart = testimony.parts.find(p => p.unlocked);
-
   return (
-    <>
+    <DashboardLayout>
       <VideoModal
         open={!!modalUrl}
         onClose={closeModal}
@@ -123,210 +387,68 @@ function TestimonyCard({ testimony }: { testimony: TestimonyWithStatus }) {
         title={modalTitle}
       />
 
-      <div
-        className="rounded-xl border border-border bg-card overflow-hidden"
-        data-testid={`card-testimony-${testimony.id}`}
+      <PageContainer
+        variant="full"
+        className="pt-[80px] pb-16 min-h-[calc(100vh-72px)]"
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "48px" }}
       >
-        {/* Header */}
-        <div className="p-5">
-          <div className="flex items-start gap-4">
-            {testimony.thumbnailUrl ? (
-              <img
-                src={testimony.thumbnailUrl}
-                alt={testimony.personName}
-                className="w-16 h-16 rounded-full object-cover flex-shrink-0 border-2 border-border"
-                data-testid={`img-testimony-thumbnail-${testimony.id}`}
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 border-2 border-border">
-                <span className="text-xl font-semibold text-muted-foreground">
-                  {testimony.personName.charAt(0)}
-                </span>
-              </div>
-            )}
+        {/* Page title */}
+        <h1
+          className="type-display-xl text-white text-center"
+          data-testid="text-testimonies-title"
+        >
+          Testimonies
+        </h1>
 
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground text-base leading-snug" data-testid={`text-testimony-name-${testimony.id}`}>
-                {testimony.personName}
-              </h3>
-              {testimony.description && (
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  {testimony.description}
-                </p>
-              )}
+        {/* Divider */}
+        <Divider />
 
-              {/* Progress */}
-              {testimony.totalParts > 0 && (
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-muted-foreground">
-                      {testimony.unlockedCount} of {testimony.totalParts} part{testimony.totalParts !== 1 ? "s" : ""} unlocked
-                    </span>
-                    <span className="text-xs text-muted-foreground">{progressPct}%</span>
-                  </div>
-                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all duration-500"
-                      style={{ width: `${progressPct}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Quick play button for first unlocked part */}
-              {firstUnlockedPart && (
-                <button
-                  data-testid={`button-quick-play-${testimony.id}`}
-                  onClick={() => openVideo(firstUnlockedPart.videoUrl, `${testimony.personName} — Part ${firstUnlockedPart.partNumber}${firstUnlockedPart.title ? ` — ${firstUnlockedPart.title}` : ""}`)}
-                  className="mt-3 flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-                >
-                  <Play className="w-3.5 h-3.5 fill-primary" /> Watch now
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Actions row */}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {/* Watch Full Testimony CTA */}
-            {testimony.fullyUnlocked && testimony.fullVideoUrl && (
-              <Button
-                size="sm"
-                data-testid={`button-watch-full-testimony-${testimony.id}`}
-                onClick={() => openVideo(testimony.fullVideoUrl, `${testimony.personName} — Full Testimony`)}
-                className="flex items-center gap-1.5"
-              >
-                <Play className="w-3.5 h-3.5 fill-current" />
-                Watch Full Testimony
-              </Button>
-            )}
-
-            {/* Expand/collapse parts */}
-            {testimony.totalParts > 0 && (
-              <button
-                data-testid={`button-expand-testimony-${testimony.id}`}
-                onClick={() => setExpanded(e => !e)}
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
-              >
-                {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                {expanded ? "Hide" : "View"} parts
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Parts list */}
-        {expanded && testimony.parts.length > 0 && (
-          <div className="border-t border-border">
-            {testimony.parts.map(part => (
-              <button
-                key={part.id}
-                data-testid={`button-part-${part.id}`}
-                disabled={!part.unlocked}
-                onClick={() => part.unlocked && openVideo(part.videoUrl, `${testimony.personName} — Part ${part.partNumber}${part.title ? ` — ${part.title}` : ""}`)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors border-b border-border last:border-b-0",
-                  part.unlocked
-                    ? "hover:bg-secondary/50 cursor-pointer"
-                    : "cursor-not-allowed opacity-60"
-                )}
-              >
-                <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                  part.unlocked ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
-                )}>
-                  {part.unlocked
-                    ? <Play className="w-4 h-4 fill-primary" />
-                    : <Lock className="w-3.5 h-3.5" />
-                  }
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    "text-sm font-medium leading-snug",
-                    part.unlocked ? "text-foreground" : "text-muted-foreground"
-                  )}>
-                    Part {part.partNumber}{part.title ? ` — ${part.title}` : ""}
-                  </p>
-                  {!part.unlocked && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {unlockHintText(part.unlockKey)}
-                    </p>
-                  )}
-                </div>
-                {part.unlocked && (
-                  <Play className="w-4 h-4 text-primary flex-shrink-0" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* No parts unlocked yet — show first lock hint */}
-        {testimony.unlockedCount === 0 && testimony.totalParts > 0 && !expanded && (
-          <div className="border-t border-border px-5 py-3.5 bg-secondary/30">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Lock className="w-4 h-4 flex-shrink-0" />
-              <span>{unlockHintText(testimony.parts[0]?.unlockKey ?? "")}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="text-center py-20">
-      <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
-        <Play className="w-7 h-7 text-muted-foreground" />
-      </div>
-      <p className="text-muted-foreground text-sm">No testimonies have been added yet.</p>
-    </div>
-  );
-}
-
-export default function TestimoniesPage() {
-  const { data: testimonies = [], isLoading } = useQuery<TestimonyWithStatus[]>({
-    queryKey: ["/api/testimonies"],
-  });
-
-  return (
-    <DashboardLayout>
-      <PageContainer variant="wide" className="py-8">
-        <div className="mb-8">
-          <h1
-            className="text-foreground"
+        {/* Cards */}
+        {isLoading ? (
+          <div
             style={{
-              fontFamily: "'IvyOra Display', serif",
-              fontWeight: 500,
-              fontSize: "1.625rem",
+              display: "flex",
+              gap: "20px",
+              width: "100%",
+              maxWidth: "960px",
             }}
           >
-            Testimonies
-          </h1>
-          <p className="text-muted-foreground text-sm mt-2">
-            Hear how others have experienced healing and transformation through this journey.
-            Complete lessons to unlock more stories.
-          </p>
-        </div>
-
-        {isLoading ? (
-          <div className="grid gap-5">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-40 rounded-xl bg-secondary animate-pulse" />
-            ))}
+            {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
           </div>
         ) : testimonies.length === 0 ? (
-          <EmptyState />
+          <div style={{ textAlign: "center", paddingTop: "60px" }}>
+            <p className="type-body-md" style={{ color: "var(--white-40)" }}>
+              No testimonies have been added yet.
+            </p>
+          </div>
         ) : (
-          <div className="grid gap-5">
+          <div
+            data-testid="testimonies-grid"
+            style={{
+              display: "flex",
+              gap: "20px",
+              width: "100%",
+              maxWidth: "960px",
+              overflowX: "auto",
+              paddingBottom: "4px",
+            }}
+          >
             {testimonies.map(testimony => (
-              <TestimonyCard key={testimony.id} testimony={testimony} />
+              <TestimonyCard
+                key={testimony.id}
+                testimony={testimony}
+                onPlay={openVideo}
+              />
             ))}
           </div>
         )}
       </PageContainer>
+
+      <style>{`
+        [data-testid^="card-testimony-"]:hover .play-overlay {
+          opacity: 1 !important;
+        }
+      `}</style>
     </DashboardLayout>
   );
 }
