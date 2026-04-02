@@ -555,7 +555,8 @@ export function LessonFlow({
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
       {!hideFooter && (
         <div
-          className="relative shrink-0 flex flex-col items-center justify-center p-4 sm:p-8"
+          key={animKey}
+          className="relative z-10 shrink-0 flex flex-col items-center justify-center p-4 sm:p-8 lesson-footer-enter"
           style={{
             background: "var(--surface-ground)",
             borderTop: "1px solid var(--white-5)",
@@ -566,7 +567,7 @@ export function LessonFlow({
               onClick={handleNext}
               disabled={navBlocked}
               className={cn(
-                "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] transition-opacity whitespace-nowrap",
+                "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] whitespace-nowrap",
                 navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{

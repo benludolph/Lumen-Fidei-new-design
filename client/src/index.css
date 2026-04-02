@@ -587,6 +587,15 @@
   animation: lessonSlideInLeft 0.35s ease-out;
 }
 
+.lesson-footer-enter {
+  animation: lessonFooterEnter 0.2s ease-out;
+}
+
+@keyframes lessonFooterEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @keyframes light-sweep {
   0% {
     transform: translateX(-100%) rotate(-45deg);
