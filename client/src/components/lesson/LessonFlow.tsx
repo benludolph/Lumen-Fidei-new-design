@@ -546,7 +546,7 @@ export function LessonFlow({
               background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
-          <div className="relative flex-1 overflow-y-auto">
+          <div className="relative flex-1 min-h-0 overflow-y-auto">
             {lessonSlideEl}
           </div>
         </div>
@@ -566,7 +566,7 @@ export function LessonFlow({
               onClick={handleNext}
               disabled={navBlocked}
               className={cn(
-                "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] transition-opacity",
+                "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] transition-opacity whitespace-nowrap",
                 navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{
