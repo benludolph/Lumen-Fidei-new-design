@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
+import Begin from "@/pages/Begin";
 import Dashboard from "@/pages/Dashboard";
 import Day0 from "@/pages/Day0";
 import MentorPortal from "@/pages/MentorPortal";
@@ -60,7 +61,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      
+      <Route path="/begin" component={Begin} />
+
       {/* Root redirect */}
       <Route path="/" component={RootRedirect} />
 
