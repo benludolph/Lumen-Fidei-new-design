@@ -137,7 +137,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "evening">("morning");
   const [selectedPrelimPosition, setSelectedPrelimPosition] = useState<number>(1);
-  const [completedModule, setCompletedModule] = useState<{ type: "prelim" | "day"; id: number } | null>(null);
+  const [completedModule, setCompletedModule] = useState<{ type: "prelim" | "day"; id: number; behavior?: ScrollBehavior } | null>(null);
   
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
     const saved = localStorage.getItem('lumenFidei_fontSize');
@@ -155,7 +155,7 @@ export default function Dashboard() {
       : `card-day-${completedModule.id}`;
     const el = document.querySelector(`[data-testid="${testId}"]`);
     if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.scrollIntoView({ behavior: completedModule.behavior ?? "smooth", block: "center" });
     }
     setCompletedModule(null);
   }, [viewMode, completedModule]);
@@ -304,7 +304,9 @@ export default function Dashboard() {
 
   const handleBackToGrid = (dayToScrollTo?: number) => {
     if (dayToScrollTo && dayToScrollTo > 0) {
-      setCompletedModule({ type: "day", id: dayToScrollTo });
+      setCompletedModule({ type: "day", id: dayToScrollTo, behavior: "smooth" });
+    } else if (selectedDay > 0) {
+      setCompletedModule({ type: "day", id: selectedDay, behavior: "instant" });
     }
     setViewMode("grid");
     setSelectedDay(0);
@@ -322,6 +324,7 @@ export default function Dashboard() {
   };
 
   const handlePrelimExit = () => {
+    setCompletedModule({ type: "prelim", id: selectedPrelimPosition, behavior: "instant" });
     setViewMode("grid");
   };
 
