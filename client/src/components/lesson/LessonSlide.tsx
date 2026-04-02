@@ -556,7 +556,7 @@ function ScriptureSelectSlide({
             style={{
               fontFamily: "'IvyOra Display', serif",
               fontWeight: 500,
-              fontSize: "clamp(1.15rem, 4vw, 1.625rem)",
+              fontSize: "clamp(1.375rem, 4.5vw, 1.625rem)",
               color: "rgba(255,255,255,1)",
               margin: 0,
             }}
@@ -721,7 +721,7 @@ function ScriptureReflectionSlide({
             style={{
               fontFamily: "'IvyOra Display', serif",
               fontWeight: 500,
-              fontSize: "clamp(1.15rem, 4vw, 1.625rem)",
+              fontSize: "clamp(1.375rem, 4.5vw, 1.625rem)",
               color: "rgba(255,255,255,1)",
               margin: 0,
             }}
