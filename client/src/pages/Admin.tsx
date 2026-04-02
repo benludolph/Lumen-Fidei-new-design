@@ -2317,7 +2317,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector"] as const;
+const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2336,6 +2336,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   scenario: "Scenario Stepper",
   chat_flow: "Chat Flow",
   path_selector: "Path Selector",
+  cross_grid: "Cross Grid Puzzle",
   scripture_select: "Scripture Select",
   scripture_reflection: "Scripture Reflection",
 };
@@ -2355,6 +2356,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
   chat_flow: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   path_selector: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+  cross_grid: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
   scripture_select: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   scripture_reflection: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
 };
@@ -3083,6 +3085,18 @@ const PATH_SELECTOR_DEFAULT = JSON.stringify({
       imageUrl: "",
       nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" },
     },
+  ],
+}, null, 2);
+
+const CROSS_GRID_DEFAULT = JSON.stringify({
+  headline: "The Five Keys to Healing",
+  imageUrl: "",
+  pieces: [
+    { id: "center", label: "Truth", definition: "The foundation. Jesus said, 'I am the Way, the Truth, and the Life.' Truth is not an idea — it's a Person who loves you completely." },
+    { id: "top", label: "Repentance", definition: "Turning away from what harms you and toward God. Not shame — freedom. God's kindness leads you here." },
+    { id: "left", label: "Trust", definition: "Letting go of control. When you trust God fully, you stop managing your own healing and let Him lead." },
+    { id: "right", label: "Healing", definition: "God restores what was broken — emotionally, spiritually, relationally. It is His will for you. Ask Him." },
+    { id: "bottom", label: "Freedom", definition: "Where Truth, Repentance, Trust, and Healing lead. The life you were made for. It is available to you now." },
   ],
 }, null, 2);
 
@@ -4081,6 +4095,7 @@ function TrackAContentManagementView() {
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
+    if (type === "cross_grid") return CROSS_GRID_DEFAULT;
     if (type === "scripture_select") return JSON.stringify({ title: "Choose a phrase that speaks to you", reference: "Matthew 11:28-30", chunks: ["Come to me, all you who are weary and burdened", "and I will give you rest", "Take my yoke upon you and learn from me", "for I am gentle and humble in heart"], reflectionDuration: 120 }, null, 2);
     if (type === "scripture_reflection") return JSON.stringify({ reflectionDuration: 120, reflectionTitle: "" }, null, 2);
     return "";
@@ -4520,6 +4535,11 @@ function TrackAContentManagementView() {
                                 if (val === "scripture_reflection") {
                                   try { JSON.parse(slide.content); } catch {
                                     updateSlide(index, "content", JSON.stringify({ reflectionDuration: 120, reflectionTitle: "" }));
+                                  }
+                                }
+                                if (val === "cross_grid") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", CROSS_GRID_DEFAULT);
                                   }
                                 }
                               }}>
@@ -5257,6 +5277,7 @@ function PrelimContentManagementView() {
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
+    if (type === "cross_grid") return CROSS_GRID_DEFAULT;
     return "";
   };
 
