@@ -9,7 +9,7 @@ const volumes: Record<string, number> = {
   [answerCorrectUrl]: 0.5,
   [wrongAnswerUrl]: 0.5,
   [lessonCompleteUrl]: 0.5,
-  [clickContinueUrl]: 0.25,
+  [clickContinueUrl]: 0.12,
   [timerCompleteUrl]: 0.5,
   [sendMessageUrl]: 0.5,
 };

@@ -525,7 +525,7 @@ export function LessonFlow({
       {/* ── Content area ── */}
       <div
         className="relative flex-1 min-h-0 flex flex-col items-center"
-        style={{ paddingTop: "32px", paddingLeft: "20px", paddingRight: "20px" }}
+        style={{ paddingTop: "44px", paddingLeft: "24px", paddingRight: "24px" }}
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
