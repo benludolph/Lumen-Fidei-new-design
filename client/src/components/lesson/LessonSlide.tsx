@@ -171,24 +171,28 @@ function MediaContent({ text }: { text: string }) {
 
   if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
     return (
-      <img
-        src={trimmed}
-        alt=""
-        className="w-full rounded-lg"
-        data-testid="media-image"
-      />
+      <div style={{ width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }}>
+        <img
+          src={trimmed}
+          alt=""
+          style={{ width: "100%", height: "100%", maxHeight: "35vh", objectFit: "cover", display: "block" }}
+          data-testid="media-image"
+        />
+      </div>
     );
   }
 
   if (trimmed.startsWith("http")) {
     if (/\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
       return (
-        <img
-          src={trimmed}
-          alt=""
-          className="w-full rounded-lg"
-          data-testid="media-image"
-        />
+        <div style={{ width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }}>
+          <img
+            src={trimmed}
+            alt=""
+            style={{ width: "100%", height: "100%", maxHeight: "35vh", objectFit: "cover", display: "block" }}
+            data-testid="media-image"
+          />
+        </div>
       );
     }
     return (
