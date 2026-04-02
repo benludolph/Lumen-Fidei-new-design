@@ -12,9 +12,9 @@ import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage 
 import { HtmlContent } from "@/components/ui/html-content";
 import { ChatFlowSlide } from "./ChatFlowSlide";
 
-import answersImg from "@assets/Answers_1775059077144.webp";
-import controlImg from "@assets/Control_1775059077143.webp";
-import lovedImg from "@assets/Love_1775059077144.webp";
+import answersImg from "@assets/Answers_desktop_1775146558812.webp";
+import controlImg from "@assets/Control_desktop_1775146558812.webp";
+import lovedImg from "@assets/Love_desktop_1775146558813.webp";
 
 import audioDay0 from "@assets/Day_0_1772743901058.mp3";
 import audioDay1 from "@assets/Day_1_1772743901058.mp3";
