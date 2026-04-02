@@ -43,6 +43,8 @@ const DEFAULT_PIECES: Piece[] = [
   },
 ];
 
+const REQUIRED_IDS = new Set(["center", "top", "left", "right", "bottom"]);
+
 const PIECE_GRID: Record<string, { row: number; col: number; bgPos: string }> = {
   top:    { row: 0, col: 1, bgPos: "50% 0%" },
   left:   { row: 1, col: 0, bgPos: "0% 50%" },
@@ -195,13 +197,21 @@ export function CrossGridSlide({
   const { headline, imageUrl, pieces } = useMemo<CrossGridContent>(() => {
     try {
       const p = JSON.parse(content);
+      const parsed: Piece[] | null =
+        Array.isArray(p.pieces) && p.pieces.length === 5 ? p.pieces : null;
+      const hasValidIds =
+        parsed !== null &&
+        parsed.every(
+          (piece) =>
+            typeof piece.id === "string" &&
+            REQUIRED_IDS.has(piece.id) &&
+            typeof piece.label === "string" &&
+            typeof piece.definition === "string"
+        );
       return {
         headline: p.headline || undefined,
         imageUrl: p.imageUrl || sacredHeartImg,
-        pieces:
-          Array.isArray(p.pieces) && p.pieces.length === 5
-            ? p.pieces
-            : DEFAULT_PIECES,
+        pieces: hasValidIds ? parsed! : DEFAULT_PIECES,
       };
     } catch {
       return { headline: undefined, imageUrl: sacredHeartImg, pieces: DEFAULT_PIECES };
