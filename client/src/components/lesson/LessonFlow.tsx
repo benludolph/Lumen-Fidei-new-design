@@ -407,7 +407,11 @@ export function LessonFlow({
   const SELF_CTA_TYPES = new Set(["action", "text_input", "mentor_message"]);
   const hideFooter =
     (isValidKc && kcAnswered) ||
-    (requiresInteraction && SELF_CTA_TYPES.has(effectiveSlideData.type));
+    (requiresInteraction && SELF_CTA_TYPES.has(effectiveSlideData.type)) ||
+    // Hide footer while timer is still running — the in-card audio button + a footer
+    // button would show two buttons simultaneously. Footer reappears once timer finishes.
+    ((currentSlideData.type === "timer" || effectiveSlideData.type === "timer") && !timerDone) ||
+    (effectiveSlideData.type === "scripture_reflection" && !timerDone);
 
   return createPortal(
     <div
