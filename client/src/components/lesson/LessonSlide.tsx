@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } fro
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -16,23 +16,6 @@ import answersImg from "@assets/Answers_1775059077144.webp";
 import controlImg from "@assets/Control_1775059077143.webp";
 import lovedImg from "@assets/Love_1775059077144.webp";
 
-import audioDay0 from "@assets/Day_0_1772743901058.mp3";
-import audioDay1 from "@assets/Day_1_1772743901058.mp3";
-import audioDay2 from "@assets/Day_2_1772743901058.mp3";
-import audioDay3 from "@assets/Day_3_1772743901058.mp3";
-import audioDay4 from "@assets/Day_4_1772743901057.mp3";
-import audioDay5 from "@assets/Day_5_1772743901057.mp3";
-import audioDay6 from "@assets/Day_6_1772743901057.mp3";
-
-const TIMER_AUDIO_FALLBACK: Record<number, string> = {
-  0: audioDay0,
-  1: audioDay1,
-  2: audioDay2,
-  3: audioDay3,
-  4: audioDay4,
-  5: audioDay5,
-  6: audioDay6,
-};
 
 export type SlideType =
   | "text"
@@ -1297,13 +1280,10 @@ function TimerSlide({
   onTimerComplete?: () => void;
   alreadyDone?: boolean;
 }) {
-  const { duration, text, audioUrl } = useMemo(() => parseTimerContent(content), [content]);
+  const { duration, text } = useMemo(() => parseTimerContent(content), [content]);
   const [remaining, setRemaining] = useState(alreadyDone ? 0 : duration);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completedRef = useRef(!!alreadyDone);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioSrc = audioUrl || TIMER_AUDIO_FALLBACK[dayNumber] || null;
 
   useEffect(() => {
     if (alreadyDone) {
@@ -1337,30 +1317,6 @@ function TimerSlide({
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [duration, onTimerComplete]);
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  const toggleAudio = useCallback(() => {
-    if (!audioSrc) return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(audioSrc);
-      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
-    }
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play();
-      setIsPlaying(true);
-    }
-  }, [audioSrc, isPlaying]);
 
   const progress = duration > 0 ? (duration - remaining) / duration : 1;
   const minutes = Math.floor(remaining / 60);
@@ -1399,31 +1355,6 @@ function TimerSlide({
         <p className="type-body-lg text-[#6a6a6a]">
           Take a moment to reflect on this passage
         </p>
-      )}
-
-      {audioSrc && (
-        <button
-          onClick={toggleAudio}
-          className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
-            isPlaying
-              ? "bg-[var(--white-15)] text-white border-[var(--white-20)] shadow-md"
-              : "bg-[var(--white-5)] text-[var(--white-70)] border-[var(--white-10)] hover:bg-[var(--white-10)]"
-          )}
-          data-testid="button-audio-toggle"
-        >
-          {isPlaying ? (
-            <>
-              <Pause className="w-4 h-4" />
-              Pause Audio
-            </>
-          ) : (
-            <>
-              <Volume2 className="w-4 h-4" />
-              Listen to Scripture
-            </>
-          )}
-        </button>
       )}
 
       <div className="w-full">
