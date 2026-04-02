@@ -435,7 +435,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
   }, [loadedFromServer]);
 
 
-  // ── Auto-scroll ──
+  // ── Auto-scroll (messages / typing / input state) ──
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -446,7 +446,18 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
       return () => cancelAnimationFrame(r2);
     });
     return () => cancelAnimationFrame(r1);
-  }, [renderedMessages, showTyping, inputReady, flowComplete]);
+  }, [renderedMessages, showTyping, inputReady]);
+
+  // ── Auto-scroll when flow completes (summary card needs extra time to lay out) ──
+  useEffect(() => {
+    if (!flowComplete) return;
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const id = setTimeout(() => {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }, 120);
+    return () => clearTimeout(id);
+  }, [flowComplete]);
 
   // ── Save answer to state + server ──
   const saveAnswer = useCallback(async (variableName: string, value: string) => {
@@ -1001,7 +1012,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                 </div>
               )}
 
-              <div ref={chatEndRef} className="h-8 shrink-0" />
+              <div ref={chatEndRef} className="h-16 shrink-0" />
             </div>
 
             {/* ── Input row ── */}
