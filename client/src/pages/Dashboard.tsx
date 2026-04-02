@@ -137,6 +137,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "evening">("morning");
   const [selectedPrelimPosition, setSelectedPrelimPosition] = useState<number>(1);
+  const [completedModule, setCompletedModule] = useState<{ type: "prelim" | "day"; id: number } | null>(null);
   
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
     const saved = localStorage.getItem('lumenFidei_fontSize');
@@ -146,6 +147,18 @@ export default function Dashboard() {
   useEffect(() => {
     localStorage.setItem('lumenFidei_fontSize', fontSize);
   }, [fontSize]);
+
+  useEffect(() => {
+    if (viewMode !== "grid" || !completedModule) return;
+    const testId = completedModule.type === "prelim"
+      ? `card-prelim-${completedModule.id}`
+      : `card-day-${completedModule.id}`;
+    const el = document.querySelector(`[data-testid="${testId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    setCompletedModule(null);
+  }, [viewMode, completedModule]);
   
   const decreaseFontSize = () => {
     const sizes: FontSizeKey[] = ['small', 'medium', 'large', 'xlarge'];
@@ -289,7 +302,10 @@ export default function Dashboard() {
     setViewMode("detail");
   };
 
-  const handleBackToGrid = () => {
+  const handleBackToGrid = (dayToScrollTo?: number) => {
+    if (dayToScrollTo && dayToScrollTo > 0) {
+      setCompletedModule({ type: "day", id: dayToScrollTo });
+    }
     setViewMode("grid");
     setSelectedDay(0);
   };
@@ -300,6 +316,7 @@ export default function Dashboard() {
   };
 
   const handlePrelimComplete = (position: number) => {
+    setCompletedModule({ type: "prelim", id: position });
     setViewMode("grid");
     completePrelimMutation.mutate(position);
   };
@@ -392,7 +409,7 @@ export default function Dashboard() {
               if (!isPeriodCompleted(selectedDay, "morning")) {
                 markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
               }
-              handleBackToGrid();
+              handleBackToGrid(selectedDay);
             }}
           />
         ) : (
@@ -408,7 +425,7 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleBackToGrid}
+              onClick={() => handleBackToGrid(selectedDay)}
               className="gap-2 text-muted-foreground hover:text-foreground"
               data-testid="button-back-to-overview"
             >
