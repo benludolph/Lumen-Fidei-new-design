@@ -28,14 +28,14 @@ interface CompletionOverlayProps {
 
 function spawnParticle(cx: number, cy: number): Particle {
   const angle = Math.random() * Math.PI * 2;
-  const speed = Math.random() * 0.3 + 0.08;
+  const speed = Math.random() * 0.9 + 0.2;
   return {
     x: cx + (Math.random() - 0.5) * 20,
     y: cy + (Math.random() - 0.5) * 20,
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
-    size: Math.random() * 2.2 + 1.0,
-    alpha: Math.random() * 0.45 + 0.2,
+    size: Math.random() * 3.5 + 1.5,
+    alpha: Math.random() * 0.6 + 0.4,
   };
 }
 
@@ -74,15 +74,15 @@ export function CompletionOverlay({ overlayConfig, onDismiss }: CompletionOverla
     const cx = W / 2;
     const cy = H / 2;
 
-    particlesRef.current = Array.from({ length: 18 }, () => spawnParticle(cx, cy));
+    particlesRef.current = Array.from({ length: 35 }, () => spawnParticle(cx, cy));
     frameCountRef.current = 0;
 
     const animate = () => {
       ctx.clearRect(0, 0, W, H);
 
-      if (frameCountRef.current % 6 === 0) {
+      if (frameCountRef.current % 3 === 0) {
         particlesRef.current.push(spawnParticle(cx, cy));
-        if (particlesRef.current.length > 50) particlesRef.current.shift();
+        if (particlesRef.current.length > 90) particlesRef.current.shift();
       }
 
       particlesRef.current = particlesRef.current.filter((p) => p.alpha > 0.01);
@@ -90,7 +90,7 @@ export function CompletionOverlay({ overlayConfig, onDismiss }: CompletionOverla
       for (const p of particlesRef.current) {
         p.x += p.vx;
         p.y += p.vy;
-        p.alpha -= 0.0018;
+        p.alpha -= 0.003;
         const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
         grad.addColorStop(0, `rgba(255,255,255,${p.alpha.toFixed(3)})`);
         grad.addColorStop(1, `rgba(255,255,255,0)`);

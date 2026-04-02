@@ -257,24 +257,17 @@ function TestimonyCard({
       >
         {/* Floating badge — centered, spans from top of strip into image */}
         <div
+          className="absolute flex items-center justify-center rounded-full w-[10px] h-[10px] sm:w-[20px] sm:h-[20px] -top-[5px] sm:-top-[10px]"
           style={{
-            position: "absolute",
-            top: "-10px",
             left: "50%",
             transform: "translateX(-50%)",
-            width: "20px",
-            height: "20px",
-            borderRadius: "10px",
             background: "#1b1c1d",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             zIndex: 2,
           }}
         >
           {isLocked
-            ? <Lock size={8} style={{ color: "rgba(255,255,255,0.4)" }} />
-            : <CircleUser size={8} style={{ color: "rgba(255,255,255,0.5)" }} />
+            ? <Lock className="w-[4px] h-[4px] sm:w-[8px] sm:h-[8px]" style={{ color: "rgba(255,255,255,0.4)" }} />
+            : <CircleUser className="w-[4px] h-[4px] sm:w-[8px] sm:h-[8px]" style={{ color: "rgba(255,255,255,0.5)" }} />
           }
         </div>
 
