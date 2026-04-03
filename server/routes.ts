@@ -2846,7 +2846,7 @@ As you move into Week 2, continue these daily practices. They are building a fou
         await storage.upsertTrackAContent({
             dayNumber: 0,
             weekNumber: 0,
-            centralTheme: "Introduction - Goal of 30 Days",
+            centralTheme: "Goal of 30 Days",
             slides: introSlides,
         });
         console.log("Day 0 (Introduction) seeded in Track A content.");
