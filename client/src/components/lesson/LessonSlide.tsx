@@ -1895,8 +1895,8 @@ function SurveySlide({
                   })}
                 </div>
                 <div className="flex justify-between px-0.5">
-                  <span className="type-caption-sm text-[#6a6a6a]">Not at all</span>
-                  <span className="type-caption-sm text-[#6a6a6a]">Very much</span>
+                  <span className="type-caption-sm text-white">Not at all</span>
+                  <span className="type-caption-sm text-white">Very much</span>
                 </div>
               </div>
             )}
