@@ -1807,7 +1807,7 @@ function SurveySlide({
             </p>
 
             {q.type === "single_select" && q.options && (
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {q.options.map(opt => {
                   const selected = answers[q.id] === opt;
                   return (
@@ -1816,19 +1816,13 @@ function SurveySlide({
                       type="button"
                       onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
                       className={cn(
-                        "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-sans type-body-lg",
+                        "flex items-center justify-center w-full text-center px-3 py-4 min-h-[72px] rounded-xl border-2 transition-all duration-150 font-sans type-body-lg leading-snug",
                         selected
                           ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
                           : "border-[var(--white-10)] bg-transparent text-[var(--white-70)] hover:border-[var(--white-20)]"
                       )}
                       data-testid={`survey-option-${idx}-${opt}`}
                     >
-                      <span className={cn(
-                        "shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-[var(--white-30)]"
-                      )}>
-                        {selected && <span className="w-2 h-2 rounded-full bg-white block" />}
-                      </span>
                       {opt}
                     </button>
                   );
@@ -1839,35 +1833,27 @@ function SurveySlide({
             {q.type === "multi_select" && q.options && (
               <div className="space-y-2">
                 <p className="type-body-sm text-[#6a6a6a]">Select all that apply</p>
-                {q.options.map(opt => {
-                  const selected = Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(opt);
-                  return (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => toggleMulti(q.id, opt)}
-                      className={cn(
-                        "flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-150 font-sans type-body-lg",
-                        selected
-                          ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
-                          : "border-[var(--white-10)] bg-transparent text-[var(--white-70)] hover:border-[var(--white-20)]"
-                      )}
-                      data-testid={`survey-option-${idx}-${opt}`}
-                    >
-                      <span className={cn(
-                        "shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors",
-                        selected ? "border-[#00b57a] bg-[#00b57a]" : "border-[var(--white-30)]"
-                      )}>
-                        {selected && (
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
+                <div className="grid grid-cols-2 gap-2">
+                  {q.options.map(opt => {
+                    const selected = Array.isArray(answers[q.id]) && (answers[q.id] as string[]).includes(opt);
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => toggleMulti(q.id, opt)}
+                        className={cn(
+                          "flex items-center justify-center w-full text-center px-3 py-4 min-h-[72px] rounded-xl border-2 transition-all duration-150 font-sans type-body-lg leading-snug",
+                          selected
+                            ? "border-[#00b57a] bg-[#00b57a]/10 text-white"
+                            : "border-[var(--white-10)] bg-transparent text-[var(--white-70)] hover:border-[var(--white-20)]"
                         )}
-                      </span>
-                      {opt}
-                    </button>
-                  );
-                })}
+                        data-testid={`survey-option-${idx}-${opt}`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
