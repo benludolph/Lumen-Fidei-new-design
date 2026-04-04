@@ -2317,7 +2317,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid"] as const;
+const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2337,6 +2337,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   chat_flow: "Chat Flow",
   path_selector: "Path Selector",
   cross_grid: "Cross Grid Puzzle",
+  story_choice: "Story Choice",
   scripture_select: "Scripture Select",
   scripture_reflection: "Scripture Reflection",
 };
@@ -2357,6 +2358,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   chat_flow: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   path_selector: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
   cross_grid: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+  story_choice: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   scripture_select: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   scripture_reflection: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
 };
@@ -3086,6 +3088,12 @@ const PATH_SELECTOR_DEFAULT = JSON.stringify({
       nextContent: { type: "media", content: "https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci" },
     },
   ],
+}, null, 2);
+
+const STORY_CHOICE_DEFAULT = JSON.stringify({
+  prompt: "Someone looks at you. 'You good?'",
+  leftLabel: "Say you're fine",
+  rightLabel: "Say you're tired",
 }, null, 2);
 
 const CROSS_GRID_DEFAULT = JSON.stringify({
@@ -4096,6 +4104,7 @@ function TrackAContentManagementView() {
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
     if (type === "cross_grid") return CROSS_GRID_DEFAULT;
+    if (type === "story_choice") return STORY_CHOICE_DEFAULT;
     if (type === "scripture_select") return JSON.stringify({ title: "Choose a phrase that speaks to you", reference: "Matthew 11:28-30", chunks: ["Come to me, all you who are weary and burdened", "and I will give you rest", "Take my yoke upon you and learn from me", "for I am gentle and humble in heart"], reflectionDuration: 120 }, null, 2);
     if (type === "scripture_reflection") return JSON.stringify({ reflectionDuration: 120, reflectionTitle: "" }, null, 2);
     return "";
@@ -4540,6 +4549,11 @@ function TrackAContentManagementView() {
                                 if (val === "cross_grid") {
                                   try { JSON.parse(slide.content); } catch {
                                     updateSlide(index, "content", CROSS_GRID_DEFAULT);
+                                  }
+                                }
+                                if (val === "story_choice") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", STORY_CHOICE_DEFAULT);
                                   }
                                 }
                               }}>
@@ -5278,6 +5292,7 @@ function PrelimContentManagementView() {
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
     if (type === "cross_grid") return CROSS_GRID_DEFAULT;
+    if (type === "story_choice") return STORY_CHOICE_DEFAULT;
     return "";
   };
 

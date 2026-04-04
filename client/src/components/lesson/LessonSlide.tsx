@@ -12,6 +12,7 @@ import { playAnswerCorrect, playWrongAnswer, playTimerComplete, playSendMessage 
 import { HtmlContent } from "@/components/ui/html-content";
 import { ChatFlowSlide } from "./ChatFlowSlide";
 import { CrossGridSlide } from "./CrossGridSlide";
+import { StoryChoiceSlide } from "./StoryChoiceSlide";
 
 import answersImg from "@assets/Answers_desktop_1775146558812.webp";
 import controlImg from "@assets/Control_desktop_1775146558812.webp";
@@ -52,6 +53,7 @@ export type SlideType =
   | "chat_flow"
   | "path_selector"
   | "cross_grid"
+  | "story_choice"
   | "scripture_select"
   | "scripture_reflection";
 
@@ -941,6 +943,8 @@ export function LessonSlide({
           />
         ) : type === "cross_grid" ? (
           <CrossGridSlide content={content} onInteracted={onInteracted} />
+        ) : type === "story_choice" ? (
+          <StoryChoiceSlide content={content} onInteracted={onInteracted} />
         ) : type === "scripture_select" ? (
           <ScriptureSelectSlide
             content={content}
