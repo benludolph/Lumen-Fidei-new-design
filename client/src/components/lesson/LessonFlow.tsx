@@ -319,7 +319,7 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(effectiveSlideData.type) && !slideInteracted;
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
