@@ -4629,6 +4629,17 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : (slide.type === "cross_grid" || slide.type === "story_choice") ? (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
+                                <textarea
+                                  value={slide.content}
+                                  onChange={(e) => updateSlide(index, "content", e.target.value)}
+                                  className="w-full font-mono text-xs rounded-md border border-input bg-background px-3 py-2 min-h-[200px] resize-y"
+                                  spellCheck={false}
+                                  data-testid={`textarea-slide-json-${index}`}
+                                />
+                              </div>
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -5547,6 +5558,17 @@ function PrelimContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : (slide.type === "cross_grid" || slide.type === "story_choice") ? (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
+                                <textarea
+                                  value={slide.content}
+                                  onChange={(e) => updateSlide(index, "content", e.target.value)}
+                                  className="w-full font-mono text-xs rounded-md border border-input bg-background px-3 py-2 min-h-[200px] resize-y"
+                                  spellCheck={false}
+                                  data-testid={`textarea-prelim-json-${index}`}
+                                />
+                              </div>
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
