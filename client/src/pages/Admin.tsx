@@ -3094,6 +3094,7 @@ const STORY_CHOICE_DEFAULT = JSON.stringify({
   prompt: "Someone looks at you. 'You good?'",
   leftLabel: "Say you're fine",
   rightLabel: "Say you're tired",
+  image: "",
 }, null, 2);
 
 const CROSS_GRID_DEFAULT = JSON.stringify({

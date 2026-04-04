@@ -6,6 +6,7 @@ interface StoryChoiceContent {
   prompt: string;
   leftLabel: string;
   rightLabel: string;
+  image?: string;
 }
 
 const DEFAULT_CONTENT: StoryChoiceContent = {
@@ -35,7 +36,7 @@ export function StoryChoiceSlide({
   const leftOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20, 0], [1, 0.35, 0]);
   const rightOpacity = useTransform(x, [0, 20, SWIPE_THRESHOLD], [0, 0.35, 1]);
 
-  const { prompt, leftLabel, rightLabel } = useMemo<StoryChoiceContent>(() => {
+  const { prompt, leftLabel, rightLabel, image } = useMemo<StoryChoiceContent>(() => {
     try {
       const p = JSON.parse(content);
       if (
@@ -43,7 +44,12 @@ export function StoryChoiceSlide({
         typeof p.leftLabel === "string" &&
         typeof p.rightLabel === "string"
       ) {
-        return { prompt: p.prompt, leftLabel: p.leftLabel, rightLabel: p.rightLabel };
+        return {
+          prompt: p.prompt,
+          leftLabel: p.leftLabel,
+          rightLabel: p.rightLabel,
+          image: typeof p.image === "string" && p.image.trim() ? p.image.trim() : undefined,
+        };
       }
     } catch {}
     return DEFAULT_CONTENT;
@@ -134,7 +140,7 @@ export function StoryChoiceSlide({
     >
       <div
         className="relative w-full flex items-center justify-center"
-        style={{ minHeight: "260px" }}
+        style={{ minHeight: image ? "340px" : "260px" }}
       >
         {/* Left label */}
         <motion.div
@@ -173,12 +179,13 @@ export function StoryChoiceSlide({
             scale: cardScale,
             touchAction: "none",
             width: "min(300px, 85vw)",
-            padding: "36px 26px",
             background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
             border: "1px solid rgba(255,255,255,0.10)",
             borderRadius: "20px",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
             cursor: "grab",
+            overflow: "hidden",
+            padding: image ? 0 : "36px 26px",
           }}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
@@ -192,12 +199,54 @@ export function StoryChoiceSlide({
           whileTap={{ cursor: "grabbing" }}
           data-testid="card-story-choice"
         >
-          <p
-            className="type-display-md font-medium text-center"
-            style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
-          >
-            {prompt}
-          </p>
+          {image ? (
+            <>
+              {/* Image section — top 45% of card */}
+              <div
+                style={{ position: "relative", width: "100%", height: "160px", flexShrink: 0 }}
+                data-testid="img-story-choice"
+              >
+                <img
+                  src={image}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    pointerEvents: "none",
+                  }}
+                />
+                {/* Darkening gradient over image bottom → blends into card */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background:
+                      "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(15,16,17,0.72) 100%)",
+                    pointerEvents: "none",
+                  }}
+                />
+              </div>
+
+              {/* Prompt section — below image */}
+              <div style={{ padding: "22px 22px 26px" }}>
+                <p
+                  className="type-display-md font-medium text-center"
+                  style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
+                >
+                  {prompt}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p
+              className="type-display-md font-medium text-center"
+              style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
+            >
+              {prompt}
+            </p>
+          )}
         </motion.div>
       </div>
 
