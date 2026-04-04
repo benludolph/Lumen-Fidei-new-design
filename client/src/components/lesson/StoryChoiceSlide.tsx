@@ -57,7 +57,7 @@ function NextCardFlip({
   onFlipDone: () => void;
 }) {
   const { prompt, image } = item;
-  const cardH = image ? "340px" : "260px";
+  const cardH = image ? "500px" : "420px";
 
   const handleTransitionEnd = useCallback(() => {
     if (isFlipping) onFlipDone();
@@ -98,7 +98,7 @@ function NextCardFlip({
             background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
             border: "1px solid rgba(255,255,255,0.10)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
-            overflow: "hidden",
+            overflow: image ? "hidden" : "visible",
             padding: 0,
             display: "flex",
             flexDirection: "column",
@@ -277,7 +277,7 @@ function StoryCard({
   return (
     <div
       className="relative w-full flex items-center justify-center"
-      style={{ height: image ? "340px" : "260px" }}
+      style={{ height: image ? "500px" : "420px" }}
     >
       {/* Left label */}
       <motion.div
@@ -316,13 +316,13 @@ function StoryCard({
           scale: cardScale,
           touchAction: "none",
           width: "min(300px, 85vw)",
-          height: image ? "340px" : "260px",
+          height: image ? "500px" : "420px",
           background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
           cursor: "grab",
-          overflow: "hidden",
+          overflow: image ? "hidden" : "visible",
           padding: 0,
           display: "flex",
           flexDirection: "column",
