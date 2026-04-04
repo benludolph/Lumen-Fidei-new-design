@@ -1,0 +1,108 @@
+I already have a swipeable card component built with hover displacement. Do not rebuild it. Extend it.
+
+I do NOT want a full card stack. There can be 30+ cards in a deck, but only 2 should be rendered at once:
+
+Current card (top, interactive)
+Next card (behind, partially revealed on hover)
+What needs to be added
+1. Add Back Side to Cards (3D setup)
+
+Each card must support front + back.
+
+Structure:
+
+.card
+  .card-inner
+    .card-front
+    .card-back
+
+CSS requirements:
+
+transform-style: preserve-3d
+backface-visibility: hidden
+.card-back starts rotated: rotateY(180deg)
+
+The NEXT card (the one behind) should initially show its BACK.
+
+2. Only 2 Cards Rendered
+
+Keep logic simple:
+
+currentCard = deck[index]
+nextCard = deck[index + 1]
+
+Do NOT render more than these two.
+
+3. Flip Animation (core behavior)
+
+When the user releases the current card (decision made):
+
+Sequence:
+
+Current card animates off-screen (already exists, keep it)
+At the same time:
+The NEXT card (which is behind and currently showing its BACK)
+Rotates from rotateY(180deg) → rotateY(0deg)
+This reveals the FRONT
+The next card becomes the current card
+A new next card is loaded behind it (already rotated to back side)
+4. Important Timing
+Flip should NOT happen during hover
+Flip should ONLY happen after release (decision)
+Flip should feel like a reveal, not instant
+
+Timing:
+
+Current card exit: ~200ms
+Next card flip: ~250–300ms
+Slight overlap is fine
+5. State Handling
+
+Add a flip trigger state:
+
+isFlippingNext = true/false
+
+Flow:
+
+On swipe release:
+set isFlippingNext = true
+animate next card rotateY → 0deg
+After animation completes:
+increment index
+reset next card to rotateY(180deg)
+set isFlippingNext = false
+6. Transform Logic
+
+Next card default:
+
+transform: rotateY(180deg) scale(0.98);
+
+On flip:
+
+transform: rotateY(0deg) scale(1);
+
+Add smooth easing:
+
+transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+7. Keep Existing Behavior
+
+Do NOT break:
+
+Hover displacement
+Drag/swipe logic
+Existing card styling
+
+Only layer in:
+
+back side
+flip animation
+next card state
+8. Result
+
+User experience should feel like:
+
+You slightly reveal the next card while hovering (already working)
+But it is just a “mystery” (back of card)
+Once you decide:
+current card leaves
+next card flips into view and becomes the new card

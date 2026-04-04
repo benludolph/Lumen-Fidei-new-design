@@ -1,0 +1,173 @@
+Extend the existing story_choice swipeable card component. Do not rebuild it.
+
+Add a second card behind the current one that reveals itself using a 3D flip animation when a choice is made.
+
+Only render:
+
+Current card (interactive)
+Next card (behind, non-interactive)
+
+The next card should:
+
+Start on its back face (no readable content)
+Flip to its front face only after a choice is made
+Done looks like
+While hovering or dragging:
+The next card is slightly visible behind
+It shows ONLY its back (no text visible)
+When a choice is made:
+Current card exits left or right (existing behavior unchanged)
+At the same time, the next card:
+rotates from rotateY(180deg) → rotateY(0deg)
+reveals its front content
+After animation completes:
+The flipped card becomes the new current card
+A new next card is mounted behind it, already rotated to back
+All existing interactions remain:
+hover tilt
+drag/swipe thresholds
+click side detection
+keyboard input
+sounds
+Out of scope
+Do not change card UI design
+Do not modify JSON or lesson logic
+Do not touch other slide types
+Do not rewrite swipe system
+Tasks
+1. Create NextCardFlip component
+
+Non-interactive card rendered behind the current card.
+
+Structure:
+
+<div className="card">
+  <div className="card-inner">
+    <div className="card-front">...</div>
+    <div className="card-back">...</div>
+  </div>
+</div>
+
+Behavior:
+
+Default state: shows BACK
+transform: rotateY(180deg)
+When isFlipping is true:
+animate to rotateY(0deg)
+
+CSS requirements:
+
+.card {
+  perspective: 1200px;
+}
+
+.card-inner {
+  transform-style: preserve-3d;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.card-front,
+.card-back {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+Props:
+
+{
+  item: StoryItem
+  isFlipping: boolean
+  onFlipDone: () => void
+}
+
+Important:
+
+Use key={index} so it resets to back after each advance
+Call onFlipDone after transition ends (use onTransitionEnd)
+2. Update StoryChoiceSlide.tsx
+
+Add state:
+
+const [isFlippingNext, setIsFlippingNext] = useState(false);
+
+Update handleMadeChoice:
+
+if (hasNextCard) {
+  setIsFlippingNext(true);
+} else {
+  goToDoneState();
+}
+
+Remove:
+
+any setTimeout(220ms) logic
+3. Handle flip completion
+
+Add handler:
+
+const handleFlipDone = () => {
+  setIndex((i) => i + 1);
+  setIsFlippingNext(false);
+};
+
+Pass to NextCardFlip
+
+4. Render structure (important)
+
+Wrap both cards in a shared container:
+
+<div className="card-stack">
+  <NextCardFlip
+    key={index}
+    item={nextItem}
+    isFlipping={isFlippingNext}
+    onFlipDone={handleFlipDone}
+  />
+
+  <StoryCard
+    item={currentItem}
+    ...existingProps
+  />
+</div>
+
+Styling:
+
+.card-stack {
+  position: relative;
+}
+
+.card-stack > * {
+  position: absolute;
+  inset: 0;
+}
+
+.next-card {
+  z-index: 0;
+  transform: scale(0.98);
+}
+
+.current-card {
+  z-index: 1;
+}
+5. Data logic (keep simple)
+const currentItem = items[index];
+const nextItem = items[index + 1];
+
+Do NOT render NextCardFlip if no next item.
+
+6. Critical behavior rules
+Flip happens ONLY after choice is made
+Flip happens WHILE current card exits (overlap allowed)
+Next card is NEVER interactive until flip completes
+Always reset next card to rotateY(180deg) via remount
+Result
+User slightly reveals the next card while interacting
+It feels hidden (back side only)
+When they commit:
+current card leaves
+next card flips into place and becomes active
