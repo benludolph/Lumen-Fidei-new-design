@@ -72,7 +72,6 @@ function NextCardFlip({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        perspective: "1200px",
         pointerEvents: "none",
       }}
     >
@@ -81,11 +80,13 @@ function NextCardFlip({
         onTransitionEnd={handleTransitionEnd}
         style={{
           width: "min(300px, 85vw)",
+          height: "100%",
           minHeight: cardMinH,
           position: "relative",
           transformStyle: "preserve-3d",
           transform: isFlipping ? "rotateY(0deg)" : "rotateY(180deg)",
-          transition: "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
+          transition: "transform 480ms cubic-bezier(0.16, 1, 0.3, 1) 40ms",
+          willChange: "transform",
         }}
       >
         {/* Front face — shows next item content */}
@@ -169,7 +170,7 @@ function NextCardFlip({
           )}
         </div>
 
-        {/* Back face — mystery surface, no readable content */}
+        {/* Back face — mystery surface, plain dark card per Figma */}
         <div
           style={{
             backfaceVisibility: "hidden",
@@ -177,30 +178,13 @@ function NextCardFlip({
             position: "absolute",
             inset: 0,
             borderRadius: "20px",
-            background: "linear-gradient(160deg, #141519 0%, #0C0D0E 65%)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            background: "linear-gradient(138deg, #17181F 0%, #0F1011 65%)",
+            border: "1px solid rgba(255,255,255,0.10)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
             transform: "rotateY(180deg)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            overflow: "hidden",
           }}
-        >
-          <svg
-            width="44"
-            height="44"
-            viewBox="0 0 44 44"
-            fill="none"
-            style={{ opacity: 0.09 }}
-          >
-            <path
-              d="M22 3v38M3 22h38"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
+        />
       </div>
     </div>
   );
@@ -477,7 +461,7 @@ export function StoryChoiceSlide({
         NextCardFlip is position:absolute (fills container), StoryCard is
         position:relative (defines container height via its own minHeight).
       */}
-      <div style={{ position: "relative", width: "100%" }}>
+      <div style={{ position: "relative", width: "100%", perspective: "1200px" }}>
         {/* Next card — behind, shows back face until flip */}
         {nextItem && (
           <div
@@ -485,7 +469,8 @@ export function StoryChoiceSlide({
               position: "absolute",
               inset: 0,
               zIndex: 0,
-              transform: "scale(0.98)",
+              transform: "translateY(4px)",
+              opacity: 0.88,
             }}
           >
             <NextCardFlip
