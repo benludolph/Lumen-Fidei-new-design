@@ -1,0 +1,112 @@
+Create a new slide type called reigns_choice for the Lumen Fidei lesson system.
+
+This slide presents a single scenario card with:
+
+prompt text (NPC or situation)
+two choices (left and right)
+swipe interaction on mobile
+hover + click interaction on desktop
+
+The goal is to simulate Reigns-style decision making while staying fully compatible with the existing lesson engine.
+
+Requirements
+1. Component structure
+
+Create a reusable component:
+
+ReignsChoiceSlide.tsx
+
+Props:
+
+{
+  prompt: string
+  leftLabel: string
+  rightLabel: string
+  onSelect: (choice: "left" | "right") => void
+}
+2. Interaction logic
+Mobile
+Detect horizontal drag
+If drag passes threshold → trigger selection
+Animate card off screen in that direction
+Desktop
+Track mouse position relative to card center
+If cursor is left → tilt left + show leftLabel
+If cursor is right → tilt right + show rightLabel
+On click → select that side
+Keyboard
+Left arrow → select left
+Right arrow → select right
+3. Visual behavior
+
+Card should:
+
+rotate based on drag/hover (-6deg to +6deg)
+slightly scale up on interaction
+show overlay text near top:
+left side → leftLabel
+right side → rightLabel
+
+Overlay text:
+
+fades in based on interaction strength
+should feel subtle, not loud
+4. Animation
+
+Use lightweight animation (Framer Motion or CSS transforms):
+
+States:
+
+idle
+dragging / hovering
+exit (fly out left/right)
+
+Exit animation:
+
+translateX off screen
+slight rotation
+duration: 150–250ms
+5. Data format (IMPORTANT)
+
+This slide must integrate with existing lesson JSON.
+
+Example:
+
+{
+  type: "reigns_choice",
+  prompt: "Your father looks up. 'You always have a reason, don’t you?'",
+  leftLabel: "Stare at your plate",
+  rightLabel: "Make a joke"
+}
+6. State tracking (future-safe)
+
+When a choice is made:
+
+return "left" or "right"
+allow parent system to attach tags (Wall, Hunger, Fog later)
+
+DO NOT hardcode logic inside component.
+
+Keep it presentation-only.
+
+7. Styling
+Dark background
+Centered card
+Large readable text
+Image optional (slot for future)
+
+Card design:
+
+rounded corners
+soft shadow
+subtle gradient or texture
+8. Accessibility
+keyboard support required
+visible focus state
+no interaction requires drag only
+Done looks like
+Slide works inside existing lesson flow
+Works on mobile (swipe)
+Works on desktop (hover + click)
+No layout breaking across screen sizes
+Easy to reuse across modules

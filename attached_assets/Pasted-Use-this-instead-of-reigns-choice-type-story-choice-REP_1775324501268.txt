@@ -1,0 +1,134 @@
+Use this instead of “reigns_choice”:
+
+type: "story_choice"
+REPLIT PROMPT (FINAL)
+
+What & Why
+
+Add a new slide type called story_choice to the lesson engine.
+This slide presents a single scenario with two choices.
+Users can swipe (mobile), hover + click (desktop), or use arrow keys.
+
+The component is presentation-only but must return which choice was selected so the system can support story logic later.
+
+Done looks like
+Admin can select “Story Choice” as a slide type
+JSON editor supports { prompt, leftLabel, rightLabel }
+Mobile: swipe left/right triggers choice
+Desktop: hover tilts card, click selects side
+Arrow keys work
+Card animates off screen (150–250ms)
+After animation → Continue button unlocks
+ALSO returns "left" or "right" via callback
+No layout breaking
+Tasks
+1. Build component
+
+Create:
+
+StoryChoiceSlide.tsx
+
+Props:
+
+{
+  prompt: string
+  leftLabel: string
+  rightLabel: string
+  onInteracted: () => void
+  onChoice?: (choice: "left" | "right") => void
+}
+2. Interaction
+
+Mobile:
+
+drag horizontally
+threshold ~80px triggers choice
+
+Desktop:
+
+mouse left/right tilts card
+click left/right selects
+
+Keyboard:
+
+← = left
+→ = right
+3. Behavior
+
+On selection:
+
+call onChoice("left" | "right") if provided
+animate card off screen
+after animation → call onInteracted()
+4. Animation
+rotate: ±6deg
+slight scale
+fade-in label
+exit: translateX + rotate
+duration: 150–250ms
+
+Use Framer Motion.
+
+5. Data format
+{
+  "type": "story_choice",
+  "prompt": "Your father looks up. 'You always have a reason, don’t you?'",
+  "leftLabel": "Stare at your plate",
+  "rightLabel": "Make a joke"
+}
+6. Register in system
+
+Add to:
+
+SlideType union → "story_choice"
+LessonSlide renderer switch
+Admin SLIDE_TYPES
+Label → "Story Choice"
+Color → indigo
+
+Default content:
+
+{
+  "prompt": "Someone looks at you. 'You good?'",
+  "leftLabel": "Say you're fine",
+  "rightLabel": "Say you're tired"
+}
+7. IMPORTANT RULE
+
+Do NOT:
+
+store state in this component
+handle branching logic here
+change lesson navigation
+
+This component only:
+
+renders
+detects interaction
+returns choice
+HOW YOU USE IT (NO OPTIONS, THIS IS IT)
+
+You build your story like this:
+
+[
+  {
+    "type": "story_choice",
+    "prompt": "Your father sets down his fork. 'You always have a reason, don’t you?'",
+    "leftLabel": "Stare at your plate",
+    "rightLabel": "Make a joke"
+  },
+  {
+    "type": "story_choice",
+    "prompt": "Your phone lights up. 'You good?'",
+    "leftLabel": "Say 'I'm fine'",
+    "rightLabel": "Say 'just tired'"
+  },
+  {
+    "type": "story_choice",
+    "prompt": "It's late. The room is quiet.",
+    "leftLabel": "Turn it over",
+    "rightLabel": "Open it"
+  }
+]
+
+That’s how the story is made.
