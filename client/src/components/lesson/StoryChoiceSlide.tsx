@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import type { PanInfo } from "framer-motion";
+import swipeSound from "@assets/Shapeforms_-_The_Mint_-_Credit_Card_Swipe_1775326675495.wav";
 
 interface StoryChoiceItem {
   prompt: string;
@@ -66,6 +67,11 @@ function StoryCard({
     (side: "left" | "right") => {
       if (chosen) return;
       setChosen(side);
+      try {
+        const sfx = new Audio(swipeSound);
+        sfx.volume = 0.15;
+        sfx.play().catch(() => {});
+      } catch {}
       const target = side === "left" ? -520 : 520;
       animate(x, target, {
         duration: 0.22,
@@ -132,8 +138,8 @@ function StoryCard({
         className="absolute left-0 top-3 z-10"
       >
         <span
-          className="type-body-sm font-semibold"
-          style={{ color: "rgba(255,255,255,0.80)" }}
+          className="font-semibold"
+          style={{ color: "rgba(255,255,255,0.80)", fontSize: "15px" }}
           data-testid="label-story-left"
         >
           ← {leftLabel}
@@ -146,8 +152,8 @@ function StoryCard({
         className="absolute right-0 top-3 z-10"
       >
         <span
-          className="type-body-sm font-semibold"
-          style={{ color: "rgba(255,255,255,0.80)" }}
+          className="font-semibold"
+          style={{ color: "rgba(255,255,255,0.80)", fontSize: "15px" }}
           data-testid="label-story-right"
         >
           {rightLabel} →
