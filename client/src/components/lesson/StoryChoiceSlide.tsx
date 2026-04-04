@@ -45,13 +45,176 @@ function parseItems(content: string): StoryChoiceItem[] {
   return DEFAULT_ITEMS;
 }
 
-// ─── Inner card — owns all motion state, fresh per key ───────────────────────
+// ─── NextCardFlip — 3D flip, non-interactive, rendered behind current card ────
+
+function NextCardFlip({
+  item,
+  isFlipping,
+  onFlipDone,
+}: {
+  item: StoryChoiceItem;
+  isFlipping: boolean;
+  onFlipDone: () => void;
+}) {
+  const { prompt, image } = item;
+  const cardMinH = image ? "340px" : "260px";
+
+  const handleTransitionEnd = useCallback(() => {
+    if (isFlipping) onFlipDone();
+  }, [isFlipping, onFlipDone]);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: cardMinH,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        perspective: "1200px",
+        pointerEvents: "none",
+      }}
+    >
+      {/* Inner wrapper — rotates on Y axis */}
+      <div
+        onTransitionEnd={handleTransitionEnd}
+        style={{
+          width: "min(300px, 85vw)",
+          minHeight: cardMinH,
+          position: "relative",
+          transformStyle: "preserve-3d",
+          transform: isFlipping ? "rotateY(0deg)" : "rotateY(180deg)",
+          transition: "transform 280ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
+        {/* Front face — shows next item content */}
+        <div
+          style={{
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            position: "absolute",
+            inset: 0,
+            borderRadius: "20px",
+            background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
+            overflow: "hidden",
+            padding: image ? 0 : "36px 26px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {image ? (
+            <>
+              <div style={{ position: "relative", width: "100%", height: "160px", flexShrink: 0 }}>
+                <img
+                  src={image}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
+                    pointerEvents: "none",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background:
+                      "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(15,16,17,0.72) 100%)",
+                    pointerEvents: "none",
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  padding: "22px 22px 26px",
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <p
+                  className="type-display-md font-medium text-center"
+                  style={{
+                    color: "rgba(255,255,255,0.90)",
+                    lineHeight: 1.55,
+                    margin: 0,
+                    width: "100%",
+                  }}
+                >
+                  {prompt}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+              }}
+            >
+              <p
+                className="type-display-md font-medium text-center"
+                style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
+              >
+                {prompt}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Back face — mystery surface, no readable content */}
+        <div
+          style={{
+            backfaceVisibility: "hidden",
+            WebkitBackfaceVisibility: "hidden",
+            position: "absolute",
+            inset: 0,
+            borderRadius: "20px",
+            background: "linear-gradient(160deg, #141519 0%, #0C0D0E 65%)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
+            transform: "rotateY(180deg)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 44 44"
+            fill="none"
+            style={{ opacity: 0.09 }}
+          >
+            <path
+              d="M22 3v38M3 22h38"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── StoryCard — interactive current card, owns all motion state ──────────────
 
 function StoryCard({
   item,
+  onChoiceStart,
   onMadeChoice,
 }: {
   item: StoryChoiceItem;
+  onChoiceStart?: () => void;
   onMadeChoice: (choice: "left" | "right") => void;
 }) {
   const [chosen, setChosen] = useState<"left" | "right" | null>(null);
@@ -67,6 +230,7 @@ function StoryCard({
     (side: "left" | "right") => {
       if (chosen) return;
       setChosen(side);
+      onChoiceStart?.();
       try {
         const sfx = new Audio(swipeSound);
         sfx.volume = 0.15;
@@ -79,7 +243,7 @@ function StoryCard({
         onComplete: () => onMadeChoice(side),
       });
     },
-    [chosen, x, onMadeChoice]
+    [chosen, x, onChoiceStart, onMadeChoice]
   );
 
   useEffect(() => {
@@ -238,7 +402,7 @@ function StoryCard({
   );
 }
 
-// ─── Outer slide — manages sequence ──────────────────────────────────────────
+// ─── StoryChoiceSlide — outer, manages sequence + flip state ─────────────────
 
 export function StoryChoiceSlide({
   content,
@@ -252,20 +416,36 @@ export function StoryChoiceSlide({
   const items = parseItems(content);
   const [index, setIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
+  const [isFlippingNext, setIsFlippingNext] = useState(false);
 
+  const currentItem = items[index];
+  const nextItem = items[index + 1] ?? null;
+
+  // Called by NextCardFlip after its flip-to-front animation completes
+  const handleFlipDone = useCallback(() => {
+    setIndex((prev) => prev + 1);
+    setIsFlippingNext(false);
+  }, []);
+
+  // Called immediately when user commits a choice (before exit animation)
+  const handleChoiceStart = useCallback(() => {
+    if (nextItem) {
+      setIsFlippingNext(true);
+    }
+  }, [nextItem]);
+
+  // Called after the current card's exit animation completes (220ms after choice)
   const handleMadeChoice = useCallback(
     (choice: "left" | "right") => {
       onChoice?.(choice);
-      if (index < items.length - 1) {
-        setTimeout(() => {
-          setIndex((prev) => prev + 1);
-        }, 220);
-      } else {
+      if (!nextItem) {
         onInteracted?.();
         setIsDone(true);
       }
+      // If nextItem exists: flip was already triggered via handleChoiceStart;
+      // handleFlipDone (via onTransitionEnd) will advance the index.
     },
-    [index, items.length, onChoice, onInteracted]
+    [nextItem, onChoice, onInteracted]
   );
 
   if (isDone) {
@@ -292,7 +472,41 @@ export function StoryChoiceSlide({
       className="w-full flex flex-col items-center gap-4 select-none"
       data-testid="slide-story-choice"
     >
-      <StoryCard key={index} item={items[index]} onMadeChoice={handleMadeChoice} />
+      {/*
+        Card stack: next card sits behind the current card.
+        NextCardFlip is position:absolute (fills container), StoryCard is
+        position:relative (defines container height via its own minHeight).
+      */}
+      <div style={{ position: "relative", width: "100%" }}>
+        {/* Next card — behind, shows back face until flip */}
+        {nextItem && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 0,
+              transform: "scale(0.98)",
+            }}
+          >
+            <NextCardFlip
+              key={index}
+              item={nextItem}
+              isFlipping={isFlippingNext}
+              onFlipDone={handleFlipDone}
+            />
+          </div>
+        )}
+
+        {/* Current card — in front, interactive */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <StoryCard
+            key={index}
+            item={currentItem}
+            onChoiceStart={handleChoiceStart}
+            onMadeChoice={handleMadeChoice}
+          />
+        </div>
+      </div>
 
       <p
         className="type-caption-sm text-center"
