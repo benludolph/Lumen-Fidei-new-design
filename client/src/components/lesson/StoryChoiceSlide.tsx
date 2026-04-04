@@ -85,7 +85,7 @@ function NextCardFlip({
           position: "relative",
           transformStyle: "preserve-3d",
           transform: isFlipping ? "rotateY(0deg)" : "rotateY(180deg)",
-          transition: "transform 480ms cubic-bezier(0.16, 1, 0.3, 1) 40ms",
+          transition: "transform 820ms cubic-bezier(0.4, 0, 0.2, 1) 60ms",
           willChange: "transform",
         }}
       >
@@ -469,8 +469,6 @@ export function StoryChoiceSlide({
               position: "absolute",
               inset: 0,
               zIndex: 0,
-              transform: "translateY(4px)",
-              opacity: 0.88,
             }}
           >
             <NextCardFlip
