@@ -57,7 +57,7 @@ function NextCardFlip({
   onFlipDone: () => void;
 }) {
   const { prompt, image } = item;
-  const cardMinH = image ? "340px" : "260px";
+  const cardH = image ? "340px" : "260px";
 
   const handleTransitionEnd = useCallback(() => {
     if (isFlipping) onFlipDone();
@@ -67,8 +67,7 @@ function NextCardFlip({
     <div
       style={{
         width: "100%",
-        height: "100%",
-        minHeight: cardMinH,
+        height: cardH,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -80,8 +79,7 @@ function NextCardFlip({
         onTransitionEnd={handleTransitionEnd}
         style={{
           width: "min(300px, 85vw)",
-          height: "100%",
-          minHeight: cardMinH,
+          height: cardH,
           position: "relative",
           transformStyle: "preserve-3d",
           transform: isFlipping ? "rotateY(0deg)" : "rotateY(180deg)",
@@ -101,7 +99,7 @@ function NextCardFlip({
             border: "1px solid rgba(255,255,255,0.10)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
             overflow: "hidden",
-            padding: image ? 0 : "36px 26px",
+            padding: 0,
             display: "flex",
             flexDirection: "column",
           }}
@@ -155,9 +153,10 @@ function NextCardFlip({
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                flexDirection: "column",
+                justifyContent: "flex-end",
                 flex: 1,
+                padding: "0 26px 28px",
               }}
             >
               <p
@@ -278,7 +277,7 @@ function StoryCard({
   return (
     <div
       className="relative w-full flex items-center justify-center"
-      style={{ minHeight: image ? "340px" : "260px" }}
+      style={{ height: image ? "340px" : "260px" }}
     >
       {/* Left label */}
       <motion.div
@@ -317,13 +316,16 @@ function StoryCard({
           scale: cardScale,
           touchAction: "none",
           width: "min(300px, 85vw)",
+          height: image ? "340px" : "260px",
           background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
           cursor: "grab",
           overflow: "hidden",
-          padding: image ? 0 : "36px 26px",
+          padding: 0,
+          display: "flex",
+          flexDirection: "column",
         }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
@@ -374,12 +376,22 @@ function StoryCard({
             </div>
           </>
         ) : (
-          <p
-            className="type-display-md font-medium text-center"
-            style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+              flex: 1,
+              padding: "0 26px 28px",
+            }}
           >
-            {prompt}
-          </p>
+            <p
+              className="type-display-md font-medium text-center"
+              style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
+            >
+              {prompt}
+            </p>
+          </div>
         )}
       </motion.div>
     </div>
