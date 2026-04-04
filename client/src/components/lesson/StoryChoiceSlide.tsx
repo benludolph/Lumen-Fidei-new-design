@@ -251,7 +251,9 @@ export function StoryChoiceSlide({
     (choice: "left" | "right") => {
       onChoice?.(choice);
       if (index < items.length - 1) {
-        setIndex(index + 1);
+        setTimeout(() => {
+          setIndex((prev) => prev + 1);
+        }, 220);
       } else {
         onInteracted?.();
         setIsDone(true);
