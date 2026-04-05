@@ -491,22 +491,33 @@ export function StoryChoiceSlide({
       style={{ gap: "20px" }}
       data-testid="slide-story-choice"
     >
-      {/* Prompt — sits above the card per Figma */}
-      <p
+      {/* Prompt — fixed-height container so card never shifts */}
+      <div
         style={{
-          fontFamily: "Afacad, sans-serif",
-          fontSize: "16px",
-          fontWeight: 400,
-          color: "rgba(255,255,255,0.90)",
-          lineHeight: 1.5,
-          textAlign: "center",
+          height: "80px",
           maxWidth: "370px",
-          margin: 0,
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
         }}
-        data-testid="text-story-prompt"
       >
-        {currentItem.prompt}
-      </p>
+        <p
+          style={{
+            fontFamily: "Afacad, sans-serif",
+            fontSize: "16px",
+            fontWeight: 400,
+            color: "rgba(255,255,255,0.90)",
+            lineHeight: 1.5,
+            textAlign: "center",
+            margin: 0,
+          }}
+          data-testid="text-story-prompt"
+        >
+          {currentItem.prompt}
+        </p>
+      </div>
 
       {/* Card stack — centered, perspective for 3D flip */}
       <div
