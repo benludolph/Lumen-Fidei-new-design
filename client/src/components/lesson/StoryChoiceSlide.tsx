@@ -236,17 +236,6 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
   const cardOpacity = useMotionValue(1);
   const rotate = useTransform(x, [-160, 0, 160], [-6, 0, 6]);
   const cardScale = useTransform(x, [-120, 0, 120], [1.03, 1, 1.03]);
-  // Overlay slides in progressively — starts at ±20px, fully revealed at ±100px
-  const overlayTranslateY = useTransform(
-    x,
-    [-100, -20, 0, 20, 100],
-    ["0%", "100%", "100%", "100%", "0%"]
-  );
-  const overlayOpacity = useTransform(
-    x,
-    [-100, -20, 0, 20, 100],
-    [1, 0, 0, 0, 1]
-  );
 
   // Update direction based on x motion value — but only show overlay while hovered or dragging
   useEffect(() => {
@@ -339,6 +328,8 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
 
   const { leftLabel, rightLabel, image } = item;
 
+  // Overlay shows whenever the card is leaning — no hover gate
+  const overlayVisible = direction !== null;
   const overlayLabel = direction === "left" ? `← ${leftLabel}` : direction === "right" ? `${rightLabel} →` : "";
 
   const cardW = "min(220px, 70vw)";
@@ -415,8 +406,8 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           </>
         )}
 
-        {/* Choice underlay — dark panel slides up progressively with lean amount */}
-        <motion.div
+        {/* Choice underlay — dark panel slides up from bottom (Reigns-style) */}
+        <div
           style={{
             position: "absolute",
             bottom: 0,
@@ -424,8 +415,9 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
             right: 0,
             height: "46%",
             background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.90) 28%, rgba(0,0,0,0.97) 100%)",
-            translateY: overlayTranslateY,
-            opacity: overlayOpacity,
+            transform: overlayVisible ? "translateY(0%)" : "translateY(100%)",
+            opacity: overlayVisible ? 1 : 0,
+            transition: "transform 260ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -448,7 +440,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           >
             {overlayLabel}
           </span>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );
