@@ -387,7 +387,7 @@ export function LessonFlow({
 
   if (isChatFlow) {
     return createPortal(
-      <div className="fixed inset-0 z-[200] flex flex-col overflow-x-hidden bg-[var(--surface-base)]" data-testid="lesson-flow">
+      <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--surface-base)]" data-testid="lesson-flow">
         {lessonSlideEl}
       </div>,
       document.body
@@ -411,7 +411,7 @@ export function LessonFlow({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex flex-col overflow-hidden"
+      className="fixed inset-0 z-[200] flex flex-col"
       data-testid="lesson-flow"
     >
       {/* ── Full-screen background: painting + radial vignette ── */}
@@ -546,7 +546,7 @@ export function LessonFlow({
               background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
-          <div className="relative flex-1 min-h-0 overflow-y-auto">
+          <div className="relative flex-1 min-h-0 overflow-visible">
             {lessonSlideEl}
           </div>
         </div>
