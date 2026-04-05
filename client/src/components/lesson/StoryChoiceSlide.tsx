@@ -227,9 +227,9 @@ function StoryCard({
         sfx.play().catch(() => {});
       } catch {}
       const nudge = side === "left" ? -60 : 60;
-      animate(x, nudge, { duration: 0.15, ease: "easeOut" });
+      animate(x, nudge, { duration: 0.35, ease: "easeOut" });
       animate(cardOpacity, 0, {
-        duration: 0.15,
+        duration: 0.35,
         ease: "easeIn",
         onComplete: () => onMadeChoice(side),
       });
