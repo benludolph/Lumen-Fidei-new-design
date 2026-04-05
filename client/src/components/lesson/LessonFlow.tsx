@@ -440,8 +440,8 @@ export function LessonFlow({
           boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
           paddingLeft: "16px",
           paddingRight: "16px",
-          paddingTop: "24px",
-          paddingBottom: "24px",
+          paddingTop: "16px",
+          paddingBottom: "16px",
         }}
       >
         {/* Left: Back button */}
@@ -525,7 +525,7 @@ export function LessonFlow({
       {/* ── Content area ── */}
       <div
         className="relative flex-1 min-h-0 flex flex-col items-center"
-        style={{ paddingTop: "32px", paddingLeft: "16px", paddingRight: "16px" }}
+        style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
@@ -556,7 +556,7 @@ export function LessonFlow({
       {!hideFooter && (
         <div
           key={animKey}
-          className="relative z-10 shrink-0 flex flex-col items-center justify-center p-4 sm:p-8 lesson-footer-enter"
+          className="relative z-10 shrink-0 flex flex-col items-center justify-center px-4 py-4 sm:px-8 lesson-footer-enter"
           style={{
             background: "var(--surface-ground)",
             borderTop: "1px solid var(--white-5)",
