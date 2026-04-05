@@ -57,7 +57,7 @@ function NextCardFlip({
   onFlipDone: () => void;
 }) {
   const { prompt, image } = item;
-  const cardH = image ? "500px" : "420px";
+  const cardH = "min(480px, calc(100dvh - 250px))";
 
   const handleTransitionEnd = useCallback(() => {
     if (isFlipping) onFlipDone();
@@ -283,7 +283,7 @@ function StoryCard({
   return (
     <div
       className="relative w-full flex items-center justify-center"
-      style={{ height: image ? "500px" : "420px" }}
+      style={{ height: "min(480px, calc(100dvh - 250px))" }}
     >
       {/* Left label */}
       <motion.div
@@ -322,7 +322,7 @@ function StoryCard({
           scale: cardScale,
           touchAction: "none",
           width: "min(300px, 85vw)",
-          height: image ? "500px" : "420px",
+          height: "100%",
           background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: "20px",
