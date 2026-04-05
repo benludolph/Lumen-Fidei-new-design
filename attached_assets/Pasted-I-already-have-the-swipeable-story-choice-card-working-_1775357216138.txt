@@ -1,0 +1,164 @@
+I already have the swipeable story_choice card working (hover tilt, drag, swipe, flip). Do not rebuild it.
+
+Modify the card UI to separate:
+
+Prompt text (always visible, anchored at top)
+Choice response (appears as a directional overlay based on hover/drag)
+Goal
+Prompt text sits at the top of the card
+When user hovers or drags:
+A response overlay slides down inside the card
+The content changes based on:
+left side (reject / resist)
+right side (accept / engage)
+1. Move prompt text to top of card
+
+Inside .card-front, structure like this:
+
+<div className="card-front">
+  <div className="card-prompt">
+    {promptText}
+  </div>
+
+  <div className="card-response-overlay">
+    {activeResponse}
+  </div>
+</div>
+Styling for prompt (top anchored)
+.card-prompt {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+
+  text-align: center;
+  font-size: clamp(18px, 3.5vw, 26px);
+  line-height: 1.35;
+  color: white;
+
+  z-index: 2;
+}
+2. Add response overlay (hidden by default)
+
+This is the “drop-down” layer.
+
+.card-response-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  padding: 20px;
+  padding-top: 80px; /* pushes below prompt */
+
+  text-align: center;
+  font-size: clamp(16px, 3vw, 22px);
+  color: white;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.75),
+    rgba(0,0,0,0.9)
+  );
+
+  transform: translateY(-100%);
+  opacity: 0;
+
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms ease;
+
+  pointer-events: none;
+  z-index: 1;
+}
+3. Show overlay based on interaction
+
+You already track hover + drag direction.
+
+Add a derived state:
+
+const direction = dragX > threshold ? "right" : dragX < -threshold ? "left" : null;
+
+OR for hover:
+
+const direction = cursorX > center ? "right" : "left";
+4. Set active response
+const activeResponse =
+  direction === "left"
+    ? item.leftLabel
+    : direction === "right"
+    ? item.rightLabel
+    : null;
+5. Animate overlay in
+
+When direction !== null, apply class:
+
+<div
+  className={cn(
+    "card-response-overlay",
+    direction && "is-visible",
+    direction === "left" && "is-left",
+    direction === "right" && "is-right"
+  )}
+>
+  {activeResponse}
+</div>
+Visible state
+.card-response-overlay.is-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+6. Add directional color feedback (important)
+.card-response-overlay.is-left {
+  background: linear-gradient(
+    to bottom,
+    rgba(120, 20, 20, 0.8),
+    rgba(40, 0, 0, 0.95)
+  );
+}
+
+.card-response-overlay.is-right {
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 120, 60, 0.8),
+    rgba(0, 40, 20, 0.95)
+  );
+}
+
+This makes the decision feel clear.
+
+7. Mobile behavior
+
+On mobile:
+
+Trigger overlay when user starts dragging (not just hover)
+
+You likely already have drag state:
+
+const isDragging = ...
+
+So:
+
+const showOverlay = isDragging || isHovering;
+8. Keep everything else unchanged
+Do NOT modify flip logic
+Do NOT modify swipe thresholds
+Do NOT change card sizing
+Do NOT move card structure
+
+Only add:
+
+top prompt
+response overlay system
+Result
+User reads prompt immediately (top, stable)
+As they move:
+response appears
+direction becomes clear
+On release:
+existing swipe + flip continues
+
+This removes confusion because:
+
+prompt is always visible and grounded
+decision appears only when intent begins

@@ -199,6 +199,8 @@ function NextCardFlip({
 
 interface StoryCardHandle {
   triggerChoice: (side: "left" | "right") => void;
+  getX: () => number;
+  wasDragging: () => boolean;
 }
 
 interface StoryCardProps {
@@ -214,6 +216,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
 }, ref) {
   const [chosen, setChosen] = useState<"left" | "right" | null>(null);
   const chosenRef = useRef(false);
+  const wasDraggingRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
@@ -246,7 +249,11 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
     [x, cardOpacity, onChoiceStart, onMadeChoice]
   );
 
-  useImperativeHandle(ref, () => ({ triggerChoice }), [triggerChoice]);
+  useImperativeHandle(ref, () => ({
+    triggerChoice,
+    getX: () => x.get(),
+    wasDragging: () => wasDraggingRef.current,
+  }), [triggerChoice, x]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -285,28 +292,9 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
       triggerChoice("right");
     } else {
       animate(x, 0, { duration: 0.4, ease: "easeOut" });
+      // Suppress the click that fires after a non-committing drag
+      setTimeout(() => { wasDraggingRef.current = false; }, 150);
     }
-  };
-
-  const handleTap = (e: MouseEvent | TouchEvent | PointerEvent) => {
-    if (chosenRef.current || !cardRef.current) return;
-    const currentX = x.get();
-    // If the card is leaning left or right enough to show a label, confirm that direction
-    if (currentX < -20) {
-      triggerChoice("left");
-      return;
-    }
-    if (currentX > 20) {
-      triggerChoice("right");
-      return;
-    }
-    // Card is neutral — use click position relative to card center
-    const rect = cardRef.current.getBoundingClientRect();
-    const clientX =
-      "changedTouches" in e
-        ? (e as TouchEvent).changedTouches[0]?.clientX ?? rect.left + rect.width / 2
-        : (e as MouseEvent | PointerEvent).clientX;
-    triggerChoice(clientX < rect.left + rect.width / 2 ? "left" : "right");
   };
 
   const { prompt, leftLabel, rightLabel, image } = item;
@@ -369,8 +357,8 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
+        onDragStart={() => { wasDraggingRef.current = true; }}
         onDragEnd={handleDragEnd}
-        onTap={handleTap}
         tabIndex={0}
         aria-label="Choice card — swipe or click left or right"
         whileTap={{ cursor: "grabbing" }}
@@ -455,13 +443,18 @@ export function StoryChoiceSlide({
   const currentItem = items[index];
   const nextItem = items[index + 1] ?? null;
 
-  // Clicking outside the card (to the left or right) triggers that direction
+  // Any click in the stack area confirms the current lean direction.
+  // If the card is neutral (centered), fall back to click-position left/right.
   const handleStackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const card = (e.currentTarget as HTMLElement).querySelector("[data-testid='story-card']");
-    if (card && card.contains(e.target as Node)) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const side = e.clientX < rect.left + rect.width / 2 ? "left" : "right";
-    storyCardRef.current?.triggerChoice(side);
+    // Ignore clicks that are the tail end of a drag gesture
+    if (storyCardRef.current?.wasDragging()) return;
+    const currentX = storyCardRef.current?.getX() ?? 0;
+    if (Math.abs(currentX) > 20) {
+      storyCardRef.current?.triggerChoice(currentX < 0 ? "left" : "right");
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      storyCardRef.current?.triggerChoice(e.clientX < rect.left + rect.width / 2 ? "left" : "right");
+    }
   }, []);
 
   // Called by NextCardFlip after its flip-to-front animation completes
