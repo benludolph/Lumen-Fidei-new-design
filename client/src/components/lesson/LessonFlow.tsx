@@ -413,13 +413,6 @@ export function LessonFlow({
     <div
       className="fixed inset-0 z-[200] flex flex-col"
       data-testid="lesson-flow"
-      onClick={(e) => {
-        if (e.target !== e.currentTarget) return;
-        if (effectiveSlideData.type !== "story_choice") return;
-        window.dispatchEvent(new CustomEvent("lf:story-choice-bg-click", {
-          detail: { clientX: e.clientX, screenW: window.innerWidth },
-        }));
-      }}
     >
       {/* ── Full-screen background: painting + radial vignette ── */}
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
@@ -533,6 +526,13 @@ export function LessonFlow({
       <div
         className="relative flex-1 min-h-0 flex flex-col items-center"
         style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
+        onClick={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (effectiveSlideData.type !== "story_choice") return;
+          window.dispatchEvent(new CustomEvent("lf:story-choice-bg-click", {
+            detail: { clientX: e.clientX, screenW: window.innerWidth },
+          }));
+        }}
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
