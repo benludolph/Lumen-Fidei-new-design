@@ -525,7 +525,11 @@ export function LessonFlow({
       {/* ── Content area ── */}
       <div
         className="relative flex-1 min-h-0 flex flex-col items-center"
-        style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
+        style={{
+          paddingTop: effectiveSlideData.type === "story_choice" ? "8px" : "16px",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+        }}
         onClick={(e) => {
           if (e.target !== e.currentTarget) return;
           if (effectiveSlideData.type !== "story_choice") return;
@@ -536,7 +540,10 @@ export function LessonFlow({
       >
         {/* Dark card — fills remaining height, top corners rounded */}
         <div
-          className="relative flex-1 min-h-0 flex flex-col w-full max-w-[780px] p-7 sm:p-12"
+          className={cn(
+            "relative flex-1 min-h-0 flex flex-col w-full max-w-[780px]",
+            effectiveSlideData.type === "story_choice" ? "p-4 sm:p-6" : "p-7 sm:p-12"
+          )}
           style={{
             background: "var(--surface-base)",
             border: "0.5px solid var(--white-5)",
