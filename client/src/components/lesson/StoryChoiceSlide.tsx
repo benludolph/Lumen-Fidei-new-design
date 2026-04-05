@@ -207,6 +207,7 @@ function StoryCard({
   onMadeChoice: (choice: "left" | "right") => void;
 }) {
   const [chosen, setChosen] = useState<"left" | "right" | null>(null);
+  const chosenRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
@@ -218,7 +219,8 @@ function StoryCard({
 
   const triggerChoice = useCallback(
     (side: "left" | "right") => {
-      if (chosen) return;
+      if (chosenRef.current) return;
+      chosenRef.current = true;
       setChosen(side);
       onChoiceStart?.();
       try {
@@ -226,35 +228,37 @@ function StoryCard({
         sfx.volume = 0.15;
         sfx.play().catch(() => {});
       } catch {}
-      const nudge = side === "left" ? -60 : 60;
-      animate(x, nudge, { duration: 0.65, ease: "easeOut" });
+      // Drift further in the chosen direction while fading out
+      const target = side === "left" ? -420 : 420;
+      animate(x, target, { duration: 0.7, ease: [0.4, 0, 1, 1] });
       animate(cardOpacity, 0, {
-        duration: 0.65,
+        duration: 0.5,
         ease: "easeIn",
         onComplete: () => onMadeChoice(side),
       });
     },
-    [chosen, x, cardOpacity, onChoiceStart, onMadeChoice]
+    [x, cardOpacity, onChoiceStart, onMadeChoice]
   );
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (chosen) return;
+      if (chosenRef.current) return;
       if (e.key === "ArrowLeft") triggerChoice("left");
       if (e.key === "ArrowRight") triggerChoice("right");
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [chosen, triggerChoice]);
+  }, [triggerChoice]);
 
   // Global mouse tracking — card leans toward whichever side of the screen the mouse is on
   useEffect(() => {
-    if (chosen) return;
     const onMouseMove = (e: MouseEvent) => {
+      if (chosenRef.current) return;
       const normalized = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
       x.set(normalized * 160);
     };
     const onMouseLeaveWindow = () => {
+      if (chosenRef.current) return;
       animate(x, 0, { duration: 0.35, ease: "easeOut" });
     };
     window.addEventListener("mousemove", onMouseMove);
@@ -263,7 +267,7 @@ function StoryCard({
       window.removeEventListener("mousemove", onMouseMove);
       document.documentElement.removeEventListener("mouseleave", onMouseLeaveWindow);
     };
-  }, [chosen, x]);
+  }, [x]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (chosen) return;
@@ -277,7 +281,18 @@ function StoryCard({
   };
 
   const handleTap = (e: MouseEvent | TouchEvent | PointerEvent) => {
-    if (chosen || !cardRef.current) return;
+    if (chosenRef.current || !cardRef.current) return;
+    const currentX = x.get();
+    // If the card is leaning left or right enough to show a label, confirm that direction
+    if (currentX < -20) {
+      triggerChoice("left");
+      return;
+    }
+    if (currentX > 20) {
+      triggerChoice("right");
+      return;
+    }
+    // Card is neutral — use click position relative to card center
     const rect = cardRef.current.getBoundingClientRect();
     const clientX =
       "changedTouches" in e
