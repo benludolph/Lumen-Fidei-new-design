@@ -434,6 +434,8 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
               color: "rgba(255,255,255,0.92)",
               letterSpacing: "0.01em",
               marginTop: "20px",
+              paddingLeft: "20px",
+              paddingRight: "20px",
             }}
           >
             {overlayLabel}
