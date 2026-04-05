@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, forwardRef, useImperativeHandle } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import type { PanInfo } from "framer-motion";
 import swipeSound from "@assets/Shapeforms_-_The_Mint_-_Credit_Card_Swipe_1775326675495.wav";
@@ -197,15 +197,21 @@ function NextCardFlip({
 
 // ─── StoryCard — interactive current card, owns all motion state ──────────────
 
-function StoryCard({
-  item,
-  onChoiceStart,
-  onMadeChoice,
-}: {
+interface StoryCardHandle {
+  triggerChoice: (side: "left" | "right") => void;
+}
+
+interface StoryCardProps {
   item: StoryChoiceItem;
   onChoiceStart?: () => void;
   onMadeChoice: (choice: "left" | "right") => void;
-}) {
+}
+
+const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard({
+  item,
+  onChoiceStart,
+  onMadeChoice,
+}, ref) {
   const [chosen, setChosen] = useState<"left" | "right" | null>(null);
   const chosenRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -240,6 +246,8 @@ function StoryCard({
     [x, cardOpacity, onChoiceStart, onMadeChoice]
   );
 
+  useImperativeHandle(ref, () => ({ triggerChoice }), [triggerChoice]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (chosenRef.current) return;
@@ -270,7 +278,7 @@ function StoryCard({
   }, [x]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    if (chosen) return;
+    if (chosenRef.current) return;
     if (info.offset.x < -SWIPE_THRESHOLD) {
       triggerChoice("left");
     } else if (info.offset.x > SWIPE_THRESHOLD) {
@@ -307,6 +315,7 @@ function StoryCard({
     <div
       className="relative w-full flex items-center justify-center"
       style={{ height: "min(480px, calc(100dvh - 250px))" }}
+      data-testid="story-card"
     >
       {/* Left label */}
       <motion.div
@@ -424,7 +433,7 @@ function StoryCard({
       </motion.div>
     </div>
   );
-}
+});
 
 // ─── StoryChoiceSlide — outer, manages sequence + flip state ─────────────────
 
@@ -441,9 +450,19 @@ export function StoryChoiceSlide({
   const [index, setIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
   const [isFlippingNext, setIsFlippingNext] = useState(false);
+  const storyCardRef = useRef<StoryCardHandle>(null);
 
   const currentItem = items[index];
   const nextItem = items[index + 1] ?? null;
+
+  // Clicking outside the card (to the left or right) triggers that direction
+  const handleStackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const card = (e.currentTarget as HTMLElement).querySelector("[data-testid='story-card']");
+    if (card && card.contains(e.target as Node)) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const side = e.clientX < rect.left + rect.width / 2 ? "left" : "right";
+    storyCardRef.current?.triggerChoice(side);
+  }, []);
 
   // Called by NextCardFlip after its flip-to-front animation completes
   const handleFlipDone = useCallback(() => {
@@ -501,7 +520,10 @@ export function StoryChoiceSlide({
         NextCardFlip is position:absolute (fills container), StoryCard is
         position:relative (defines container height via its own minHeight).
       */}
-      <div style={{ position: "relative", width: "100%", perspective: "1200px" }}>
+      <div
+        style={{ position: "relative", width: "100%", perspective: "1200px", cursor: "pointer" }}
+        onClick={handleStackClick}
+      >
         {/* Next card — behind, shows back face until flip */}
         {nextItem && (
           <div
@@ -523,6 +545,7 @@ export function StoryChoiceSlide({
         {/* Current card — in front, interactive */}
         <div style={{ position: "relative", zIndex: 1 }}>
           <StoryCard
+            ref={storyCardRef}
             key={index}
             item={currentItem}
             onChoiceStart={handleChoiceStart}
