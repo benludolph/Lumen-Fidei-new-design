@@ -48,9 +48,15 @@ function isValidItem(p: unknown): p is StoryChoiceItem {
   );
 }
 
+function stripJsonComments(raw: string): string {
+  // Remove lines whose first non-whitespace characters are //
+  // This avoids clobbering https:// URLs inside string values.
+  return raw.replace(/^\s*\/\/[^\n]*$/gm, "");
+}
+
 function parseItems(content: string): StoryChoiceItem[] {
   try {
-    const parsed = JSON.parse(content);
+    const parsed = JSON.parse(stripJsonComments(content));
     const arr = Array.isArray(parsed) ? parsed : [parsed];
     const valid = arr.filter(isValidItem).map((p) => ({
       prompt: p.prompt,

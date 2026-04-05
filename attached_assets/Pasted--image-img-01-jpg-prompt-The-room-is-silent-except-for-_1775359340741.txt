@@ -1,0 +1,360 @@
+[
+{
+  "image": "img/01.jpg",
+  "prompt": "The room is silent except for a faint hum from the vent. It presses on your chest. You feel it before you even open your eyes.",
+  "leftLabel": "Lie there and take it",
+  "rightLabel": "Reach for the glow"
+},
+{
+  "image": "img/02.jpg",
+  "prompt": "Your phone lights up. Mom: “Hey, haven’t heard from you.” The screen fades back to black.",
+  "leftLabel": "Let it sit there",
+  "rightLabel": "Type something easy"
+},
+{
+  "image": "img/03.jpg",
+  "prompt": "You catch yourself in the reflection of a dark window. Your face looks older when you’re not trying.",
+  "leftLabel": "Keep moving",
+  "rightLabel": "Fix it quickly"
+},
+{
+  "image": "img/04.jpg",
+  "prompt": "Your boss doesn’t look up. “I can put more on your plate if you want it.”",
+  "leftLabel": "Say you’re not sure",
+  "rightLabel": "Tell him you can handle it"
+},
+{
+  "image": "img/05.jpg",
+  "prompt": "Lunch. The room is filled with low voices and silverware scraping plates. No one looks your way.",
+  "leftLabel": "Sit with the noise of it",
+  "rightLabel": "Disappear into your phone"
+},
+{
+  "image": "img/06.jpg",
+  "prompt": "Your dad stands in the doorway. “Just… don’t waste it.” He doesn’t explain.",
+  "leftLabel": "Ask him what that means",
+  "rightLabel": "Nod like you understand"
+},
+{
+  "image": "img/07.jpg",
+  "prompt": "The ceiling above you. Your eyes stay open. Your thoughts don’t slow down.",
+  "leftLabel": "Let them run",
+  "rightLabel": "Drown them out"
+},
+{
+  "image": "img/08.jpg",
+  "prompt": "“You coming out tonight?” The message sits there, waiting.",
+  "leftLabel": "Stay in",
+  "rightLabel": "Go where it’s loud"
+},
+{
+  "image": "img/09.jpg",
+  "prompt": "Your bank app opens. The number is stable. It doesn’t feel like enough.",
+  "leftLabel": "Close it fast",
+  "rightLabel": "Start figuring it out"
+},
+{
+  "image": "img/10.jpg",
+  "prompt": "“I need this tonight.” He finally looks at you.",
+  "leftLabel": "Push back a little",
+  "rightLabel": "Take it without thinking"
+},
+{
+  "image": "img/11.jpg",
+  "prompt": "Dinner is cold. The room smells faintly like something stale.",
+  "leftLabel": "Eat it anyway",
+  "rightLabel": "Order something better"
+},
+{
+  "image": "img/12.jpg",
+  "prompt": "Mom again. “You sound tired.” You can hear it in her voice.",
+  "leftLabel": "Let her hear it",
+  "rightLabel": "Keep it smooth"
+},
+{
+  "image": "img/13.jpg",
+  "prompt": "Your screen goes dark. No messages. No feedback. Just your reflection again.",
+  "leftLabel": "Shut it down",
+  "rightLabel": "Find something else to do"
+},
+{
+  "image": "img/14.jpg",
+  "prompt": "Bathroom mirror. Fluorescent light. You don’t recognize the expression right away.",
+  "leftLabel": "Stay with it",
+  "rightLabel": "Turn something on"
+},
+{
+  "image": "img/15.jpg",
+  "prompt": "“You don’t need help. You need a system. Something that works.”",
+  "leftLabel": "Build it yourself",
+  "rightLabel": "Find something that works",
+  "setPathOnChoice": {
+    "left": "architect",
+    "right": "numb"
+  }
+},
+
+{
+  "image": "img/16.jpg",
+  "prompt": "“You ever notice how things line up?” He waits for you to agree.",
+  "leftLabel": "Let it go",
+  "rightLabel": "Follow the thread"
+},
+{
+  "image": "img/17.jpg",
+  "prompt": "“You’re reliable.” He says it like it defines you.",
+  "leftLabel": "Brush it off",
+  "rightLabel": "Hold onto it"
+},
+{
+  "image": "img/18.jpg",
+  "prompt": "Your phone buzzes again. Not urgent. Just enough to break the silence.",
+  "leftLabel": "Leave it face down",
+  "rightLabel": "Check it anyway"
+},
+{
+  "image": "img/19.jpg",
+  "prompt": "“Don’t drift.” The words stay longer than the conversation.",
+  "leftLabel": "Say nothing",
+  "rightLabel": "Promise something"
+},
+{
+  "image": "img/20.jpg",
+  "prompt": "Nothing is wrong. That’s the problem. The emptiness just sits there.",
+  "leftLabel": "Feel it fully",
+  "rightLabel": "Cover it quickly"
+},
+
+// ARCHITECT
+{
+  "path": "architect",
+  "image": "img/21.jpg",
+  "prompt": "Your calendar fills until there are no empty spaces left.",
+  "leftLabel": "Clear a gap",
+  "rightLabel": "Fill everything"
+},
+{
+  "path": "architect",
+  "image": "img/22.jpg",
+  "prompt": "“We need you on this.” The word need lands hard.",
+  "leftLabel": "Step back",
+  "rightLabel": "Lean into it"
+},
+{
+  "path": "architect",
+  "image": "img/23.jpg",
+  "prompt": "Missed call: Home.",
+  "leftLabel": "Call back",
+  "rightLabel": "Handle it later"
+},
+{
+  "path": "architect",
+  "image": "img/24.jpg",
+  "prompt": "You eat at your desk. The food barely registers.",
+  "leftLabel": "Stop working",
+  "rightLabel": "Keep going"
+},
+{
+  "path": "architect",
+  "image": "img/25.jpg",
+  "prompt": "“You don’t need anyone here.”",
+  "leftLabel": "Sit with that",
+  "rightLabel": "Prove it"
+},
+{
+  "path": "architect",
+  "image": "img/26.jpg",
+  "prompt": "Your phone is quiet. Too quiet.",
+  "leftLabel": "Notice it",
+  "rightLabel": "Ignore it"
+},
+{
+  "path": "architect",
+  "image": "img/27.jpg",
+  "prompt": "Everything is done. Early.",
+  "leftLabel": "Stop",
+  "rightLabel": "Find more"
+},
+{
+  "path": "architect",
+  "image": "img/28.jpg",
+  "prompt": "No one checks on you anymore.",
+  "leftLabel": "Reach out",
+  "rightLabel": "Stay useful"
+},
+{
+  "path": "architect",
+  "image": "img/29.jpg",
+  "prompt": "You forget what day it is.",
+  "leftLabel": "Pause and check",
+  "rightLabel": "Keep moving"
+},
+{
+  "path": "architect",
+  "image": "img/30.jpg",
+  "prompt": "“You’re the one we rely on.”",
+  "leftLabel": "Downplay it",
+  "rightLabel": "Accept it",
+  "end": true,
+  "endText": {
+    "left": "You step away for a moment. No one notices. The silence feels like you’re disappearing.",
+    "right": "You stay. Everything depends on you now. There’s nothing left outside of it."
+  }
+},
+
+// NUMB
+{
+  "path": "numb",
+  "image": "img/31.jpg",
+  "prompt": "The screen lights your face in the dark.",
+  "leftLabel": "Turn it off",
+  "rightLabel": "Stay a little longer"
+},
+{
+  "path": "numb",
+  "image": "img/32.jpg",
+  "prompt": "The room is filled with sound now. It’s easier this way.",
+  "leftLabel": "Cut the noise",
+  "rightLabel": "Turn it up"
+},
+{
+  "path": "numb",
+  "image": "img/33.jpg",
+  "prompt": "Missed call: Home.",
+  "leftLabel": "Answer it",
+  "rightLabel": "Let it fade"
+},
+{
+  "path": "numb",
+  "image": "img/34.jpg",
+  "prompt": "Food sits in front of you. You barely taste it.",
+  "leftLabel": "Finish it",
+  "rightLabel": "Forget it"
+},
+{
+  "path": "numb",
+  "image": "img/35.jpg",
+  "prompt": "Hours pass. You don’t remember when they started.",
+  "leftLabel": "Stop and look",
+  "rightLabel": "Keep drifting"
+},
+{
+  "path": "numb",
+  "image": "img/36.jpg",
+  "prompt": "The silence creeps back in between videos.",
+  "leftLabel": "Sit in it",
+  "rightLabel": "Skip ahead"
+},
+{
+  "path": "numb",
+  "image": "img/37.jpg",
+  "prompt": "“We stopped asking.”",
+  "leftLabel": "Let that land",
+  "rightLabel": "Ignore it"
+},
+{
+  "path": "numb",
+  "image": "img/38.jpg",
+  "prompt": "Your room feels smaller.",
+  "leftLabel": "Step outside",
+  "rightLabel": "Stay inside"
+},
+{
+  "path": "numb",
+  "image": "img/39.jpg",
+  "prompt": "Silence feels worse now than before.",
+  "leftLabel": "Face it",
+  "rightLabel": "Fill it"
+},
+{
+  "path": "numb",
+  "image": "img/40.jpg",
+  "prompt": "Another night. Same glow.",
+  "leftLabel": "Turn it off",
+  "rightLabel": "Keep going",
+  "end": true,
+  "endText": {
+    "left": "The silence hits harder now. You reach for something again almost immediately.",
+    "right": "The screen stays on. Time moves. You barely notice anymore."
+  }
+},
+
+// SEER
+{
+  "image": "img/41.jpg",
+  "prompt": "The clock hits 11:11 as you think of her. It lands wrong.",
+  "leftLabel": "Ignore it",
+  "rightLabel": "Pay attention",
+  "setPathOnChoice": {
+    "right": "seer"
+  }
+},
+{
+  "path": "seer",
+  "image": "img/42.jpg",
+  "prompt": "Small coincidences start to stack.",
+  "leftLabel": "Call it random",
+  "rightLabel": "Track them"
+},
+{
+  "path": "seer",
+  "image": "img/43.jpg",
+  "prompt": "“There’s meaning in everything.”",
+  "leftLabel": "Push back",
+  "rightLabel": "Lean in"
+},
+{
+  "path": "seer",
+  "image": "img/44.jpg",
+  "prompt": "People feel harder to read than patterns.",
+  "leftLabel": "Talk to someone",
+  "rightLabel": "Trust the patterns"
+},
+{
+  "path": "seer",
+  "image": "img/45.jpg",
+  "prompt": "Missed call: Home.",
+  "leftLabel": "Answer it",
+  "rightLabel": "Ignore it"
+},
+{
+  "path": "seer",
+  "image": "img/46.jpg",
+  "prompt": "Things feel connected now.",
+  "leftLabel": "Question it",
+  "rightLabel": "Accept it"
+},
+{
+  "path": "seer",
+  "image": "img/47.jpg",
+  "prompt": "The world feels thinner, like something underneath it.",
+  "leftLabel": "Ground yourself",
+  "rightLabel": "Follow it"
+},
+{
+  "path": "seer",
+  "image": "img/48.jpg",
+  "prompt": "You stop explaining yourself to people.",
+  "leftLabel": "Try again",
+  "rightLabel": "Withdraw"
+},
+{
+  "path": "seer",
+  "image": "img/49.jpg",
+  "prompt": "“You see it now.”",
+  "leftLabel": "Step back",
+  "rightLabel": "Commit"
+},
+{
+  "path": "seer",
+  "image": "img/50.jpg",
+  "prompt": "Everything makes sense now. In a way that cuts you off from everything else.",
+  "leftLabel": "Let it go",
+  "rightLabel": "Hold onto it",
+  "end": true,
+  "endText": {
+    "left": "The meaning slips. The world feels empty again. Worse than before.",
+    "right": "You understand everything now. You just don’t feel connected to anything real."
+  }
+}
+]
