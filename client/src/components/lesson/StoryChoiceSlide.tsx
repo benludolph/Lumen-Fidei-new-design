@@ -84,7 +84,7 @@ function NextCardFlip({
           position: "relative",
           transformStyle: "preserve-3d",
           transform: isFlipping ? "rotateY(0deg)" : "rotateY(180deg)",
-          transition: "transform 820ms cubic-bezier(0.4, 0, 0.2, 1) 60ms",
+          transition: "transform 1400ms cubic-bezier(0.4, 0, 0.2, 1) 60ms",
           willChange: "transform",
         }}
       >
