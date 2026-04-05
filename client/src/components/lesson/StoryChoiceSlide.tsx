@@ -145,11 +145,15 @@ function NextCardFlip({
             }}
           >
             <p
-              className="type-display-md font-medium text-center"
               style={{
+                fontFamily: "Afacad, sans-serif",
+                fontSize: "16px",
+                fontWeight: 400,
                 color: "rgba(255,255,255,0.90)",
                 lineHeight: 1.55,
                 margin: 0,
+                textAlign: "center",
+                textShadow: "0 1px 6px rgba(0,0,0,0.6)",
               }}
             >
               {prompt}
@@ -202,8 +206,6 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
   onMadeChoice,
 }, ref) {
   const [direction, setDirection] = useState<"left" | "right" | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const chosenRef = useRef(false);
   const wasDraggingRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -287,11 +289,9 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
 
   const handleDragStart = () => {
     wasDraggingRef.current = true;
-    setIsDragging(true);
   };
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
-    setIsDragging(false);
     if (chosenRef.current) return;
     if (info.offset.x < -SWIPE_THRESHOLD) {
       triggerChoice("left");
@@ -306,10 +306,9 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
 
   const { prompt, leftLabel, rightLabel, image } = item;
 
-  // Overlay only shows when hovering the card or actively dragging it
-  const showOverlay = isHovered || isDragging;
-  const isLeft = showOverlay && direction === "left";
-  const isRight = showOverlay && direction === "right";
+  // Overlay shows whenever the card is leaning — no hover gate
+  const overlayVisible = direction !== null;
+  const overlayLabel = direction === "left" ? `← ${leftLabel}` : direction === "right" ? `${rightLabel} →` : "";
 
   return (
     <div
@@ -343,8 +342,6 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
         dragElastic={0.7}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
         tabIndex={0}
         aria-label="Choice card — swipe or click left or right"
         whileTap={{ cursor: "grabbing" }}
@@ -382,83 +379,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           }}
         />
 
-        {/* Directional overlay — slides down from top on hover/drag */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 2,
-            pointerEvents: "none",
-            overflow: "hidden",
-            borderRadius: "inherit",
-          }}
-        >
-          {/* Left overlay — red tint */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "linear-gradient(180deg, rgba(220,38,38,0.72) 0%, rgba(185,28,28,0.45) 55%, rgba(0,0,0,0) 100%)",
-              transform: isLeft ? "translateY(0%)" : "translateY(-100%)",
-              opacity: isLeft ? 1 : 0,
-              transition: "transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)",
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "center",
-              paddingTop: "80px",
-            }}
-            data-testid="overlay-story-left"
-          >
-            <span
-              className="font-semibold"
-              style={{
-                color: "rgba(255,255,255,0.95)",
-                fontSize: "18px",
-                letterSpacing: "0.01em",
-                textShadow: "0 1px 4px rgba(0,0,0,0.4)",
-              }}
-            >
-              ← {leftLabel}
-            </span>
-          </div>
-
-          {/* Right overlay — green tint */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "linear-gradient(180deg, rgba(22,163,74,0.72) 0%, rgba(21,128,61,0.45) 55%, rgba(0,0,0,0) 100%)",
-              transform: isRight ? "translateY(0%)" : "translateY(-100%)",
-              opacity: isRight ? 1 : 0,
-              transition: "transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)",
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "center",
-              paddingTop: "80px",
-            }}
-            data-testid="overlay-story-right"
-          >
-            <span
-              className="font-semibold"
-              style={{
-                color: "rgba(255,255,255,0.95)",
-                fontSize: "18px",
-                letterSpacing: "0.01em",
-                textShadow: "0 1px 4px rgba(0,0,0,0.4)",
-              }}
-            >
-              {rightLabel} →
-            </span>
-          </div>
-        </div>
-
-        {/* Prompt anchored to top */}
+        {/* Prompt anchored to top — 16px Afacad regular */}
         <div
           style={{
             position: "absolute",
@@ -471,17 +392,55 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           }}
         >
           <p
-            className="type-display-md font-medium text-center"
             style={{
+              fontFamily: "Afacad, sans-serif",
+              fontSize: "16px",
+              fontWeight: 400,
               color: "rgba(255,255,255,0.90)",
               lineHeight: 1.55,
               margin: 0,
-              textShadow: "0 1px 6px rgba(0,0,0,0.5)",
+              textAlign: "center",
+              textShadow: "0 1px 6px rgba(0,0,0,0.6)",
             }}
             data-testid="text-story-prompt"
           >
             {prompt}
           </p>
+        </div>
+
+        {/* Dark underlay — slides up from bottom when leaning (Reigns-style) */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "44%",
+            background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 30%, rgba(0,0,0,0.96) 100%)",
+            transform: overlayVisible ? "translateY(0%)" : "translateY(100%)",
+            opacity: overlayVisible ? 1 : 0,
+            transition: "transform 260ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+            pointerEvents: "none",
+          }}
+          data-testid="overlay-story-choice"
+        >
+          <span
+            style={{
+              fontFamily: "Afacad, sans-serif",
+              fontSize: "16px",
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.95)",
+              letterSpacing: "0.02em",
+              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
+              marginTop: "16px",
+            }}
+          >
+            {overlayLabel}
+          </span>
         </div>
       </motion.div>
     </div>
