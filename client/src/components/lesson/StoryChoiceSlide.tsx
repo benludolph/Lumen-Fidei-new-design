@@ -62,7 +62,14 @@ function parseItems(content: string): StoryChoiceItem[] {
       prompt: p.prompt,
       leftLabel: p.leftLabel,
       rightLabel: p.rightLabel,
-      image: typeof p.image === "string" && p.image.trim() ? p.image.trim() : undefined,
+      image: (() => {
+        const raw = typeof p.image === "string" ? p.image.trim() : "";
+        if (!raw) return undefined;
+        // Ensure absolute path — relative paths like "img/01.png" break when
+        // the page URL is not at the root (e.g. /lesson/4).
+        if (!raw.startsWith("http") && !raw.startsWith("/")) return "/" + raw;
+        return raw;
+      })(),
       effects: p.effects ?? undefined,
       path: typeof p.path === "string" ? p.path : undefined,
       setPathOnChoice: p.setPathOnChoice ?? undefined,
