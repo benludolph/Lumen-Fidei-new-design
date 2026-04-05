@@ -428,11 +428,11 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
         >
           <span
             style={{
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "15px",
+              fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+              fontSize: "20px",
               fontWeight: 400,
               color: "rgba(255,255,255,0.92)",
-              letterSpacing: "0.02em",
+              letterSpacing: "0.01em",
               marginTop: "20px",
             }}
           >
