@@ -210,6 +210,7 @@ function StoryCard({
   const cardRef = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
+  const cardOpacity = useMotionValue(1);
   const rotate = useTransform(x, [-160, 0, 160], [-6, 0, 6]);
   const cardScale = useTransform(x, [-120, 0, 120], [1.03, 1, 1.03]);
   const leftOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20, 0], [1, 0.35, 0]);
@@ -225,14 +226,15 @@ function StoryCard({
         sfx.volume = 0.15;
         sfx.play().catch(() => {});
       } catch {}
-      const target = side === "left" ? -520 : 520;
-      animate(x, target, {
-        duration: 0.22,
+      const nudge = side === "left" ? -60 : 60;
+      animate(x, nudge, { duration: 0.15, ease: "easeOut" });
+      animate(cardOpacity, 0, {
+        duration: 0.15,
         ease: "easeIn",
         onComplete: () => onMadeChoice(side),
       });
     },
-    [chosen, x, onChoiceStart, onMadeChoice]
+    [chosen, x, cardOpacity, onChoiceStart, onMadeChoice]
   );
 
   useEffect(() => {
@@ -326,6 +328,7 @@ function StoryCard({
           x,
           rotate,
           scale: cardScale,
+          opacity: cardOpacity,
           touchAction: "none",
           width: "min(300px, 85vw)",
           height: "100%",
