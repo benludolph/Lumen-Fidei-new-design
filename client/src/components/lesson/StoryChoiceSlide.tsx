@@ -57,8 +57,9 @@ function NextCardFlip({
   isFlipping: boolean;
   onFlipDone: () => void;
 }) {
-  const { prompt, image } = item;
-  const cardH = "min(480px, calc(100dvh - 250px))";
+  const { image } = item;
+  const cardW = "min(220px, 70vw)";
+  const cardH = "min(360px, calc(100dvh - 340px))";
 
   const handleTransitionEnd = useCallback(() => {
     if (isFlipping) onFlipDone();
@@ -67,20 +68,18 @@ function NextCardFlip({
   return (
     <div
       style={{
-        width: "100%",
+        width: cardW,
         height: cardH,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         pointerEvents: "none",
+        flexShrink: 0,
       }}
     >
       {/* Inner wrapper — rotates on Y axis */}
       <div
         onTransitionEnd={handleTransitionEnd}
         style={{
-          width: "min(300px, 85vw)",
-          height: cardH,
+          width: "100%",
+          height: "100%",
           position: "relative",
           transformStyle: "preserve-3d",
           transform: isFlipping ? "rotateY(0deg)" : "rotateY(180deg)",
@@ -88,7 +87,7 @@ function NextCardFlip({
           willChange: "transform",
         }}
       >
-        {/* Front face — full-bleed image layout */}
+        {/* Front face — full-bleed image, no prompt (prompt is above the stack) */}
         <div
           style={{
             backfaceVisibility: "hidden",
@@ -104,7 +103,6 @@ function NextCardFlip({
             overflow: "hidden",
           }}
         >
-          {/* Full-bleed image background */}
           {image && (
             <img
               src={image}
@@ -120,45 +118,16 @@ function NextCardFlip({
               }}
             />
           )}
-
-          {/* Dark scrim for readability */}
           <div
             style={{
               position: "absolute",
               inset: 0,
               background: image
-                ? "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.30) 100%)"
+                ? "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)"
                 : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
               pointerEvents: "none",
             }}
           />
-
-          {/* Prompt anchored to top */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              padding: "20px 22px 0",
-              zIndex: 2,
-            }}
-          >
-            <p
-              style={{
-                fontFamily: "Afacad, sans-serif",
-                fontSize: "16px",
-                fontWeight: 400,
-                color: "rgba(255,255,255,0.90)",
-                lineHeight: 1.55,
-                margin: 0,
-                textAlign: "center",
-                textShadow: "0 1px 6px rgba(0,0,0,0.6)",
-              }}
-            >
-              {prompt}
-            </p>
-          </div>
         </div>
 
         {/* Back face — branded card back image */}
@@ -304,16 +273,18 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
     }
   };
 
-  const { prompt, leftLabel, rightLabel, image } = item;
+  const { leftLabel, rightLabel, image } = item;
 
   // Overlay shows whenever the card is leaning — no hover gate
   const overlayVisible = direction !== null;
   const overlayLabel = direction === "left" ? `← ${leftLabel}` : direction === "right" ? `${rightLabel} →` : "";
 
+  const cardW = "min(220px, 70vw)";
+  const cardH = "min(360px, calc(100dvh - 340px))";
+
   return (
     <div
-      className="relative w-full flex items-center justify-center"
-      style={{ height: "min(480px, calc(100dvh - 250px))" }}
+      style={{ width: cardW, height: cardH, position: "relative" }}
       data-testid="story-card"
     >
       {/* Card */}
@@ -325,7 +296,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           scale: cardScale,
           opacity: cardOpacity,
           touchAction: "none",
-          width: "min(300px, 85vw)",
+          width: "100%",
           height: "100%",
           background: image
             ? "transparent"
@@ -347,7 +318,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
         whileTap={{ cursor: "grabbing" }}
         data-testid="card-story-choice"
       >
-        {/* Full-bleed image background */}
+        {/* Full-bleed image */}
         {image && (
           <img
             src={image}
@@ -366,57 +337,28 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           />
         )}
 
-        {/* Dark scrim for readability */}
+        {/* Permanent dark gradient scrim — bottom-weighted */}
         <div
           style={{
             position: "absolute",
             inset: 0,
             background: image
-              ? "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.30) 100%)"
+              ? "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)"
               : "transparent",
             pointerEvents: "none",
             zIndex: 1,
           }}
         />
 
-        {/* Prompt anchored to top — 16px Afacad regular */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            padding: "20px 22px 0",
-            zIndex: 3,
-            pointerEvents: "none",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "Afacad, sans-serif",
-              fontSize: "16px",
-              fontWeight: 400,
-              color: "rgba(255,255,255,0.90)",
-              lineHeight: 1.55,
-              margin: 0,
-              textAlign: "center",
-              textShadow: "0 1px 6px rgba(0,0,0,0.6)",
-            }}
-            data-testid="text-story-prompt"
-          >
-            {prompt}
-          </p>
-        </div>
-
-        {/* Dark underlay — slides up from bottom when leaning (Reigns-style) */}
+        {/* Choice underlay — dark panel slides up from bottom (Reigns-style) */}
         <div
           style={{
             position: "absolute",
             bottom: 0,
             left: 0,
             right: 0,
-            height: "44%",
-            background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 30%, rgba(0,0,0,0.96) 100%)",
+            height: "46%",
+            background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.90) 28%, rgba(0,0,0,0.97) 100%)",
             transform: overlayVisible ? "translateY(0%)" : "translateY(100%)",
             opacity: overlayVisible ? 1 : 0,
             transition: "transform 260ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -431,12 +373,11 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           <span
             style={{
               fontFamily: "Afacad, sans-serif",
-              fontSize: "16px",
+              fontSize: "15px",
               fontWeight: 400,
-              color: "rgba(255,255,255,0.95)",
+              color: "rgba(255,255,255,0.92)",
               letterSpacing: "0.02em",
-              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-              marginTop: "16px",
+              marginTop: "20px",
             }}
           >
             {overlayLabel}
@@ -546,25 +487,48 @@ export function StoryChoiceSlide({
 
   return (
     <div
-      className="w-full flex flex-col items-center gap-4 select-none"
+      className="w-full flex flex-col items-center select-none"
+      style={{ gap: "20px" }}
       data-testid="slide-story-choice"
     >
-      {/*
-        Card stack: next card sits behind the current card.
-        NextCardFlip is position:absolute (fills container), StoryCard is
-        position:relative (defines container height via its own minHeight).
-      */}
+      {/* Prompt — sits above the card per Figma */}
+      <p
+        style={{
+          fontFamily: "Afacad, sans-serif",
+          fontSize: "16px",
+          fontWeight: 400,
+          color: "rgba(255,255,255,0.90)",
+          lineHeight: 1.5,
+          textAlign: "center",
+          maxWidth: "370px",
+          margin: 0,
+        }}
+        data-testid="text-story-prompt"
+      >
+        {currentItem.prompt}
+      </p>
+
+      {/* Card stack — centered, perspective for 3D flip */}
       <div
-        style={{ position: "relative", width: "100%", perspective: "1200px", cursor: "pointer" }}
+        style={{
+          position: "relative",
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          perspective: "1200px",
+          cursor: "pointer",
+        }}
         onClick={handleStackClick}
       >
-        {/* Next card — behind, shows back face until flip */}
+        {/* Next card — behind, aligned over the same center position */}
         {nextItem && (
           <div
             style={{
               position: "absolute",
               inset: 0,
               zIndex: 0,
+              display: "flex",
+              justifyContent: "center",
             }}
           >
             <NextCardFlip
@@ -576,7 +540,7 @@ export function StoryChoiceSlide({
           </div>
         )}
 
-        {/* Current card — in front, interactive */}
+        {/* Current card — in front, defines stack height */}
         <div style={{ position: "relative", zIndex: 1 }}>
           <StoryCard
             ref={storyCardRef}
