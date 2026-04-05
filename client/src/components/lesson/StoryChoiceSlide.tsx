@@ -457,6 +457,23 @@ export function StoryChoiceSlide({
     }
   }, []);
 
+  // Listen for clicks on the hills/background area (outside the dark content card).
+  // LessonFlow dispatches this event when the user clicks directly on the background.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { clientX, screenW } = (e as CustomEvent<{ clientX: number; screenW: number }>).detail;
+      if (storyCardRef.current?.wasDragging()) return;
+      const currentX = storyCardRef.current?.getX() ?? 0;
+      if (Math.abs(currentX) > 20) {
+        storyCardRef.current?.triggerChoice(currentX < 0 ? "left" : "right");
+      } else {
+        storyCardRef.current?.triggerChoice(clientX < screenW / 2 ? "left" : "right");
+      }
+    };
+    window.addEventListener("lf:story-choice-bg-click", handler);
+    return () => window.removeEventListener("lf:story-choice-bg-click", handler);
+  }, []);
+
   // Called by NextCardFlip after its flip-to-front animation completes
   const handleFlipDone = useCallback(() => {
     setIndex((prev) => prev + 1);
