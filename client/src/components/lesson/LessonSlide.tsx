@@ -885,7 +885,7 @@ export function LessonSlide({
 
   return (
     <div
-      className={cn("flex-1 overflow-y-auto", animationClass)}
+      className={cn("flex-1", type === "story_choice" ? "overflow-visible" : "overflow-y-auto", animationClass)}
       data-testid={`lesson-slide-${type}`}
     >
       <div className="flex flex-col justify-center min-h-full">
