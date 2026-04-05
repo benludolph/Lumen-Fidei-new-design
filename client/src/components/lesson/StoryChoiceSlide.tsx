@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import type { PanInfo } from "framer-motion";
 import swipeSound from "@assets/Shapeforms_-_The_Mint_-_Credit_Card_Swipe_1775326675495.wav";
+import cardBackImage from "@assets/Back_of_Card_(1)_1775355890768.webp";
 
 interface StoryChoiceItem {
   prompt: string;
@@ -169,7 +170,7 @@ function NextCardFlip({
           )}
         </div>
 
-        {/* Back face — mystery surface, plain dark card per Figma */}
+        {/* Back face — branded card back image */}
         <div
           style={{
             backfaceVisibility: "hidden",
@@ -177,13 +178,18 @@ function NextCardFlip({
             position: "absolute",
             inset: 0,
             borderRadius: "20px",
-            background: "linear-gradient(138deg, #17181F 0%, #0F1011 65%)",
             border: "1px solid rgba(255,255,255,0.10)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
             transform: "rotateY(180deg)",
             overflow: "hidden",
           }}
-        />
+        >
+          <img
+            src={cardBackImage}
+            alt=""
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        </div>
       </div>
     </div>
   );
