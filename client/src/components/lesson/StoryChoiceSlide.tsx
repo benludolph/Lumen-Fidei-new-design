@@ -88,7 +88,7 @@ function NextCardFlip({
           willChange: "transform",
         }}
       >
-        {/* Front face — shows next item content */}
+        {/* Front face — full-bleed image layout */}
         <div
           style={{
             backfaceVisibility: "hidden",
@@ -96,78 +96,65 @@ function NextCardFlip({
             position: "absolute",
             inset: 0,
             borderRadius: "20px",
-            background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
+            background: image
+              ? "transparent"
+              : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
             border: "1px solid rgba(255,255,255,0.10)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
-            overflow: image ? "hidden" : "visible",
-            padding: 0,
-            display: "flex",
-            flexDirection: "column",
+            overflow: "hidden",
           }}
         >
-          {image ? (
-            <>
-              <div style={{ position: "relative", width: "100%", height: "160px", flexShrink: 0 }}>
-                <img
-                  src={image}
-                  alt=""
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                    pointerEvents: "none",
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(15,16,17,0.72) 100%)",
-                    pointerEvents: "none",
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  padding: "22px 22px 26px",
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <p
-                  className="type-display-md font-medium text-center"
-                  style={{
-                    color: "rgba(255,255,255,0.90)",
-                    lineHeight: 1.55,
-                    margin: 0,
-                    width: "100%",
-                  }}
-                >
-                  {prompt}
-                </p>
-              </div>
-            </>
-          ) : (
-            <div
+          {/* Full-bleed image background */}
+          {image && (
+            <img
+              src={image}
+              alt=""
               style={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "flex-end",
-                flex: 1,
-                padding: "0 26px 28px",
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+                pointerEvents: "none",
+              }}
+            />
+          )}
+
+          {/* Dark scrim for readability */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: image
+                ? "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.30) 100%)"
+                : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* Prompt anchored to top */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              padding: "20px 22px 0",
+              zIndex: 2,
+            }}
+          >
+            <p
+              className="type-display-md font-medium text-center"
+              style={{
+                color: "rgba(255,255,255,0.90)",
+                lineHeight: 1.55,
+                margin: 0,
               }}
             >
-              <p
-                className="type-display-md font-medium text-center"
-                style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
-              >
-                {prompt}
-              </p>
-            </div>
-          )}
+              {prompt}
+            </p>
+          </div>
         </div>
 
         {/* Back face — branded card back image */}
@@ -214,7 +201,9 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
   onChoiceStart,
   onMadeChoice,
 }, ref) {
-  const [chosen, setChosen] = useState<"left" | "right" | null>(null);
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const chosenRef = useRef(false);
   const wasDraggingRef = useRef(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -223,14 +212,26 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
   const cardOpacity = useMotionValue(1);
   const rotate = useTransform(x, [-160, 0, 160], [-6, 0, 6]);
   const cardScale = useTransform(x, [-120, 0, 120], [1.03, 1, 1.03]);
-  const leftOpacity = useTransform(x, [-SWIPE_THRESHOLD, -20, 0], [1, 0.35, 0]);
-  const rightOpacity = useTransform(x, [0, 20, SWIPE_THRESHOLD], [0, 0.35, 1]);
+
+  // Update direction based on x motion value — but only show overlay while hovered or dragging
+  useEffect(() => {
+    const unsubscribe = x.on("change", (val) => {
+      if (chosenRef.current) return;
+      if (val < -20) {
+        setDirection("left");
+      } else if (val > 20) {
+        setDirection("right");
+      } else {
+        setDirection(null);
+      }
+    });
+    return unsubscribe;
+  }, [x]);
 
   const triggerChoice = useCallback(
     (side: "left" | "right") => {
       if (chosenRef.current) return;
       chosenRef.current = true;
-      setChosen(side);
       onChoiceStart?.();
       try {
         const sfx = new Audio(swipeSound);
@@ -284,7 +285,13 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
     };
   }, [x]);
 
+  const handleDragStart = () => {
+    wasDraggingRef.current = true;
+    setIsDragging(true);
+  };
+
   const handleDragEnd = (_: unknown, info: PanInfo) => {
+    setIsDragging(false);
     if (chosenRef.current) return;
     if (info.offset.x < -SWIPE_THRESHOLD) {
       triggerChoice("left");
@@ -299,40 +306,17 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
 
   const { prompt, leftLabel, rightLabel, image } = item;
 
+  // Overlay only shows when hovering the card or actively dragging it
+  const showOverlay = isHovered || isDragging;
+  const isLeft = showOverlay && direction === "left";
+  const isRight = showOverlay && direction === "right";
+
   return (
     <div
       className="relative w-full flex items-center justify-center"
       style={{ height: "min(480px, calc(100dvh - 250px))" }}
       data-testid="story-card"
     >
-      {/* Left label */}
-      <motion.div
-        style={{ opacity: leftOpacity, pointerEvents: "none" }}
-        className="absolute left-0 top-3 z-10"
-      >
-        <span
-          className="font-semibold"
-          style={{ color: "rgba(255,255,255,0.80)", fontSize: "15px" }}
-          data-testid="label-story-left"
-        >
-          ← {leftLabel}
-        </span>
-      </motion.div>
-
-      {/* Right label */}
-      <motion.div
-        style={{ opacity: rightOpacity, pointerEvents: "none" }}
-        className="absolute right-0 top-3 z-10"
-      >
-        <span
-          className="font-semibold"
-          style={{ color: "rgba(255,255,255,0.80)", fontSize: "15px" }}
-          data-testid="label-story-right"
-        >
-          {rightLabel} →
-        </span>
-      </motion.div>
-
       {/* Card */}
       <motion.div
         ref={cardRef}
@@ -344,80 +328,161 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           touchAction: "none",
           width: "min(300px, 85vw)",
           height: "100%",
-          background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
+          background: image
+            ? "transparent"
+            : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
           cursor: "grab",
-          overflow: image ? "hidden" : "visible",
-          padding: 0,
-          display: "flex",
-          flexDirection: "column",
+          overflow: "hidden",
+          position: "relative",
         }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
-        onDragStart={() => { wasDraggingRef.current = true; }}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
         tabIndex={0}
         aria-label="Choice card — swipe or click left or right"
         whileTap={{ cursor: "grabbing" }}
         data-testid="card-story-choice"
       >
-        {image ? (
-          <>
-            <div
-              style={{ position: "relative", width: "100%", height: "160px", flexShrink: 0 }}
-              data-testid="img-story-choice"
-            >
-              <img
-                src={image}
-                alt=""
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                  pointerEvents: "none",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(15,16,17,0.72) 100%)",
-                  pointerEvents: "none",
-                }}
-              />
-            </div>
-            <div style={{ padding: "22px 22px 26px" }}>
-              <p
-                className="type-display-md font-medium text-center"
-                style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
-              >
-                {prompt}
-              </p>
-            </div>
-          </>
-        ) : (
+        {/* Full-bleed image background */}
+        {image && (
+          <img
+            src={image}
+            alt=""
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
+            data-testid="img-story-choice"
+          />
+        )}
+
+        {/* Dark scrim for readability */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: image
+              ? "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.30) 100%)"
+              : "transparent",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
+
+        {/* Directional overlay — slides down from top on hover/drag */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 2,
+            pointerEvents: "none",
+            overflow: "hidden",
+            borderRadius: "inherit",
+          }}
+        >
+          {/* Left overlay — red tint */}
           <div
             style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "linear-gradient(180deg, rgba(220,38,38,0.72) 0%, rgba(185,28,28,0.45) 55%, rgba(0,0,0,0) 100%)",
+              transform: isLeft ? "translateY(0%)" : "translateY(-100%)",
+              opacity: isLeft ? 1 : 0,
+              transition: "transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)",
               display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              flex: 1,
-              padding: "0 26px 28px",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              paddingTop: "80px",
             }}
+            data-testid="overlay-story-left"
           >
-            <p
-              className="type-display-md font-medium text-center"
-              style={{ color: "rgba(255,255,255,0.90)", lineHeight: 1.55, margin: 0 }}
+            <span
+              className="font-semibold"
+              style={{
+                color: "rgba(255,255,255,0.95)",
+                fontSize: "18px",
+                letterSpacing: "0.01em",
+                textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+              }}
             >
-              {prompt}
-            </p>
+              ← {leftLabel}
+            </span>
           </div>
-        )}
+
+          {/* Right overlay — green tint */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "linear-gradient(180deg, rgba(22,163,74,0.72) 0%, rgba(21,128,61,0.45) 55%, rgba(0,0,0,0) 100%)",
+              transform: isRight ? "translateY(0%)" : "translateY(-100%)",
+              opacity: isRight ? 1 : 0,
+              transition: "transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms cubic-bezier(0.4, 0, 0.2, 1)",
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              paddingTop: "80px",
+            }}
+            data-testid="overlay-story-right"
+          >
+            <span
+              className="font-semibold"
+              style={{
+                color: "rgba(255,255,255,0.95)",
+                fontSize: "18px",
+                letterSpacing: "0.01em",
+                textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+              }}
+            >
+              {rightLabel} →
+            </span>
+          </div>
+        </div>
+
+        {/* Prompt anchored to top */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: "20px 22px 0",
+            zIndex: 3,
+            pointerEvents: "none",
+          }}
+        >
+          <p
+            className="type-display-md font-medium text-center"
+            style={{
+              color: "rgba(255,255,255,0.90)",
+              lineHeight: 1.55,
+              margin: 0,
+              textShadow: "0 1px 6px rgba(0,0,0,0.5)",
+            }}
+            data-testid="text-story-prompt"
+          >
+            {prompt}
+          </p>
+        </div>
       </motion.div>
     </div>
   );
