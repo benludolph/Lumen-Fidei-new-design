@@ -239,17 +239,23 @@ function StoryCard({
     return () => window.removeEventListener("keydown", handler);
   }, [chosen, triggerChoice]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (chosen || !cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const delta = e.clientX - (rect.left + rect.width / 2);
-    x.set((delta / (rect.width / 2)) * SWIPE_THRESHOLD * 1.1);
-  };
-
-  const handleMouseLeave = () => {
+  // Global mouse tracking — card leans toward whichever side of the screen the mouse is on
+  useEffect(() => {
     if (chosen) return;
-    animate(x, 0, { duration: 0.35, ease: "easeOut" });
-  };
+    const onMouseMove = (e: MouseEvent) => {
+      const normalized = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+      x.set(normalized * 160);
+    };
+    const onMouseLeaveWindow = () => {
+      animate(x, 0, { duration: 0.35, ease: "easeOut" });
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    document.documentElement.addEventListener("mouseleave", onMouseLeaveWindow);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      document.documentElement.removeEventListener("mouseleave", onMouseLeaveWindow);
+    };
+  }, [chosen, x]);
 
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (chosen) return;
@@ -332,8 +338,6 @@ function StoryCard({
         dragElastic={0.7}
         onDragEnd={handleDragEnd}
         onTap={handleTap}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
         tabIndex={0}
         aria-label="Choice card — swipe or click left or right"
         whileTap={{ cursor: "grabbing" }}
