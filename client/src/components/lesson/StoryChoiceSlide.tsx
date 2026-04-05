@@ -121,7 +121,7 @@ function NextCardFlip({
           willChange: "transform",
         }}
       >
-        {/* Front face — full-bleed image, no prompt (prompt is above the stack) */}
+        {/* Front face — top image + dark card base */}
         <div
           style={{
             backfaceVisibility: "hidden",
@@ -129,39 +129,45 @@ function NextCardFlip({
             position: "absolute",
             inset: 0,
             borderRadius: "20px",
-            background: image
-              ? "transparent"
-              : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
+            background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
             border: "1px solid rgba(255,255,255,0.10)",
             boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
             overflow: "hidden",
           }}
         >
           {image && (
-            <img
-              src={image}
-              alt=""
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-                pointerEvents: "none",
-              }}
-            />
+            <>
+              <img
+                src={image}
+                alt=""
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  width: "100%",
+                  height: "62%",
+                  objectFit: "cover",
+                  objectPosition: "center top",
+                  display: "block",
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: "45%",
+                  left: 0,
+                  right: 0,
+                  height: "20%",
+                  background: "linear-gradient(180deg, transparent 0%, #0F1011 100%)",
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+              />
+            </>
           )}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: image
-                ? "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)"
-                : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
-              pointerEvents: "none",
-            }}
-          />
         </div>
 
         {/* Back face — branded card back image */}
@@ -332,9 +338,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
           touchAction: "none",
           width: "100%",
           height: "100%",
-          background: image
-            ? "transparent"
-            : "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
+          background: "linear-gradient(160deg, #17181f 0%, #0F1011 65%)",
           border: "1px solid rgba(255,255,255,0.10)",
           borderRadius: "20px",
           boxShadow: "0 8px 40px rgba(0,0,0,0.55), 0 1px 4px rgba(0,0,0,0.3)",
@@ -352,37 +356,42 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
         whileTap={{ cursor: "grabbing" }}
         data-testid="card-story-choice"
       >
-        {/* Full-bleed image */}
+        {/* Top image — occupies upper portion, fades into card below */}
         {image && (
-          <img
-            src={image}
-            alt=""
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              display: "block",
-              pointerEvents: "none",
-              zIndex: 0,
-            }}
-            data-testid="img-story-choice"
-          />
+          <>
+            <img
+              src={image}
+              alt=""
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                width: "100%",
+                height: "62%",
+                objectFit: "cover",
+                objectPosition: "center top",
+                display: "block",
+                pointerEvents: "none",
+                zIndex: 0,
+              }}
+              data-testid="img-story-choice"
+            />
+            {/* Fade from image into card background */}
+            <div
+              style={{
+                position: "absolute",
+                top: "45%",
+                left: 0,
+                right: 0,
+                height: "20%",
+                background: "linear-gradient(180deg, transparent 0%, #0F1011 100%)",
+                pointerEvents: "none",
+                zIndex: 1,
+              }}
+            />
+          </>
         )}
-
-        {/* Permanent dark gradient scrim — bottom-weighted */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: image
-              ? "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)"
-              : "transparent",
-            pointerEvents: "none",
-            zIndex: 1,
-          }}
-        />
 
         {/* Choice underlay — dark panel slides up from bottom (Reigns-style) */}
         <div
