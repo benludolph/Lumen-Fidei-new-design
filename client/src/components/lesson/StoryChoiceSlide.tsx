@@ -4,11 +4,28 @@ import type { PanInfo } from "framer-motion";
 import swipeSound from "@assets/Shapeforms_-_The_Mint_-_Credit_Card_Swipe_1775326675495.wav";
 import cardBackImage from "@assets/Back_of_Card_(1)_1775355890768.webp";
 
+interface StatDelta {
+  performance?: number;
+  noise?: number;
+  debt?: number;
+  void?: number;
+}
+
 interface StoryChoiceItem {
   prompt: string;
   leftLabel: string;
   rightLabel: string;
   image?: string;
+  /** Stat deltas applied silently on choice */
+  effects?: { left?: StatDelta; right?: StatDelta };
+  /** Only show this card if the player's current path matches */
+  path?: string;
+  /** Set the player's path based on which way they swipe */
+  setPathOnChoice?: { left?: string; right?: string };
+  /** If true: don't advance to next card — show endText instead */
+  end?: boolean;
+  /** Replacement prompt text shown after swiping an end card */
+  endText?: { left?: string; right?: string };
 }
 
 const DEFAULT_ITEMS: StoryChoiceItem[] = [
@@ -40,10 +57,27 @@ function parseItems(content: string): StoryChoiceItem[] {
       leftLabel: p.leftLabel,
       rightLabel: p.rightLabel,
       image: typeof p.image === "string" && p.image.trim() ? p.image.trim() : undefined,
+      effects: p.effects ?? undefined,
+      path: typeof p.path === "string" ? p.path : undefined,
+      setPathOnChoice: p.setPathOnChoice ?? undefined,
+      end: p.end === true,
+      endText: p.endText ?? undefined,
     }));
     if (valid.length > 0) return valid;
   } catch {}
   return DEFAULT_ITEMS;
+}
+
+/** Find the first item index > fromIdx whose path matches (or has no path). */
+function findNextValidIdx(
+  items: StoryChoiceItem[],
+  fromIdx: number,
+  path: string | null
+): number {
+  for (let i = fromIdx + 1; i < items.length; i++) {
+    if (!items[i].path || items[i].path === path) return i;
+  }
+  return -1;
 }
 
 // ─── NextCardFlip — 3D flip, non-interactive, rendered behind current card ────
@@ -165,7 +199,7 @@ interface StoryCardHandle {
 
 interface StoryCardProps {
   item: StoryChoiceItem;
-  onChoiceStart?: () => void;
+  onChoiceStart?: (side: "left" | "right") => void;
   onMadeChoice: (choice: "left" | "right") => void;
 }
 
@@ -203,7 +237,7 @@ const StoryCard = forwardRef<StoryCardHandle, StoryCardProps>(function StoryCard
     (side: "left" | "right") => {
       if (chosenRef.current) return;
       chosenRef.current = true;
-      onChoiceStart?.();
+      onChoiceStart?.(side);
       try {
         const sfx = new Audio(swipeSound);
         sfx.volume = 0.15;
@@ -399,19 +433,25 @@ export function StoryChoiceSlide({
   onInteracted?: () => void;
   onChoice?: (choice: "left" | "right") => void;
 }) {
-  const items = parseItems(content);
+  const allItems = parseItems(content);
   const [index, setIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);
   const [isFlippingNext, setIsFlippingNext] = useState(false);
+  const [currentPath, setCurrentPath] = useState<string | null>(null);
+  const [endedMessage, setEndedMessage] = useState<string | null>(null);
+  // Silent stat accumulation — no re-render needed
+  const statsRef = useRef<Record<string, number>>({});
+  // Which index the flip will advance to — set in handleChoiceStart, used in handleFlipDone
+  const nextIdxRef = useRef<number>(-1);
   const storyCardRef = useRef<StoryCardHandle>(null);
 
-  const currentItem = items[index];
-  const nextItem = items[index + 1] ?? null;
+  const currentItem = allItems[index];
+  // Next valid item: path-filtered
+  const nextValidIdx = findNextValidIdx(allItems, index, currentPath);
+  const nextItem = nextValidIdx >= 0 ? allItems[nextValidIdx] : null;
 
   // Any click in the stack area confirms the current lean direction.
-  // If the card is neutral (centered), fall back to click-position left/right.
   const handleStackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Ignore clicks that are the tail end of a drag gesture
     if (storyCardRef.current?.wasDragging()) return;
     const currentX = storyCardRef.current?.getX() ?? 0;
     if (Math.abs(currentX) > 20) {
@@ -422,8 +462,7 @@ export function StoryChoiceSlide({
     }
   }, []);
 
-  // Listen for clicks on the hills/background area (outside the dark content card).
-  // LessonFlow dispatches this event when the user clicks directly on the background.
+  // Listen for background-area clicks dispatched from LessonFlow
   useEffect(() => {
     const handler = (e: Event) => {
       const { clientX, screenW } = (e as CustomEvent<{ clientX: number; screenW: number }>).detail;
@@ -441,29 +480,69 @@ export function StoryChoiceSlide({
 
   // Called by NextCardFlip after its flip-to-front animation completes
   const handleFlipDone = useCallback(() => {
-    setIndex((prev) => prev + 1);
+    const newIdx = nextIdxRef.current;
+    if (newIdx >= 0) setIndex(newIdx);
     setIsFlippingNext(false);
+    nextIdxRef.current = -1;
   }, []);
 
-  // Called immediately when user commits a choice (before exit animation)
-  const handleChoiceStart = useCallback(() => {
-    if (nextItem) {
+  // Called immediately when user commits a choice — before exit animation.
+  // direction is now forwarded so we can pre-compute path + next index.
+  const handleChoiceStart = useCallback((side: "left" | "right") => {
+    const item = allItems[index];
+    // end cards don't flip to a next card
+    if (item?.end) return;
+    // Compute path after this choice to find the correct next item
+    const newPath =
+      item?.setPathOnChoice && side in item.setPathOnChoice
+        ? (item.setPathOnChoice[side] ?? null)
+        : currentPath;
+    const newNextIdx = findNextValidIdx(allItems, index, newPath);
+    nextIdxRef.current = newNextIdx;
+    if (newNextIdx >= 0) {
       setIsFlippingNext(true);
     }
-  }, [nextItem]);
+  }, [allItems, index, currentPath]);
 
-  // Called after the current card's exit animation completes (220ms after choice)
+  // Called after the current card's exit animation completes (500ms after choice)
   const handleMadeChoice = useCallback(
     (choice: "left" | "right") => {
+      const item = allItems[index];
       onChoice?.(choice);
-      if (!nextItem) {
+
+      // ── Apply stat effects silently ──
+      const delta = item?.effects?.[choice];
+      if (delta) {
+        Object.entries(delta).forEach(([key, val]) => {
+          if (typeof val === "number") {
+            statsRef.current[key] = (statsRef.current[key] ?? 0) + val;
+          }
+        });
+      }
+
+      // ── Set path ──
+      if (item?.setPathOnChoice && choice in item.setPathOnChoice) {
+        const newPath = item.setPathOnChoice[choice] ?? null;
+        setCurrentPath(newPath);
+      }
+
+      // ── End card: replace prompt, don't advance ──
+      if (item?.end) {
+        const msg = item?.endText?.[choice] ?? "Your choice has been made.";
+        setEndedMessage(msg);
+        setIsDone(true);
+        onInteracted?.();
+        return;
+      }
+
+      // ── Normal advance: if no next item exists, mark done ──
+      if (nextIdxRef.current < 0) {
         onInteracted?.();
         setIsDone(true);
       }
-      // If nextItem exists: flip was already triggered via handleChoiceStart;
-      // handleFlipDone (via onTransitionEnd) will advance the index.
+      // If there is a next item: handleFlipDone (via onTransitionEnd) advances the index.
     },
-    [nextItem, onChoice, onInteracted]
+    [allItems, index, onChoice, onInteracted]
   );
 
   if (isDone) {
@@ -476,10 +555,10 @@ export function StoryChoiceSlide({
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="type-body-md"
-          style={{ color: "var(--white-30)" }}
+          className="type-body-md text-center"
+          style={{ color: "var(--white-30)", maxWidth: "370px" }}
         >
-          Your choice has been made.
+          {endedMessage ?? "Your choice has been made."}
         </motion.p>
       </div>
     );
