@@ -889,7 +889,7 @@ export function LessonSlide({
 
   return (
     <div
-      className={cn("flex-1", type === "story_choice" ? "overflow-visible" : (type === "image_carousel" || type === "before_after") ? "overflow-hidden" : "overflow-y-auto", animationClass)}
+      className={cn("flex-1", type === "story_choice" ? "overflow-visible" : type === "image_carousel" ? "overflow-hidden" : "overflow-y-auto", animationClass)}
       data-testid={`lesson-slide-${type}`}
     >
       <div className={cn("flex flex-col min-h-full", type === "story_choice" ? "justify-start" : "justify-center")}>

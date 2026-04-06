@@ -3,6 +3,8 @@ import { useRef, useState, useCallback, useEffect } from "react";
 interface BeforeAfterContent {
   beforeImage?: string;
   afterImage?: string;
+  headline?: string;
+  body?: string;
 }
 
 function parse(content: string): BeforeAfterContent {
@@ -11,6 +13,8 @@ function parse(content: string): BeforeAfterContent {
     return {
       beforeImage: typeof p.beforeImage === "string" ? p.beforeImage : undefined,
       afterImage: typeof p.afterImage === "string" ? p.afterImage : undefined,
+      headline: typeof p.headline === "string" ? p.headline : undefined,
+      body: typeof p.body === "string" ? p.body : undefined,
     };
   } catch {
     return {};
@@ -26,13 +30,12 @@ export function BeforeAfterSlide({
   content: string;
   onInteracted?: () => void;
 }) {
-  const { beforeImage, afterImage } = parse(content);
+  const { beforeImage, afterImage, headline, body } = parse(content);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState(0.5); // 0–1, default centred
+  const [position, setPosition] = useState(0.5);
   const dragging = useRef(false);
 
-  // Signal interacted on mount — display-only slide
   useEffect(() => {
     onInteracted?.();
   }, []);
@@ -71,16 +74,19 @@ export function BeforeAfterSlide({
   const pct = `${(position * 100).toFixed(2)}%`;
   const rightPct = `${((1 - position) * 100).toFixed(2)}%`;
 
+  const hasText = !!(headline || body);
+  const bodyLines = (body ?? "").split("\n").filter(Boolean);
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
         width: "100%",
-        padding: "20px 16px 28px",
+        padding: hasText ? "20px 16px 28px" : "20px 16px",
         boxSizing: "border-box",
+        gap: 20,
       }}
       data-testid="slide-before-after"
     >
@@ -95,7 +101,9 @@ export function BeforeAfterSlide({
           position: "relative",
           width: "100%",
           maxWidth: 480,
-          aspectRatio: "4 / 3",
+          /* Match media slide height cap exactly */
+          height: "40vh",
+          maxHeight: "35vh",
           borderRadius: 12,
           overflow: "hidden",
           background: "#0F1011",
@@ -103,10 +111,11 @@ export function BeforeAfterSlide({
           touchAction: "none",
           userSelect: "none",
           boxShadow: "0 2px 24px rgba(0,0,0,0.5)",
+          flexShrink: 0,
         }}
         data-testid="before-after-container"
       >
-        {/* After image (bottom — full width) */}
+        {/* After image — full width base layer */}
         {afterImage && (
           <img
             src={afterImage}
@@ -124,7 +133,7 @@ export function BeforeAfterSlide({
           />
         )}
 
-        {/* Before image (top — clipped to left portion) */}
+        {/* Before image — clipped to the left portion */}
         {beforeImage && (
           <img
             src={beforeImage}
@@ -179,16 +188,75 @@ export function BeforeAfterSlide({
           }}
           data-testid="before-after-handle"
         >
-          {/* Left chevron */}
           <svg width="7" height="11" viewBox="0 0 7 11" fill="none">
             <path d="M6 1L1.5 5.5L6 10" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          {/* Right chevron */}
           <svg width="7" height="11" viewBox="0 0 7 11" fill="none">
             <path d="M1 1L5.5 5.5L1 10" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
+
+      {/* ── Optional text content ── */}
+      {hasText && (
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          {headline && (
+            <h2
+              style={{
+                fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
+                fontSize: "clamp(19px, 5vw, 24px)",
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.95)",
+                lineHeight: 1.25,
+                margin: 0,
+                letterSpacing: "-0.01em",
+              }}
+              data-testid="before-after-headline"
+            >
+              {headline}
+            </h2>
+          )}
+
+          {bodyLines.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {bodyLines.map((line, i) => {
+                const isBullet = /^[•\-\*]/.test(line);
+                const text = isBullet ? line.replace(/^[•\-\*]\s*/, "") : line;
+                return (
+                  <p
+                    key={i}
+                    style={{
+                      fontFamily: "'Afacad', system-ui, sans-serif",
+                      fontSize: "15px",
+                      fontWeight: 400,
+                      color: "rgba(255,255,255,0.70)",
+                      lineHeight: 1.5,
+                      margin: 0,
+                      paddingLeft: isBullet ? 16 : 0,
+                      position: "relative",
+                    }}
+                    data-testid={`before-after-body-${i}`}
+                  >
+                    {isBullet && (
+                      <span style={{ position: "absolute", left: 0, color: "rgba(255,255,255,0.35)" }}>
+                        •
+                      </span>
+                    )}
+                    {text}
+                  </p>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

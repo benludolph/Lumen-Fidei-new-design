@@ -2980,6 +2980,8 @@ const STORY_CHOICE_DEFAULT = JSON.stringify({
 const BEFORE_AFTER_DEFAULT = JSON.stringify({
   beforeImage: "",
   afterImage: "",
+  headline: "",
+  body: "",
 }, null, 2);
 
 const IMAGE_CAROUSEL_DEFAULT = JSON.stringify({
