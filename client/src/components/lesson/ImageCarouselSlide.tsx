@@ -49,7 +49,7 @@ export function ImageCarouselSlide({
     if (singlePassW === 0) return;
     controlRef.current?.stop();
     // Animate one full pass then loop
-    const speed = 40; // px per second
+    const speed = 18; // px per second
     const duration = singlePassW / speed;
     controlRef.current = animate(x, -singlePassW, {
       duration,
@@ -94,7 +94,6 @@ export function ImageCarouselSlide({
                 objectFit: "cover",
                 objectPosition: "center",
                 borderRadius: 6,
-                border: "1px solid rgba(255,255,255,0.25)",
                 flexShrink: 0,
                 display: "block",
               }}
