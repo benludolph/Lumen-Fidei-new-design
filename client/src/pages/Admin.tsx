@@ -2321,6 +2321,9 @@ const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media"
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
+const TRACK_A_EXCLUDED = new Set(["action", "knowledge_check", "scenario"]);
+const TRACK_A_SLIDE_TYPES = SLIDE_TYPES.filter(t => !TRACK_A_EXCLUDED.has(t));
+
 const SLIDE_TYPE_LABELS: Record<string, string> = {
   text: "Text",
   multi_select: "Multi Select",
@@ -4577,7 +4580,7 @@ function TrackAContentManagementView() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {SLIDE_TYPES.map(t => (
+                                  {TRACK_A_SLIDE_TYPES.map(t => (
                                     <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
                                   ))}
                                 </SelectContent>
@@ -4696,7 +4699,7 @@ function TrackAContentManagementView() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SLIDE_TYPES.map(t => (
+                    {TRACK_A_SLIDE_TYPES.map(t => (
                       <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
                     ))}
                   </SelectContent>
