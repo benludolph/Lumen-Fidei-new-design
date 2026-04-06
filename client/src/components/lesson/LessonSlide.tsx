@@ -13,6 +13,7 @@ import { HtmlContent } from "@/components/ui/html-content";
 import { ChatFlowSlide } from "./ChatFlowSlide";
 import { CrossGridSlide } from "./CrossGridSlide";
 import { StoryChoiceSlide } from "./StoryChoiceSlide";
+import { ImageCarouselSlide } from "./ImageCarouselSlide";
 
 import answersImg from "@assets/Answers_desktop_1775146558812.webp";
 import controlImg from "@assets/Control_desktop_1775146558812.webp";
@@ -54,6 +55,7 @@ export type SlideType =
   | "path_selector"
   | "cross_grid"
   | "story_choice"
+  | "image_carousel"
   | "scripture_select"
   | "scripture_reflection";
 
@@ -885,7 +887,7 @@ export function LessonSlide({
 
   return (
     <div
-      className={cn("flex-1", type === "story_choice" ? "overflow-visible" : "overflow-y-auto", animationClass)}
+      className={cn("flex-1", type === "story_choice" ? "overflow-visible" : type === "image_carousel" ? "overflow-hidden" : "overflow-y-auto", animationClass)}
       data-testid={`lesson-slide-${type}`}
     >
       <div className={cn("flex flex-col min-h-full", type === "story_choice" ? "justify-start" : "justify-center")}>
@@ -945,6 +947,8 @@ export function LessonSlide({
           <CrossGridSlide content={content} onInteracted={onInteracted} />
         ) : type === "story_choice" ? (
           <StoryChoiceSlide content={content} onInteracted={onInteracted} />
+        ) : type === "image_carousel" ? (
+          <ImageCarouselSlide content={content} onInteracted={onInteracted} />
         ) : type === "scripture_select" ? (
           <ScriptureSelectSlide
             content={content}
