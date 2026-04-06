@@ -889,10 +889,10 @@ export function LessonSlide({
 
   return (
     <div
-      className={cn("flex-1", type === "story_choice" ? "overflow-visible" : type === "image_carousel" ? "overflow-hidden" : "overflow-y-auto", animationClass)}
+      className={cn("flex-1", type === "before_after" ? "h-full" : "", type === "story_choice" ? "overflow-visible" : type === "image_carousel" ? "overflow-hidden" : "overflow-y-auto", animationClass)}
       data-testid={`lesson-slide-${type}`}
     >
-      <div className={cn("flex flex-col min-h-full", type === "story_choice" ? "justify-start" : "justify-center")}>
+      <div className={cn("flex flex-col", type === "before_after" ? "h-full" : "min-h-full", type === "story_choice" ? "justify-start" : "justify-center")}>
         {type === "text" ? (
           <TextSlide content={content} />
         ) : type === "multi_select" ? (

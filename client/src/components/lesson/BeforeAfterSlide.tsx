@@ -82,10 +82,8 @@ export function BeforeAfterSlide({
       style={{
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
         width: "100%",
-        padding: hasText ? "20px 16px 28px" : "20px 16px",
-        boxSizing: "border-box",
+        height: hasText ? undefined : "100%",
         gap: 20,
       }}
       data-testid="slide-before-after"
@@ -100,18 +98,13 @@ export function BeforeAfterSlide({
         style={{
           position: "relative",
           width: "100%",
-          maxWidth: 480,
-          /* Match media slide height cap exactly */
-          height: "40vh",
-          maxHeight: "35vh",
-          borderRadius: 12,
+          flex: hasText ? "0 0 auto" : "1 1 auto",
+          height: hasText ? "35vh" : "100%",
           overflow: "hidden",
           background: "#0F1011",
           cursor: "ew-resize",
           touchAction: "none",
           userSelect: "none",
-          boxShadow: "0 2px 24px rgba(0,0,0,0.5)",
-          flexShrink: 0,
         }}
         data-testid="before-after-container"
       >
