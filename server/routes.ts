@@ -2955,5 +2955,24 @@ As you move into Week 2, continue these daily practices. They are building a fou
     }
     console.log("Testimonies seeded/corrected.");
 
+    // One-time migration: remove action/knowledge_check/scenario slides from Track A
+    const migrationResult = await db.execute(sql`
+      UPDATE track_a_content
+      SET slides = (
+        SELECT COALESCE(json_agg(slide ORDER BY idx), '[]'::json)
+        FROM json_array_elements(slides) WITH ORDINALITY AS t(slide, idx)
+        WHERE slide->>'type' NOT IN ('action', 'knowledge_check', 'scenario')
+      )
+      WHERE slides IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM json_array_elements(slides) s
+          WHERE s->>'type' IN ('action', 'knowledge_check', 'scenario')
+        )
+    `);
+    const cleaned = (migrationResult as any)?.rowCount ?? 0;
+    if (cleaned > 0) {
+      console.log(`Migration: removed action/knowledge_check/scenario slides from ${cleaned} Track A day(s).`);
+    }
+
     console.log("Seeding complete.");
 }
