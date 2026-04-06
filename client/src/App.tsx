@@ -9,7 +9,6 @@ import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
 import Begin from "@/pages/Begin";
 import Dashboard from "@/pages/Dashboard";
-import Day0 from "@/pages/Day0";
 import MentorPortal from "@/pages/MentorPortal";
 import MenteeDetails from "@/pages/MenteeDetails";
 import Messages from "@/pages/Messages";
@@ -65,10 +64,6 @@ function Router() {
 
       {/* Root redirect */}
       <Route path="/" component={RootRedirect} />
-
-      <Route path="/day0">
-        <ProtectedRoute component={Day0} allowedRoles={['participant']} />
-      </Route>
 
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} allowedRoles={['participant']} />

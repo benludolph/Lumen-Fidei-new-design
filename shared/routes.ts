@@ -302,7 +302,6 @@ export const api = {
             mentorId: z.number().nullable(),
             mentorName: z.string().nullable(),
             startDate: z.string().nullable(),
-            agreementSignedAt: z.string().nullable(),
             currentDay: z.number(),
             daysCompleted: z.number(),
             totalPossibleDays: z.number(),
@@ -340,32 +339,6 @@ export const api = {
         }),
         400: errorSchemas.validation,
         403: errorSchemas.forbidden,
-      },
-    },
-    day0Settings: {
-      get: {
-        method: 'GET' as const,
-        path: '/api/admin/day0-settings',
-        responses: {
-          200: z.object({ 
-            introVideoUrl: z.string().nullable(), 
-            agreementText: z.string().nullable() 
-          }),
-          403: errorSchemas.forbidden,
-        },
-      },
-      update: {
-        method: 'POST' as const,
-        path: '/api/admin/day0-settings',
-        input: z.object({ 
-          introVideoUrl: z.string().optional(),
-          agreementText: z.string().optional()
-        }),
-        responses: {
-          200: z.object({ message: z.string() }),
-          400: errorSchemas.validation,
-          403: errorSchemas.forbidden,
-        },
       },
     },
     exportUsers: {
@@ -434,27 +407,6 @@ export const api = {
         200: z.object({ message: z.string(), counts: z.record(z.number()) }),
         400: errorSchemas.validation,
         403: errorSchemas.forbidden,
-      },
-    },
-  },
-  day0: {
-    get: {
-      method: 'GET' as const,
-      path: '/api/day0',
-      responses: {
-        200: z.object({ 
-          introVideoUrl: z.string().nullable(), 
-          agreementText: z.string().nullable(),
-          agreementSigned: z.boolean()
-        }),
-      },
-    },
-    signAgreement: {
-      method: 'POST' as const,
-      path: '/api/day0/sign-agreement',
-      responses: {
-        200: z.object({ message: z.string() }),
-        400: errorSchemas.validation,
       },
     },
   },

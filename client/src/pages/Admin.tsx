@@ -364,7 +364,6 @@ type UserDetailsData = {
     mentorId: number | null;
     mentorName: string | null;
     startDate: string | null;
-    agreementSignedAt: string | null;
     currentDay: number;
     daysCompleted: number;
     totalPossibleDays: number;
@@ -485,12 +484,6 @@ function UserDetailsDialog({ userId, userName }: { userId: number; userName: str
                     <span className="text-muted-foreground">Start Date:</span>
                     <p className="font-medium">
                       {data.user.startDate ? format(new Date(data.user.startDate), "MMM d, yyyy") : "-"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Agreement Signed:</span>
-                    <p className="font-medium">
-                      {data.user.agreementSignedAt ? format(new Date(data.user.agreementSignedAt), "MMM d, yyyy") : "No"}
                     </p>
                   </div>
                 </div>
@@ -1135,8 +1128,6 @@ function CohortSettingsView() {
         </CardContent>
       </Card>
 
-      <Day0SettingsCard />
-
       <DataExportCard />
 
       <BackupRestoreCard />
@@ -1718,124 +1709,6 @@ function DataExportCard() {
             Export Progress
           </Button>
         </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Day0SettingsCard() {
-  const { toast } = useToast();
-  const [introVideoUrl, setIntroVideoUrl] = useState("");
-  const [introContent, setIntroContent] = useState("");
-  const [agreementText, setAgreementText] = useState("");
-  
-  const { data: day0Data, isLoading } = useQuery<{ introVideoUrl: string | null; introContent: string | null; agreementText: string | null }>({
-    queryKey: ["/api/admin/day0-settings"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/day0-settings", { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch Day 0 settings");
-      return res.json();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: { introVideoUrl?: string; introContent?: string; agreementText?: string }) => {
-      const res = await apiRequest("POST", "/api/admin/day0-settings", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/day0-settings"] });
-      toast({ title: "Day 0 settings updated" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update Day 0 settings", variant: "destructive" });
-    },
-  });
-
-  const handleSave = () => {
-    updateMutation.mutate({
-      introVideoUrl: introVideoUrl || day0Data?.introVideoUrl || "",
-      introContent: introContent || day0Data?.introContent || "",
-      agreementText: agreementText || day0Data?.agreementText || "",
-    });
-  };
-
-  const currentVideoUrl = day0Data?.introVideoUrl || "";
-  const currentIntroContent = day0Data?.introContent || "";
-  const currentAgreementText = day0Data?.agreementText || "";
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <BookOpen className="w-5 h-5" />
-          Day 0 Settings
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
-        ) : (
-          <>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2">Introduction Video</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  YouTube video URL for the program introduction video shown on Day 0.
-                </p>
-                <Input 
-                  type="url" 
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={introVideoUrl || currentVideoUrl}
-                  onChange={(e) => setIntroVideoUrl(e.target.value)}
-                  data-testid="input-day0-video-url"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2">Introduction Content</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Introductory text shown to participants on Day 0 before the agreement. Use this for program goals, overview, or orientation content.
-                </p>
-                <Textarea 
-                  placeholder="Enter introduction content (e.g., Goal of 30 Days, what to expect...)"
-                  value={introContent || currentIntroContent}
-                  onChange={(e) => setIntroContent(e.target.value)}
-                  rows={6}
-                  className="resize-none"
-                  data-testid="textarea-day0-intro-content"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2">Participant Agreement</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  The commitment agreement text that participants must accept before starting the program.
-                </p>
-                <Textarea 
-                  placeholder="Enter the participant agreement text..."
-                  value={agreementText || currentAgreementText}
-                  onChange={(e) => setAgreementText(e.target.value)}
-                  rows={8}
-                  className="resize-none"
-                  data-testid="textarea-day0-agreement"
-                />
-              </div>
-            </div>
-
-            <Button 
-              onClick={handleSave} 
-              disabled={updateMutation.isPending}
-              data-testid="button-save-day0-settings"
-            >
-              {updateMutation.isPending ? "Saving..." : "Save Day 0 Settings"}
-            </Button>
-          </>
-        )}
       </CardContent>
     </Card>
   );

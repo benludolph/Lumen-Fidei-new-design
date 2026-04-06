@@ -26,7 +26,6 @@ declare global {
       track: "A" | "B" | "C" | null;
       mentorId: number | null;
       startDate: Date | null;
-      agreementSignedAt: Date | null;
     }
   }
 }

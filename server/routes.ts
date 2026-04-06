@@ -1006,15 +1006,10 @@ export async function registerRoutes(
       const input = api.admin.startNewCohort.input.parse(req.body);
       
       let completionsCleared = 0;
-      let agreementsCleared = 0;
       
       if (input.clearCompletions) {
         completionsCleared = await storage.clearAllPrayerCompletions();
       }
-      
-      // Always clear agreement signatures when starting a new cohort
-      // This forces all users back to Day 0
-      agreementsCleared = await storage.clearAllAgreementSignatures();
       
       await storage.setCohortSetting("cohort_start_date", input.startDate);
       
@@ -1022,7 +1017,6 @@ export async function registerRoutes(
         message: "New cohort started successfully",
         startDate: input.startDate,
         completionsCleared,
-        agreementsCleared
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -1131,7 +1125,6 @@ export async function registerRoutes(
         mentorId: user.mentorId,
         mentorName,
         startDate: user.startDate?.toISOString() || null,
-        agreementSignedAt: user.agreementSignedAt?.toISOString() || null,
         currentDay,
         daysCompleted,
         totalPossibleDays: currentDay,
@@ -1144,89 +1137,6 @@ export async function registerRoutes(
         completedAt: c.completedAt.toISOString(),
       })),
     });
-  });
-
-  // === Day 0 Settings (Admin) ===
-  
-  app.get(api.admin.day0Settings.get.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
-    const introContent = await storage.getCohortSetting("day0_intro_content");
-    const agreementText = await storage.getCohortSetting("day0_agreement_text");
-    res.json({ introVideoUrl, introContent, agreementText });
-  });
-
-  app.post(api.admin.day0Settings.update.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const { introVideoUrl, introContent, agreementText } = req.body;
-    
-    if (introVideoUrl !== undefined) {
-      await storage.setCohortSetting("day0_intro_video_url", introVideoUrl);
-    }
-    if (introContent !== undefined) {
-      await storage.setCohortSetting("day0_intro_content", introContent);
-    }
-    if (agreementText !== undefined) {
-      await storage.setCohortSetting("day0_agreement_text", agreementText);
-    }
-    
-    res.json({ message: "Day 0 settings updated" });
-  });
-
-  // === Day 0 (User) ===
-  
-  app.get(api.day0.get.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    // Day 0 agreement requires all prelim modules completed first
-    if (req.user!.role === 'participant') {
-      const [allModules, completions] = await Promise.all([
-        storage.getPrelimModules(),
-        storage.getUserPrelimCompletions(req.user!.id),
-      ]);
-      if (completions.length < allModules.length) {
-        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
-      }
-    }
-    
-    const introVideoUrl = await storage.getCohortSetting("day0_intro_video_url");
-    const agreementText = await storage.getCohortSetting("day0_agreement_text");
-    const agreementSigned = !!req.user!.agreementSignedAt;
-    
-    const day0TrackAContent = await storage.getTrackAContent(0);
-    const introSlides = day0TrackAContent?.slides || null;
-    
-    const introContent = await storage.getCohortSetting("day0_intro_content");
-    
-    res.json({ introVideoUrl, introContent, introSlides, agreementText, agreementSigned });
-  });
-
-  app.post(api.day0.signAgreement.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    // Agreement requires all prelim modules completed first
-    if (req.user!.role === 'participant') {
-      const [allModules, completions] = await Promise.all([
-        storage.getPrelimModules(),
-        storage.getUserPrelimCompletions(req.user!.id),
-      ]);
-      if (completions.length < allModules.length) {
-        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
-      }
-    }
-    
-    if (req.user!.agreementSignedAt) {
-      return res.status(400).json({ message: "Agreement already signed" });
-    }
-    
-    await storage.updateUser(req.user!.id, { agreementSignedAt: new Date() });
-    res.json({ message: "Agreement signed successfully" });
   });
 
   // === Admin CSV Export Routes ===
@@ -1251,7 +1161,7 @@ export async function registerRoutes(
   app.get(api.admin.exportUsers.path, requireRole('admin'), async (req, res) => {
     const users = await storage.getAllUsers();
     
-    const headers = ['ID', 'Name', 'Email', 'Role', 'Track', 'Mentor ID', 'Start Date', 'Agreement Signed'];
+    const headers = ['ID', 'Name', 'Email', 'Role', 'Track', 'Mentor ID', 'Start Date'];
     const rows = users.map(u => [
       escapeCSV(u.id),
       escapeCSV(u.name),
@@ -1260,7 +1170,6 @@ export async function registerRoutes(
       escapeCSV(u.track),
       escapeCSV(u.mentorId),
       escapeCSV(u.startDate ? new Date(u.startDate).toISOString() : null),
-      escapeCSV(u.agreementSignedAt ? new Date(u.agreementSignedAt).toISOString() : null),
     ].join(','));
     
     const csv = [headers.join(','), ...rows].join('\n');
