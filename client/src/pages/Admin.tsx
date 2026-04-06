@@ -3078,6 +3078,115 @@ const BEFORE_AFTER_DEFAULT = JSON.stringify({
   body: "",
 }, null, 2);
 
+function CarouselImageUpload({ index, editorIndex, currentUrl, onUploaded, onRemove }: { index: number; editorIndex: number; currentUrl: string; onUploaded: (url: string) => void; onRemove: () => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      onUploaded(url);
+    } catch (err) {
+      console.error("Carousel image upload error:", err instanceof Error ? err.message : err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [onUploaded]);
+
+  return (
+    <div className="flex items-center gap-2" data-testid={`carousel-img-row-${editorIndex}-${index}`}>
+      {currentUrl ? (
+        <img src={currentUrl} alt="" className="w-12 h-12 rounded object-cover border shrink-0" data-testid={`carousel-img-preview-${editorIndex}-${index}`} />
+      ) : (
+        <div className="w-12 h-12 rounded border bg-muted shrink-0 flex items-center justify-center">
+          <ImageIcon className="w-4 h-4 text-muted-foreground" />
+        </div>
+      )}
+      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleUpload} data-testid={`carousel-img-input-${editorIndex}-${index}`} />
+      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-1 flex-1" data-testid={`carousel-img-upload-${editorIndex}-${index}`}>
+        <Upload className="w-3 h-3" />
+        {uploading ? "Uploading..." : currentUrl ? "Change" : "Upload"}
+      </Button>
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive shrink-0" onClick={onRemove} data-testid={`carousel-img-remove-${editorIndex}-${index}`}>
+        <Trash2 className="w-3 h-3" />
+      </Button>
+    </div>
+  );
+}
+
+function ImageCarouselSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let parsed: { headline: string; body: string; images: string[] } = { headline: "", body: "", images: [] };
+  try {
+    const p = JSON.parse(content || "{}");
+    parsed = {
+      headline: p.headline ?? "",
+      body: p.body ?? "",
+      images: Array.isArray(p.images) ? p.images : [],
+    };
+  } catch {}
+
+  const update = (next: typeof parsed) => onChange(JSON.stringify(next));
+
+  const setImage = (i: number, url: string) => {
+    const imgs = [...parsed.images];
+    imgs[i] = url;
+    update({ ...parsed, images: imgs });
+  };
+  const removeImage = (i: number) => update({ ...parsed, images: parsed.images.filter((_, idx) => idx !== i) });
+  const addImage = () => update({ ...parsed, images: [...parsed.images, ""] });
+
+  return (
+    <div className="space-y-4" data-testid={`carousel-editor-${index}`}>
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Images</label>
+        {parsed.images.map((url, i) => (
+          <CarouselImageUpload
+            key={i}
+            index={i}
+            editorIndex={index}
+            currentUrl={url}
+            onUploaded={(u) => setImage(i, u)}
+            onRemove={() => removeImage(i)}
+          />
+        ))}
+        <Button variant="outline" size="sm" onClick={addImage} className="gap-2 w-full" data-testid={`carousel-add-image-${index}`}>
+          <Plus className="w-3 h-3" /> Add Image
+        </Button>
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Headline (optional)</label>
+        <input
+          type="text"
+          value={parsed.headline}
+          onChange={(e) => update({ ...parsed, headline: e.target.value })}
+          placeholder="e.g. Many sins begin as attempts to meet real needs…"
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-carousel-headline-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Body text (optional — use • for bullets)</label>
+        <textarea
+          value={parsed.body}
+          onChange={(e) => update({ ...parsed, body: e.target.value })}
+          placeholder={"e.g. A person may want love but look for it in destructive places.\n• Bullet point"}
+          rows={4}
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-y"
+          data-testid={`textarea-carousel-body-${index}`}
+        />
+      </div>
+    </div>
+  );
+}
+
 const IMAGE_CAROUSEL_DEFAULT = JSON.stringify({
   headline: "Many sins begin as attempts to meet real needs in unhealthy ways.",
   body: "Many sins begin as attempts to meet real needs in unhealthy ways.\n• A person may want love but look for it in destructive places.\n• A person may want peace but turn toward habits that numb pain.\n• A person may want control and begin manipulating others.\nSin often grows from wounded desires.",
@@ -4630,7 +4739,13 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : (slide.type === "cross_grid" || slide.type === "story_choice" || slide.type === "image_carousel") ? (
+                            ) : slide.type === "image_carousel" ? (
+                              <ImageCarouselSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : (slide.type === "cross_grid" || slide.type === "story_choice") ? (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
                                 <textarea
@@ -5567,7 +5682,13 @@ function PrelimContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : (slide.type === "cross_grid" || slide.type === "story_choice" || slide.type === "image_carousel") ? (
+                            ) : slide.type === "image_carousel" ? (
+                              <ImageCarouselSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : (slide.type === "cross_grid" || slide.type === "story_choice") ? (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
                                 <textarea
