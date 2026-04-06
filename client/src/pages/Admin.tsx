@@ -2943,6 +2943,100 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
   );
 }
 
+function BeforeAfterImageUpload({ label, currentUrl, onUploaded, testPrefix }: { label: string; currentUrl: string; onUploaded: (url: string) => void; testPrefix: string }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      onUploaded(url);
+    } catch (err) {
+      console.error("Before/after upload error:", err instanceof Error ? err.message : err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [onUploaded]);
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      {currentUrl && (
+        <img src={currentUrl} alt={label} className="w-full h-24 object-cover rounded-md border" data-testid={`${testPrefix}-preview`} />
+      )}
+      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleUpload} data-testid={`${testPrefix}-input`} />
+      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 w-full" data-testid={`${testPrefix}-button`}>
+        <Upload className="w-3 h-3" />
+        {uploading ? "Uploading..." : currentUrl ? "Change" : "Upload"}
+      </Button>
+    </div>
+  );
+}
+
+function BeforeAfterSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let parsed: { beforeImage: string; afterImage: string; headline: string; body: string } = { beforeImage: "", afterImage: "", headline: "", body: "" };
+  try {
+    const p = JSON.parse(content || "{}");
+    parsed = {
+      beforeImage: p.beforeImage ?? "",
+      afterImage: p.afterImage ?? "",
+      headline: p.headline ?? "",
+      body: p.body ?? "",
+    };
+  } catch {}
+
+  const update = (next: typeof parsed) => onChange(JSON.stringify(next));
+
+  return (
+    <div className="space-y-4" data-testid={`before-after-editor-${index}`}>
+      <div className="grid grid-cols-2 gap-3">
+        <BeforeAfterImageUpload
+          label="Before Image"
+          currentUrl={parsed.beforeImage}
+          onUploaded={(url) => update({ ...parsed, beforeImage: url })}
+          testPrefix={`before-img-${index}`}
+        />
+        <BeforeAfterImageUpload
+          label="After Image"
+          currentUrl={parsed.afterImage}
+          onUploaded={(url) => update({ ...parsed, afterImage: url })}
+          testPrefix={`after-img-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Headline (optional)</label>
+        <input
+          type="text"
+          value={parsed.headline}
+          onChange={(e) => update({ ...parsed, headline: e.target.value })}
+          placeholder="e.g. The same need, two very different paths."
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-before-after-headline-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Body text (optional — use • for bullets)</label>
+        <textarea
+          value={parsed.body}
+          onChange={(e) => update({ ...parsed, body: e.target.value })}
+          placeholder={"e.g. Real needs are not the problem.\n• The direction we take them is."}
+          rows={4}
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-y"
+          data-testid={`textarea-before-after-body-${index}`}
+        />
+      </div>
+    </div>
+  );
+}
+
 const PATH_SELECTOR_DEFAULT = JSON.stringify({
   headline: "Pick a pathway to explore",
   options: [
@@ -4530,7 +4624,13 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : (slide.type === "cross_grid" || slide.type === "story_choice" || slide.type === "image_carousel" || slide.type === "before_after") ? (
+                            ) : slide.type === "before_after" ? (
+                              <BeforeAfterSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : (slide.type === "cross_grid" || slide.type === "story_choice" || slide.type === "image_carousel") ? (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
                                 <textarea
@@ -5461,7 +5561,13 @@ function PrelimContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : (slide.type === "cross_grid" || slide.type === "story_choice" || slide.type === "image_carousel" || slide.type === "before_after") ? (
+                            ) : slide.type === "before_after" ? (
+                              <BeforeAfterSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : (slide.type === "cross_grid" || slide.type === "story_choice" || slide.type === "image_carousel") ? (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
                                 <textarea
