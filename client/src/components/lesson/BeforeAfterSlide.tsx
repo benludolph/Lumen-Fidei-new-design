@@ -84,7 +84,7 @@ export function BeforeAfterSlide({
         flexDirection: "column",
         width: "100%",
         height: hasText ? undefined : "100%",
-        gap: 20,
+        gap: 32,
       }}
       data-testid="slide-before-after"
     >
