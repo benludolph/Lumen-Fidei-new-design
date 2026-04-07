@@ -56,6 +56,7 @@ export function LessonFlow({
   const [pendingInjectedSlide, setPendingInjectedSlide] = useState<{ type: SlideType; content: string } | null>(null);
   const [isShowingInjected, setIsShowingInjected] = useState(false);
   const [scriptureSelections, setScriptureSelections] = useState<Record<number, ScriptureSelection>>({});
+  const [practiceChunkSelections, setPracticeChunkSelections] = useState<Record<number, number>>({});
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const overlayContextKey =
@@ -232,6 +233,10 @@ export function LessonFlow({
     setScriptureSelections((prev) => ({ ...prev, [currentSlide]: selection }));
   }, [currentSlide]);
 
+  const handlePracticeChunkSelect = useCallback((chunkIndex: number) => {
+    setPracticeChunkSelections((prev) => ({ ...prev, [currentSlide]: chunkIndex }));
+  }, [currentSlide]);
+
   const handleContinue = useCallback(() => {
     if (overlayConfig?.enabled && !overlayShownRef.current) {
       overlayShownRef.current = true;
@@ -382,6 +387,8 @@ export function LessonFlow({
       onPathSelected={currentSlideData.type === "path_selector" && !isShowingInjected ? handlePathSelected : undefined}
       onScriptureSelect={effectiveSlideData.type === "scripture_select" ? handleScriptureSelect : undefined}
       scriptureSelection={currentScriptureSelection ?? undefined}
+      practiceChunkIndex={effectiveSlideData.type === "scripture_practice" ? (practiceChunkSelections[currentSlide] ?? undefined) : undefined}
+      onPracticeChunkSelect={effectiveSlideData.type === "scripture_practice" ? handlePracticeChunkSelect : undefined}
     />
   );
 

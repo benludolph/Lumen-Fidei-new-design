@@ -802,10 +802,14 @@ function ScripturePracticeSlide({
   content,
   onTimerComplete,
   alreadyDone,
+  existingChunkIndex,
+  onChunkSelect,
 }: {
   content: string;
   onTimerComplete?: () => void;
   alreadyDone?: boolean;
+  existingChunkIndex?: number;
+  onChunkSelect?: (idx: number) => void;
 }) {
   const data = useMemo(() => {
     try {
@@ -834,8 +838,10 @@ function ScripturePracticeSlide({
     }
   }, [content]);
 
-  const [activeTab, setActiveTab] = useState<0 | 1 | 2>(alreadyDone ? 2 : 0);
-  const [maxUnlocked, setMaxUnlocked] = useState<0 | 1 | 2>(alreadyDone ? 2 : 0);
+  const initialTab: 0 | 1 | 2 = alreadyDone ? 2 : (existingChunkIndex !== undefined ? 2 : 0);
+  const initialMaxUnlocked: 0 | 1 | 2 = alreadyDone ? 2 : (existingChunkIndex !== undefined ? 2 : 0);
+  const [activeTab, setActiveTab] = useState<0 | 1 | 2>(initialTab);
+  const [maxUnlocked, setMaxUnlocked] = useState<0 | 1 | 2>(initialMaxUnlocked);
 
   const [tab1Remaining, setTab1Remaining] = useState(alreadyDone ? 0 : data.duration);
   const tab1TimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -844,7 +850,7 @@ function ScripturePracticeSlide({
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(null);
+  const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(existingChunkIndex ?? null);
   const [hoveredChunkIndex, setHoveredChunkIndex] = useState<number | null>(null);
 
   const [tab3Started, setTab3Started] = useState(!!alreadyDone);
@@ -946,6 +952,7 @@ function ScripturePracticeSlide({
 
   const handleChunkSelect = (idx: number) => {
     setSelectedChunkIndex(idx);
+    onChunkSelect?.(idx);
     setMaxUnlocked(2);
     setActiveTab(2);
     setTab3Started(true);
@@ -1296,6 +1303,9 @@ interface LessonSlideProps {
   onScriptureSelect?: (selection: ScriptureSelection) => void;
   // scripture_reflection specific
   scriptureSelection?: ScriptureSelection | null;
+  // scripture_practice specific
+  practiceChunkIndex?: number;
+  onPracticeChunkSelect?: (chunkIndex: number) => void;
 }
 
 export function LessonSlide({
@@ -1326,6 +1336,8 @@ export function LessonSlide({
   onPathSelected,
   onScriptureSelect,
   scriptureSelection,
+  practiceChunkIndex,
+  onPracticeChunkSelect,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
@@ -1448,6 +1460,8 @@ export function LessonSlide({
             content={content}
             onTimerComplete={onTimerComplete}
             alreadyDone={timerAlreadyDone}
+            existingChunkIndex={practiceChunkIndex}
+            onChunkSelect={onPracticeChunkSelect}
           />
         ) : (
           <TextSlide content={content} />
