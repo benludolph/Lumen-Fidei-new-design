@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import sacredHeartImg from "@assets/amethyst1__jesus_with_the_divine_sacred_heart_in_his_hands_te_1775149739636.webp";
@@ -410,13 +410,11 @@ function DualRightTile({
   tile,
   isSelected,
   isLocked,
-  isComplete,
   onClick,
 }: {
   tile: RightTile;
   isSelected: boolean;
   isLocked: boolean;
-  isComplete: boolean;
   onClick: (id: string) => void;
 }) {
   const pos = RIGHT_GRID_POS[tile.position];
@@ -458,8 +456,8 @@ function DualRightTile({
     >
       {isSelected && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
           style={{
             position: "absolute",
@@ -538,6 +536,11 @@ function DualPhaseSlide({
   const [hasInteracted, setHasInteracted] = useState(false);
   const [overlayLine, setOverlayLine] = useState(0);
 
+  const timerRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => {
+    return () => { timerRefs.current.forEach(clearTimeout); };
+  }, []);
+
   const handleLeftTap = useCallback((idx: number) => {
     if (leftSelections.includes(idx) || phaseState !== "left") return;
 
@@ -552,9 +555,9 @@ function DualPhaseSlide({
     if (next.length === leftCards.length) {
       setPhaseState("transition");
       setOverlayLine(1);
-      setTimeout(() => setOverlayLine(2), 450);
-      setTimeout(() => setOverlayLine(0), 2000);
-      setTimeout(() => setPhaseState("right"), 2400);
+      timerRefs.current.push(setTimeout(() => setOverlayLine(2), 450));
+      timerRefs.current.push(setTimeout(() => setOverlayLine(0), 2000));
+      timerRefs.current.push(setTimeout(() => setPhaseState("right"), 2400));
     }
   }, [leftSelections, phaseState, hasInteracted, leftCards.length, onInteracted]);
 
@@ -566,7 +569,7 @@ function DualPhaseSlide({
     setRightSelections(next);
 
     if (next.length === rightGrid.length) {
-      setTimeout(() => setPhaseState("complete"), 500);
+      timerRefs.current.push(setTimeout(() => setPhaseState("complete"), 500));
     }
   }, [rightSelections, phaseState, rightGrid.length]);
 
@@ -642,8 +645,8 @@ function DualPhaseSlide({
             >
               {selected && (
                 <motion.span
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ duration: 0.25 }}
                   style={{
                     position: "absolute",
@@ -944,7 +947,6 @@ function DualPhaseSlide({
                   tile={tile}
                   isSelected={rightSelections.includes(tile.id)}
                   isLocked={tile.id !== "truth" && !isTruthSelected}
-                  isComplete={isComplete}
                   onClick={handleRightTap}
                 />
               ))}
