@@ -59,8 +59,8 @@ export function LessonCompletionScreen({
           boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
           paddingLeft: "16px",
           paddingRight: "16px",
-          paddingTop: "24px",
-          paddingBottom: "24px",
+          paddingTop: "16px",
+          paddingBottom: "16px",
         }}
       >
         {/* Left: Back button */}
@@ -130,12 +130,12 @@ export function LessonCompletionScreen({
 
       {/* ── Content area ── */}
       <div
-        className="relative flex-1 flex flex-col items-center overflow-hidden"
-        style={{ paddingTop: "32px", paddingLeft: "20px", paddingRight: "20px" }}
+        className="relative flex-1 min-h-0 flex flex-col items-center"
+        style={{ paddingTop: "16px", paddingLeft: "16px", paddingRight: "16px" }}
       >
         {/* Dark card — identical structure to slide screens */}
         <div
-          className="relative flex-1 flex flex-col overflow-hidden w-full max-w-[640px] p-5 sm:p-12"
+          className="relative flex-1 min-h-0 flex flex-col w-full max-w-[780px] p-7 sm:p-12"
           style={{
             background: "var(--surface-base)",
             border: "0.5px solid var(--white-5)",
@@ -196,7 +196,7 @@ export function LessonCompletionScreen({
           borderTop: "1px solid var(--white-5)",
         }}
       >
-        <div className="max-w-[640px] w-full flex items-center justify-end">
+        <div className="max-w-[780px] w-full flex items-center justify-end">
           <button
             onClick={onContinue}
             className="flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] transition-opacity hover:opacity-80"
