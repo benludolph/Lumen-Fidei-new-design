@@ -348,12 +348,12 @@ export function LessonFlow({
       direction={direction}
       mentorId={mentorId}
       onTimerComplete={
-        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection"
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection" || effectiveSlideData.type === "scripture_practice"
           ? handleTimerComplete
           : undefined
       }
       timerAlreadyDone={
-        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection"
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection" || effectiveSlideData.type === "scripture_practice"
           ? completedTimerSlides.has(currentSlide)
           : undefined
       }
@@ -397,6 +397,7 @@ export function LessonFlow({
   const navBlocked =
     (currentSlideData.type === "timer" && !timerDone) ||
     (effectiveSlideData.type === "scripture_reflection" && !timerDone) ||
+    (effectiveSlideData.type === "scripture_practice" && !timerDone) ||
     (effectiveSlideData.type === "scripture_select" && !currentScriptureSelection) ||
     isValidKc ||
     requiresInteraction ||

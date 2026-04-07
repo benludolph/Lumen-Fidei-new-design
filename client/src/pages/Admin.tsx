@@ -2190,7 +2190,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "scripture_select", "scripture_reflection", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2216,6 +2216,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   story_choice: "Story Choice",
   image_carousel: "Image Carousel",
   before_after: "Before / After Slider",
+  scripture_practice: "Scripture Practice",
   scripture_select: "Scripture Select",
   scripture_reflection: "Scripture Reflection",
 };
@@ -2239,6 +2240,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   story_choice: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   image_carousel: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   before_after: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
+  scripture_practice: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   scripture_select: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   scripture_reflection: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
 };
@@ -3673,6 +3675,225 @@ function TimerSlideEditor({ content, onChange, index }: { content: string; onCha
   );
 }
 
+function ScripturePracticeEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: {
+    duration: number;
+    text: string;
+    audioUrl?: string;
+    reference: string;
+    chunks: string[];
+    reflectionDuration: number;
+    reflectionTitle: string;
+  };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      duration: typeof parsed.duration === "number" ? parsed.duration : 180,
+      text: typeof parsed.text === "string" ? parsed.text : "",
+      audioUrl: typeof parsed.audioUrl === "string" && parsed.audioUrl ? parsed.audioUrl : undefined,
+      reference: typeof parsed.reference === "string" ? parsed.reference : "",
+      chunks: Array.isArray(parsed.chunks) && parsed.chunks.length > 0 ? parsed.chunks : [""],
+      reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
+      reflectionTitle: typeof parsed.reflectionTitle === "string" ? parsed.reflectionTitle : "",
+    };
+  } catch {
+    data = { duration: 180, text: "", reference: "", chunks: [""], reflectionDuration: 120, reflectionTitle: "" };
+  }
+
+  const update = (fields: Partial<typeof data>) => {
+    const next = { ...data, ...fields };
+    if (!next.audioUrl) delete (next as any).audioUrl;
+    onChange(JSON.stringify(next));
+  };
+
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const [audioUploading, setAudioUploading] = useState(false);
+  const contentRef = useRef(content);
+  contentRef.current = content;
+
+  const handleAudioUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAudioUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("audio", file);
+      const res = await fetch("/api/admin/upload-audio", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const { url } = await res.json();
+      let latest: any = {};
+      try { latest = JSON.parse(contentRef.current || "{}"); } catch {}
+      onChange(JSON.stringify({ ...latest, audioUrl: url }));
+    } catch (err) {
+      console.error("Audio upload error:", err);
+    } finally {
+      setAudioUploading(false);
+      if (audioInputRef.current) audioInputRef.current.value = "";
+    }
+  }, [onChange]);
+
+  const updateChunk = (idx: number, value: string) => {
+    const chunks = [...data.chunks];
+    chunks[idx] = value;
+    update({ chunks });
+  };
+
+  const addChunk = () => update({ chunks: [...data.chunks, ""] });
+
+  const removeChunk = (idx: number) => {
+    if (data.chunks.length <= 1) return;
+    update({ chunks: data.chunks.filter((_, i) => i !== idx) });
+  };
+
+  return (
+    <div className="space-y-3">
+      <Tabs defaultValue="read" className="w-full">
+        <TabsList className="w-full grid grid-cols-3 mb-3">
+          <TabsTrigger value="read" className="text-xs" data-testid={`tab-practice-read-${index}`}>Read Once</TabsTrigger>
+          <TabsTrigger value="select" className="text-xs" data-testid={`tab-practice-select-${index}`}>What Stands Out</TabsTrigger>
+          <TabsTrigger value="reflect" className="text-xs" data-testid={`tab-practice-reflect-${index}`}>Reflect</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="read" className="space-y-3 mt-0">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Timer Duration (seconds)</label>
+            <input
+              type="number"
+              min={5}
+              max={3600}
+              value={data.duration}
+              onChange={(e) => update({ duration: Math.max(5, parseInt(e.target.value) || 180) })}
+              className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-practice-duration-${index}`}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Verse Text (displayed during timer)</label>
+            <textarea
+              value={data.text}
+              onChange={(e) => update({ text: e.target.value })}
+              placeholder={`"If you remain in my word, you are truly my disciples..."`}
+              rows={4}
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-y"
+              data-testid={`textarea-practice-text-${index}`}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Scripture Audio (optional)</label>
+            {data.audioUrl ? (
+              <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                <Volume2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="text-xs text-muted-foreground truncate flex-1">{data.audioUrl.split("/").pop()}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => update({ audioUrl: undefined })}
+                  className="h-6 px-2"
+                  data-testid={`button-practice-remove-audio-${index}`}
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
+            ) : null}
+            <input
+              ref={audioInputRef}
+              type="file"
+              accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/mp4,audio/x-m4a,audio/aac"
+              className="hidden"
+              onChange={handleAudioUpload}
+              data-testid={`input-practice-audio-${index}`}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => audioInputRef.current?.click()}
+              disabled={audioUploading}
+              className="w-full"
+              data-testid={`button-practice-upload-audio-${index}`}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {audioUploading ? "Uploading..." : data.audioUrl ? "Change Audio" : "Upload Audio"}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="select" className="space-y-3 mt-0">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Scripture Reference</label>
+            <input
+              type="text"
+              value={data.reference}
+              onChange={(e) => update({ reference: e.target.value })}
+              placeholder="e.g. John 8:31–32"
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-practice-reference-${index}`}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Scripture Chunks (one phrase per entry — user taps to select)</label>
+            {data.chunks.map((chunk, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chunk}
+                  onChange={(e) => updateChunk(idx, e.target.value)}
+                  placeholder={`Phrase ${idx + 1}`}
+                  className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
+                  data-testid={`input-practice-chunk-${index}-${idx}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeChunk(idx)}
+                  disabled={data.chunks.length <= 1}
+                  className="shrink-0 p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  data-testid={`button-practice-remove-chunk-${index}-${idx}`}
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addChunk}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
+              data-testid={`button-practice-add-chunk-${index}`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add phrase
+            </button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="reflect" className="space-y-3 mt-0">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Reflection Timer Duration (seconds)</label>
+            <input
+              type="number"
+              min={10}
+              max={600}
+              value={data.reflectionDuration}
+              onChange={(e) => update({ reflectionDuration: parseInt(e.target.value) || 120 })}
+              className="w-32 px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-practice-reflection-duration-${index}`}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Reflection Title (optional — shown on Tab 3)</label>
+            <textarea
+              value={data.reflectionTitle}
+              onChange={(e) => update({ reflectionTitle: e.target.value })}
+              placeholder="Stay with this and bring it to God.&#10;Explore the thoughts that come up."
+              rows={2}
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-none"
+              data-testid={`textarea-practice-reflection-title-${index}`}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 function QuizSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: QuizEditorData;
   try {
@@ -4733,6 +4954,12 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : slide.type === "scripture_practice" ? (
+                              <ScripturePracticeEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : slide.type === "before_after" ? (
                               <BeforeAfterSlideEditor
                                 content={slide.content}
@@ -5672,6 +5899,12 @@ function PrelimContentManagementView() {
                               />
                             ) : slide.type === "scripture_reflection" ? (
                               <ScriptureReflectionEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "scripture_practice" ? (
+                              <ScripturePracticeEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}

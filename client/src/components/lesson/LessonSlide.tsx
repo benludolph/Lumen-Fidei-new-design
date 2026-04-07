@@ -59,7 +59,8 @@ export type SlideType =
   | "image_carousel"
   | "before_after"
   | "scripture_select"
-  | "scripture_reflection";
+  | "scripture_reflection"
+  | "scripture_practice";
 
 export interface ScriptureSelection {
   chunks: string[];
@@ -797,6 +798,472 @@ function ScriptureReflectionSlide({
   );
 }
 
+function ScripturePracticeSlide({
+  content,
+  onTimerComplete,
+  alreadyDone,
+}: {
+  content: string;
+  onTimerComplete?: () => void;
+  alreadyDone?: boolean;
+}) {
+  const data = useMemo(() => {
+    try {
+      const parsed = JSON.parse(content);
+      return {
+        duration: typeof parsed.duration === "number" ? parsed.duration : 180,
+        text: typeof parsed.text === "string" ? parsed.text : "",
+        audioUrl: typeof parsed.audioUrl === "string" && parsed.audioUrl ? parsed.audioUrl : undefined,
+        reference: typeof parsed.reference === "string" ? parsed.reference : "",
+        chunks: Array.isArray(parsed.chunks) && parsed.chunks.length > 0 ? parsed.chunks : [""],
+        reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
+        reflectionTitle: typeof parsed.reflectionTitle === "string" && parsed.reflectionTitle
+          ? parsed.reflectionTitle
+          : "Stay with this and bring it to God.\nExplore the thoughts that come up.",
+      };
+    } catch {
+      return {
+        duration: 180,
+        text: "",
+        audioUrl: undefined,
+        reference: "",
+        chunks: [""],
+        reflectionDuration: 120,
+        reflectionTitle: "Stay with this and bring it to God.\nExplore the thoughts that come up.",
+      };
+    }
+  }, [content]);
+
+  const [activeTab, setActiveTab] = useState<0 | 1 | 2>(alreadyDone ? 2 : 0);
+  const [maxUnlocked, setMaxUnlocked] = useState<0 | 1 | 2>(alreadyDone ? 2 : 0);
+
+  const [tab1Remaining, setTab1Remaining] = useState(alreadyDone ? 0 : data.duration);
+  const tab1TimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tab1CompletedRef = useRef(!!alreadyDone);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const [selectedChunkIndex, setSelectedChunkIndex] = useState<number | null>(null);
+  const [hoveredChunkIndex, setHoveredChunkIndex] = useState<number | null>(null);
+
+  const [tab3Started, setTab3Started] = useState(!!alreadyDone);
+  const [tab3Remaining, setTab3Remaining] = useState(alreadyDone ? 0 : data.reflectionDuration);
+  const tab3TimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tab3CompletedRef = useRef(!!alreadyDone);
+
+  useEffect(() => {
+    if (alreadyDone) {
+      setTab1Remaining(0);
+      tab1CompletedRef.current = true;
+      return;
+    }
+    if (data.duration <= 0) {
+      setTab1Remaining(0);
+      tab1CompletedRef.current = true;
+      setMaxUnlocked((m) => Math.max(m, 1) as 0 | 1 | 2);
+      setActiveTab(1);
+      return;
+    }
+    tab1TimerRef.current = setInterval(() => {
+      setTab1Remaining((prev: number) => {
+        if (prev <= 1) {
+          if (tab1TimerRef.current) clearInterval(tab1TimerRef.current);
+          if (!tab1CompletedRef.current) {
+            tab1CompletedRef.current = true;
+            playTimerComplete();
+            setMaxUnlocked((m: 0 | 1 | 2) => Math.max(m, 1) as 0 | 1 | 2);
+            setActiveTab(1);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (tab1TimerRef.current) clearInterval(tab1TimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tab3Started) return;
+    if (alreadyDone) {
+      setTab3Remaining(0);
+      tab3CompletedRef.current = true;
+      onTimerComplete?.();
+      return;
+    }
+    if (data.reflectionDuration <= 0) {
+      setTab3Remaining(0);
+      tab3CompletedRef.current = true;
+      onTimerComplete?.();
+      return;
+    }
+    setTab3Remaining(data.reflectionDuration);
+    tab3CompletedRef.current = false;
+    tab3TimerRef.current = setInterval(() => {
+      setTab3Remaining((prev: number) => {
+        if (prev <= 1) {
+          if (tab3TimerRef.current) clearInterval(tab3TimerRef.current);
+          if (!tab3CompletedRef.current) {
+            tab3CompletedRef.current = true;
+            playTimerComplete();
+            onTimerComplete?.();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (tab3TimerRef.current) clearInterval(tab3TimerRef.current);
+    };
+  }, [tab3Started]);
+
+  const toggleAudio = useCallback(() => {
+    if (!data.audioUrl) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(data.audioUrl);
+      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
+    }
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  }, [data.audioUrl, isPlaying]);
+
+  const handleChunkSelect = (idx: number) => {
+    setSelectedChunkIndex(idx);
+    setMaxUnlocked(2);
+    setActiveTab(2);
+    setTab3Started(true);
+  };
+
+  const tab1Progress = data.duration > 0 ? (data.duration - tab1Remaining) / data.duration : 1;
+  const tab1Minutes = Math.floor(tab1Remaining / 60);
+  const tab1Seconds = tab1Remaining % 60;
+  const tab1Circumference = 2 * Math.PI * 54;
+  const tab1Offset = tab1Circumference * (1 - tab1Progress);
+  const tab1Done = tab1Remaining === 0;
+
+  const tab3Progress = data.reflectionDuration > 0 ? (data.reflectionDuration - tab3Remaining) / data.reflectionDuration : 1;
+  const tab3Minutes = Math.floor(tab3Remaining / 60);
+  const tab3Seconds = tab3Remaining % 60;
+  const tab3Circumference = 2 * Math.PI * 54;
+  const tab3Offset = tab3Circumference * (1 - tab3Progress);
+  const tab3Done = tab3Remaining === 0;
+
+  const reflectionTitleLines = data.reflectionTitle.split("\n");
+
+  const TAB_LABELS = ["Read once", "What stands out", "Reflect"] as const;
+
+  return (
+    <div className="flex flex-col gap-0 w-full" data-testid="slide-scripture-practice">
+      <div className="flex items-center w-full mb-6" style={{ gap: 0 }}>
+        {TAB_LABELS.map((label, i) => {
+          const unlocked = i <= maxUnlocked;
+          const active = i === activeTab;
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={!unlocked}
+              onClick={() => unlocked && setActiveTab(i as 0 | 1 | 2)}
+              data-testid={`tab-scripture-practice-${i}`}
+              style={{
+                flex: 1,
+                paddingBottom: "10px",
+                paddingTop: "10px",
+                fontSize: "clamp(0.72rem, 2.8vw, 0.875rem)",
+                fontFamily: "'Afacad', sans-serif",
+                fontWeight: active ? 600 : 400,
+                color: active ? "rgba(255,255,255,1)" : unlocked ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.25)",
+                borderBottom: active ? "2px solid rgba(255,255,255,0.9)" : "2px solid rgba(255,255,255,0.1)",
+                background: "transparent",
+                cursor: unlocked ? "pointer" : "not-allowed",
+                transition: "color 200ms ease, border-color 200ms ease",
+                letterSpacing: "0.01em",
+                whiteSpace: "nowrap",
+                textAlign: "center",
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeTab === 0 && (
+        <div className="flex flex-col items-center gap-6" data-testid="scripture-practice-tab-read">
+          <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] flex items-center justify-center">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
+              <circle
+                cx="60" cy="60" r="54" fill="none"
+                stroke={tab1Done ? "#00b57a" : "var(--white-70)"}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={tab1Circumference}
+                strokeDashoffset={tab1Offset}
+                className="transition-all duration-1000 ease-linear"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              {tab1Done ? (
+                <CheckCircle className="w-10 h-10 text-[#00b57a]" />
+              ) : (
+                <span className="type-display-lg font-bold text-white tabular-nums">
+                  {tab1Minutes}:{tab1Seconds.toString().padStart(2, "0")}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {data.text && (
+            <div className="w-full">
+              {isHtmlContent(data.text) ? (
+                <HtmlContent content={data.text} className="slide-text-content space-y-5" />
+              ) : (
+                <div
+                  style={{
+                    borderLeft: "3px solid rgba(255,255,255,0.15)",
+                    paddingLeft: "20px",
+                    fontFamily: "'Afacad', sans-serif",
+                    fontStyle: "italic",
+                    fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
+                    color: "rgba(255,255,255,0.8)",
+                    lineHeight: "1.65",
+                  }}
+                >
+                  {data.text.split("\n").filter(Boolean).map((line: string, i: number) => (
+                    <p key={i} style={{ margin: 0 }}>{line}</p>
+                  ))}
+                  {data.reference && (
+                    <div className="flex justify-end w-full mt-3">
+                      <span
+                        style={{
+                          fontFamily: "'Afacad', sans-serif",
+                          fontWeight: 700,
+                          fontStyle: "normal",
+                          fontSize: "1rem",
+                          color: "rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        — {data.reference}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {data.audioUrl && (
+            <button
+              onClick={toggleAudio}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
+                isPlaying
+                  ? "bg-[var(--white-15)] text-white border-[var(--white-20)] shadow-md"
+                  : "bg-[var(--white-5)] text-[var(--white-70)] border-[var(--white-10)] hover:bg-[var(--white-10)]"
+              )}
+              data-testid="button-practice-audio-toggle"
+            >
+              {isPlaying ? (
+                <>
+                  <Pause className="w-4 h-4" />
+                  Pause Audio
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-4 h-4" />
+                  Listen to Scripture
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
+      {activeTab === 1 && (
+        <div className="flex flex-col gap-5" data-testid="scripture-practice-tab-select">
+          <div
+            style={{
+              borderLeft: "3px solid rgba(255,255,255,0.15)",
+              paddingLeft: "20px",
+              fontFamily: "'Afacad', sans-serif",
+              fontStyle: "italic",
+              fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
+              color: "rgba(255,255,255,0.8)",
+              lineHeight: "1.65",
+            }}
+          >
+            {data.chunks.map((chunk: string, i: number) => {
+              const isSelected = selectedChunkIndex === i;
+              const isHovered = hoveredChunkIndex === i && !isSelected;
+              return (
+                <span
+                  key={i}
+                  onClick={() => handleChunkSelect(i)}
+                  onMouseEnter={() => setHoveredChunkIndex(i)}
+                  onMouseLeave={() => setHoveredChunkIndex(null)}
+                  data-testid={`scripture-practice-chunk-${i}`}
+                  style={{
+                    cursor: "pointer",
+                    background: isSelected
+                      ? "rgba(212, 175, 55, 0.22)"
+                      : isHovered
+                      ? "rgba(255,255,255,0.07)"
+                      : "transparent",
+                    color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
+                    transition: "background 150ms ease, color 150ms ease",
+                    borderRadius: "3px",
+                    padding: "1px 3px",
+                    textDecoration: isSelected ? "none" : "underline",
+                    textDecorationStyle: isSelected ? undefined : "dotted",
+                    textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
+                    WebkitBoxDecorationBreak: "clone",
+                    boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+                  }}
+                >
+                  {chunk}
+                </span>
+              );
+            })}
+          </div>
+
+          {data.reference && (
+            <div className="flex justify-end w-full">
+              <span
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontWeight: 700,
+                  fontSize: "1.15rem",
+                  color: "rgba(255,255,255,0.8)",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                — {data.reference}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 2 && (
+        <div className="flex flex-col items-center gap-8" data-testid="scripture-practice-tab-reflect">
+          <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] flex items-center justify-center">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
+              <circle
+                cx="60" cy="60" r="54" fill="none"
+                stroke={tab3Done ? "#00b57a" : "var(--white-70)"}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={tab3Circumference}
+                strokeDashoffset={tab3Offset}
+                className="transition-all duration-1000 ease-linear"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              {tab3Done ? (
+                <CheckCircle className="w-10 h-10 text-[#00b57a]" />
+              ) : (
+                <span className="type-display-lg font-bold text-white tabular-nums">
+                  {tab3Minutes}:{tab3Seconds.toString().padStart(2, "0")}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="w-full flex flex-col gap-0">
+            {reflectionTitleLines.map((line: string, i: number) => (
+              <h2
+                key={i}
+                className="leading-[1.3] text-left"
+                style={{
+                  fontFamily: "'IvyOra Display', serif",
+                  fontWeight: 500,
+                  fontSize: "clamp(1.375rem, 4.5vw, 1.625rem)",
+                  color: "rgba(255,255,255,1)",
+                  margin: 0,
+                }}
+              >
+                {line}
+              </h2>
+            ))}
+          </div>
+
+          {selectedChunkIndex !== null && (
+            <div className="w-full flex flex-col gap-4">
+              <div
+                style={{
+                  borderLeft: "3px solid rgba(255,255,255,0.15)",
+                  paddingLeft: "20px",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontStyle: "italic",
+                  fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
+                  color: "rgba(255,255,255,0.8)",
+                  lineHeight: "1.65",
+                }}
+              >
+                {data.chunks.map((chunk: string, i: number) => {
+                  const isSelected = i === selectedChunkIndex;
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        background: isSelected ? "rgba(212, 175, 55, 0.22)" : "transparent",
+                        color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
+                        borderRadius: "3px",
+                        padding: "1px 3px",
+                        textDecoration: isSelected ? "none" : "underline",
+                        textDecorationStyle: isSelected ? undefined : "dotted",
+                        textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
+                        WebkitBoxDecorationBreak: "clone",
+                        boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
+                      }}
+                    >
+                      {chunk}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {data.reference && (
+                <div className="flex justify-end w-full">
+                  <span
+                    style={{
+                      fontFamily: "'Afacad', sans-serif",
+                      fontWeight: 700,
+                      fontSize: "1.15rem",
+                      color: "rgba(255,255,255,0.8)",
+                    }}
+                  >
+                    — {data.reference}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface LessonSlideProps {
   type: SlideType;
   content: string;
@@ -973,6 +1440,12 @@ export function LessonSlide({
                 return scriptureSelection;
               }
             })()}
+            onTimerComplete={onTimerComplete}
+            alreadyDone={timerAlreadyDone}
+          />
+        ) : type === "scripture_practice" ? (
+          <ScripturePracticeSlide
+            content={content}
             onTimerComplete={onTimerComplete}
             alreadyDone={timerAlreadyDone}
           />
