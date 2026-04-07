@@ -1,0 +1,168 @@
+Extend the existing cross_grid slide type to support a new mode: phase: "dual".
+
+This mode teaches a contrast:
+
+What people want (fast, controlled solutions)
+What actually heals (a process rooted in truth and surrender)
+
+The experience must unfold through user interaction only.
+No auto-advance. No Continue button.
+
+Done looks like
+Layout
+Two-column layout:
+Left: 40%
+Right: 60%
+PHASE 1 — LEFT ACTIVE, RIGHT DIMMED
+Left side
+
+Label: What People Want
+
+3 tappable cards (any order):
+
+[
+  { "title": "Quick Fix", "subtext": "Make the pain stop now." },
+  { "title": "Quick Prayer", "subtext": "Say the words. Move on." },
+  { "title": "Quick Deliverance", "subtext": "Remove it instantly." }
+]
+Right side (initial state)
+Visible but dimmed (opacity: 0.3–0.4)
+Not interactive
+Contains 3 hidden tiles of a distorted / broken sacred image
+Image should feel “off”, not explicitly demonic
+Interaction (Phase 1)
+
+State:
+
+leftSelections: number[]
+
+On each left card tap:
+
+Add index to leftSelections
+Card:
+Darkens slightly
+Shows checkmark or subtle glow
+Reveal corresponding right tile:
+Fade in (300–500ms)
+No movement, only opacity
+After all 3 left taps
+
+Trigger:
+
+1. Full image visible
+2. Overlay (centered, fade in)
+
+Text:
+
+But it does not heal you.
+It keeps you in control.
+Second line appears ~400ms after first
+3. Transition to Phase 2
+Left column fades to opacity: ~0.2
+Right column animates to opacity: 1
+Overlay fades out
+Right becomes interactive
+PHASE 2 — RIGHT ACTIVE
+Right side label
+
+What Actually Heals
+
+Cross grid layout
+    [Repentance]
+[Trust] [Truth] [Surrender]
+    [Healing]
+Tile content
+[
+  { "id": "truth", "title": "Truth", "subtext": "Face what is real.", "position": "center" },
+  { "id": "repentance", "title": "Repentance", "subtext": "Turn away from what is false.", "position": "top" },
+  { "id": "trust", "title": "Trust", "subtext": "Let go of control.", "position": "left" },
+  { "id": "surrender", "title": "Surrender", "subtext": "Give it to God.", "position": "right" },
+  { "id": "healing", "title": "Healing", "subtext": "God restores what was broken.", "position": "bottom" }
+]
+Interaction rules
+
+State:
+
+rightSelections: string[]
+
+Rules:
+
+Truth (center) must be tapped first
+Other tiles are locked until truth is selected
+After that, remaining 4 can be tapped in any order
+On each right tile tap
+Add to rightSelections
+Tile:
+Brightens
+Subtle glow (not flashy)
+Cross effect:
+A faint cross shape appears behind tiles
+Opacity increases with each selection
+After all 5 tiles tapped
+1. Cross fully visible
+2. Background image fades in
+Sacred Heart or Christ image
+Appears behind tiles (not replacing them)
+Fade in (500–800ms)
+3. Final text (centered)
+This is how healing happens.
+Not instantly. But truly.
+Second line delayed ~400ms
+Visual / Motion rules
+Use framer-motion
+All transitions: soft fade or opacity shifts
+Duration: 300–600ms
+No bouncing, scaling, or aggressive easing
+Light should feel like it builds, not flashes
+Constraints
+No explicit Satan imagery
+No horror visuals
+Avoid anything symbolic that feels forced or obvious
+Keep tone grounded and serious
+Schema changes
+
+Extend cross_grid:
+
+{
+  "phase": "dual",
+  "leftCards": [],
+  "rightGrid": [],
+  "leftRevealImage": {
+    "tiles": 3,
+    "type": "distorted"
+  },
+  "overlayText": [
+    "But it does not heal you.",
+    "It keeps you in control."
+  ],
+  "finalText": [
+    "This is how healing happens.",
+    "Not instantly. But truly."
+  ]
+}
+Admin.tsx
+Add default
+const CROSS_GRID_DUAL_DEFAULT = {
+  phase: "dual",
+  leftCards: [...],
+  rightGrid: [...],
+  overlayText: [...],
+  finalText: [...]
+}
+Editor updates
+Toggle: Standard / Dual mode
+If dual:
+Show editable fields:
+Left cards (title + subtext)
+Overlay text (2 lines)
+Final text (2 lines)
+Right grid tiles (existing structure)
+Important implementation note
+
+Do NOT reuse standard cross_grid logic blindly.
+
+Dual mode requires:
+
+Separate state machines for left + right phases
+Explicit phase control:
+phaseState: "left" | "transition" | "right" | "complete"

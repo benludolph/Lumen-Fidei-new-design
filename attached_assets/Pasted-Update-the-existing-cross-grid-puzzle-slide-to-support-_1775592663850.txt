@@ -1,0 +1,183 @@
+Update the existing cross_grid_puzzle slide to support a two-phase interactive experience on a single slide.
+
+This slide should teach:
+
+Most people want quick, instant solutions
+That approach does not lead to real healing
+True healing follows a different path
+
+The experience should move through two distinct sides:
+
+Left side (visible first): “What People Want”
+Right side (initially hidden/dark): “What Actually Heals”
+
+The transition between them should feel earned through interaction, not automatic.
+
+Done looks like
+User first sees ONLY the left side clearly
+Right side is visible but darkened and inactive
+User taps 3 options on the left
+Each tap reveals part of a hidden image on the right
+After all 3 taps:
+Full “deceptive” image is revealed
+Short overlay text appears
+Then UI transitions:
+Left side dims
+Right side becomes active
+User taps 5 steps forming a cross
+Cross completes and reveals Christ image
+Final text appears
+
+No “Continue” button between phases
+
+Layout
+Container
+Single slide
+Two columns:
+Left: 40%
+Right: 60%
+PHASE 1 — LEFT SIDE
+Section label
+
+What People Want
+
+3 tappable cards (vertical stack)
+
+Card 1
+Title: Quick Fix
+Subtext: Make the pain stop now.
+
+Card 2
+Title: Quick Prayer
+Subtext: Say the words. Move on.
+
+Card 3
+Title: Quick Deliverance
+Subtext: Remove it instantly.
+
+Interaction logic
+Cards must be tapped in any order
+Track state: leftSelections = []
+On each tap
+Mark card as selected
+Reveal one tile on right side (see Phase 1 right)
+Slight visual feedback:
+card darkens
+checkmark or subtle glow
+PHASE 1 — RIGHT SIDE (initial state)
+Entire right side is dimmed (opacity ~30–40%)
+Not clickable
+Hidden image
+Broken/distorted sacred image (NOT explicit Satan)
+Split into 3 tiles
+Each left tap reveals:
+One tile of this image
+Tiles fade in, not snap
+After all 3 taps
+
+Trigger:
+
+1. Full image revealed
+2. Overlay text (centered, fade in)
+
+But it does not heal you.
+
+Optional second line (delay 500ms):
+
+It keeps you in control.
+
+Then transition to Phase 2
+TRANSITION
+Left side fades to low opacity (~20%)
+Right side brightens to full opacity
+Overlay disappears
+Right side becomes interactive
+PHASE 2 — RIGHT SIDE (ACTIVE)
+Section label
+
+What Actually Heals
+
+Cross grid (5 tiles)
+
+Use existing cross_grid_puzzle layout:
+
+   [Repentance]
+[Trust] [Truth] [Surrender]
+   [Healing]
+Tile content
+
+Center (start point):
+TRUTH
+Subtext: Face what is real.
+
+Top:
+REPENTANCE
+Subtext: Turn away from what is false.
+
+Left:
+TRUST
+Subtext: Let go of control.
+
+Right:
+SURRENDER
+Subtext: Give it to God.
+
+Bottom:
+HEALING
+Subtext: God restores what was broken.
+
+Interaction logic
+Enforce order:
+Truth (must be first)
+Then others unlock
+
+Track state: rightSelections = []
+
+On each tap
+Tile lights up
+Subtle glow spreads from center outward
+After 2–3 taps, faint cross shape begins to appear behind tiles
+After all 5 taps
+1. Cross fully illuminated
+2. Background image reveal
+Christ / Sacred Heart image fades in behind tiles
+3. Final text appears
+
+This is how healing happens.
+
+Second line (delay):
+
+Not instantly. But truly.
+
+Visual details
+Use soft fades (300–600ms)
+No harsh animations
+No sound
+Light should feel like it builds, not flashes
+Important constraints
+Do NOT show literal Satan or horror imagery
+Avoid anything cartoonish or obvious
+Keep tone grounded and serious
+Data / Schema changes
+
+Extend cross_grid_puzzle to support:
+
+phase: "dual"
+leftCards: []
+rightGrid: []
+rightHiddenImage: {
+  tiles: 3,
+  revealOnLeftTap: true
+}
+finalImage: {
+  type: "cross_reveal"
+}
+Summary
+
+This slide must feel like:
+
+“This is what I want”
+“That does not actually work”
+“This is what real healing requires”
+
+The interaction should teach this without long explanations.
