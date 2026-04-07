@@ -58,17 +58,8 @@ export type SlideType =
   | "story_choice"
   | "image_carousel"
   | "before_after"
-  | "scripture_select"
-  | "scripture_reflection"
   | "scripture_practice";
 
-export interface ScriptureSelection {
-  chunks: string[];
-  selectedIndex: number;
-  reference: string;
-  reflectionDuration: number;
-  reflectionTitle?: string;
-}
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
@@ -507,293 +498,6 @@ function PathSelectorSlide({
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function ScriptureSelectSlide({
-  content,
-  existingSelection,
-  onScriptureSelect,
-}: {
-  content: string;
-  existingSelection?: ScriptureSelection | null;
-  onScriptureSelect?: (sel: ScriptureSelection) => void;
-}) {
-  const data = useMemo(() => {
-    try {
-      const parsed = JSON.parse(content);
-      return {
-        title: parsed.title || "Now read it again\nThis time, notice if anything stands out, or evokes an emotion.\nThen tap the word or phrase that stands out to you.",
-        reference: parsed.reference || "",
-        chunks: Array.isArray(parsed.chunks) ? parsed.chunks : [content],
-        reflectionDuration: parsed.reflectionDuration ?? 60,
-        reflectionTitle: parsed.reflectionTitle || "Stay with this and bring it to God.\nExplore the thoughts that come up.",
-      };
-    } catch {
-      return {
-        title: "Now read it again\nThis time, notice if anything stands out, or evokes an emotion.\nThen tap the word or phrase that stands out to you.",
-        reference: "",
-        chunks: [content],
-        reflectionDuration: 60,
-        reflectionTitle: "Stay with this and bring it to God.\nExplore the thoughts that come up.",
-      };
-    }
-  }, [content]);
-
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(
-    existingSelection != null ? existingSelection.selectedIndex : null
-  );
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  const handleSelect = (index: number) => {
-    setSelectedIndex(index);
-    onScriptureSelect?.({
-      chunks: data.chunks,
-      selectedIndex: index,
-      reference: data.reference,
-      reflectionDuration: data.reflectionDuration,
-      reflectionTitle: data.reflectionTitle,
-    });
-  };
-
-  const titleLines = data.title.split("\n");
-
-  return (
-    <div className="flex flex-col gap-5" data-testid="slide-scripture-select">
-      <div className="flex flex-col gap-0">
-        {titleLines.map((line, i) => (
-          <h2
-            key={i}
-            className="leading-[1.3]"
-            style={{
-              fontFamily: "'IvyOra Display', serif",
-              fontWeight: 500,
-              fontSize: "clamp(1.375rem, 4.5vw, 1.625rem)",
-              color: "rgba(255,255,255,1)",
-              margin: 0,
-            }}
-          >
-            {line}
-          </h2>
-        ))}
-      </div>
-
-      <div
-        style={{
-          borderLeft: "3px solid rgba(255,255,255,0.15)",
-          paddingLeft: "20px",
-          fontFamily: "'Afacad', sans-serif",
-          fontStyle: "italic",
-          fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
-          color: "rgba(255,255,255,0.8)",
-          lineHeight: "1.65",
-        }}
-      >
-        {data.chunks.map((chunk, i) => {
-          const isSelected = selectedIndex === i;
-          const isHovered = hoveredIndex === i && !isSelected;
-          return (
-            <span
-              key={i}
-              onClick={() => handleSelect(i)}
-              onMouseEnter={() => setHoveredIndex(i)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              data-testid={`scripture-chunk-${i}`}
-              style={{
-                cursor: "pointer",
-                background: isSelected
-                  ? "rgba(212, 175, 55, 0.22)"
-                  : isHovered
-                  ? "rgba(255,255,255,0.07)"
-                  : "transparent",
-                color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
-                transition: "background 150ms ease, color 150ms ease",
-                borderRadius: "3px",
-                padding: "1px 3px",
-                textDecoration: isSelected ? "none" : "underline",
-                textDecorationStyle: isSelected ? undefined : "dotted",
-                textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
-                WebkitBoxDecorationBreak: "clone",
-                boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
-              }}
-            >
-              {chunk}
-            </span>
-          );
-        })}
-      </div>
-
-      {data.reference && (
-        <div className="flex justify-end w-full" data-testid="scripture-reference">
-          <span
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontWeight: 700,
-              fontSize: "1.15rem",
-              color: "rgba(255,255,255,0.8)",
-              letterSpacing: "0.01em",
-            }}
-          >
-            — {data.reference}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ScriptureReflectionSlide({
-  selection,
-  onTimerComplete,
-  alreadyDone,
-}: {
-  selection: ScriptureSelection;
-  onTimerComplete?: () => void;
-  alreadyDone?: boolean;
-}) {
-  const { chunks, selectedIndex, reference, reflectionDuration, reflectionTitle } = selection;
-  const [remaining, setRemaining] = useState(alreadyDone ? 0 : reflectionDuration);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const completedRef = useRef(!!alreadyDone);
-
-  useEffect(() => {
-    if (alreadyDone) {
-      setRemaining(0);
-      completedRef.current = true;
-      return;
-    }
-    if (reflectionDuration <= 0) {
-      setRemaining(0);
-      completedRef.current = true;
-      onTimerComplete?.();
-      return;
-    }
-    setRemaining(reflectionDuration);
-    completedRef.current = false;
-    timerRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          if (!completedRef.current) {
-            completedRef.current = true;
-            playTimerComplete();
-            onTimerComplete?.();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [reflectionDuration, onTimerComplete]);
-
-  const progress = reflectionDuration > 0 ? (reflectionDuration - remaining) / reflectionDuration : 1;
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
-  const circumference = 2 * Math.PI * 54;
-  const strokeOffset = circumference * (1 - progress);
-  const done = remaining === 0;
-
-  const titleText = reflectionTitle || "Stay with this and bring it to God.\nExplore the thoughts that come up.";
-  const titleLines = titleText.split("\n");
-
-  return (
-    <div className="flex flex-col items-center gap-8" data-testid="slide-scripture-reflection">
-      <div className="relative w-[100px] h-[100px] sm:w-[140px] sm:h-[140px] flex items-center justify-center">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
-          <circle
-            cx="60" cy="60" r="54" fill="none"
-            stroke={done ? "#00b57a" : "var(--white-70)"}
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeOffset}
-            className="transition-all duration-1000 ease-linear"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          {done ? (
-            <CheckCircle className="w-10 h-10 text-[#00b57a]" />
-          ) : (
-            <span className="type-display-lg font-bold text-white tabular-nums">
-              {minutes}:{seconds.toString().padStart(2, "0")}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="w-full flex flex-col gap-0">
-        {titleLines.map((line, i) => (
-          <h2
-            key={i}
-            className="leading-[1.3] text-left"
-            style={{
-              fontFamily: "'IvyOra Display', serif",
-              fontWeight: 500,
-              fontSize: "clamp(1.375rem, 4.5vw, 1.625rem)",
-              color: "rgba(255,255,255,1)",
-              margin: 0,
-            }}
-          >
-            {line}
-          </h2>
-        ))}
-      </div>
-
-      <div className="w-full flex flex-col gap-4">
-        <div
-          style={{
-            borderLeft: "3px solid rgba(255,255,255,0.15)",
-            paddingLeft: "20px",
-            fontFamily: "'Afacad', sans-serif",
-            fontStyle: "italic",
-            fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
-            color: "rgba(255,255,255,0.8)",
-            lineHeight: "1.65",
-          }}
-        >
-          {chunks.map((chunk, i) => {
-            const isSelected = i === selectedIndex;
-            return (
-              <span
-                key={i}
-                style={{
-                  background: isSelected ? "rgba(212, 175, 55, 0.22)" : "transparent",
-                  color: isSelected ? "#e8d5a3" : "rgba(255,255,255,0.8)",
-                  borderRadius: "3px",
-                  padding: "1px 3px",
-                  textDecoration: isSelected ? "none" : "underline",
-                  textDecorationStyle: isSelected ? undefined : "dotted",
-                  textDecorationColor: isSelected ? undefined : "rgba(111,111,111,0.8)",
-                  WebkitBoxDecorationBreak: "clone",
-                  boxDecorationBreak: "clone" as React.CSSProperties["boxDecorationBreak"],
-                }}
-              >
-                {chunk}
-              </span>
-            );
-          })}
-        </div>
-
-        {reference && (
-          <div className="flex justify-end w-full">
-            <span
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontWeight: 700,
-                fontSize: "1.15rem",
-                color: "rgba(255,255,255,0.8)",
-              }}
-            >
-              — {reference}
-            </span>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -1312,10 +1016,6 @@ interface LessonSlideProps {
   onChatFlowExit?: () => void;
   // path_selector specific
   onPathSelected?: (nextType: SlideType, nextContent: string) => void;
-  // scripture_select specific
-  onScriptureSelect?: (selection: ScriptureSelection) => void;
-  // scripture_reflection specific
-  scriptureSelection?: ScriptureSelection | null;
   // scripture_practice specific
   practiceChunkIndex?: number;
   onPracticeChunkSelect?: (chunkIndex: number) => void;
@@ -1349,8 +1049,6 @@ export function LessonSlide({
   onChatFlowComplete,
   onChatFlowExit,
   onPathSelected,
-  onScriptureSelect,
-  scriptureSelection,
   practiceChunkIndex,
   onPracticeChunkSelect,
 }: LessonSlideProps) {
@@ -1449,29 +1147,6 @@ export function LessonSlide({
           <ImageCarouselSlide content={content} onInteracted={onInteracted} />
         ) : type === "before_after" ? (
           <BeforeAfterSlide content={content} onInteracted={onInteracted} />
-        ) : type === "scripture_select" ? (
-          <ScriptureSelectSlide
-            content={content}
-            existingSelection={scriptureSelection}
-            onScriptureSelect={onScriptureSelect}
-          />
-        ) : type === "scripture_reflection" && scriptureSelection ? (
-          <ScriptureReflectionSlide
-            selection={(() => {
-              try {
-                const parsed = JSON.parse(content || "{}");
-                return {
-                  ...scriptureSelection,
-                  reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
-                  reflectionTitle: typeof parsed.reflectionTitle === "string" && parsed.reflectionTitle ? parsed.reflectionTitle : scriptureSelection.reflectionTitle,
-                };
-              } catch {
-                return scriptureSelection;
-              }
-            })()}
-            onTimerComplete={onTimerComplete}
-            alreadyDone={timerAlreadyDone}
-          />
         ) : type === "scripture_practice" ? (
           <ScripturePracticeSlide
             content={content}

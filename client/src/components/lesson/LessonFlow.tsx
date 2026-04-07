@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
-import { LessonSlide, type SlideType, type QuizData, type ScriptureSelection } from "./LessonSlide";
+import { LessonSlide, type SlideType, type QuizData } from "./LessonSlide";
 import slideBg from "@assets/SlideBG_1774302310257.webp";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
 import { CompletionOverlay, type OverlayConfig } from "./CompletionOverlay";
@@ -68,7 +68,6 @@ export function LessonFlow({
   const [scenarioRevealCount, setScenarioRevealCount] = useState(1);
   const [pendingInjectedSlide, setPendingInjectedSlide] = useState<{ type: SlideType; content: string } | null>(null);
   const [isShowingInjected, setIsShowingInjected] = useState(false);
-  const [scriptureSelections, setScriptureSelections] = useState<Record<number, ScriptureSelection>>({});
   const [practiceChunkSelections, setPracticeChunkSelections] = useState<Record<number, number>>({});
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -242,10 +241,6 @@ export function LessonFlow({
     // Do NOT set isShowingInjected here — the user must press CONTINUE to proceed
   }, []);
 
-  const handleScriptureSelect = useCallback((selection: ScriptureSelection) => {
-    setScriptureSelections((prev) => ({ ...prev, [currentSlide]: selection }));
-  }, [currentSlide]);
-
   const handlePracticeChunkSelect = useCallback((chunkIndex: number) => {
     setPracticeChunkSelections((prev) => ({ ...prev, [currentSlide]: chunkIndex }));
   }, [currentSlide]);
@@ -342,19 +337,6 @@ export function LessonFlow({
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
 
-  const currentScriptureSelection = effectiveSlideData.type === "scripture_select"
-    ? (scriptureSelections[currentSlide] ?? null)
-    : effectiveSlideData.type === "scripture_reflection"
-    ? (() => {
-        for (let i = currentSlide - 1; i >= 0; i--) {
-          if (slides[i]?.type === "scripture_select" && scriptureSelections[i]) {
-            return scriptureSelections[i];
-          }
-        }
-        return null;
-      })()
-    : null;
-
   const lessonSlideEl = (
     <LessonSlide
       key={`slide-${animKey}`}
@@ -368,12 +350,12 @@ export function LessonFlow({
       mentorPhotoUrl={mentorPhotoUrl}
       mentorName={mentorName}
       onTimerComplete={
-        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection" || effectiveSlideData.type === "scripture_practice"
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_practice"
           ? handleTimerComplete
           : undefined
       }
       timerAlreadyDone={
-        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection" || effectiveSlideData.type === "scripture_practice"
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_practice"
           ? completedTimerSlides.has(currentSlide)
           : undefined
       }
@@ -400,8 +382,6 @@ export function LessonFlow({
       onChatFlowComplete={effectiveSlideData.type === "chat_flow" ? handleNext : undefined}
       onChatFlowExit={effectiveSlideData.type === "chat_flow" ? onExit : undefined}
       onPathSelected={currentSlideData.type === "path_selector" && !isShowingInjected ? handlePathSelected : undefined}
-      onScriptureSelect={effectiveSlideData.type === "scripture_select" ? handleScriptureSelect : undefined}
-      scriptureSelection={currentScriptureSelection ?? undefined}
       practiceChunkIndex={effectiveSlideData.type === "scripture_practice" ? (practiceChunkSelections[currentSlide] ?? undefined) : undefined}
       onPracticeChunkSelect={effectiveSlideData.type === "scripture_practice" ? handlePracticeChunkSelect : undefined}
     />
@@ -418,9 +398,7 @@ export function LessonFlow({
 
   const navBlocked =
     (currentSlideData.type === "timer" && !timerDone) ||
-    (effectiveSlideData.type === "scripture_reflection" && !timerDone) ||
     (effectiveSlideData.type === "scripture_practice" && !timerDone) ||
-    (effectiveSlideData.type === "scripture_select" && !currentScriptureSelection) ||
     isValidKc ||
     requiresInteraction ||
     surveyBlocked;
