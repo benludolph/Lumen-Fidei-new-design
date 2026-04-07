@@ -3330,6 +3330,222 @@ const CROSS_GRID_DEFAULT = JSON.stringify({
   ],
 }, null, 2);
 
+const CROSS_GRID_DUAL_DEFAULT = JSON.stringify({
+  phase: "dual",
+  leftCards: [
+    { title: "Quick Fix", subtext: "Make the pain stop now." },
+    { title: "Quick Prayer", subtext: "Say the words. Move on." },
+    { title: "Quick Deliverance", subtext: "Remove it instantly." },
+  ],
+  rightGrid: [
+    { id: "truth",      title: "Truth",      subtext: "Face what is real.",            position: "center" },
+    { id: "repentance", title: "Repentance", subtext: "Turn away from what is false.", position: "top"    },
+    { id: "trust",      title: "Trust",      subtext: "Let go of control.",            position: "left"   },
+    { id: "surrender",  title: "Surrender",  subtext: "Give it to God.",               position: "right"  },
+    { id: "healing",    title: "Healing",    subtext: "God restores what was broken.", position: "bottom" },
+  ],
+  leftRevealImage: { tiles: 3, type: "distorted" },
+  overlayText: ["But it does not heal you.", "It keeps you in control."],
+  finalText: ["This is how healing happens.", "Not instantly. But truly."],
+}, null, 2);
+
+function CrossGridSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let parsed: Record<string, unknown> = {};
+  try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
+  const isDual = parsed?.phase === "dual";
+
+  const switchMode = (dual: boolean) => {
+    onChange(dual ? CROSS_GRID_DUAL_DEFAULT : CROSS_GRID_DEFAULT);
+  };
+
+  if (!isDual) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Mode:</span>
+          <button
+            className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground font-medium"
+            disabled
+          >
+            Standard
+          </button>
+          <button
+            className="text-xs px-2 py-1 rounded border border-input text-muted-foreground hover:bg-accent"
+            onClick={() => switchMode(true)}
+            data-testid={`btn-cross-grid-dual-mode-${index}`}
+          >
+            Dual Phase
+          </button>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
+          <textarea
+            value={content}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full font-mono text-xs rounded-md border border-input bg-background px-3 py-2 min-h-[160px] resize-y"
+            spellCheck={false}
+            data-testid={`textarea-cross-grid-json-${index}`}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  let dualData: {
+    leftCards: { title: string; subtext: string }[];
+    rightGrid: { id: string; title: string; subtext: string; position: string }[];
+    overlayText: string[];
+    finalText: string[];
+  };
+  try {
+    const p = JSON.parse(content || "{}");
+    dualData = {
+      leftCards: Array.isArray(p.leftCards) ? p.leftCards : [],
+      rightGrid: Array.isArray(p.rightGrid) ? p.rightGrid : [],
+      overlayText: Array.isArray(p.overlayText) ? p.overlayText : ["", ""],
+      finalText: Array.isArray(p.finalText) ? p.finalText : ["", ""],
+    };
+  } catch {
+    dualData = { leftCards: [], rightGrid: [], overlayText: ["", ""], finalText: ["", ""] };
+  }
+
+  const update = (next: typeof dualData) => {
+    const base = (() => { try { return JSON.parse(content); } catch { return {}; } })();
+    onChange(JSON.stringify({ ...base, ...next }, null, 2));
+  };
+
+  const updateLeftCard = (i: number, field: "title" | "subtext", val: string) => {
+    const cards = [...dualData.leftCards];
+    cards[i] = { ...cards[i], [field]: val };
+    update({ ...dualData, leftCards: cards });
+  };
+
+  const updateRightTile = (i: number, field: "title" | "subtext", val: string) => {
+    const tiles = [...dualData.rightGrid];
+    tiles[i] = { ...tiles[i], [field]: val };
+    update({ ...dualData, rightGrid: tiles });
+  };
+
+  const POSITION_LABELS: Record<string, string> = {
+    center: "Center", top: "Top", left: "Left", right: "Right", bottom: "Bottom",
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">Mode:</span>
+        <button
+          className="text-xs px-2 py-1 rounded border border-input text-muted-foreground hover:bg-accent"
+          onClick={() => switchMode(false)}
+          data-testid={`btn-cross-grid-standard-mode-${index}`}
+        >
+          Standard
+        </button>
+        <button
+          className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground font-medium"
+          disabled
+        >
+          Dual Phase
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Left Cards (Phase 1)</p>
+        {dualData.leftCards.map((card, i) => (
+          <div key={i} className="grid grid-cols-2 gap-2 p-2 rounded border border-input bg-muted/30">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Card {i + 1} Title</label>
+              <input
+                className="w-full text-xs rounded border border-input bg-background px-2 py-1"
+                value={card.title}
+                onChange={(e) => updateLeftCard(i, "title", e.target.value)}
+                data-testid={`input-left-card-title-${index}-${i}`}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Subtext</label>
+              <input
+                className="w-full text-xs rounded border border-input bg-background px-2 py-1"
+                value={card.subtext}
+                onChange={(e) => updateLeftCard(i, "subtext", e.target.value)}
+                data-testid={`input-left-card-subtext-${index}-${i}`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Overlay Text (after Phase 1)</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="space-y-1">
+              <label className="text-xs text-muted-foreground">Line {i + 1}</label>
+              <input
+                className="w-full text-xs rounded border border-input bg-background px-2 py-1"
+                value={dualData.overlayText[i] || ""}
+                onChange={(e) => {
+                  const t = [...dualData.overlayText];
+                  t[i] = e.target.value;
+                  update({ ...dualData, overlayText: t });
+                }}
+                data-testid={`input-overlay-text-${index}-${i}`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Right Grid Tiles (Phase 2)</p>
+        {dualData.rightGrid.map((tile, i) => (
+          <div key={tile.id || i} className="grid grid-cols-2 gap-2 p-2 rounded border border-input bg-muted/30">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{POSITION_LABELS[tile.position] || tile.position} — Title</label>
+              <input
+                className="w-full text-xs rounded border border-input bg-background px-2 py-1"
+                value={tile.title}
+                onChange={(e) => updateRightTile(i, "title", e.target.value)}
+                data-testid={`input-right-tile-title-${index}-${i}`}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Subtext</label>
+              <input
+                className="w-full text-xs rounded border border-input bg-background px-2 py-1"
+                value={tile.subtext}
+                onChange={(e) => updateRightTile(i, "subtext", e.target.value)}
+                data-testid={`input-right-tile-subtext-${index}-${i}`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Final Text (after Phase 2)</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="space-y-1">
+              <label className="text-xs text-muted-foreground">Line {i + 1}</label>
+              <input
+                className="w-full text-xs rounded border border-input bg-background px-2 py-1"
+                value={dualData.finalText[i] || ""}
+                onChange={(e) => {
+                  const t = [...dualData.finalText];
+                  t[i] = e.target.value;
+                  update({ ...dualData, finalText: t });
+                }}
+                data-testid={`input-final-text-${index}-${i}`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DEFAULT_PATH_OPTIONS = [
   { id: "answers", label: "Seeking Answers", description: "You were looking for answers. What you found felt real. But something shifted.", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci" } },
   { id: "control", label: "Seeking Control", description: "The world is loud. You seek calm in breath and focus to gain power over your day. Yet, the unrest remains.", imageUrl: "", nextContent: { type: "media", content: "https://vimeo.com/1177815632?fl=ip&fe=ec" } },
@@ -4916,7 +5132,13 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : (slide.type === "cross_grid" || slide.type === "story_choice") ? (
+                            ) : slide.type === "cross_grid" ? (
+                              <CrossGridSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "story_choice" ? (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
                                 <textarea
@@ -5841,7 +6063,13 @@ function PrelimContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : (slide.type === "cross_grid" || slide.type === "story_choice") ? (
+                            ) : slide.type === "cross_grid" ? (
+                              <CrossGridSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "story_choice" ? (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content (JSON)</label>
                                 <textarea
