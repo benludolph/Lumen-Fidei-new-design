@@ -1783,6 +1783,87 @@ export async function registerRoutes(
     }
   });
 
+  // Migration: convert timer slides to scripture_practice
+  app.post('/api/admin/migrate-timer-to-scripture-practice', requireRole('admin'), async (req, res) => {
+    try {
+      const stripHtml = (html: string): string =>
+        html
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&ldquo;|&#8220;/g, '\u201c')
+          .replace(/&rdquo;|&#8221;/g, '\u201d')
+          .replace(/&lsquo;|&#8216;/g, '\u2018')
+          .replace(/&rsquo;|&#8217;/g, '\u2019')
+          .replace(/&amp;/g, '&')
+          .replace(/&hellip;|&#8230;/g, '...')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const splitIntoChunks = (html: string): string[] => {
+        const text = stripHtml(html);
+        const parts = text.split(/(?<=[,;.!?])\s+/);
+        return parts.map(p => p.trim()).filter(p => p.length > 1);
+      };
+
+      const convertSlides = (slides: { type: string; content: string }[]): { converted: number; slides: { type: string; content: string }[] } => {
+        let converted = 0;
+        const newSlides = slides.map(slide => {
+          if (slide.type !== 'timer') return slide;
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(slide.content); } catch {}
+          const text = typeof parsed.text === 'string' ? parsed.text : '';
+          const chunks = splitIntoChunks(text);
+          converted++;
+          return {
+            type: 'scripture_practice',
+            content: JSON.stringify({
+              duration: typeof parsed.duration === 'number' ? parsed.duration : 180,
+              text,
+              ...(typeof parsed.audioUrl === 'string' && parsed.audioUrl ? { audioUrl: parsed.audioUrl } : {}),
+              reference: '',
+              chunks: chunks.length > 0 ? chunks : [stripHtml(text)],
+              reflectionDuration: 120,
+              reflectionTitle: 'Stay with this and bring it to God.\nReflect on the thoughts that come up.',
+            }),
+          };
+        });
+        return { converted, slides: newSlides };
+      };
+
+      let totalConverted = 0;
+      const log: string[] = [];
+
+      // Migrate track_a_content
+      const trackARows = await db.select().from(trackAContent);
+      for (const row of trackARows) {
+        const slides = (row.slides ?? []) as { type: string; content: string }[];
+        const { converted, slides: newSlides } = convertSlides(slides);
+        if (converted > 0) {
+          await db.update(trackAContent).set({ slides: newSlides }).where(eq(trackAContent.id, row.id));
+          log.push(`track_a_content day ${row.dayNumber}: converted ${converted} timer slide(s)`);
+          totalConverted += converted;
+        }
+      }
+
+      // Migrate prelim_modules
+      const prelimRows = await db.select().from(prelimModules);
+      for (const row of prelimRows) {
+        const slides = (row.slides ?? []) as { type: string; content: string }[];
+        const { converted, slides: newSlides } = convertSlides(slides);
+        if (converted > 0) {
+          await db.update(prelimModules).set({ slides: newSlides }).where(eq(prelimModules.id, row.id));
+          log.push(`prelim_modules position ${row.position}: converted ${converted} timer slide(s)`);
+          totalConverted += converted;
+        }
+      }
+
+      res.json({ success: true, totalConverted, log });
+    } catch (err: unknown) {
+      console.error('Migration error:', err);
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
   // Seed Data
   await seed();
 

@@ -1131,6 +1131,8 @@ function CohortSettingsView() {
       <DataExportCard />
 
       <BackupRestoreCard />
+
+      <MigrateTimerCard />
     </div>
   );
 }
@@ -1312,6 +1314,70 @@ function BackupRestoreCard() {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function MigrateTimerCard() {
+  const { toast } = useToast();
+  const [result, setResult] = useState<{ totalConverted: number; log: string[] } | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  const handleMigrate = async () => {
+    if (!confirmed) { setConfirmed(true); return; }
+    setIsRunning(true);
+    try {
+      const res = await fetch('/api/admin/migrate-timer-to-scripture-practice', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Migration failed');
+      setResult(data);
+      toast({
+        title: `Migration complete`,
+        description: `Converted ${data.totalConverted} timer slide(s) to Scripture Practice.`,
+      });
+    } catch (err: unknown) {
+      toast({ title: 'Migration failed', description: String(err), variant: 'destructive' });
+    } finally {
+      setIsRunning(false);
+      setConfirmed(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">Convert Timer Slides → Scripture Practice</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Automatically converts all existing <strong>Timer</strong> slides in every day and module into the new <strong>Scripture Practice</strong> slide type. Your scripture text, audio files, and timer durations are preserved as Tab 1. The scripture text is automatically split into tappable chunks for Tab 2. Tab 3 uses standard reflection defaults.
+        </p>
+        <div className="flex items-center gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+          <span className="font-medium">⚠ This modifies your database.</span>
+          <span>Take a backup first. This cannot be undone automatically.</span>
+        </div>
+        {result && (
+          <div className="p-3 rounded-md bg-green-50 border border-green-200 text-sm text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200 space-y-1">
+            <p className="font-medium">Converted {result.totalConverted} slide(s)</p>
+            {result.log.map((line, i) => <p key={i} className="text-xs opacity-80">{line}</p>)}
+          </div>
+        )}
+        <Button
+          variant={confirmed ? 'destructive' : 'outline'}
+          onClick={handleMigrate}
+          disabled={isRunning}
+          data-testid="button-migrate-timer-to-scripture-practice"
+        >
+          {isRunning ? 'Running migration...' : confirmed ? 'Confirm — run migration now' : 'Run Timer → Scripture Practice Migration'}
+        </Button>
+        {confirmed && !isRunning && (
+          <p className="text-xs text-muted-foreground">Click again to confirm. Make sure you have a backup.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

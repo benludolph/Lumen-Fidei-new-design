@@ -823,7 +823,7 @@ function ScripturePracticeSlide({
         reflectionDuration: typeof parsed.reflectionDuration === "number" ? parsed.reflectionDuration : 120,
         reflectionTitle: typeof parsed.reflectionTitle === "string" && parsed.reflectionTitle
           ? parsed.reflectionTitle
-          : "Stay with this and bring it to God.\nExplore the thoughts that come up.",
+          : "Stay with this and bring it to God.\nReflect on the thoughts that come up.",
       };
     } catch {
       return {
@@ -1106,6 +1106,17 @@ function ScripturePracticeSlide({
 
       {activeTab === 1 && (
         <div className="flex flex-col gap-5" data-testid="scripture-practice-tab-select">
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "clamp(0.875rem, 3.2vw, 1rem)",
+              color: "rgba(255,255,255,0.55)",
+              lineHeight: "1.5",
+              margin: 0,
+            }}
+          >
+            Now read it again. Notice if anything stands out, or evokes an emotion. Tap the word or phrase that stands out to you.
+          </p>
           <div
             style={{
               borderLeft: "3px solid rgba(255,255,255,0.15)",
