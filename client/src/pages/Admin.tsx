@@ -174,6 +174,34 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
   const [resetOpen, setResetOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleMentorPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch(`/api/admin/mentor/${user.id}/upload-photo`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(err.message || "Upload failed");
+      }
+      toast({ title: "Photo updated", description: `Profile photo updated for ${user.name}.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message || "Please try again.", variant: "destructive" });
+    } finally {
+      setIsUploadingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = "";
+    }
+  };
   // Include both mentors and admins as possible mentors for participants
   const mentors = allUsers.filter(u => u.role === 'mentor' || u.role === 'admin');
 
@@ -268,6 +296,33 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-1">
           <UserDetailsDialog userId={user.id} userName={user.name} />
+
+          {(user.role === 'mentor' || user.role === 'admin') && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Upload profile photo"
+                data-testid={`button-upload-mentor-photo-${user.id}`}
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+              >
+                {isUploadingPhoto ? (
+                  <Upload className="w-4 h-4 animate-pulse" />
+                ) : (
+                  <ImageIcon className="w-4 h-4" />
+                )}
+              </Button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={handleMentorPhotoUpload}
+                data-testid={`input-mentor-photo-${user.id}`}
+              />
+            </>
+          )}
           
           <Dialog open={resetOpen} onOpenChange={setResetOpen}>
             <DialogTrigger asChild>

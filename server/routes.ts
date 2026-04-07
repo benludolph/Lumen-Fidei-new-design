@@ -241,6 +241,31 @@ export async function registerRoutes(
     }
   });
 
+  // Get a single user's public profile (used by participants to get mentor photo)
+  app.get('/api/users/:id', requireAuth, async (req, res) => {
+    const targetId = Number(req.params.id);
+    if (isNaN(targetId)) return res.sendStatus(400);
+    const target = await storage.getUser(targetId);
+    if (!target) return res.sendStatus(404);
+
+    // Participants can only fetch their own mentor
+    if (req.user!.role === 'participant') {
+      if (target.id !== req.user!.mentorId && target.id !== req.user!.id) {
+        return res.sendStatus(403);
+      }
+    }
+    // Mentors can fetch their mentees or admins
+    if (req.user!.role === 'mentor') {
+      const isMentee = target.mentorId === req.user!.id;
+      const isAdmin = target.role === 'admin';
+      const isSelf = target.id === req.user!.id;
+      if (!isMentee && !isAdmin && !isSelf) {
+        return res.sendStatus(403);
+      }
+    }
+    res.json(sanitizeUser(target));
+  });
+
   app.post(api.users.create.path, async (req, res) => {
     // Only admin can create users usually, but for demo maybe open? 
     // Let's restrict to admin for now, or allow open registration for 'participant'
@@ -447,6 +472,73 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Image upload error:", error);
       res.status(500).json({ message: "Failed to save image" });
+    }
+  });
+
+  // === Mentor Profile Photo Upload ===
+
+  // Mentor uploads their own profile photo
+  app.post('/api/mentor/upload-photo', requireRole('mentor', 'admin'), uploadLimiter, upload.single('image'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+    try {
+      const ext = path.extname(req.file.originalname);
+      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `mentor_photo_${req.user!.id}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+
+      await db.insert(uploadedImages).values({
+        filename,
+        mimeType: req.file.mimetype,
+        data: base64Data,
+      }).onConflictDoUpdate({
+        target: uploadedImages.filename,
+        set: { data: base64Data, mimeType: req.file.mimetype },
+      });
+
+      const photoUrl = `/api/images/${filename}`;
+      await storage.updateUser(req.user!.id, { profilePhotoUrl: photoUrl });
+
+      res.json({ url: photoUrl });
+    } catch (error) {
+      console.error("Mentor photo upload error:", error);
+      res.status(500).json({ message: "Failed to save photo" });
+    }
+  });
+
+  // Admin sets profile photo for any mentor
+  app.post('/api/admin/mentor/:mentorId/upload-photo', requireRole('admin'), uploadLimiter, upload.single('image'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+    const mentorId = Number(req.params.mentorId);
+    const mentor = await storage.getUser(mentorId);
+    if (!mentor || (mentor.role !== 'mentor' && mentor.role !== 'admin')) {
+      return res.status(404).json({ message: "Mentor not found" });
+    }
+    try {
+      const ext = path.extname(req.file.originalname);
+      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `mentor_photo_${mentorId}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+
+      await db.insert(uploadedImages).values({
+        filename,
+        mimeType: req.file.mimetype,
+        data: base64Data,
+      }).onConflictDoUpdate({
+        target: uploadedImages.filename,
+        set: { data: base64Data, mimeType: req.file.mimetype },
+      });
+
+      const photoUrl = `/api/images/${filename}`;
+      await storage.updateUser(mentorId, { profilePhotoUrl: photoUrl });
+
+      res.json({ url: photoUrl });
+    } catch (error) {
+      console.error("Admin mentor photo upload error:", error);
+      res.status(500).json({ message: "Failed to save photo" });
     }
   });
 

@@ -41,6 +41,26 @@ function InitialsAvatar({ name, size = 36 }: { name: string; size?: number }) {
   );
 }
 
+function UserAvatar({ name, photoUrl, size = 36 }: { name: string; photoUrl?: string | null; size?: number }) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={name}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          flexShrink: 0,
+          border: "1px solid var(--brand-border)",
+        }}
+      />
+    );
+  }
+  return <InitialsAvatar name={name} size={size} />;
+}
+
 export default function Messages() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -269,7 +289,7 @@ export default function Messages() {
                                 (e.currentTarget as HTMLButtonElement).style.background = "none";
                               }}
                             >
-                              <InitialsAvatar name={u.name} size={32} />
+                              <UserAvatar name={u.name} photoUrl={u.profilePhotoUrl} size={32} />
                               <div>
                                 <p className="type-body-md font-medium" style={{ color: "white", margin: 0 }}>
                                   {u.name}
@@ -332,7 +352,7 @@ export default function Messages() {
                         (e.currentTarget as HTMLButtonElement).style.background = "none";
                     }}
                   >
-                    <InitialsAvatar name={contact.name} size={36} />
+                    <UserAvatar name={contact.name} photoUrl={contact.profilePhotoUrl} size={36} />
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <p className="type-body-md font-medium" style={{ color: "white", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {contact.name}
@@ -368,6 +388,11 @@ export default function Messages() {
                   allUsers?.find((u) => u.id === selectedContactId)?.name ||
                   "Unknown"
                 }
+                otherUserPhotoUrl={
+                  contacts?.find((c) => c.id === selectedContactId)?.profilePhotoUrl ||
+                  allUsers?.find((u) => u.id === selectedContactId)?.profilePhotoUrl ||
+                  null
+                }
                 isMobile={isMobile}
                 onBack={handleBackToContacts}
               />
@@ -398,12 +423,14 @@ function ChatWindow({
   currentUserId,
   otherUserId,
   otherUserName,
+  otherUserPhotoUrl,
   isMobile,
   onBack,
 }: {
   currentUserId: number;
   otherUserId: number;
   otherUserName: string;
+  otherUserPhotoUrl?: string | null;
   isMobile: boolean;
   onBack: () => void;
 }) {
@@ -467,7 +494,7 @@ function ChatWindow({
             <ArrowLeft size={16} />
           </button>
         )}
-        <InitialsAvatar name={otherUserName} size={30} />
+        <UserAvatar name={otherUserName} photoUrl={otherUserPhotoUrl} size={30} />
         <span className="type-body-lg font-medium" style={{ color: "white" }}>
           {otherUserName}
         </span>

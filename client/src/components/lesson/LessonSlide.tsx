@@ -1290,6 +1290,8 @@ interface LessonSlideProps {
   onJournalChange?: (value: string) => void;
   direction: "forward" | "backward";
   mentorId?: number | null;
+  mentorPhotoUrl?: string | null;
+  mentorName?: string | null;
   onTimerComplete?: () => void;
   timerAlreadyDone?: boolean;
   onKnowledgeCheckAnswered?: () => void;
@@ -1327,6 +1329,8 @@ export function LessonSlide({
   onJournalChange,
   direction,
   mentorId,
+  mentorPhotoUrl,
+  mentorName,
   onTimerComplete,
   timerAlreadyDone,
   onKnowledgeCheckAnswered,
@@ -1367,6 +1371,8 @@ export function LessonSlide({
           contextKey={chatFlowContextKey || `chat-flow-${dayNumber}`}
           totalSlides={chatFlowTotalSlides}
           slideIndex={chatFlowSlideIndex}
+          mentorPhotoUrl={mentorPhotoUrl}
+          mentorName={mentorName}
           onComplete={() => {
             onInteracted?.();
             onChatFlowComplete?.();

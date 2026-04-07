@@ -86,6 +86,8 @@ interface ChatFlowSlideProps {
   contextKey: string;
   totalSlides: number;
   slideIndex: number;
+  mentorPhotoUrl?: string | null;
+  mentorName?: string | null;
   onComplete: () => void;
   onExit: () => void;
 }
@@ -266,13 +268,59 @@ function TypingIndicator() {
 // Message bubble
 // ============================================================
 
+function MentorAvatar({ photoUrl, name, size = 28 }: { photoUrl?: string | null; name?: string | null; size?: number }) {
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt="Mentor"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          flexShrink: 0,
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      />
+    );
+  }
+  const initials = name
+    ? name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "M";
+  const fontSize = Math.max(10, Math.round(size * 0.38));
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "var(--surface-float)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        fontSize,
+        fontWeight: 600,
+        color: "var(--white-60, rgba(255,255,255,0.6))",
+        letterSpacing: "0.02em",
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 function MessageBubble({
-  role, text, isNew, onRewind,
+  role, text, isNew, onRewind, mentorPhotoUrl, mentorName,
 }: {
   role: "system" | "user";
   text: string;
   isNew?: boolean;
   onRewind?: () => void;
+  mentorPhotoUrl?: string | null;
+  mentorName?: string | null;
 }) {
   const [visible, setVisible] = useState(!isNew);
   useEffect(() => {
@@ -285,13 +333,16 @@ function MessageBubble({
   return (
     <div
       className={cn(
-        "flex items-center gap-[10px]",
+        "flex items-end gap-[8px]",
         role === "system" ? "justify-start" : "justify-end",
         "transition-all ease-out",
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-[10px]",
       )}
       style={{ transitionDuration: "180ms" }}
     >
+      {role === "system" && (
+        <MentorAvatar photoUrl={mentorPhotoUrl} name={mentorName} size={28} />
+      )}
       {role === "user" && onRewind && (
         <button
           onClick={onRewind}
@@ -350,7 +401,7 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
 // Main ChatFlowSlide component
 // ============================================================
 
-export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, onComplete, onExit }: ChatFlowSlideProps) {
+export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, mentorPhotoUrl, mentorName, onComplete, onExit }: ChatFlowSlideProps) {
 
   // ── Parse & normalize flow definition ──
   const { flatSteps, optionSets, summaryTemplate, isRich } = useMemo(
@@ -908,6 +959,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
                   role={msg.role}
                   text={msg.text}
                   isNew={i === renderedMessages.length - 1}
+                  mentorPhotoUrl={msg.role === "system" ? mentorPhotoUrl : undefined}
+                  mentorName={msg.role === "system" ? mentorName : undefined}
                   onRewind={
                     msg.role === "user" && msg.stepId && !msg.stepId.startsWith("__refl")
                       ? () => handleRewind(msg.stepId)
@@ -917,7 +970,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, on
               ))}
 
               {showTyping && (
-                <div className="flex justify-start">
+                <div className="flex items-end gap-[8px] justify-start">
+                  <MentorAvatar photoUrl={mentorPhotoUrl} name={mentorName} size={28} />
                   <TypingIndicator />
                 </div>
               )}

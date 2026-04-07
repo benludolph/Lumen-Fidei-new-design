@@ -39,6 +39,19 @@ export function LessonFlow({
   onExit,
   onComplete,
 }: LessonFlowProps) {
+  const { data: mentorData } = useQuery<{ profilePhotoUrl?: string | null; name?: string | null }>({
+    queryKey: ["/api/users", mentorId],
+    queryFn: async () => {
+      if (!mentorId) return null;
+      const res = await fetch(`/api/users/${mentorId}`, { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!mentorId,
+    staleTime: 60_000,
+  });
+  const mentorPhotoUrl = mentorData?.profilePhotoUrl ?? null;
+  const mentorName = mentorData?.name ?? null;
   type FlowState = "loading" | "slides" | "overlay" | "complete";
   const [flowState, setFlowState] = useState<FlowState>("loading");
   const overlayShownRef = useRef(false);
@@ -352,6 +365,8 @@ export function LessonFlow({
       onJournalChange={effectiveSlideData.type === "text_input" ? setJournalDraft : undefined}
       direction={direction}
       mentorId={mentorId}
+      mentorPhotoUrl={mentorPhotoUrl}
+      mentorName={mentorName}
       onTimerComplete={
         effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_reflection" || effectiveSlideData.type === "scripture_practice"
           ? handleTimerComplete

@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   track: text("track", { enum: ["A", "B", "C"] }), // Nullable for non-participants
   mentorId: integer("mentor_id"), // Self-referencing FK
   startDate: timestamp("start_date"),
+  profilePhotoUrl: text("profile_photo_url"), // Optional profile photo URL
 });
 
 export const dailyContent = pgTable("daily_content", {
