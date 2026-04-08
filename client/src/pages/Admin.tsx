@@ -3011,23 +3011,34 @@ interface QuizEditorData {
 }
 
 function MediaSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  let data: { url: string; text: string };
+  let data: { url: string; text: string; mediaType: "video" | "music"; title: string };
   try {
     const parsed = JSON.parse(content || "{}");
     if (parsed && typeof parsed.url === "string") {
-      data = { url: parsed.url, text: parsed.text || "" };
+      data = {
+        url: parsed.url,
+        text: parsed.text || "",
+        mediaType: parsed.mediaType === "music" ? "music" : "video",
+        title: parsed.title || "",
+      };
     } else {
-      data = { url: content || "", text: "" };
+      data = { url: content || "", text: "", mediaType: "video", title: "" };
     }
   } catch {
-    data = { url: content || "", text: "" };
+    data = { url: content || "", text: "", mediaType: "video", title: "" };
   }
 
   const updateData = (next: typeof data) => {
-    if (!next.text) {
+    const isMusic = next.mediaType === "music";
+    const hasExtras = next.text || isMusic || next.title;
+    if (!hasExtras) {
       onChange(next.url);
     } else {
-      onChange(JSON.stringify(next));
+      const obj: Record<string, string> = { url: next.url };
+      if (next.text) obj.text = next.text;
+      if (isMusic) obj.mediaType = "music";
+      if (next.title) obj.title = next.title;
+      onChange(JSON.stringify(obj));
     }
   };
 
@@ -3037,20 +3048,70 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Video URL or Image</label>
+        <label className="text-xs font-medium text-muted-foreground">Media Type</label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => updateData({ ...data, mediaType: "video" })}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+              data.mediaType !== "music"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-muted-foreground border-input hover:bg-accent"
+            }`}
+            data-testid={`button-media-type-video-${index}`}
+          >
+            🎬 Video / Image
+          </button>
+          <button
+            type="button"
+            onClick={() => updateData({ ...data, mediaType: "music" })}
+            className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+              data.mediaType === "music"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-muted-foreground border-input hover:bg-accent"
+            }`}
+            data-testid={`button-media-type-music-${index}`}
+          >
+            🎵 Music
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">
+          {data.mediaType === "music" ? "YouTube URL or MP3 path" : "Video URL or Image"}
+        </label>
         <input
           type="text"
           value={data.url}
           onChange={(e) => updateData({ ...data, url: e.target.value })}
-          placeholder="Paste YouTube URL or upload an image below"
+          placeholder={data.mediaType === "music" ? "Paste YouTube URL or MP3 file path" : "Paste YouTube/Vimeo URL or upload an image below"}
           className="w-full px-3 py-2 text-sm border rounded-md bg-background"
           data-testid={`input-media-url-${index}`}
         />
       </div>
-      <ModuleImageUpload
-        currentUrl={isImage ? mediaUrl : null}
-        onUploaded={(url) => updateData({ ...data, url })}
-      />
+
+      {data.mediaType === "music" && (
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Song Title</label>
+          <input
+            type="text"
+            value={data.title}
+            onChange={(e) => updateData({ ...data, title: e.target.value })}
+            placeholder="e.g. Come As You Are — Crowder"
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            data-testid={`input-media-title-${index}`}
+          />
+        </div>
+      )}
+
+      {data.mediaType !== "music" && (
+        <ModuleImageUpload
+          currentUrl={isImage ? mediaUrl : null}
+          onUploaded={(url) => updateData({ ...data, url })}
+        />
+      )}
+
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Caption / Text (optional)</label>
         <RichTextEditor

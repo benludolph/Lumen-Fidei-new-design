@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } fro
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -154,15 +154,201 @@ function YouTubeEmbed({ videoId, originalUrl }: { videoId: string; originalUrl: 
   );
 }
 
-function MediaContent({ text }: { text: string }) {
-  if (!text) return null;
+function MusicCard({ url, title }: { url: string; title?: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const trimmed = url.trim();
 
-  const youtubeId = extractYouTubeId(text.trim());
+  const youtubeId = extractYouTubeId(trimmed);
   if (youtubeId) {
-    return <YouTubeEmbed videoId={youtubeId} originalUrl={text.trim()} />;
+    const watchUrl = trimmed.includes("youtube.com") || trimmed.includes("youtu.be")
+      ? trimmed.split("&list=")[0].split("&start_radio")[0]
+      : `https://www.youtube.com/watch?v=${youtubeId}`;
+    const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
+
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          data-testid="button-music-card"
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            background: expanded ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: "12px",
+            padding: "12px",
+            cursor: "pointer",
+            textAlign: "left",
+            transition: "background 150ms ease",
+          }}
+        >
+          <div style={{
+            position: "relative",
+            flexShrink: 0,
+            width: "76px",
+            height: "76px",
+            borderRadius: "8px",
+            overflow: "hidden",
+            background: "#111",
+          }}>
+            <img
+              src={thumbnailUrl}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.38)",
+            }}>
+              {expanded
+                ? <Pause style={{ width: 22, height: 22, color: "#fff" }} />
+                : <Play style={{ width: 22, height: 22, color: "#fff", fill: "#fff" }} />
+              }
+            </div>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.68rem",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.09em",
+              color: "rgba(255,255,255,0.42)",
+              marginBottom: "5px",
+            }}>
+              Optional Listening
+            </div>
+            <div style={{
+              fontFamily: "'IvyOra Display', serif",
+              fontSize: "1.1rem",
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.92)",
+              lineHeight: 1.3,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+              {title || "Listen to this song"}
+            </div>
+            <div style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.78rem",
+              color: "rgba(255,255,255,0.38)",
+              marginTop: "5px",
+            }}>
+              {expanded ? "Tap to collapse" : "Tap to expand"}
+            </div>
+          </div>
+          <Music style={{ width: 17, height: 17, color: "rgba(255,255,255,0.28)", flexShrink: 0 }} />
+        </button>
+
+        {expanded && (
+          <div style={{ marginTop: "12px" }}>
+            <div className="aspect-video rounded-lg overflow-hidden">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
+                title="Music"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                className="w-full h-full"
+              />
+            </div>
+            <a
+              href={watchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 text-[var(--white-50)] hover:text-[var(--white-80)] transition-colors mt-2"
+              data-testid="link-youtube-music-external"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="type-caption-sm">Open in YouTube</span>
+            </a>
+          </div>
+        )}
+      </div>
+    );
   }
 
+  if (/\.mp3$/i.test(trimmed)) {
+    return (
+      <div style={{
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: "12px",
+        padding: "16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Music style={{ width: 20, height: 20, color: "rgba(255,255,255,0.45)", flexShrink: 0 }} />
+          <div>
+            <div style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.68rem",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.09em",
+              color: "rgba(255,255,255,0.42)",
+              marginBottom: "3px",
+            }}>
+              Optional Listening
+            </div>
+            <div style={{
+              fontFamily: "'IvyOra Display', serif",
+              fontSize: "1.05rem",
+              color: "rgba(255,255,255,0.9)",
+            }}>
+              {title || "Listen to this song"}
+            </div>
+          </div>
+        </div>
+        <audio
+          controls
+          src={trimmed}
+          data-testid="audio-music-player"
+          style={{ width: "100%" }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={trimmed}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="type-body-xl text-[#00b57a] underline break-all hover:text-[#00d490]"
+    >
+      {title || trimmed}
+    </a>
+  );
+}
+
+function MediaContent({ text, mediaType, title }: { text: string; mediaType?: string; title?: string }) {
+  if (!text) return null;
+
   const trimmed = text.trim();
+
+  if (mediaType === "music") {
+    return <MusicCard url={trimmed} title={title} />;
+  }
+
+  const youtubeId = extractYouTubeId(trimmed);
+  if (youtubeId) {
+    return <YouTubeEmbed videoId={youtubeId} originalUrl={trimmed} />;
+  }
 
   const vimeoId = extractVimeoId(trimmed);
   if (vimeoId) {
@@ -210,22 +396,27 @@ function MediaContent({ text }: { text: string }) {
   return <p className="type-body-xl whitespace-pre-wrap text-[var(--white-80)]">{text}</p>;
 }
 
-function parseMediaContent(content: string): { url: string; text: string } {
+function parseMediaContent(content: string): { url: string; text: string; mediaType?: string; title?: string } {
   try {
     const parsed = JSON.parse(content);
     if (parsed && typeof parsed.url === "string") {
-      return { url: parsed.url, text: parsed.text || "" };
+      return {
+        url: parsed.url,
+        text: parsed.text || "",
+        mediaType: parsed.mediaType || undefined,
+        title: parsed.title || undefined,
+      };
     }
   } catch {}
   return { url: content, text: "" };
 }
 
 function MediaSlide({ content }: { content: string }) {
-  const { url, text } = useMemo(() => parseMediaContent(content), [content]);
+  const { url, text, mediaType, title } = useMemo(() => parseMediaContent(content), [content]);
 
   return (
     <div className="space-y-6" data-testid="slide-media">
-      <MediaContent text={url} />
+      <MediaContent text={url} mediaType={mediaType} title={title} />
       {text && (
         isHtmlContent(text) ? (
           <HtmlContent content={text} className="slide-text-content space-y-5" />
