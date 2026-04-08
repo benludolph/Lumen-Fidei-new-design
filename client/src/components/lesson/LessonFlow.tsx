@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
@@ -70,6 +70,31 @@ export function LessonFlow({
   const [isShowingInjected, setIsShowingInjected] = useState(false);
   const [practiceChunkSelections, setPracticeChunkSelections] = useState<Record<number, number>>({});
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scrollContentRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+  const [hasReachedBottom, setHasReachedBottom] = useState(true);
+
+  useEffect(() => {
+    setCanScroll(false);
+    setHasReachedBottom(true);
+    const el = scrollContentRef.current;
+    if (!el) return;
+    const t = setTimeout(() => {
+      el.scrollTop = 0;
+      const scrollable = el.scrollHeight > el.clientHeight + 8;
+      setCanScroll(scrollable);
+      setHasReachedBottom(!scrollable);
+    }, 80);
+    return () => clearTimeout(t);
+  }, [currentSlide]);
+
+  const handleContentScroll = useCallback(() => {
+    const el = scrollContentRef.current;
+    if (!el || hasReachedBottom) return;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 12;
+    if (atBottom) setHasReachedBottom(true);
+  }, [hasReachedBottom]);
 
   const overlayContextKey =
     dayNumber < 0 ? `prelim-module-${Math.abs(dayNumber)}` : `chat-flow-${dayNumber}`;
@@ -564,14 +589,44 @@ export function LessonFlow({
               background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
-          <div className="relative flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          <div
+            ref={scrollContentRef}
+            onScroll={handleContentScroll}
+            className="relative flex-1 min-h-0 overflow-y-auto custom-scrollbar"
+          >
             {lessonSlideEl}
           </div>
+
+          {/* Scroll hint — shown when content overflows and user hasn't reached bottom */}
+          {canScroll && !hasReachedBottom && !hideFooter && (
+            <div
+              className="absolute bottom-0 left-0 right-0 pointer-events-none flex flex-col items-center justify-end"
+              style={{
+                height: 100,
+                background: "linear-gradient(to bottom, transparent 0%, var(--surface-base) 70%)",
+                paddingBottom: 18,
+              }}
+            >
+              <div
+                className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 rounded-full"
+                style={{
+                  background: "var(--surface-float)",
+                  border: "1px solid var(--white-10)",
+                  animation: "bounce 1.6s ease-in-out infinite",
+                }}
+              >
+                <ChevronDown className="w-4 h-4 text-white" />
+                <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.08em", color: "rgba(255,255,255,0.8)", textTransform: "uppercase" }}>
+                  Scroll
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
-      {!hideFooter && (
+      {!hideFooter && (!canScroll || hasReachedBottom) && (
         <div
           key={animKey}
           className="relative z-10 shrink-0 flex flex-col items-center justify-center px-4 py-4 sm:px-8 lesson-footer-enter"
