@@ -156,65 +156,56 @@ export function LessonCompletionScreen({
             }}
           />
 
-          {/* Monstrance — fades in first, slowly from below */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              top: 0, left: 0, right: 0, bottom: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-            }}
-          >
-            <img
-              src={monstranceImg}
-              alt=""
-              style={{
-                width: "clamp(90px, 22vw, 140px)",
-                height: "auto",
-                mixBlendMode: "screen",
-                opacity: monstranceVisible ? 0.72 : 0,
-                transform: monstranceVisible ? "translateY(0)" : "translateY(28px)",
-                transition: "opacity 2200ms cubic-bezier(0.4, 0, 0.2, 1), transform 2200ms cubic-bezier(0.4, 0, 0.2, 1)",
-                marginBottom: "clamp(100px, 26vw, 160px)",
-              }}
-            />
-          </div>
-
-          {/* Completion content — vertically and horizontally centered */}
+          {/* Completion content — stacked column, monstrance first then text */}
           <div
             className="relative flex-1 flex flex-col items-center justify-center"
-            style={{
-              gap: "24px",
-              transition: "opacity 900ms ease, transform 900ms ease",
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(14px)",
-            }}
+            style={{ gap: "28px" }}
           >
-            {/* Headline */}
-            <p
-              className="type-display-lg text-white text-center"
-              style={{ letterSpacing: "-0.64px" }}
-            >
-              Lesson Complete
-            </p>
-
-            {/* Cross divider */}
+            {/* Monstrance — fades in first, slowly from below */}
             <img
-              src={crossDividerImg}
+              src={monstranceImg}
+              aria-hidden="true"
               alt=""
-              style={{ width: "152px", height: "auto", opacity: 0.4 }}
+              style={{
+                width: "clamp(90px, 22vw, 130px)",
+                height: "auto",
+                mixBlendMode: "screen",
+                opacity: monstranceVisible ? 0.78 : 0,
+                transform: monstranceVisible ? "translateY(0)" : "translateY(24px)",
+                transition: "opacity 2000ms cubic-bezier(0.4, 0, 0.2, 1), transform 2000ms cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
             />
 
-            {/* Day · Theme tag */}
-            <p
-              className="type-body-sm text-[var(--white-40)] text-center"
+            {/* Text block — fades in after monstrance settles */}
+            <div
+              className="flex flex-col items-center"
+              style={{
+                gap: "20px",
+                opacity: visible ? 1 : 0,
+                transform: visible ? "translateY(0)" : "translateY(14px)",
+                transition: "opacity 900ms ease, transform 900ms ease",
+              }}
             >
-              {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
-            </p>
+              {/* Headline */}
+              <p
+                className="type-display-lg text-white text-center"
+                style={{ letterSpacing: "-0.64px" }}
+              >
+                Lesson Complete
+              </p>
+
+              {/* Cross divider */}
+              <img
+                src={crossDividerImg}
+                alt=""
+                style={{ width: "152px", height: "auto", opacity: 0.4 }}
+              />
+
+              {/* Day · Theme tag */}
+              <p className="type-body-sm text-[var(--white-40)] text-center">
+                {dayNumber > 0 ? `Day ${dayNumber} · ` : ""}{theme || ""}
+              </p>
+            </div>
           </div>
         </div>
       </div>
