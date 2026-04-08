@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { playLessonComplete } from "@/lib/sounds";
 import slideBg from "@assets/SlideBG_1774302310257.webp";
 import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
+import monstranceImg from "@assets/Logo_LumenFidei_1775672709011.webp";
 
 interface LessonCompletionScreenProps {
   dayNumber: number;
@@ -20,11 +21,13 @@ export function LessonCompletionScreen({
   onBack,
 }: LessonCompletionScreenProps) {
   const [visible, setVisible] = useState(false);
+  const [monstranceVisible, setMonstranceVisible] = useState(false);
 
   useEffect(() => {
     playLessonComplete();
-    const t = setTimeout(() => setVisible(true), 200);
-    return () => clearTimeout(t);
+    const t1 = setTimeout(() => setMonstranceVisible(true), 80);
+    const t2 = setTimeout(() => setVisible(true), 700);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
@@ -153,14 +156,42 @@ export function LessonCompletionScreen({
             }}
           />
 
+          {/* Monstrance — fades in first, slowly from below */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0, bottom: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <img
+              src={monstranceImg}
+              alt=""
+              style={{
+                width: "clamp(90px, 22vw, 140px)",
+                height: "auto",
+                mixBlendMode: "screen",
+                opacity: monstranceVisible ? 0.72 : 0,
+                transform: monstranceVisible ? "translateY(0)" : "translateY(28px)",
+                transition: "opacity 2200ms cubic-bezier(0.4, 0, 0.2, 1), transform 2200ms cubic-bezier(0.4, 0, 0.2, 1)",
+                marginBottom: "clamp(100px, 26vw, 160px)",
+              }}
+            />
+          </div>
+
           {/* Completion content — vertically and horizontally centered */}
           <div
             className="relative flex-1 flex flex-col items-center justify-center"
             style={{
               gap: "24px",
-              transition: "opacity 700ms ease, transform 700ms ease",
+              transition: "opacity 900ms ease, transform 900ms ease",
               opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0)" : "translateY(16px)",
+              transform: visible ? "translateY(0)" : "translateY(14px)",
             }}
           >
             {/* Headline */}
@@ -190,7 +221,7 @@ export function LessonCompletionScreen({
 
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
       <div
-        className="relative shrink-0 flex flex-col items-center justify-center p-4 sm:p-8"
+        className="relative shrink-0 flex flex-col items-center justify-center px-4 py-4 sm:px-8"
         style={{
           background: "var(--surface-ground)",
           borderTop: "1px solid var(--white-5)",
