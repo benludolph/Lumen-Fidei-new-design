@@ -26,22 +26,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import type { TrackAModule, TrackAContent, PrelimModuleWithStatus } from "@shared/schema";
 
-import trackAImg1 from "@assets/image_1771985019617.png";
-import trackAImg2 from "@assets/image_1771985039759.png";
-import trackAImg3 from "@assets/image_1771985088299.png";
-import trackAImg4 from "@assets/image_1771985210712.png";
-import trackAImg5 from "@assets/image_1771985228368.png";
-import trackAImg6 from "@assets/image_1771985236426.png";
-
-const TRACK_A_FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
-
 function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[], modules?: TrackAModule[]): string {
   const dayContent = trackASummaries?.find(c => c.dayNumber === dayNumber);
   if (dayContent?.imageUrl) return dayContent.imageUrl;
   const weekNumber = Math.ceil(dayNumber / 6);
   const module = modules?.find(m => m.weekNumber === weekNumber);
   if (module?.imageUrl) return module.imageUrl;
-  return TRACK_A_FALLBACK_IMAGES[(dayNumber - 1) % TRACK_A_FALLBACK_IMAGES.length];
+  return "";
 }
 
 const PRAYER_TEXTS = {
