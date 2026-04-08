@@ -1034,7 +1034,7 @@ function ScripturePracticeSlide({
             <button
               onClick={toggleAudio}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
+                "w-fit flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
                 isPlaying
                   ? "bg-[var(--white-15)] text-white border-[var(--white-20)] shadow-md"
                   : "bg-[var(--white-5)] text-[var(--white-70)] border-[var(--white-10)] hover:bg-[var(--white-10)]"
@@ -1848,7 +1848,7 @@ function TimerSlide({
         <button
           onClick={toggleAudio}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
+            "w-fit flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 font-sans type-body-md font-medium border",
             isPlaying
               ? "bg-[var(--white-15)] text-white border-[var(--white-20)] shadow-md"
               : "bg-[var(--white-5)] text-[var(--white-70)] border-[var(--white-10)] hover:bg-[var(--white-10)]"
