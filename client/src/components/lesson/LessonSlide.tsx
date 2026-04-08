@@ -810,17 +810,18 @@ function ScripturePracticeSlide({
 
       {activeTab === 1 && (
         <div className="flex flex-col gap-5" data-testid="scripture-practice-tab-select">
-          <p
+          <h2
             style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "clamp(0.875rem, 3.2vw, 1rem)",
-              color: "rgba(255,255,255,0.55)",
-              lineHeight: "1.5",
+              fontFamily: "'IvyOra Display', serif",
+              fontSize: "clamp(1.15rem, 4vw, 1.55rem)",
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.88)",
+              lineHeight: "1.35",
               margin: 0,
             }}
           >
             Now read it again. Notice if anything stands out, or evokes an emotion. Tap the word or phrase that stands out to you.
-          </p>
+          </h2>
           <div
             style={{
               borderLeft: "3px solid rgba(255,255,255,0.15)",
