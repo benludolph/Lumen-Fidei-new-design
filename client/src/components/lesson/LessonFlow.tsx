@@ -543,7 +543,7 @@ export function LessonFlow({
         <div
           className={cn(
             "relative flex-1 min-h-0 flex flex-col w-full max-w-[780px]",
-            effectiveSlideData.type === "story_choice" ? "p-4 sm:p-6" : "p-7 sm:p-12"
+            effectiveSlideData.type === "story_choice" ? "p-4 sm:p-6" : effectiveSlideData.type === "scripture_practice" ? "px-7 pb-7 pt-3 sm:px-12 sm:pb-12 sm:pt-4" : "p-7 sm:p-12"
           )}
           style={{
             background: "var(--surface-base)",
