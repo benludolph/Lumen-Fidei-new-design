@@ -880,7 +880,7 @@ function ScripturePracticeSlide({
 
   return (
     <div className="flex flex-col gap-0 w-full" data-testid="slide-scripture-practice">
-      <div className="flex items-center w-full mb-6" style={{ gap: 0 }}>
+      <div className="flex items-center w-full mb-5" style={{ gap: 0 }}>
         {TAB_LABELS.map((label, i) => {
           const unlocked = i <= maxUnlocked;
           const active = i === activeTab;
@@ -914,31 +914,82 @@ function ScripturePracticeSlide({
         })}
       </div>
 
-      {activeTab === 0 && (
-        <div className="flex flex-col items-center gap-6" data-testid="scripture-practice-tab-read">
-          <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] flex items-center justify-center">
+      {/* ── Persistent 3-circle row ── */}
+      <div className="flex items-center justify-around w-full mb-6">
+        {/* Circle 1 — Tab 1 timer */}
+        <div style={{ transition: "opacity 300ms ease", opacity: activeTab === 0 ? 1 : 0.28 }}>
+          <div className="relative flex items-center justify-center" style={{ width: 88, height: 88 }}>
             <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
               <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
               <circle
                 cx="60" cy="60" r="54" fill="none"
                 stroke={tab1Done ? "#00b57a" : "var(--white-70)"}
-                strokeWidth="6"
-                strokeLinecap="round"
+                strokeWidth="6" strokeLinecap="round"
                 strokeDasharray={tab1Circumference}
                 strokeDashoffset={tab1Offset}
                 className="transition-all duration-1000 ease-linear"
               />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {tab1Done ? (
-                <CheckCircle className="w-10 h-10 text-[#00b57a]" />
-              ) : (
-                <span className="type-display-lg font-bold text-white tabular-nums">
-                  {tab1Minutes}:{tab1Seconds.toString().padStart(2, "0")}
-                </span>
-              )}
+            <div className="absolute inset-0 flex items-center justify-center">
+              {tab1Done
+                ? <CheckCircle className="w-8 h-8 text-[#00b57a]" />
+                : <span className="font-bold text-white tabular-nums" style={{ fontSize: "clamp(1rem, 4vw, 1.25rem)", fontFamily: "'Afacad', sans-serif" }}>
+                    {tab1Minutes}:{tab1Seconds.toString().padStart(2, "0")}
+                  </span>
+              }
             </div>
           </div>
+        </div>
+
+        {/* Circle 2 — Select (tab 2 indicator) */}
+        <div style={{ transition: "opacity 300ms ease", opacity: activeTab === 1 ? 1 : maxUnlocked >= 1 ? 0.28 : 0.18 }}>
+          <div className="relative flex items-center justify-center" style={{ width: 88, height: 88 }}>
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
+              {selectedChunkIndex !== null && (
+                <circle cx="60" cy="60" r="54" fill="none" stroke="#00b57a" strokeWidth="6" strokeLinecap="round"
+                  strokeDasharray={tab1Circumference} strokeDashoffset={0} />
+              )}
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              {selectedChunkIndex !== null
+                ? <CheckCircle className="w-8 h-8 text-[#00b57a]" />
+                : <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.75)" }}>
+                    Select
+                  </span>
+              }
+            </div>
+          </div>
+        </div>
+
+        {/* Circle 3 — Tab 3 timer */}
+        <div style={{ transition: "opacity 300ms ease", opacity: activeTab === 2 ? 1 : maxUnlocked >= 2 ? 0.28 : 0.18 }}>
+          <div className="relative flex items-center justify-center" style={{ width: 88, height: 88 }}>
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
+              <circle
+                cx="60" cy="60" r="54" fill="none"
+                stroke={tab3Done ? "#00b57a" : "var(--white-70)"}
+                strokeWidth="6" strokeLinecap="round"
+                strokeDasharray={tab3Circumference}
+                strokeDashoffset={tab3Started ? tab3Offset : tab3Circumference}
+                className="transition-all duration-1000 ease-linear"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              {tab3Done
+                ? <CheckCircle className="w-8 h-8 text-[#00b57a]" />
+                : <span className="font-bold text-white tabular-nums" style={{ fontSize: "clamp(1rem, 4vw, 1.25rem)", fontFamily: "'Afacad', sans-serif" }}>
+                    {tab3Minutes}:{tab3Seconds.toString().padStart(2, "0")}
+                  </span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {activeTab === 0 && (
+        <div className="flex flex-col gap-5" data-testid="scripture-practice-tab-read">
 
           {data.text && (
             <div className="w-full">
@@ -1084,31 +1135,7 @@ function ScripturePracticeSlide({
       )}
 
       {activeTab === 2 && (
-        <div className="flex flex-col items-center gap-8" data-testid="scripture-practice-tab-reflect">
-          <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] flex items-center justify-center">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--white-10)" strokeWidth="6" />
-              <circle
-                cx="60" cy="60" r="54" fill="none"
-                stroke={tab3Done ? "#00b57a" : "var(--white-70)"}
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={tab3Circumference}
-                strokeDashoffset={tab3Offset}
-                className="transition-all duration-1000 ease-linear"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {tab3Done ? (
-                <CheckCircle className="w-10 h-10 text-[#00b57a]" />
-              ) : (
-                <span className="type-display-lg font-bold text-white tabular-nums">
-                  {tab3Minutes}:{tab3Seconds.toString().padStart(2, "0")}
-                </span>
-              )}
-            </div>
-          </div>
-
+        <div className="flex flex-col gap-6" data-testid="scripture-practice-tab-reflect">
           <div className="w-full flex flex-col gap-0">
             {reflectionTitleLines.map((line: string, i: number) => (
               <h2
