@@ -58,12 +58,19 @@ export type SlideType =
   | "story_choice"
   | "image_carousel"
   | "before_after"
-  | "scripture_practice";
+  | "scripture_practice"
+  | "knowledge_quiz";
 
 
 export interface QuizData {
   questions: { question: string; options: string[] }[];
   results: Record<string, { title: string; description: string }>;
+}
+
+export interface KnowledgeQuizData {
+  intro: { title: string; subtitle?: string };
+  questions: { question: string; options: string[]; correctIndex: number }[];
+  conclusion: string;
 }
 
 function extractYouTubeId(url: string): string | null {
@@ -1211,6 +1218,8 @@ interface LessonSlideProps {
   // scripture_practice specific
   practiceChunkIndex?: number;
   onPracticeChunkSelect?: (chunkIndex: number) => void;
+  // knowledge_quiz specific
+  onKnowledgeQuizComplete?: () => void;
 }
 
 export function LessonSlide({
@@ -1243,11 +1252,27 @@ export function LessonSlide({
   onPathSelected,
   practiceChunkIndex,
   onPracticeChunkSelect,
+  onKnowledgeQuizComplete,
 }: LessonSlideProps) {
   const animationClass =
     direction === "forward"
       ? "lesson-slide-in-right"
       : "lesson-slide-in-left";
+
+  // knowledge_quiz takes over the entire slide area with its own UI
+  if (type === "knowledge_quiz") {
+    return (
+      <div
+        className={cn("flex-1 flex flex-col overflow-hidden", animationClass)}
+        data-testid="lesson-slide-knowledge_quiz"
+      >
+        <KnowledgeQuizSlide
+          content={content}
+          onComplete={onKnowledgeQuizComplete || (() => {})}
+        />
+      </div>
+    );
+  }
 
   // chat_flow takes over the entire slide area with its own UI
   if (type === "chat_flow") {
@@ -2008,6 +2033,218 @@ function KnowledgeCheckSlide({
         </div>
       )}
     </>
+  );
+}
+
+// ============================================================
+// Knowledge Quiz Slide
+// ============================================================
+
+function KnowledgeQuizSlide({ content, onComplete }: { content: string; onComplete: () => void }) {
+  const data = useMemo<KnowledgeQuizData>(() => {
+    try {
+      const parsed = JSON.parse(content);
+      return {
+        intro: {
+          title: parsed.intro?.title || "Test Your Knowledge",
+          subtitle: parsed.intro?.subtitle || "",
+        },
+        questions: Array.isArray(parsed.questions) ? parsed.questions.map((q: any) => ({
+          question: q.question || "",
+          options: Array.isArray(q.options) ? q.options : [],
+          correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
+        })) : [],
+        conclusion: parsed.conclusion || "",
+      };
+    } catch {
+      return { intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [], conclusion: "" };
+    }
+  }, [content]);
+
+  type Phase = "intro" | "question" | "results";
+  const [phase, setPhase] = useState<Phase>("intro");
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [feedbackState, setFeedbackState] = useState<"none" | "correct" | "wrong">("none");
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [shaking, setShaking] = useState(false);
+  const shakeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+    };
+  }, []);
+
+  const totalQuestions = data.questions.length;
+  const currentQuestion = data.questions[questionIndex];
+
+  const handleAnswer = useCallback((idx: number) => {
+    if (feedbackState !== "none") return;
+    const isCorrect = idx === currentQuestion.correctIndex;
+    setSelectedIndex(idx);
+    if (isCorrect) {
+      playAnswerCorrect();
+      setFeedbackState("correct");
+      setScore(s => s + 1);
+    } else {
+      playWrongAnswer();
+      setFeedbackState("wrong");
+      setShaking(true);
+      if (shakeTimerRef.current) clearTimeout(shakeTimerRef.current);
+      shakeTimerRef.current = setTimeout(() => setShaking(false), 500);
+    }
+    if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+    advanceTimerRef.current = setTimeout(() => {
+      setFeedbackState("none");
+      setSelectedIndex(null);
+      const nextIndex = questionIndex + 1;
+      if (nextIndex >= totalQuestions) {
+        setPhase("results");
+      } else {
+        setQuestionIndex(nextIndex);
+      }
+    }, 1000);
+  }, [feedbackState, currentQuestion, questionIndex, totalQuestions]);
+
+  if (phase === "intro") {
+    return (
+      <div
+        className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8"
+        data-testid="kq-intro-screen"
+      >
+        <div className="space-y-3">
+          <p className="type-display-xl font-bold text-white leading-tight">
+            {data.intro.title}
+          </p>
+          {data.intro.subtitle && (
+            <p className="type-body-xl text-[var(--white-60)]">
+              {data.intro.subtitle}
+            </p>
+          )}
+        </div>
+        <Button
+          onClick={() => setPhase("question")}
+          className="bg-[#00b57a] hover:bg-[#00a06a] text-white px-8 py-3 text-base rounded-xl"
+          data-testid="button-kq-start"
+        >
+          Start
+          <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    );
+  }
+
+  if (phase === "question" && currentQuestion) {
+    const progress = ((questionIndex + 1) / totalQuestions) * 100;
+    return (
+      <div className="flex-1 flex flex-col px-6 py-6 gap-6 overflow-y-auto" data-testid="kq-question-screen">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="type-caption-sm text-[var(--white-50)]">
+              {questionIndex + 1} of {totalQuestions}
+            </span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-[var(--white-8)] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[#00b57a] transition-all duration-300"
+              style={{ width: `${progress}%` }}
+              data-testid="kq-progress-bar"
+            />
+          </div>
+        </div>
+
+        <p className="type-display-lg font-bold text-white leading-snug" data-testid="kq-question-text">
+          {currentQuestion.question}
+        </p>
+
+        <div
+          className={cn(
+            "space-y-3 transition-transform",
+            shaking && "animate-[shake_0.4s_ease]"
+          )}
+        >
+          {currentQuestion.options.map((option, idx) => {
+            const isSelected = selectedIndex === idx;
+            const answered = feedbackState !== "none";
+            let optionStyle = "bg-transparent border border-[var(--white-8)] hover:bg-[var(--white-4)]";
+            let circleStyle = "bg-[var(--white-8)] text-[var(--white-50)]";
+
+            if (answered && isSelected) {
+              if (feedbackState === "correct") {
+                optionStyle = "bg-[#00b57a]/15 ring-2 ring-[#00b57a] border-transparent";
+                circleStyle = "bg-[#00b57a] text-white";
+              } else {
+                optionStyle = "bg-[#ef4444]/15 ring-2 ring-[#ef4444] border-transparent";
+                circleStyle = "bg-[#ef4444] text-white";
+              }
+            } else if (answered) {
+              optionStyle = "bg-transparent opacity-40 border border-[var(--white-8)]";
+            }
+
+            const labels = ["A", "B", "C", "D"];
+            return (
+              <button
+                key={idx}
+                type="button"
+                disabled={answered}
+                onClick={() => handleAnswer(idx)}
+                className={cn(
+                  "flex items-center gap-3 w-full text-left p-4 rounded-xl transition-all duration-200",
+                  optionStyle,
+                  answered && "cursor-default"
+                )}
+                data-testid={`kq-option-${idx}`}
+              >
+                <span className={cn(
+                  "shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
+                  circleStyle
+                )}>
+                  {answered && isSelected && feedbackState === "correct" ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : answered && isSelected && feedbackState === "wrong" ? (
+                    <XIcon className="w-5 h-5" />
+                  ) : (
+                    labels[idx] || String(idx + 1)
+                  )}
+                </span>
+                <span className="type-body-xl text-[var(--white-80)] leading-snug">
+                  {option}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8"
+      data-testid="kq-results-screen"
+    >
+      <div className="space-y-4">
+        <p className="type-display-xl font-bold text-white" data-testid="kq-score-text">
+          You got {score} out of {totalQuestions}!
+        </p>
+        {data.conclusion && (
+          <p className="type-body-xl text-[var(--white-60)] leading-relaxed" data-testid="kq-conclusion">
+            {data.conclusion}
+          </p>
+        )}
+      </div>
+      <Button
+        onClick={onComplete}
+        className="bg-[#00b57a] hover:bg-[#00a06a] text-white px-8 py-3 text-base rounded-xl"
+        data-testid="button-kq-continue"
+      >
+        Continue
+        <ArrowRight className="w-4 h-4 ml-2" />
+      </Button>
+    </div>
   );
 }
 

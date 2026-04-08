@@ -2311,7 +2311,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2328,6 +2328,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   mentor_message: "Mentor Message",
   timer: "Timer",
   knowledge_check: "Knowledge Check",
+  knowledge_quiz: "Knowledge Quiz",
   quiz: "Quiz",
   survey: "Survey",
   scenario: "Scenario Stepper",
@@ -2350,6 +2351,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   mentor_message: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
   timer: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   knowledge_check: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  knowledge_quiz: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   quiz: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200",
   survey: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200",
   scenario: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200",
@@ -3825,6 +3827,238 @@ function KnowledgeCheckEditor({ content, onChange, index }: { content: string; o
 }
 
 
+function KnowledgeQuizEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let data: { intro: { title: string; subtitle: string }; questions: { question: string; options: string[]; correctIndex: number }[]; conclusion: string };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      intro: {
+        title: parsed.intro?.title || "",
+        subtitle: parsed.intro?.subtitle || "",
+      },
+      questions: Array.isArray(parsed.questions) ? parsed.questions.map((q: any) => ({
+        question: q.question || "",
+        options: Array.isArray(q.options) ? q.options : ["", "", "", ""],
+        correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
+      })) : [{ question: "", options: ["", "", "", ""], correctIndex: 0 }],
+      conclusion: parsed.conclusion || "",
+    };
+  } catch {
+    data = { intro: { title: "", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" };
+  }
+
+  const update = (next: typeof data) => onChange(JSON.stringify(next));
+
+  const updateQuestion = (qi: number, field: "question" | "correctIndex", value: string | number) => {
+    const questions = data.questions.map((q, i) => i === qi ? { ...q, [field]: value } : q);
+    update({ ...data, questions });
+  };
+
+  const updateOption = (qi: number, oi: number, value: string) => {
+    const questions = data.questions.map((q, i) => {
+      if (i !== qi) return q;
+      const options = [...q.options];
+      options[oi] = value;
+      return { ...q, options };
+    });
+    update({ ...data, questions });
+  };
+
+  const addOption = (qi: number) => {
+    const questions = data.questions.map((q, i) => {
+      if (i !== qi || q.options.length >= 4) return q;
+      return { ...q, options: [...q.options, ""] };
+    });
+    update({ ...data, questions });
+  };
+
+  const removeOption = (qi: number, oi: number) => {
+    const questions = data.questions.map((q, i) => {
+      if (i !== qi || q.options.length <= 2) return q;
+      const options = q.options.filter((_, j) => j !== oi);
+      let ci = q.correctIndex;
+      if (oi === ci) ci = 0;
+      else if (oi < ci) ci = ci - 1;
+      return { ...q, options, correctIndex: ci };
+    });
+    update({ ...data, questions });
+  };
+
+  const addQuestion = () => {
+    update({ ...data, questions: [...data.questions, { question: "", options: ["", "", "", ""], correctIndex: 0 }] });
+  };
+
+  const removeQuestion = (qi: number) => {
+    if (data.questions.length <= 1) return;
+    update({ ...data, questions: data.questions.filter((_, i) => i !== qi) });
+  };
+
+  const moveQuestion = (qi: number, dir: "up" | "down") => {
+    const newIndex = dir === "up" ? qi - 1 : qi + 1;
+    if (newIndex < 0 || newIndex >= data.questions.length) return;
+    const questions = [...data.questions];
+    [questions[qi], questions[newIndex]] = [questions[newIndex], questions[qi]];
+    update({ ...data, questions });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-2 p-3 border rounded-md bg-muted/30">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Intro Screen</p>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Title</label>
+          <input
+            type="text"
+            value={data.intro.title}
+            onChange={(e) => update({ ...data, intro: { ...data.intro, title: e.target.value } })}
+            placeholder="e.g. Test your knowledge of the spiritual world"
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            data-testid={`input-kq-intro-title-${index}`}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Subtitle (optional)</label>
+          <input
+            type="text"
+            value={data.intro.subtitle}
+            onChange={(e) => update({ ...data, intro: { ...data.intro, subtitle: e.target.value } })}
+            placeholder="Brief description shown below the title"
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            data-testid={`input-kq-intro-subtitle-${index}`}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Questions</p>
+        {data.questions.map((q, qi) => (
+          <div key={qi} className="p-3 border rounded-md space-y-3 bg-muted/20">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-muted-foreground">Question {qi + 1}</span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => moveQuestion(qi, "up")}
+                  disabled={qi === 0}
+                  data-testid={`button-kq-q-up-${index}-${qi}`}
+                >
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => moveQuestion(qi, "down")}
+                  disabled={qi === data.questions.length - 1}
+                  data-testid={`button-kq-q-down-${index}-${qi}`}
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </Button>
+                {data.questions.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => removeQuestion(qi)}
+                    data-testid={`button-kq-q-remove-${index}-${qi}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={q.question}
+              onChange={(e) => updateQuestion(qi, "question", e.target.value)}
+              placeholder="Enter the question..."
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+              data-testid={`input-kq-question-${index}-${qi}`}
+            />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Options (circle = correct answer)</label>
+              {q.options.map((opt, oi) => (
+                <div key={oi} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updateQuestion(qi, "correctIndex", oi)}
+                    className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      q.correctIndex === oi
+                        ? "border-green-500 bg-green-500 text-white"
+                        : "border-gray-300 bg-white hover:border-gray-400"
+                    }`}
+                    title={q.correctIndex === oi ? "Correct answer" : "Mark as correct"}
+                    data-testid={`kq-correct-radio-${index}-${qi}-${oi}`}
+                  >
+                    {q.correctIndex === oi && (
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={(e) => updateOption(qi, oi, e.target.value)}
+                    placeholder={`Option ${oi + 1}`}
+                    className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
+                    data-testid={`input-kq-option-${index}-${qi}-${oi}`}
+                  />
+                  {q.options.length > 2 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 h-8 w-8"
+                      onClick={() => removeOption(qi, oi)}
+                      data-testid={`button-kq-remove-option-${index}-${qi}-${oi}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {q.options.length < 4 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addOption(qi)}
+                  data-testid={`button-kq-add-option-${index}-${qi}`}
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  Add Option
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addQuestion}
+          data-testid={`button-kq-add-question-${index}`}
+        >
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          Add Question
+        </Button>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Conclusion (shown on results screen)</label>
+        <input
+          type="text"
+          value={data.conclusion}
+          onChange={(e) => update({ ...data, conclusion: e.target.value })}
+          placeholder="e.g. Great work! Keep diving deeper into your faith."
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+          data-testid={`input-kq-conclusion-${index}`}
+        />
+      </div>
+    </div>
+  );
+}
+
 function TimerSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: { duration: number; text: string; audioUrl?: string };
   try {
@@ -4677,10 +4911,13 @@ function TrackAContentManagementView() {
     setExpandedSlide(null);
   };
 
+  const KNOWLEDGE_QUIZ_DEFAULT = JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" });
+
   const getTrackADefaultSlideContent = (type: string): string => {
     if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } });
     if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
+    if (type === "knowledge_quiz") return KNOWLEDGE_QUIZ_DEFAULT;
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
@@ -5092,6 +5329,11 @@ function TrackAContentManagementView() {
                                     updateSlide(index, "content", JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" }));
                                   }
                                 }
+                                if (val === "knowledge_quiz") {
+                                  try { JSON.parse(slide.content); } catch {
+                                    updateSlide(index, "content", JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" }));
+                                  }
+                                }
                                 if (val === "scenario") {
                                   try { JSON.parse(slide.content); } catch {
                                     updateSlide(index, "content", JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] }));
@@ -5147,6 +5389,12 @@ function TrackAContentManagementView() {
                               />
                             ) : slide.type === "knowledge_check" ? (
                               <KnowledgeCheckEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "knowledge_quiz" ? (
+                              <KnowledgeQuizEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -5286,6 +5534,11 @@ function TrackAContentManagementView() {
                           try {
                             const d = JSON.parse(slide.content);
                             return `Q: ${d.question || "(empty)"} — ${d.options?.length || 0} options`;
+                          } catch { return slide.content || "(empty)"; }
+                        })() : slide.type === "knowledge_quiz" ? (() => {
+                          try {
+                            const d = JSON.parse(slide.content);
+                            return `"${d.intro?.title || "(no title)"}" — ${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""}`;
                           } catch { return slide.content || "(empty)"; }
                         })() : slide.type === "timer" ? (() => {
                           try {
@@ -5858,6 +6111,7 @@ function PrelimContentManagementView() {
     if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
     if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
     if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
+    if (type === "knowledge_quiz") return JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" });
     if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
     if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
     if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
@@ -6078,6 +6332,12 @@ function PrelimContentManagementView() {
                               />
                             ) : slide.type === "knowledge_check" ? (
                               <KnowledgeCheckEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "knowledge_quiz" ? (
+                              <KnowledgeQuizEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}

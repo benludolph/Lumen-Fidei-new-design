@@ -384,10 +384,13 @@ export function LessonFlow({
       onPathSelected={currentSlideData.type === "path_selector" && !isShowingInjected ? handlePathSelected : undefined}
       practiceChunkIndex={effectiveSlideData.type === "scripture_practice" ? (practiceChunkSelections[currentSlide] ?? undefined) : undefined}
       onPracticeChunkSelect={effectiveSlideData.type === "scripture_practice" ? handlePracticeChunkSelect : undefined}
+      onKnowledgeQuizComplete={effectiveSlideData.type === "knowledge_quiz" ? handleNext : undefined}
     />
   );
 
-  if (isChatFlow) {
+  const isKnowledgeQuiz = effectiveSlideData.type === "knowledge_quiz";
+
+  if (isChatFlow || isKnowledgeQuiz) {
     return createPortal(
       <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--surface-base)]" data-testid="lesson-flow">
         {lessonSlideEl}
