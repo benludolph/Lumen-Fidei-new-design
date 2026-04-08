@@ -753,7 +753,7 @@ function ScripturePracticeSlide({
                     paddingLeft: "20px",
                     fontFamily: "'Afacad', sans-serif",
                     fontStyle: "italic",
-                    fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
+                    fontSize: "1.25rem",
                     color: "rgba(255,255,255,0.8)",
                     lineHeight: "1.65",
                   }}
@@ -828,7 +828,7 @@ function ScripturePracticeSlide({
               paddingLeft: "20px",
               fontFamily: "'Afacad', sans-serif",
               fontStyle: "italic",
-              fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
+              fontSize: "1.25rem",
               color: "rgba(255,255,255,0.8)",
               lineHeight: "1.65",
             }}
@@ -937,7 +937,7 @@ function ScripturePracticeSlide({
                   paddingLeft: "20px",
                   fontFamily: "'Afacad', sans-serif",
                   fontStyle: "italic",
-                  fontSize: "clamp(1.05rem, 3.8vw, 1.5rem)",
+                  fontSize: "1.25rem",
                   color: "rgba(255,255,255,0.8)",
                   lineHeight: "1.65",
                 }}
