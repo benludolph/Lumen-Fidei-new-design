@@ -979,7 +979,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               {/* Option buttons */}
               {inputReady && !flowComplete && currentStep &&
                 (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {resolveOptions(currentStep).map(opt => (
                     <OptionButton
                       key={opt.value}
