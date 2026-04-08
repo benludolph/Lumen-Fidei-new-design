@@ -564,7 +564,7 @@ export function LessonFlow({
               background: "radial-gradient(ellipse at 0% 0%, var(--white-4) 0%, transparent 60%)",
             }}
           />
-          <div className="relative flex-1 min-h-0 overflow-visible">
+          <div className="relative flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {lessonSlideEl}
           </div>
         </div>
