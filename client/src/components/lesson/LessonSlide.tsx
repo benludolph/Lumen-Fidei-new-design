@@ -280,7 +280,7 @@ function MusicCard({ url, title }: { url: string; title?: string }) {
     );
   }
 
-  if (/\.mp3$/i.test(trimmed)) {
+  if (/\.mp3(?:$|[?#])/i.test(trimmed)) {
     return (
       <div style={{
         background: "rgba(255,255,255,0.06)",
