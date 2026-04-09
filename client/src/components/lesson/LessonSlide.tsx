@@ -1310,7 +1310,7 @@ export function LessonSlide({
         className={cn("flex-1 flex flex-col overflow-hidden", animationClass)}
         data-testid="lesson-slide-scene"
       >
-        <PotBandageScene onComplete={() => { onInteracted?.(); }} />
+        <PotBandageScene onComplete={onTimerComplete} />
       </div>
     );
   }

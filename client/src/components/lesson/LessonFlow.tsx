@@ -357,7 +357,7 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice", "scene"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(effectiveSlideData.type) && !slideInteracted;
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
@@ -375,12 +375,12 @@ export function LessonFlow({
       mentorPhotoUrl={mentorPhotoUrl}
       mentorName={mentorName}
       onTimerComplete={
-        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_practice"
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_practice" || effectiveSlideData.type === "scene"
           ? handleTimerComplete
           : undefined
       }
       timerAlreadyDone={
-        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_practice"
+        effectiveSlideData.type === "timer" || effectiveSlideData.type === "scripture_practice" || effectiveSlideData.type === "scene"
           ? completedTimerSlides.has(currentSlide)
           : undefined
       }
@@ -427,6 +427,7 @@ export function LessonFlow({
   const navBlocked =
     (currentSlideData.type === "timer" && !timerDone) ||
     (effectiveSlideData.type === "scripture_practice" && !timerDone) ||
+    (effectiveSlideData.type === "scene" && !timerDone) ||
     isValidKc ||
     requiresInteraction ||
     surveyBlocked;
