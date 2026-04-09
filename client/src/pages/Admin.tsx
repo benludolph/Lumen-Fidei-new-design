@@ -2339,7 +2339,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   image_carousel: "Image Carousel",
   before_after: "Before / After Slider",
   scripture_practice: "Scripture Practice",
-  scene: "Pot & Bandage Scene",
+  scene: "Interactive Scene",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
