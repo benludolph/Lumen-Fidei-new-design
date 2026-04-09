@@ -1,0 +1,122 @@
+Build a single interactive scene for my formation app. The scene should feel refined, dark, painterly, and symbolic, like an old oil painting brought to life.
+
+GOAL
+Create one cracked pot centered on screen with water continuously leaking from three cracks. The user clicks each crack to apply a bandage. The three bandages represent:
+1. Quick Fix
+2. Quick Prayer
+3. Quick Deliverance
+
+This is not a game with separate screens. It is one fixed scene with different visual states.
+
+CORE INTERACTION
+- Show one pot in a fixed position.
+- Water is already flowing from three visible cracks.
+- There are three clickable hotspots, one over each crack.
+- When the user clicks a crack, apply the matching bandage over that crack.
+- Each hotspot can only be clicked once.
+- Each new bandage should fade in smoothly and feel satisfying.
+- Keep the camera completely still the entire time.
+- No panning, zooming, or scene transitions.
+
+VISUAL STATES
+State 0:
+- Pot is cracked
+- Water leaks from all three cracks
+- No bandages applied
+
+State 1:
+- Quick Fix bandage appears on the first crack
+- Water still leaks overall
+
+State 2:
+- Quick Prayer bandage appears on the second crack
+- First bandage remains visible
+- Water still leaks overall
+
+State 3:
+- Quick Deliverance bandage appears on the third crack
+- All three bandages are now visible
+- Water still leaks
+- After a short pause, the pot shows subtle strain
+
+State 4:
+- The pot bursts apart
+- Use a stylized burst animation, not realistic physics
+- Pot breaks into visible shards or pieces
+- Water surges outward briefly
+- Optional dust or splash effect
+- The burst should feel symbolic and dramatic, but clean and elegant
+- After burst, either hold on the broken state or trigger a callback for the next lesson step
+
+IMPORTANT DESIGN REQUIREMENTS
+- One stable container with layered elements
+- Base pot image should stay in the same place at all times
+- Water should feel like a continuous loop
+- Bandages should be overlays that appear in place
+- Burst should happen in the same exact composition
+- Do not treat this like a slideshow
+- Do not build this as separate pages
+- Do not animate the whole screen
+- No cheesy effects
+
+TECH STACK
+- Use React
+- Use Framer Motion for animation
+- Keep implementation simple and editable
+- Put everything in one main component
+- Use placeholder assets if needed, but structure it so I can later swap in my own artwork files easily
+
+ASSET STRUCTURE
+Assume I will later provide these files:
+- /public/assets/pot-base.png
+- /public/assets/bandage-quick-fix.png
+- /public/assets/bandage-quick-prayer.png
+- /public/assets/bandage-quick-deliverance.png
+- optional shard assets if needed
+
+If those files are missing, create a visually clean placeholder version using styled divs or simple shapes so the interaction still works.
+
+WATER ANIMATION
+- Simulate continuous leaking water from each crack
+- This can be done with animated divs, SVG paths, CSS animation, or any simple approach
+- It does not need to be realistic fluid simulation
+- It should just read clearly as flowing water
+- Add small splash motion at the bottom
+
+HOTSPOTS
+Create 3 invisible clickable regions positioned over the cracks:
+- left crack = Quick Fix
+- upper right crack = Quick Prayer
+- lower center crack = Quick Deliverance
+
+When clicked:
+- reveal the correct bandage
+- disable that hotspot
+- preserve prior applied bandages
+
+BURST LOGIC
+When all three bandages are applied:
+- wait about 700ms
+- play a slight tension or shake animation on the pot
+- then trigger burst
+- hide or fade the intact pot
+- show broken shards or fractured pieces moving outward
+- keep the whole composition centered and stable
+
+CODE REQUIREMENTS
+- Clean readable React code
+- Use state clearly
+- Use named variables for each patch state
+- Add comments so I can understand where to swap assets and tweak positions
+- Make hotspot positions, bandage positions, and burst timing easy to edit
+- Include a simple callback prop like onComplete if the burst finishes
+
+STYLING
+- Dark background
+- Painterly, reverent, elegant tone
+- Refined motion, more like Linear / Framer polish than cartoon motion
+- Gentle easing for fade-ins
+- Sharp but tasteful burst moment
+
+DELIVERABLE
+Create the working component and all supporting code needed so I can run it immediately in Replit and test the click states from start to finish.

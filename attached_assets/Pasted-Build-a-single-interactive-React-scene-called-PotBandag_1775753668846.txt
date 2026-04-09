@@ -1,0 +1,79 @@
+Build a single interactive React scene called PotBandageScene.
+
+The scene shows one large cracked pot centered on screen against a dark, painterly background. The pot begins with 3 visible cracks already present, and water is actively flowing from all 3 cracks from the very start.
+
+The interaction is simple and state-based:
+
+INITIAL STATE
+- The pot already has 3 cracks
+- Water flows continuously from all 3 cracks
+- No bandages are applied yet
+- There are 3 invisible clickable hotspots, one over each crack
+
+CLICK STATES
+When the user clicks the first crack:
+- Apply a bandage over that crack
+- The bandage text should read: Quick Fix
+
+When the user clicks the second crack:
+- Apply a bandage over that crack
+- The bandage text should read: Quick Prayer
+
+When the user clicks the third crack:
+- Apply a bandage over that crack
+- The bandage text should read: Quick Deliverance
+
+IMPORTANT
+- Each hotspot can only be clicked once
+- Previously applied bandages must remain visible
+- The scene must stay in the exact same composition the whole time
+- No camera movement, no zoom, no screen transition
+
+WATER
+- Water should already be flowing from all 3 cracks before any click
+- The water should continue flowing throughout the bandage states
+- Use a simple looping animation that reads clearly as flowing water
+- Add subtle splash/drip motion near the bottom
+
+AFTER THE LAST BANDAGE
+- Once all 3 bandages have been applied, wait about 700ms
+- Then the pot should do a short stress or shake animation
+- Then the pot should explode or burst apart dramatically
+- Use a stylized burst, not realistic physics
+- Show visible shards or broken pieces moving outward
+- Add a brief water surge and optional dust/splash effect
+- Keep the burst centered in the same exact scene
+
+TECH REQUIREMENTS
+- Use React
+- Use Framer Motion for animation
+- Keep everything inside one stable scene container
+- Use absolute positioning for cracks, bandages, water streams, and shards so they are easy to edit later
+- Put the full interaction in one main component called PotBandageScene
+- Add comments where I can later swap in my own assets and adjust positions
+
+ASSETS
+Assume I may later replace placeholders with my own files, but make it work now even without assets.
+Support these optional files if present:
+- /public/assets/pot-base.png
+- /public/assets/bandage-quick-fix.png
+- /public/assets/bandage-quick-prayer.png
+- /public/assets/bandage-quick-deliverance.png
+
+If those files are missing, create a visually decent placeholder pot and placeholder bandages so I can still test the interaction immediately.
+
+LAYOUT
+- Center the pot in a scene around 700x700
+- Use a dark, elegant, painterly tone
+- Motion should feel refined, not cartoonish
+- The whole thing should feel like one symbolic object changing state, not a slideshow
+
+DELIVERABLE
+Create all code needed so I can run it immediately in Replit and test:
+1. pot with 3 cracks and flowing water
+2. click first crack → Quick Fix bandage
+3. click second crack → Quick Prayer bandage
+4. click third crack → Quick Deliverance bandage
+5. short pause
+6. shake
+7. explosion
