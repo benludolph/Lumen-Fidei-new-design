@@ -2311,7 +2311,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2339,6 +2339,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   image_carousel: "Image Carousel",
   before_after: "Before / After Slider",
   scripture_practice: "Scripture Practice",
+  scene: "Pot & Bandage Scene",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2362,6 +2363,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   image_carousel: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   before_after: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   scripture_practice: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+  scene: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
 // ============================================================
@@ -4925,6 +4927,7 @@ function TrackAContentManagementView() {
     if (type === "story_choice") return STORY_CHOICE_DEFAULT;
     if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
     if (type === "before_after") return BEFORE_AFTER_DEFAULT;
+    if (type === "scene") return "{}";
     return "";
   };
 
@@ -5457,6 +5460,11 @@ function TrackAContentManagementView() {
                                   spellCheck={false}
                                   data-testid={`textarea-slide-json-${index}`}
                                 />
+                              </div>
+                            ) : slide.type === "scene" ? (
+                              <div className="rounded-md border border-dashed border-muted-foreground/30 p-4 text-center">
+                                <p className="text-xs text-muted-foreground">Pot &amp; Bandage Scene — no configuration required.</p>
+                                <p className="text-xs text-muted-foreground/60 mt-1">The interactive cracked-pot scene is self-contained and plays automatically when this slide is shown.</p>
                               </div>
                             ) : (
                               <div className="space-y-1">
@@ -6119,6 +6127,7 @@ function PrelimContentManagementView() {
     if (type === "story_choice") return STORY_CHOICE_DEFAULT;
     if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
     if (type === "before_after") return BEFORE_AFTER_DEFAULT;
+    if (type === "scene") return "{}";
     return "";
   };
 
@@ -6400,6 +6409,11 @@ function PrelimContentManagementView() {
                                   spellCheck={false}
                                   data-testid={`textarea-prelim-json-${index}`}
                                 />
+                              </div>
+                            ) : slide.type === "scene" ? (
+                              <div className="rounded-md border border-dashed border-muted-foreground/30 p-4 text-center">
+                                <p className="text-xs text-muted-foreground">Pot &amp; Bandage Scene — no configuration required.</p>
+                                <p className="text-xs text-muted-foreground/60 mt-1">The interactive cracked-pot scene is self-contained and plays automatically when this slide is shown.</p>
                               </div>
                             ) : (
                               <div className="space-y-1">

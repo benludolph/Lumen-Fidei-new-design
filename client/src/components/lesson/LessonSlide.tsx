@@ -15,6 +15,7 @@ import { CrossGridSlide } from "./CrossGridSlide";
 import { StoryChoiceSlide } from "./StoryChoiceSlide";
 import { ImageCarouselSlide } from "./ImageCarouselSlide";
 import { BeforeAfterSlide } from "./BeforeAfterSlide";
+import { PotBandageScene } from "./PotBandageScene";
 
 import answersImg from "@assets/Answers_desktop_1775146558812.webp";
 import controlImg from "@assets/Control_desktop_1775146558812.webp";
@@ -59,7 +60,8 @@ export type SlideType =
   | "image_carousel"
   | "before_after"
   | "scripture_practice"
-  | "knowledge_quiz";
+  | "knowledge_quiz"
+  | "scene";
 
 
 export interface QuizData {
@@ -1297,6 +1299,18 @@ export function LessonSlide({
           content={content}
           onComplete={onKnowledgeQuizComplete || (() => {})}
         />
+      </div>
+    );
+  }
+
+  // scene takes over the entire slide area with its own interactive UI
+  if (type === "scene") {
+    return (
+      <div
+        className={cn("flex-1 flex flex-col overflow-hidden", animationClass)}
+        data-testid="lesson-slide-scene"
+      >
+        <PotBandageScene onComplete={() => { onInteracted?.(); }} />
       </div>
     );
   }
