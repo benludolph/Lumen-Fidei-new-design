@@ -173,6 +173,7 @@ export function PotBandageScene({ onComplete }: PotBandageSceneProps) {
               </filter>
             </defs>
 
+            {/* ASSET: replace this <g> with <image href="/assets/pot-base.png" x="60" y="80" width="200" /> to use a real pot image */}
             <g filter="url(#potShadow)">
               <ellipse cx="160" cy="356" rx="72" ry="16" fill="#3a2008" />
               <path d="M100,170 Q68,240 72,300 Q80,350 160,358 Q240,350 248,300 Q252,240 220,170 Z" fill="url(#potGrad)" />
@@ -252,6 +253,7 @@ export function PotBandageScene({ onComplete }: PotBandageSceneProps) {
                     overflow: "hidden",
                   }}
                 >
+                  {/* ASSET: replace inner content with <img src={`/assets/bandage-${c.id}.png`} style={{ width: "100%" }} /> */}
                   <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 10, background: "rgba(200,160,60,0.35)" }} />
                   <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 10, background: "rgba(200,160,60,0.35)" }} />
                   <span
