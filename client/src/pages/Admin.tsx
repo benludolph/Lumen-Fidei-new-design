@@ -5035,7 +5035,7 @@ function TrackAContentManagementView() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-medium" data-testid="text-day0-admin-title">
-                    Introduction — Goal of 30 Days
+                    Introduction — {allContent?.find(c => c.dayNumber === 0)?.centralTheme ?? "Goal of 30 Days"}
                   </h4>
                   <p className="text-xs text-muted-foreground">
                     {(() => {
@@ -5204,7 +5204,7 @@ function TrackAContentManagementView() {
                 )}
               </div>
               <CardTitle className="text-lg" data-testid="text-day-label-a">
-                {isDay0 ? "Introduction — Goal of 30 Days" : `Day ${selectedDay} — ${currentContent?.centralTheme || "No content"}`}
+                {isDay0 ? `Introduction — ${currentContent?.centralTheme || "Goal of 30 Days"}` : `Day ${selectedDay} — ${currentContent?.centralTheme || "No content"}`}
               </CardTitle>
             </div>
             {!editMode ? (

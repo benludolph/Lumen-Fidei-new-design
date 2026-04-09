@@ -720,8 +720,8 @@ export function DayGridView({
                       <DayCard
                         variant="full"
                         dayNumber={0}
-                        title="Introduction — Goal of 30 Days"
-                        subtitle="Begin your journey"
+                        title={trackASummaries?.find(c => c.dayNumber === 0)?.centralTheme ?? "Introduction"}
+                        subtitle={trackASummaries?.find(c => c.dayNumber === 0)?.subtitle ?? undefined}
                         isCompleted={isDayCompleted(0)}
                         isToday={false}
                         isLocked={!allPrelimsComplete}
