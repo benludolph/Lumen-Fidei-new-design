@@ -154,7 +154,7 @@ export function PotBandageScene({ onComplete }: PotBandageSceneProps) {
       <div
         className="relative flex items-center justify-center"
         style={{
-          width: "min(540px, 100%)",
+          width: "min(700px, 100%)",
           aspectRatio: "1 / 1",
           borderRadius: 16,
           // Painterly dark background
