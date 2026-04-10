@@ -50,6 +50,15 @@ const audioUpload = multer({
 const csvUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimes = ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel', 'application/octet-stream'];
+    const hasValidExt = file.originalname.toLowerCase().endsWith('.csv');
+    if (hasValidExt || allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are accepted (.csv extension required)'));
+    }
+  },
 });
 
 /**
@@ -1489,9 +1498,18 @@ export async function registerRoutes(
         const dayNum = parseInt(row.dayNumber, 10);
         if (isNaN(dayNum)) continue;
 
+        if (dayNum < 0 || dayNum > 30) {
+          return res.status(400).json({ message: `Invalid dayNumber ${row.dayNumber} on row — must be 0–30` });
+        }
+
+        const weekNum = parseInt(row.weekNumber, 10);
+        if (!isNaN(weekNum) && weekNum !== 0 && (weekNum < 1 || weekNum > 5)) {
+          return res.status(400).json({ message: `Invalid weekNumber ${row.weekNumber} for day ${dayNum} — must be 0–5` });
+        }
+
         if (!dayMap.has(dayNum)) {
           dayMap.set(dayNum, {
-            weekNumber: parseInt(row.weekNumber, 10) || 0,
+            weekNumber: isNaN(weekNum) ? 0 : weekNum,
             centralTheme: row.centralTheme || '',
             subtitle: row.subtitle || '',
             dayImageUrl: row.dayImageUrl || '',
