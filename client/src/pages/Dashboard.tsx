@@ -328,10 +328,6 @@ export default function Dashboard() {
           slides: (prelimMod.slides ?? []) as { type: string; content: string }[],
           imageUrl: null,
           completionMessage: null,
-          saintId: null,
-          saintName: null,
-          saintImage: null,
-          saintQuote: null,
         };
         return (
           <LessonFlow

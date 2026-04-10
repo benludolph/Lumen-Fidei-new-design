@@ -80,10 +80,6 @@ export const trackAContent = pgTable("track_a_content", {
   slides: json("slides").$type<{ type: string; content: string }[]>(),
   imageUrl: text("image_url"),
   completionMessage: text("completion_message"),
-  saintId: text("saint_id"),
-  saintName: text("saint_name"),
-  saintImage: text("saint_image"),
-  saintQuote: text("saint_quote"),
 });
 
 // Pre-cohort onboarding modules — 3 sequential modules users complete before the main program

@@ -1403,7 +1403,7 @@ export async function registerRoutes(
   app.get('/api/admin/export/track-a.csv', requireRole('admin'), async (req, res) => {
     const allContent = await storage.getAllTrackAContent();
 
-    const headers = ['dayNumber', 'weekNumber', 'centralTheme', 'subtitle', 'dayImageUrl', 'completionMessage', 'saintId', 'saintName', 'saintImage', 'saintQuote', 'slideIndex', 'slideType', 'slideContent'];
+    const headers = ['dayNumber', 'weekNumber', 'centralTheme', 'subtitle', 'dayImageUrl', 'completionMessage', 'slideIndex', 'slideType', 'slideContent'];
 
     const rows: string[] = [];
     for (const day of allContent) {
@@ -1416,10 +1416,6 @@ export async function registerRoutes(
           escapeCSVContent(day.subtitle),
           escapeCSVContent(day.imageUrl),
           escapeCSVContent(day.completionMessage),
-          escapeCSVContent(day.saintId),
-          escapeCSVContent(day.saintName),
-          escapeCSVContent(day.saintImage),
-          escapeCSVContent(day.saintQuote),
           '',
           '',
           '',
@@ -1434,10 +1430,6 @@ export async function registerRoutes(
             escapeCSVContent(day.subtitle),
             escapeCSVContent(day.imageUrl),
             escapeCSVContent(day.completionMessage),
-            escapeCSVContent(day.saintId),
-            escapeCSVContent(day.saintName),
-            escapeCSVContent(day.saintImage),
-            escapeCSVContent(day.saintQuote),
             escapeCSVContent(i),
             escapeCSVContent(slide.type),
             escapeCSVContent(slide.content),
@@ -1475,7 +1467,7 @@ export async function registerRoutes(
       const missingColumns = requiredColumns.filter(col => !(col in firstRow));
       if (missingColumns.length > 0) {
         return res.status(400).json({
-          message: `CSV is missing required columns: ${missingColumns.join(', ')}. Expected headers: dayNumber, weekNumber, centralTheme, subtitle, dayImageUrl, completionMessage, saintId, saintName, saintImage, saintQuote, slideIndex, slideType, slideContent`,
+          message: `CSV is missing required columns: ${missingColumns.join(', ')}. Expected headers: dayNumber, weekNumber, centralTheme, subtitle, dayImageUrl, completionMessage, slideIndex, slideType, slideContent`,
         });
       }
 
@@ -1485,10 +1477,6 @@ export async function registerRoutes(
         subtitle: string;
         dayImageUrl: string;
         completionMessage: string;
-        saintId: string;
-        saintName: string;
-        saintImage: string;
-        saintQuote: string;
         slides: { slideIndex: number; type: string; content: string }[];
       };
 
@@ -1514,10 +1502,6 @@ export async function registerRoutes(
             subtitle: row.subtitle || '',
             dayImageUrl: row.dayImageUrl || '',
             completionMessage: row.completionMessage || '',
-            saintId: row.saintId || '',
-            saintName: row.saintName || '',
-            saintImage: row.saintImage || '',
-            saintQuote: row.saintQuote || '',
             slides: [],
           });
         }
@@ -1536,13 +1520,11 @@ export async function registerRoutes(
       let updatedCount = 0;
       for (const [dayNum, data] of Array.from(dayMap.entries())) {
         let imageUrl = data.dayImageUrl;
-        let saintImage = data.saintImage;
 
-        if (!imageUrl || !saintImage) {
+        if (!imageUrl) {
           const existing = await storage.getTrackAContent(dayNum);
           if (existing) {
             if (!imageUrl) imageUrl = existing.imageUrl || '';
-            if (!saintImage) saintImage = existing.saintImage || '';
           }
         }
 
@@ -1557,10 +1539,6 @@ export async function registerRoutes(
           subtitle: data.subtitle || null,
           imageUrl: imageUrl || null,
           completionMessage: data.completionMessage || null,
-          saintId: data.saintId || null,
-          saintName: data.saintName || null,
-          saintImage: saintImage || null,
-          saintQuote: data.saintQuote || null,
           slides: slides.length > 0 ? slides : null,
         });
         updatedCount++;
@@ -2200,10 +2178,6 @@ async function ensureSchemaColumns() {
         console.log(`Added column ${column} to ${table}`);
       }
     };
-    await checkCol("track_a_content", "saint_name", "TEXT");
-    await checkCol("track_a_content", "saint_image", "TEXT");
-    await checkCol("track_a_content", "saint_quote", "TEXT");
-
     // Create survey_responses table if it doesn't exist
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS survey_responses (

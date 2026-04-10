@@ -2309,10 +2309,6 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
-  saintId: string | null;
-  saintName: string | null;
-  saintImage: string | null;
-  saintQuote: string | null;
 };
 
 const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene"] as const;
