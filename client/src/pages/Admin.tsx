@@ -2309,6 +2309,10 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
+  saintId: string | null;
+  saintName: string | null;
+  saintImage: string | null;
+  saintQuote: string | null;
 };
 
 const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene"] as const;
@@ -4778,6 +4782,51 @@ function TrackAContentManagementView() {
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleSubtitle, setModuleSubtitle] = useState("");
   const [moduleImageUrl, setModuleImageUrl] = useState<string | null>(null);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const csvFileRef = useRef<HTMLInputElement>(null);
+
+  const handleCsvExport = async () => {
+    try {
+      const res = await fetch('/api/admin/export/track-a.csv', { credentials: 'include' });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'track-a-content.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Export failed", description: "Could not download the CSV file.", variant: "destructive" });
+    }
+  };
+
+  const handleCsvImport = async () => {
+    const file = csvFileRef.current?.files?.[0];
+    if (!file) {
+      toast({ title: "No file selected", description: "Please choose a CSV file first.", variant: "destructive" });
+      return;
+    }
+    setCsvImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('csv', file);
+      const res = await fetch('/api/admin/import/track-a', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Import failed");
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      toast({ title: "Import successful", description: `${json.updated} day${json.updated !== 1 ? 's' : ''} updated.` });
+      if (csvFileRef.current) csvFileRef.current.value = '';
+    } catch (err: any) {
+      toast({ title: "Import failed", description: err?.message || "Could not import CSV.", variant: "destructive" });
+    } finally {
+      setCsvImporting(false);
+    }
+  };
 
   const { data: modules, isLoading: modulesLoading } = useQuery<TrackAModuleData[]>({
     queryKey: ['/api/track-a-modules'],
@@ -5004,6 +5053,28 @@ function TrackAContentManagementView() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* CSV Import / Export */}
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed px-4 py-3 bg-muted/30">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mr-auto">Bulk Edit via CSV</p>
+          <Button size="sm" variant="outline" onClick={handleCsvExport} data-testid="button-export-track-a-csv">
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Export CSV
+          </Button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={csvFileRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="text-xs text-muted-foreground file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-medium file:bg-muted file:text-foreground cursor-pointer"
+              data-testid="input-import-track-a-csv"
+            />
+            <Button size="sm" onClick={handleCsvImport} disabled={csvImporting} data-testid="button-import-track-a-csv">
+              <Upload className="w-3.5 h-3.5 mr-1.5" />
+              {csvImporting ? "Importing…" : "Import"}
+            </Button>
+          </div>
+        </div>
 
         {/* Pre-Modules section */}
         <div>

@@ -14,6 +14,7 @@ import { trackAContentData } from "./track-a-content-data";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { parse as parseCsv } from "csv-parse/sync";
 
 const uploadDir = path.join(process.cwd(), "attached_assets");
 if (!fs.existsSync(uploadDir)) {
@@ -44,6 +45,11 @@ const audioUpload = multer({
       cb(new Error("Only MP3, WAV, OGG, M4A, and AAC audio files are allowed"));
     }
   },
+});
+
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 /**
@@ -1375,6 +1381,165 @@ export async function registerRoutes(
   });
   
   // === Admin Content Backup & Restore ===
+
+  function escapeCSVContent(value: string | number | boolean | null | undefined): string {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  app.get('/api/admin/export/track-a.csv', requireRole('admin'), async (req, res) => {
+    const allContent = await storage.getAllTrackAContent();
+
+    const headers = ['dayNumber', 'weekNumber', 'centralTheme', 'subtitle', 'dayImageUrl', 'completionMessage', 'saintId', 'saintName', 'saintImage', 'saintQuote', 'slideIndex', 'slideType', 'slideContent'];
+
+    const rows: string[] = [];
+    for (const day of allContent) {
+      const slides = (day.slides || []) as { type: string; content: string }[];
+      if (slides.length === 0) {
+        rows.push([
+          escapeCSVContent(day.dayNumber),
+          escapeCSVContent(day.weekNumber),
+          escapeCSVContent(day.centralTheme),
+          escapeCSVContent(day.subtitle),
+          escapeCSVContent(day.imageUrl),
+          escapeCSVContent(day.completionMessage),
+          escapeCSVContent((day as any).saintId),
+          escapeCSVContent((day as any).saintName),
+          escapeCSVContent((day as any).saintImage),
+          escapeCSVContent((day as any).saintQuote),
+          '',
+          '',
+          '',
+        ].join(','));
+      } else {
+        for (let i = 0; i < slides.length; i++) {
+          const slide = slides[i];
+          rows.push([
+            escapeCSVContent(day.dayNumber),
+            escapeCSVContent(day.weekNumber),
+            escapeCSVContent(day.centralTheme),
+            escapeCSVContent(day.subtitle),
+            escapeCSVContent(day.imageUrl),
+            escapeCSVContent(day.completionMessage),
+            escapeCSVContent((day as any).saintId),
+            escapeCSVContent((day as any).saintName),
+            escapeCSVContent((day as any).saintImage),
+            escapeCSVContent((day as any).saintQuote),
+            escapeCSVContent(i),
+            escapeCSVContent(slide.type),
+            escapeCSVContent(slide.content),
+          ].join(','));
+        }
+      }
+    }
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="track-a-content.csv"');
+    res.send(csv);
+  });
+
+  app.post('/api/admin/import/track-a', requireRole('admin'), csvUpload.single('csv'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No CSV file provided" });
+    }
+
+    try {
+      const csvText = req.file.buffer.toString('utf-8');
+      const records = parseCsv(csvText, {
+        columns: true,
+        skip_empty_lines: true,
+        relax_quotes: true,
+        trim: true,
+      }) as Record<string, string>[];
+
+      type DayAccumulator = {
+        weekNumber: number;
+        centralTheme: string;
+        subtitle: string;
+        dayImageUrl: string;
+        completionMessage: string;
+        saintId: string;
+        saintName: string;
+        saintImage: string;
+        saintQuote: string;
+        slides: { slideIndex: number; type: string; content: string }[];
+      };
+
+      const dayMap = new Map<number, DayAccumulator>();
+
+      for (const row of records) {
+        const dayNum = parseInt(row.dayNumber, 10);
+        if (isNaN(dayNum)) continue;
+
+        if (!dayMap.has(dayNum)) {
+          dayMap.set(dayNum, {
+            weekNumber: parseInt(row.weekNumber, 10) || 0,
+            centralTheme: row.centralTheme || '',
+            subtitle: row.subtitle || '',
+            dayImageUrl: row.dayImageUrl || '',
+            completionMessage: row.completionMessage || '',
+            saintId: row.saintId || '',
+            saintName: row.saintName || '',
+            saintImage: row.saintImage || '',
+            saintQuote: row.saintQuote || '',
+            slides: [],
+          });
+        }
+
+        const dayData = dayMap.get(dayNum)!;
+        if (row.slideType && row.slideType.trim() !== '') {
+          const slideIndex = parseInt(row.slideIndex, 10);
+          dayData.slides.push({
+            slideIndex: isNaN(slideIndex) ? dayData.slides.length : slideIndex,
+            type: row.slideType,
+            content: row.slideContent || '',
+          });
+        }
+      }
+
+      let updatedCount = 0;
+      for (const [dayNum, data] of dayMap) {
+        let imageUrl = data.dayImageUrl;
+        let saintImage = data.saintImage;
+
+        if (!imageUrl || !saintImage) {
+          const existing = await storage.getTrackAContent(dayNum);
+          if (existing) {
+            if (!imageUrl) imageUrl = existing.imageUrl || '';
+            if (!saintImage) saintImage = (existing as any).saintImage || '';
+          }
+        }
+
+        const slides = data.slides
+          .sort((a, b) => a.slideIndex - b.slideIndex)
+          .map(({ type, content }) => ({ type, content }));
+
+        await storage.upsertTrackAContent({
+          dayNumber: dayNum,
+          weekNumber: data.weekNumber,
+          centralTheme: data.centralTheme || 'Untitled',
+          subtitle: data.subtitle || null,
+          imageUrl: imageUrl || null,
+          completionMessage: data.completionMessage || null,
+          saintId: data.saintId || null,
+          saintName: data.saintName || null,
+          saintImage: saintImage || null,
+          saintQuote: data.saintQuote || null,
+          slides: slides.length > 0 ? slides : null,
+        });
+        updatedCount++;
+      }
+
+      res.json({ updated: updatedCount });
+    } catch (err: any) {
+      res.status(400).json({ message: err?.message || 'Failed to parse CSV' });
+    }
+  });
 
   app.get('/api/admin/backup', requireRole('admin'), async (req, res) => {
     try {
