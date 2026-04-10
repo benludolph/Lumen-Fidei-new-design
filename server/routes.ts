@@ -1407,10 +1407,10 @@ export async function registerRoutes(
           escapeCSVContent(day.subtitle),
           escapeCSVContent(day.imageUrl),
           escapeCSVContent(day.completionMessage),
-          escapeCSVContent((day as any).saintId),
-          escapeCSVContent((day as any).saintName),
-          escapeCSVContent((day as any).saintImage),
-          escapeCSVContent((day as any).saintQuote),
+          escapeCSVContent(day.saintId),
+          escapeCSVContent(day.saintName),
+          escapeCSVContent(day.saintImage),
+          escapeCSVContent(day.saintQuote),
           '',
           '',
           '',
@@ -1425,10 +1425,10 @@ export async function registerRoutes(
             escapeCSVContent(day.subtitle),
             escapeCSVContent(day.imageUrl),
             escapeCSVContent(day.completionMessage),
-            escapeCSVContent((day as any).saintId),
-            escapeCSVContent((day as any).saintName),
-            escapeCSVContent((day as any).saintImage),
-            escapeCSVContent((day as any).saintQuote),
+            escapeCSVContent(day.saintId),
+            escapeCSVContent(day.saintName),
+            escapeCSVContent(day.saintImage),
+            escapeCSVContent(day.saintQuote),
             escapeCSVContent(i),
             escapeCSVContent(slide.type),
             escapeCSVContent(slide.content),
@@ -1456,6 +1456,19 @@ export async function registerRoutes(
         relax_quotes: true,
         trim: true,
       }) as Record<string, string>[];
+
+      if (records.length === 0) {
+        return res.status(400).json({ message: "CSV file is empty or has no data rows" });
+      }
+
+      const requiredColumns = ['dayNumber', 'weekNumber', 'centralTheme'];
+      const firstRow = records[0];
+      const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+      if (missingColumns.length > 0) {
+        return res.status(400).json({
+          message: `CSV is missing required columns: ${missingColumns.join(', ')}. Expected headers: dayNumber, weekNumber, centralTheme, subtitle, dayImageUrl, completionMessage, saintId, saintName, saintImage, saintQuote, slideIndex, slideType, slideContent`,
+        });
+      }
 
       type DayAccumulator = {
         weekNumber: number;
@@ -1503,7 +1516,7 @@ export async function registerRoutes(
       }
 
       let updatedCount = 0;
-      for (const [dayNum, data] of dayMap) {
+      for (const [dayNum, data] of Array.from(dayMap.entries())) {
         let imageUrl = data.dayImageUrl;
         let saintImage = data.saintImage;
 
@@ -1511,13 +1524,13 @@ export async function registerRoutes(
           const existing = await storage.getTrackAContent(dayNum);
           if (existing) {
             if (!imageUrl) imageUrl = existing.imageUrl || '';
-            if (!saintImage) saintImage = (existing as any).saintImage || '';
+            if (!saintImage) saintImage = existing.saintImage || '';
           }
         }
 
         const slides = data.slides
-          .sort((a, b) => a.slideIndex - b.slideIndex)
-          .map(({ type, content }) => ({ type, content }));
+          .sort((a: { slideIndex: number; type: string; content: string }, b: { slideIndex: number; type: string; content: string }) => a.slideIndex - b.slideIndex)
+          .map(({ type, content }: { slideIndex: number; type: string; content: string }) => ({ type, content }));
 
         await storage.upsertTrackAContent({
           dayNumber: dayNum,
