@@ -26,8 +26,14 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import type { TrackAModule, TrackAContent, PrelimModuleWithStatus } from "@shared/schema";
 
+function getTrackAAtPosition(position: number, summaries?: TrackAContent[]): TrackAContent | undefined {
+  if (!summaries) return undefined;
+  const programDays = summaries.filter(c => c.dayNumber > 0);
+  return programDays[position - 1];
+}
+
 function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[], modules?: TrackAModule[]): string {
-  const dayContent = trackASummaries?.find(c => c.dayNumber === dayNumber);
+  const dayContent = getTrackAAtPosition(dayNumber, trackASummaries);
   if (dayContent?.imageUrl) return dayContent.imageUrl;
   const weekNumber = Math.ceil(dayNumber / 6);
   const module = modules?.find(m => m.weekNumber === weekNumber);

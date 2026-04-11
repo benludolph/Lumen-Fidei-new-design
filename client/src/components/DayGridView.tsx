@@ -56,9 +56,17 @@ function getWeekTheme(weekNumber: number, isTrackA: boolean, trackBSummaries?: C
   return `Week ${weekNumber}`;
 }
 
+// Returns the Track A content at program position N (1-30), respecting admin sort_order.
+// The all-content API returns items sorted by (week, sort_order, day_number) — day 0 is special.
+function getTrackAAtPosition(position: number, summaries?: TrackAContent[]): TrackAContent | undefined {
+  if (!summaries) return undefined;
+  const programDays = summaries.filter(c => c.dayNumber > 0);
+  return programDays[position - 1];
+}
+
 function getDayTitle(day: number, isTrackA: boolean, trackASummaries?: TrackAContent[], trackBSummaries?: ContentSummary[]): string {
   if (isTrackA && trackASummaries) {
-    return trackASummaries.find(c => c.dayNumber === day)?.centralTheme || "Daily Activity";
+    return getTrackAAtPosition(day, trackASummaries)?.centralTheme || "Daily Activity";
   }
   if (trackBSummaries) {
     return trackBSummaries.find(c => c.dayNumber === day)?.title || `Day ${day}`;
@@ -67,7 +75,7 @@ function getDayTitle(day: number, isTrackA: boolean, trackASummaries?: TrackACon
 }
 
 function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
-  const content = trackASummaries?.find(c => c.dayNumber === dayNumber);
+  const content = getTrackAAtPosition(dayNumber, trackASummaries);
   if (content?.imageUrl) return content.imageUrl;
   return FALLBACK_IMAGES[(dayNumber - 1) % FALLBACK_IMAGES.length];
 }
@@ -747,7 +755,7 @@ export function DayGridView({
                       const isToday = day === currentDay && allPrelimsComplete;
                       const completed = isDayCompleted(day);
                       const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
-                      const subtitle = isTrackA ? trackASummaries?.find(c => c.dayNumber === day)?.subtitle ?? undefined : undefined;
+                      const subtitle = isTrackA ? getTrackAAtPosition(day, trackASummaries)?.subtitle ?? undefined : undefined;
 
                       let completedLate = false;
                       if (isTrackA && completed && cohortStartDate && prayerCompletions) {
