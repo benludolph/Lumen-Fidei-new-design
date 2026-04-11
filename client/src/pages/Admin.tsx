@@ -40,11 +40,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { api, type ContentBackup } from "@shared/routes";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 export default function Admin() {
   const { user } = useAuth();
   const { data: users, isLoading } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
+  const [, setLocation] = useLocation();
 
   if (!user || user.role !== 'admin') return null;
 
@@ -5354,7 +5356,22 @@ function TrackAContentManagementView() {
                         {dayContent?.imageUrl ? " · Has image" : ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
+                      {slideCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                          data-testid={`button-preview-day-${dayNumber}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/preview/track-a/${dayNumber}`);
+                          }}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Preview
+                        </Button>
+                      )}
                       {slideCount > 0 ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                       ) : (

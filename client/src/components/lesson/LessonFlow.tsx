@@ -28,6 +28,7 @@ interface LessonFlowProps {
   mentorId?: number | null;
   onExit: () => void;
   onComplete: () => void;
+  previewMode?: boolean;
 }
 
 export function LessonFlow({
@@ -38,6 +39,7 @@ export function LessonFlow({
   mentorId,
   onExit,
   onComplete,
+  previewMode = false,
 }: LessonFlowProps) {
   const { data: mentorData } = useQuery<{ profilePhotoUrl?: string | null; name?: string | null }>({
     queryKey: ["/api/users", mentorId],
@@ -431,13 +433,14 @@ export function LessonFlow({
     );
   }
 
-  const navBlocked =
+  const navBlocked = !previewMode && (
     (currentSlideData.type === "timer" && !timerDone) ||
     (effectiveSlideData.type === "scripture_practice" && !timerDone) ||
     (effectiveSlideData.type === "scene" && !timerDone) ||
     isValidKc ||
     requiresInteraction ||
-    surveyBlocked;
+    surveyBlocked
+  );
 
   // Slides that have their own in-card CTA button — hide the footer CONTINUE
   // while they still need interaction (avoids two stacked buttons on mobile)

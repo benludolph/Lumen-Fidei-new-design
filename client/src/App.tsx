@@ -18,6 +18,7 @@ import ResourceDetail from "@/pages/ResourceDetail";
 import Collections from "@/pages/Collections";
 import TestimoniesPage from "@/pages/Testimonies";
 import Journal from "@/pages/Journal";
+import PreviewLesson from "@/pages/PreviewLesson";
 
 // Protected Route Wrapper
 function ProtectedRoute({ 
@@ -104,6 +105,10 @@ function Router() {
 
       <Route path="/journal">
         <ProtectedRoute component={Journal} allowedRoles={['participant']} />
+      </Route>
+
+      <Route path="/preview/track-a/:day">
+        <ProtectedRoute component={PreviewLesson} allowedRoles={['admin']} />
       </Route>
 
       <Route component={NotFound} />
