@@ -423,7 +423,9 @@ export async function registerRoutes(
       }
     }
 
-    const content = await storage.getTrackAContent(day);
+    const content = day === 0
+      ? await storage.getTrackAContent(0)
+      : await storage.getTrackAContentByPosition(day);
     if (!content) return res.sendStatus(404);
     res.json(content);
   });

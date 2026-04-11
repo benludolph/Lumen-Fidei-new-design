@@ -18,7 +18,7 @@ import {
   type Testimony, type InsertTestimony,
   type TestimonyPart, type InsertTestimonyPart,
 } from "@shared/schema";
-import { eq, and, or, lt, desc, asc, min, max, count, inArray } from "drizzle-orm";
+import { eq, and, or, lt, desc, asc, min, max, count, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -77,6 +77,7 @@ export interface IStorage {
 
   // Track A Content
   getTrackAContent(dayNumber: number): Promise<TrackAContent | undefined>;
+  getTrackAContentByPosition(position: number): Promise<TrackAContent | undefined>;
   getAllTrackAContent(): Promise<TrackAContent[]>;
   reorderTrackAContent(dayNumbers: number[]): Promise<void>;
   upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent>;
@@ -431,8 +432,24 @@ export class DatabaseStorage implements IStorage {
     return content;
   }
 
+  async getTrackAContentByPosition(position: number): Promise<TrackAContent | undefined> {
+    // Returns the Nth item (1-based) when content is ordered by week then sort_order within week.
+    const all = await db.select().from(trackAContent)
+      .where(sql`${trackAContent.dayNumber} > 0`)
+      .orderBy(
+        sql`ceil(${trackAContent.dayNumber}::float / 6)`,
+        asc(trackAContent.sortOrder),
+        asc(trackAContent.dayNumber)
+      );
+    return all[position - 1];
+  }
+
   async getAllTrackAContent(): Promise<TrackAContent[]> {
-    return await db.select().from(trackAContent).orderBy(asc(trackAContent.sortOrder), asc(trackAContent.dayNumber));
+    return await db.select().from(trackAContent).orderBy(
+      sql`ceil(${trackAContent.dayNumber}::float / 6)`,
+      asc(trackAContent.sortOrder),
+      asc(trackAContent.dayNumber)
+    );
   }
 
   async reorderTrackAContent(dayNumbers: number[]): Promise<void> {
