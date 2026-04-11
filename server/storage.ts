@@ -224,6 +224,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getJournalEntries(userId: number): Promise<import("@shared/schema").JournalModule[]> {
+    // Fetch all five modules so the UI can always render all sections
+    const allModules = await db.select().from(trackAModules).orderBy(asc(trackAModules.weekNumber));
+
+    // Fetch user's answers joined with track_a_content for metadata
     const rows = await db
       .select({
         dayNumber: userAnswers.dayNumber,
@@ -231,33 +235,31 @@ export class DatabaseStorage implements IStorage {
         createdAt: userAnswers.createdAt,
         centralTheme: trackAContent.centralTheme,
         weekNumber: trackAContent.weekNumber,
-        moduleTitle: trackAModules.title,
-        moduleSubtitle: trackAModules.subtitle,
       })
       .from(userAnswers)
       .innerJoin(trackAContent, eq(userAnswers.dayNumber, trackAContent.dayNumber))
-      .innerJoin(trackAModules, eq(trackAContent.weekNumber, trackAModules.weekNumber))
       .where(eq(userAnswers.userId, userId))
       .orderBy(asc(trackAContent.weekNumber), asc(userAnswers.dayNumber));
 
-    const moduleMap = new Map<number, import("@shared/schema").JournalModule>();
+    // Group entries by weekNumber
+    const entryMap = new Map<number, import("@shared/schema").JournalEntry[]>();
     for (const row of rows) {
-      if (!moduleMap.has(row.weekNumber)) {
-        moduleMap.set(row.weekNumber, {
-          weekNumber: row.weekNumber,
-          moduleTitle: row.moduleTitle,
-          moduleSubtitle: row.moduleSubtitle,
-          entries: [],
-        });
-      }
-      moduleMap.get(row.weekNumber)!.entries.push({
+      if (!entryMap.has(row.weekNumber)) entryMap.set(row.weekNumber, []);
+      entryMap.get(row.weekNumber)!.push({
         dayNumber: row.dayNumber,
         centralTheme: row.centralTheme,
         content: row.content,
         createdAt: row.createdAt.toISOString(),
       });
     }
-    return Array.from(moduleMap.values()).sort((a, b) => a.weekNumber - b.weekNumber);
+
+    // Merge: all modules present, entries may be empty
+    return allModules.map(mod => ({
+      weekNumber: mod.weekNumber,
+      moduleTitle: mod.title,
+      moduleSubtitle: mod.subtitle,
+      entries: entryMap.get(mod.weekNumber) ?? [],
+    }));
   }
 
   // Chat

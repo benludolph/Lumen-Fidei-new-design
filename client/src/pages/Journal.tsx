@@ -102,7 +102,7 @@ export default function Journal() {
     enabled: !!user,
   });
 
-  const hasEntries = modules && modules.length > 0;
+  const hasEntries = modules && modules.some(m => m.entries.length > 0);
 
   return (
     <DashboardLayout>
@@ -144,11 +144,11 @@ export default function Journal() {
 
         {!isLoading && hasEntries && (
           <div className="space-y-3">
-            {modules.map((mod, idx) => (
+            {modules.map((mod) => (
               <ModuleSection
                 key={mod.weekNumber}
                 mod={mod}
-                defaultOpen={idx === 0}
+                defaultOpen={mod.entries.length > 0}
               />
             ))}
           </div>
