@@ -73,6 +73,7 @@ export interface IStorage {
   // Track A Modules
   getTrackAModules(): Promise<TrackAModule[]>;
   upsertTrackAModule(module: InsertTrackAModule): Promise<TrackAModule>;
+  reorderTrackAModules(weekNumbers: number[]): Promise<void>;
 
   // Track A Content
   getTrackAContent(dayNumber: number): Promise<TrackAContent | undefined>;
@@ -396,7 +397,7 @@ export class DatabaseStorage implements IStorage {
 
   // Track A Modules
   async getTrackAModules(): Promise<TrackAModule[]> {
-    return await db.select().from(trackAModules).orderBy(asc(trackAModules.weekNumber));
+    return await db.select().from(trackAModules).orderBy(asc(trackAModules.sortOrder), asc(trackAModules.weekNumber));
   }
 
   async upsertTrackAModule(module: InsertTrackAModule): Promise<TrackAModule> {
@@ -408,8 +409,19 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updated;
     }
-    const [newModule] = await db.insert(trackAModules).values(module).returning();
+    const sortOrderForNew = module.sortOrder ?? module.weekNumber;
+    const [newModule] = await db.insert(trackAModules).values({ ...module, sortOrder: sortOrderForNew }).returning();
     return newModule;
+  }
+
+  async reorderTrackAModules(weekNumbers: number[]): Promise<void> {
+    await Promise.all(
+      weekNumbers.map((weekNumber, index) =>
+        db.update(trackAModules)
+          .set({ sortOrder: index })
+          .where(eq(trackAModules.weekNumber, weekNumber))
+      )
+    );
   }
 
   // Track A Content

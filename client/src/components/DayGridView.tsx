@@ -605,7 +605,16 @@ export function DayGridView({
   const [inPrelimSection, setInPrelimSection] = useState(hasPrelims);
 
   const allDays = Array.from({ length: 30 }, (_, i) => i + 1);
-  const weekGroups = groupDaysByWeek(allDays);
+  const baseWeekGroups = groupDaysByWeek(allDays);
+  const weekGroups = isTrackA && trackAModules && trackAModules.length > 0
+    ? [...baseWeekGroups].sort((a, b) => {
+        const modA = trackAModules.find(m => m.weekNumber === a.week);
+        const modB = trackAModules.find(m => m.weekNumber === b.week);
+        const orderA = modA?.sortOrder ?? a.week;
+        const orderB = modB?.sortOrder ?? b.week;
+        return orderA - orderB;
+      })
+    : baseWeekGroups;
 
   const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const setWeekRef = useCallback((weekNum: number, el: HTMLDivElement | null) => {

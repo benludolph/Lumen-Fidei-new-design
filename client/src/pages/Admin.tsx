@@ -12,6 +12,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
@@ -4714,6 +4731,7 @@ type TrackAModuleData = {
   title: string;
   subtitle: string;
   imageUrl: string | null;
+  sortOrder: number;
 };
 
 function ModuleImageUpload({ currentUrl, onUploaded }: { currentUrl: string | null; onUploaded: (url: string) => void }) {
@@ -4760,6 +4778,95 @@ function ModuleImageUpload({ currentUrl, onUploaded }: { currentUrl: string | nu
   );
 }
 
+function SortableModuleCard({
+  mod,
+  allContent,
+  onOpen,
+  onEdit,
+}: {
+  mod: TrackAModuleData;
+  allContent: TrackAContentData[] | undefined;
+  onOpen: (weekNumber: number) => void;
+  onEdit: (mod: TrackAModuleData) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: mod.weekNumber });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  const days = (() => {
+    const start = (mod.weekNumber - 1) * 6 + 1;
+    const end = Math.min(mod.weekNumber * 6, 30);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  })();
+  const dayContents = days.map(d => allContent?.find(c => c.dayNumber === d));
+  const filledCount = dayContents.filter(c => c && c.slides && c.slides.length > 0).length;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-lg border overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+      data-testid={`card-module-${mod.weekNumber}`}
+    >
+      <div onClick={() => onOpen(mod.weekNumber)}>
+        {mod.imageUrl ? (
+          <div className="h-36 overflow-hidden relative">
+            <img src={mod.imageUrl} alt={mod.title} className="w-full h-full object-cover" data-testid={`img-module-${mod.weekNumber}`} />
+            <div
+              className="absolute top-2 right-2 p-1 rounded bg-black/40 cursor-grab active:cursor-grabbing"
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`drag-handle-module-${mod.weekNumber}`}
+            >
+              <GripVertical className="w-4 h-4 text-white" />
+            </div>
+          </div>
+        ) : (
+          <div className="h-36 flex items-center justify-center bg-muted relative">
+            <Layers className="w-10 h-10 text-muted-foreground/40" />
+            <div
+              className="absolute top-2 right-2 p-1 rounded bg-muted-foreground/20 cursor-grab active:cursor-grabbing"
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`drag-handle-module-${mod.weekNumber}`}
+            >
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
+        )}
+        <div className="pt-4 pb-3 px-4">
+          <p className="text-xs font-medium mb-1 text-muted-foreground" data-testid={`text-module-week-${mod.weekNumber}`}>Week {mod.weekNumber}</p>
+          <h3 className="font-semibold text-base truncate" data-testid={`text-module-title-${mod.weekNumber}`}>{mod.title}</h3>
+          <p className="text-sm truncate text-muted-foreground" data-testid={`text-module-subtitle-${mod.weekNumber}`}>{mod.subtitle}</p>
+          <div className="flex items-center justify-between mt-3">
+            <span className="text-xs text-muted-foreground">{days.length} lessons · {filledCount} with content</span>
+          </div>
+        </div>
+      </div>
+      <div className="px-4 pb-3">
+        <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); onEdit(mod); }} data-testid={`button-edit-module-${mod.weekNumber}`}>
+          <Edit2 className="w-3 h-3 mr-1" />
+          Edit Module
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function TrackAContentManagementView() {
   const { toast } = useToast();
   const [view, setView] = useState<"modules" | "days" | "slides">("modules");
@@ -4780,6 +4887,12 @@ function TrackAContentManagementView() {
   const [moduleImageUrl, setModuleImageUrl] = useState<string | null>(null);
   const [csvImporting, setCsvImporting] = useState(false);
   const csvFileRef = useRef<HTMLInputElement>(null);
+  const [localModuleOrder, setLocalModuleOrder] = useState<number[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const handleCsvExport = async () => {
     try {
@@ -4832,6 +4945,44 @@ function TrackAContentManagementView() {
       return res.json();
     },
   });
+
+  useEffect(() => {
+    if (modules) {
+      setLocalModuleOrder(modules.map(m => m.weekNumber));
+    }
+  }, [modules]);
+
+  const sortedModules = useMemo(() => {
+    if (!modules) return [];
+    if (localModuleOrder.length === 0) return modules;
+    const byWeek = new Map(modules.map(m => [m.weekNumber, m]));
+    return localModuleOrder.map(wn => byWeek.get(wn)).filter(Boolean) as TrackAModuleData[];
+  }, [modules, localModuleOrder]);
+
+  const reorderMutation = useMutation({
+    mutationFn: async (weekNumbers: number[]) => {
+      const res = await apiRequest("PATCH", '/api/admin/track-a/modules/reorder', { weekNumbers });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-modules'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to save order", description: "The module order could not be saved.", variant: "destructive" });
+      if (modules) setLocalModuleOrder(modules.map(m => m.weekNumber));
+    },
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localModuleOrder.indexOf(Number(active.id));
+    const newIndex = localModuleOrder.indexOf(Number(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    const newOrder = arrayMove(localModuleOrder, oldIndex, newIndex);
+    setLocalModuleOrder(newOrder);
+    reorderMutation.mutate(newOrder);
+  };
 
   const { data: allContent, isLoading: contentLoading } = useQuery<TrackAContentData[]>({
     queryKey: ['/api/track-a-content'],
@@ -5128,47 +5279,21 @@ function TrackAContentManagementView() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {(modules || []).map(mod => {
-              const days = getDaysForWeek(mod.weekNumber);
-              const dayContents = days.map(d => allContent?.find(c => c.dayNumber === d));
-              const filledCount = dayContents.filter(c => c && c.slides && c.slides.length > 0).length;
-
-              return (
-                <div
-                  key={mod.weekNumber}
-                  className="rounded-lg border overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                  data-testid={`card-module-${mod.weekNumber}`}
-                >
-                  <div onClick={() => openModule(mod.weekNumber)}>
-                    {mod.imageUrl ? (
-                      <div className="h-36 overflow-hidden">
-                        <img src={mod.imageUrl} alt={mod.title} className="w-full h-full object-cover" data-testid={`img-module-${mod.weekNumber}`} />
-                      </div>
-                    ) : (
-                      <div className="h-36 flex items-center justify-center bg-muted">
-                        <Layers className="w-10 h-10 text-muted-foreground/40" />
-                      </div>
-                    )}
-                    <div className="pt-4 pb-3 px-4">
-                      <p className="text-xs font-medium mb-1 text-muted-foreground" data-testid={`text-module-week-${mod.weekNumber}`}>Week {mod.weekNumber}</p>
-                      <h3 className="font-semibold text-base truncate" data-testid={`text-module-title-${mod.weekNumber}`}>{mod.title}</h3>
-                      <p className="text-sm truncate text-muted-foreground" data-testid={`text-module-subtitle-${mod.weekNumber}`}>{mod.subtitle}</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs text-muted-foreground">{days.length} lessons · {filledCount} with content</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-4 pb-3">
-                    <Button variant="outline" size="sm" className="w-full" onClick={(e) => { e.stopPropagation(); startEditModule(mod); }} data-testid={`button-edit-module-${mod.weekNumber}`}>
-                      <Edit2 className="w-3 h-3 mr-1" />
-                      Edit Module
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={localModuleOrder} strategy={rectSortingStrategy}>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {sortedModules.map(mod => (
+                  <SortableModuleCard
+                    key={mod.weekNumber}
+                    mod={mod}
+                    allContent={allContent}
+                    onOpen={openModule}
+                    onEdit={startEditModule}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </div>
       </div>
     );

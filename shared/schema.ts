@@ -69,6 +69,7 @@ export const trackAModules = pgTable("track_a_modules", {
   title: text("title").notNull(),
   subtitle: text("subtitle").notNull(),
   imageUrl: text("image_url"),
+  sortOrder: integer("sort_order").notNull().default(0),
 });
 
 export const trackAContent = pgTable("track_a_content", {

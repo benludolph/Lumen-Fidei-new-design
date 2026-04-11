@@ -461,6 +461,20 @@ export async function registerRoutes(
     }
   });
 
+  app.patch('/api/admin/track-a/modules/reorder', requireRole('admin'), async (req, res) => {
+    try {
+      const schema = z.object({ weekNumbers: z.array(z.number().int().positive()) });
+      const { weekNumbers } = schema.parse(req.body);
+      await storage.reorderTrackAModules(weekNumbers);
+      res.json({ ok: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      throw error;
+    }
+  });
+
   // === Image Upload ===
 
   app.post('/api/admin/upload-image', requireRole('admin'), uploadLimiter, upload.single('image'), async (req, res) => {
