@@ -80,22 +80,21 @@ export function LessonFlow({
     setHasReachedBottom(true);
     const el = scrollContentRef.current;
     if (!el) return;
+    // Media slides embed iframes that intercept scroll events — the footer
+    // would become permanently unreachable, so never gate them behind scroll.
+    // Read type from the content prop directly to avoid a TDZ on `slides`.
+    const rawSlides = (content.slides ?? []) as { type: string; content: string }[];
+    if (rawSlides[currentSlide]?.type === "media") {
+      return;
+    }
     const t = setTimeout(() => {
       el.scrollTop = 0;
-      // Media slides embed iframes that intercept scroll events — the footer
-      // would become permanently unreachable, so never gate them behind scroll.
-      const currentType = slides[currentSlide]?.type;
-      if (currentType === "media") {
-        setCanScroll(false);
-        setHasReachedBottom(true);
-        return;
-      }
       const scrollable = el.scrollHeight > el.clientHeight + 8;
       setCanScroll(scrollable);
       setHasReachedBottom(!scrollable);
     }, 80);
     return () => clearTimeout(t);
-  }, [currentSlide, slides]);
+  }, [currentSlide, content.slides]);
 
   const handleContentScroll = useCallback(() => {
     const el = scrollContentRef.current;
