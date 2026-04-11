@@ -82,12 +82,20 @@ export function LessonFlow({
     if (!el) return;
     const t = setTimeout(() => {
       el.scrollTop = 0;
+      // Media slides embed iframes that intercept scroll events — the footer
+      // would become permanently unreachable, so never gate them behind scroll.
+      const currentType = slides[currentSlide]?.type;
+      if (currentType === "media") {
+        setCanScroll(false);
+        setHasReachedBottom(true);
+        return;
+      }
       const scrollable = el.scrollHeight > el.clientHeight + 8;
       setCanScroll(scrollable);
       setHasReachedBottom(!scrollable);
     }, 80);
     return () => clearTimeout(t);
-  }, [currentSlide]);
+  }, [currentSlide, slides]);
 
   const handleContentScroll = useCallback(() => {
     const el = scrollContentRef.current;
