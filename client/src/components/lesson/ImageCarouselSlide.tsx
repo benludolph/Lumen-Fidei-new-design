@@ -143,11 +143,10 @@ export function ImageCarouselSlide({
                 return (
                   <p
                     key={i}
+                    className="type-body-xl"
                     style={{
-                      fontFamily: "'Afacad', system-ui, sans-serif",
-                      fontSize: "15px",
                       fontWeight: 400,
-                      color: "rgba(255,255,255,0.70)",
+                      color: "var(--white-80)",
                       lineHeight: 1.5,
                       margin: 0,
                       paddingLeft: isBullet ? "16px" : 0,
