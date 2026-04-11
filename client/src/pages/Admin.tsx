@@ -46,7 +46,6 @@ export default function Admin() {
   const { user } = useAuth();
   const { data: users, isLoading } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
-  const [, setLocation] = useLocation();
 
   if (!user || user.role !== 'admin') return null;
 
@@ -4871,6 +4870,7 @@ function SortableModuleCard({
 
 function TrackAContentManagementView() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [view, setView] = useState<"modules" | "days" | "slides">("modules");
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState(1);
