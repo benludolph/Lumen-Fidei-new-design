@@ -706,7 +706,7 @@ export async function registerRoutes(
 
   // === Journal ===
 
-  app.get('/api/journal', requireAuth, async (req, res) => {
+  app.get('/api/journal', requireRole('participant'), async (req, res) => {
     const modules = await storage.getJournalEntries(req.user!.id);
     res.json(modules);
   });

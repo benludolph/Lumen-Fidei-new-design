@@ -86,7 +86,7 @@ function ModuleSection({ mod, defaultOpen }: { mod: JournalModule; defaultOpen: 
       {open && (
         <div className="px-4 pb-4 pt-1 space-y-3">
           {mod.entries.map(entry => (
-            <EntryCard key={entry.dayNumber} {...entry} />
+            <EntryCard key={`${entry.dayNumber}-${entry.createdAt}`} {...entry} />
           ))}
         </div>
       )}
