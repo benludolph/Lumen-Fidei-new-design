@@ -20,15 +20,13 @@ export function LessonCompletionScreen({
   onContinue,
   onBack,
 }: LessonCompletionScreenProps) {
-  const [stage, setStage] = useState<0 | 1 | 2 | 3 | 4>(0);
+  const [stage, setStage] = useState<0 | 1 | 2>(0);
 
   useEffect(() => {
     playLessonComplete();
     const t1 = setTimeout(() => setStage(1), 80);    // monstrance begins to rise from dark
-    const t2 = setTimeout(() => setStage(2), 900);   // glow blooms
-    const t3 = setTimeout(() => setStage(3), 2000);  // darkness fully lifted
-    const t4 = setTimeout(() => setStage(4), 2600);  // text arrives
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+    const t2 = setTimeout(() => setStage(2), 2200);  // text arrives
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
@@ -52,14 +50,14 @@ export function LessonCompletionScreen({
         />
       </div>
 
-      {/* ── Full-screen darkness veil that lifts ── */}
+      {/* ── Full-screen darkness veil that lifts with the monstrance ── */}
       <div
         aria-hidden="true"
         className="absolute inset-0 pointer-events-none"
         style={{
           background: "black",
-          opacity: stage >= 3 ? 0 : 0.97,
-          transition: "opacity 2400ms cubic-bezier(0.4, 0, 0.2, 1)",
+          opacity: stage >= 1 ? 0 : 1,
+          transition: "opacity 4000ms cubic-bezier(0.4, 0, 0.2, 1)",
           zIndex: 1,
         }}
       />
@@ -170,48 +168,12 @@ export function LessonCompletionScreen({
             }}
           />
 
-          {/* Golden glow corona that blooms as monstrance rises */}
-          <div
-            aria-hidden="true"
-            className="absolute pointer-events-none"
-            style={{
-              left: "50%",
-              top: "50%",
-              transform: `translate(-50%, -58%) scale(${stage >= 2 ? 1 : 0.15})`,
-              width: "clamp(260px, 55vw, 420px)",
-              height: "clamp(260px, 55vw, 420px)",
-              borderRadius: "50%",
-              background:
-                "radial-gradient(ellipse at 50% 50%, rgba(255, 210, 120, 0.22) 0%, rgba(255, 170, 60, 0.10) 38%, rgba(200, 120, 20, 0.04) 65%, transparent 100%)",
-              opacity: stage >= 2 ? 1 : 0,
-              transition: "opacity 2200ms cubic-bezier(0.4, 0, 0.2, 1), transform 2600ms cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          />
-
-          {/* Secondary tighter glow for hot-core look */}
-          <div
-            aria-hidden="true"
-            className="absolute pointer-events-none"
-            style={{
-              left: "50%",
-              top: "50%",
-              transform: `translate(-50%, -62%) scale(${stage >= 2 ? 1 : 0.05})`,
-              width: "clamp(100px, 22vw, 160px)",
-              height: "clamp(100px, 22vw, 160px)",
-              borderRadius: "50%",
-              background:
-                "radial-gradient(ellipse at 50% 50%, rgba(255, 240, 180, 0.30) 0%, rgba(255, 210, 100, 0.12) 50%, transparent 100%)",
-              opacity: stage >= 2 ? 1 : 0,
-              transition: "opacity 1800ms cubic-bezier(0.4, 0, 0.2, 1), transform 2200ms cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          />
-
           {/* Completion content */}
           <div
             className="relative flex-1 flex flex-col items-center justify-center"
             style={{ gap: "28px" }}
           >
-            {/* Monstrance — rises from deep below */}
+            {/* Monstrance — rises from deep below as darkness lifts */}
             <img
               src={monstranceImg}
               aria-hidden="true"
@@ -221,12 +183,11 @@ export function LessonCompletionScreen({
                 height: "auto",
                 mixBlendMode: "screen",
                 opacity: stage >= 1 ? 0.88 : 0,
-                transform: stage >= 1 ? "translateY(0px)" : "translateY(140px)",
+                transform: stage >= 1 ? "translateY(0px)" : "translateY(160px)",
                 transition: [
-                  "opacity 3200ms cubic-bezier(0.4, 0, 0.15, 1)",
-                  "transform 3600ms cubic-bezier(0.16, 1, 0.3, 1)",
+                  "opacity 3800ms cubic-bezier(0.4, 0, 0.2, 1)",
+                  "transform 4200ms cubic-bezier(0.16, 1, 0.3, 1)",
                 ].join(", "),
-                filter: stage >= 2 ? "drop-shadow(0 0 18px rgba(255, 200, 80, 0.45))" : "none",
               }}
             />
 
@@ -235,8 +196,8 @@ export function LessonCompletionScreen({
               className="flex flex-col items-center"
               style={{
                 gap: "20px",
-                opacity: stage >= 4 ? 1 : 0,
-                transform: stage >= 4 ? "translateY(0)" : "translateY(20px)",
+                opacity: stage >= 2 ? 1 : 0,
+                transform: stage >= 2 ? "translateY(0)" : "translateY(20px)",
                 transition: "opacity 1000ms ease, transform 1000ms cubic-bezier(0.16, 1, 0.3, 1)",
               }}
             >
