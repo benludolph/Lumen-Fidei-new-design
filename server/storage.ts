@@ -78,6 +78,7 @@ export interface IStorage {
   // Track A Content
   getTrackAContent(dayNumber: number): Promise<TrackAContent | undefined>;
   getAllTrackAContent(): Promise<TrackAContent[]>;
+  reorderTrackAContent(dayNumbers: number[]): Promise<void>;
   upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent>;
 
   // Cohort Settings
@@ -431,7 +432,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllTrackAContent(): Promise<TrackAContent[]> {
-    return await db.select().from(trackAContent).orderBy(asc(trackAContent.dayNumber));
+    return await db.select().from(trackAContent).orderBy(asc(trackAContent.sortOrder), asc(trackAContent.dayNumber));
+  }
+
+  async reorderTrackAContent(dayNumbers: number[]): Promise<void> {
+    await Promise.all(
+      dayNumbers.map((dayNumber, index) =>
+        db.update(trackAContent)
+          .set({ sortOrder: index })
+          .where(eq(trackAContent.dayNumber, dayNumber))
+      )
+    );
   }
 
   async upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent> {

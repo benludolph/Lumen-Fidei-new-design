@@ -2327,6 +2327,7 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
+  sortOrder: number;
 };
 
 const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene"] as const;
@@ -4779,6 +4780,84 @@ function ModuleImageUpload({ currentUrl, onUploaded }: { currentUrl: string | nu
   );
 }
 
+function SortableDayCard({
+  dayNumber,
+  dayContent,
+  onOpen,
+  onPreview,
+}: {
+  dayNumber: number;
+  dayContent: TrackAContentData | undefined;
+  onOpen: (dayNumber: number) => void;
+  onPreview: (dayNumber: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: dayNumber });
+  const slideCount = dayContent?.slides?.length || 0;
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card
+        className="cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => onOpen(dayNumber)}
+        data-testid={`card-day-${dayNumber}`}
+      >
+        <CardContent className="py-4">
+          <div className="flex items-center gap-4">
+            <div
+              className="p-1 rounded text-muted-foreground/50 hover:text-muted-foreground cursor-grab active:cursor-grabbing flex-shrink-0"
+              {...attributes}
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              data-testid={`drag-handle-day-${dayNumber}`}
+            >
+              <GripVertical className="w-4 h-4" />
+            </div>
+            {dayContent?.imageUrl ? (
+              <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                <img src={dayContent.imageUrl} alt="" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{dayNumber}</span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium truncate" data-testid={`text-day-theme-${dayNumber}`}>
+                Day {dayNumber}. {dayContent?.centralTheme || "No content yet"}
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                {slideCount > 0 ? `${slideCount} slide${slideCount !== 1 ? "s" : ""}` : "Empty"}
+                {dayContent?.imageUrl ? " · Has image" : ""}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {slideCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                  data-testid={`button-preview-day-${dayNumber}`}
+                  onClick={(e) => { e.stopPropagation(); onPreview(dayNumber); }}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  Preview
+                </Button>
+              )}
+              {slideCount > 0 ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              ) : (
+                <Circle className="w-4 h-4 text-muted-foreground/40" />
+              )}
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function SortableModuleCard({
   mod,
   allContent,
@@ -4890,6 +4969,7 @@ function TrackAContentManagementView() {
   const [csvImporting, setCsvImporting] = useState(false);
   const csvFileRef = useRef<HTMLInputElement>(null);
   const [localModuleOrder, setLocalModuleOrder] = useState<number[]>([]);
+  const [localDayOrder, setLocalDayOrder] = useState<number[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -4986,6 +5066,30 @@ function TrackAContentManagementView() {
     reorderMutation.mutate(newOrder);
   };
 
+  const reorderDaysMutation = useMutation({
+    mutationFn: async (dayNumbers: number[]) => {
+      const res = await apiRequest("PATCH", '/api/admin/track-a/content/reorder', { dayNumbers });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to save order", description: "The day order could not be saved.", variant: "destructive" });
+    },
+  });
+
+  const handleDayDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localDayOrder.indexOf(Number(active.id));
+    const newIndex = localDayOrder.indexOf(Number(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    const newOrder = arrayMove(localDayOrder, oldIndex, newIndex);
+    setLocalDayOrder(newOrder);
+    reorderDaysMutation.mutate(newOrder);
+  };
+
   const { data: allContent, isLoading: contentLoading } = useQuery<TrackAContentData[]>({
     queryKey: ['/api/track-a-content'],
     queryFn: async () => {
@@ -4994,6 +5098,16 @@ function TrackAContentManagementView() {
       return res.json();
     },
   });
+
+  useEffect(() => {
+    if (allContent && selectedModule !== null) {
+      const daysInModule = allContent
+        .filter(c => c.weekNumber === selectedModule)
+        .sort((a, b) => (a.sortOrder ?? a.dayNumber) - (b.sortOrder ?? b.dayNumber))
+        .map(c => c.dayNumber);
+      setLocalDayOrder(daysInModule);
+    }
+  }, [allContent, selectedModule]);
 
   const moduleSaveMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -5304,7 +5418,6 @@ function TrackAContentManagementView() {
   // === DAY LIST VIEW ===
   if (view === "days" && selectedModule) {
     const currentModule = modules?.find(m => m.weekNumber === selectedModule);
-    const days = getDaysForWeek(selectedModule);
 
     return (
       <div className="space-y-6">
@@ -5324,67 +5437,21 @@ function TrackAContentManagementView() {
           </CardHeader>
         </Card>
 
-        <div className="space-y-2">
-          {days.map(dayNumber => {
-            const dayContent = allContent?.find(c => c.dayNumber === dayNumber);
-            const slideCount = dayContent?.slides?.length || 0;
-
-            return (
-              <Card
-                key={dayNumber}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => openDay(dayNumber)}
-                data-testid={`card-day-${dayNumber}`}
-              >
-                <CardContent className="py-4">
-                  <div className="flex items-center gap-4">
-                    {dayContent?.imageUrl ? (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={dayContent.imageUrl} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{dayNumber}</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate" data-testid={`text-day-theme-${dayNumber}`}>
-                        Day {dayNumber}. {dayContent?.centralTheme || "No content yet"}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        {slideCount > 0 ? `${slideCount} slide${slideCount !== 1 ? "s" : ""}` : "Empty"}
-                        {dayContent?.imageUrl ? " · Has image" : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {slideCount > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
-                          data-testid={`button-preview-day-${dayNumber}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setLocation(`/preview/track-a/${dayNumber}`);
-                          }}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Preview
-                        </Button>
-                      )}
-                      {slideCount > 0 ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-muted-foreground/40" />
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDayDragEnd}>
+          <SortableContext items={localDayOrder} strategy={rectSortingStrategy}>
+            <div className="space-y-2">
+              {localDayOrder.map(dayNumber => (
+                <SortableDayCard
+                  key={dayNumber}
+                  dayNumber={dayNumber}
+                  dayContent={allContent?.find(c => c.dayNumber === dayNumber)}
+                  onOpen={openDay}
+                  onPreview={(dn) => setLocation(`/preview/track-a/${dn}`)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
     );
   }
