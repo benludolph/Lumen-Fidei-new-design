@@ -704,6 +704,13 @@ export async function registerRoutes(
     res.status(201).json(answer);
   });
 
+  // === Journal ===
+
+  app.get('/api/journal', requireAuth, async (req, res) => {
+    const modules = await storage.getJournalEntries(req.user!.id);
+    res.json(modules);
+  });
+
   // === Chat ===
 
   // Unread message count - must be BEFORE the :otherUserId route

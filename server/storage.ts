@@ -44,6 +44,7 @@ export interface IStorage {
   // Answers
   getUserAnswers(userId: number): Promise<UserAnswer[]>;
   createUserAnswer(answer: InsertUserAnswer): Promise<UserAnswer>;
+  getJournalEntries(userId: number): Promise<import("@shared/schema").JournalModule[]>;
 
   // Chat
   getMessages(user1Id: number, user2Id: number): Promise<Message[]>;
@@ -220,6 +221,43 @@ export class DatabaseStorage implements IStorage {
   async createUserAnswer(answer: InsertUserAnswer): Promise<UserAnswer> {
     const [newAnswer] = await db.insert(userAnswers).values(answer).returning();
     return newAnswer;
+  }
+
+  async getJournalEntries(userId: number): Promise<import("@shared/schema").JournalModule[]> {
+    const rows = await db
+      .select({
+        dayNumber: userAnswers.dayNumber,
+        content: userAnswers.content,
+        createdAt: userAnswers.createdAt,
+        centralTheme: trackAContent.centralTheme,
+        weekNumber: trackAContent.weekNumber,
+        moduleTitle: trackAModules.title,
+        moduleSubtitle: trackAModules.subtitle,
+      })
+      .from(userAnswers)
+      .innerJoin(trackAContent, eq(userAnswers.dayNumber, trackAContent.dayNumber))
+      .innerJoin(trackAModules, eq(trackAContent.weekNumber, trackAModules.weekNumber))
+      .where(eq(userAnswers.userId, userId))
+      .orderBy(asc(trackAContent.weekNumber), asc(userAnswers.dayNumber));
+
+    const moduleMap = new Map<number, import("@shared/schema").JournalModule>();
+    for (const row of rows) {
+      if (!moduleMap.has(row.weekNumber)) {
+        moduleMap.set(row.weekNumber, {
+          weekNumber: row.weekNumber,
+          moduleTitle: row.moduleTitle,
+          moduleSubtitle: row.moduleSubtitle,
+          entries: [],
+        });
+      }
+      moduleMap.get(row.weekNumber)!.entries.push({
+        dayNumber: row.dayNumber,
+        centralTheme: row.centralTheme,
+        content: row.content,
+        createdAt: row.createdAt.toISOString(),
+      });
+    }
+    return Array.from(moduleMap.values()).sort((a, b) => a.weekNumber - b.weekNumber);
   }
 
   // Chat

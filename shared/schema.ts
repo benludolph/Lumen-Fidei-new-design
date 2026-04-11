@@ -331,6 +331,21 @@ export type InsertChatFlowResponse = z.infer<typeof insertChatFlowResponseSchema
 // Prelim module with user completion status (returned from /api/prelim-modules)
 export type PrelimModuleWithStatus = PrelimModule & { completed: boolean };
 
+// Journal types — returned by GET /api/journal
+export type JournalEntry = {
+  dayNumber: number;
+  centralTheme: string;
+  content: string;
+  createdAt: string;
+};
+
+export type JournalModule = {
+  weekNumber: number;
+  moduleTitle: string;
+  moduleSubtitle: string;
+  entries: JournalEntry[];
+};
+
 // Request/Response types
 
 // Auth

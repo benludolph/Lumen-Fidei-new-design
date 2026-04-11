@@ -12,7 +12,8 @@ import {
   Trophy,
   Menu,
   X,
-  Video
+  Video,
+  NotebookPen
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -76,6 +77,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
         {user.role === 'participant' && (
           <>
             <NavItem href="/dashboard" icon={BookOpen} label="My Journey" onClick={onNavClick} />
+            <NavItem href="/journal" icon={NotebookPen} label="Journal" onClick={onNavClick} />
             <NavItem href="/collections" icon={Trophy} label="Collection" onClick={onNavClick} />
             <NavItem href="/testimonies" icon={Video} label="Testimonies" onClick={onNavClick} />
           </>
