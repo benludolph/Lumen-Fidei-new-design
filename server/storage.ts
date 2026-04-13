@@ -19,7 +19,7 @@ import {
   type TestimonyPart, type InsertTestimonyPart,
   type PasswordResetToken,
 } from "@shared/schema";
-import { eq, and, or, lt, desc, asc, min, max, count, inArray, sql } from "drizzle-orm";
+import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -121,6 +121,7 @@ export interface IStorage {
   createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<PasswordResetToken>;
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenUsed(token: string): Promise<void>;
+  claimPasswordResetToken(token: string): Promise<PasswordResetToken | null>;
 
   // session store
   sessionStore: any;
@@ -666,6 +667,22 @@ export class DatabaseStorage implements IStorage {
 
   async markPasswordResetTokenUsed(token: string): Promise<void> {
     await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.token, token));
+  }
+
+  async claimPasswordResetToken(token: string): Promise<PasswordResetToken | null> {
+    const now = new Date();
+    const [claimed] = await db
+      .update(passwordResetTokens)
+      .set({ usedAt: now })
+      .where(
+        and(
+          eq(passwordResetTokens.token, token),
+          isNull(passwordResetTokens.usedAt),
+          gt(passwordResetTokens.expiresAt, now)
+        )
+      )
+      .returning();
+    return claimed ?? null;
   }
 
   async getUnlockedKeysForUser(userId: number): Promise<Set<string>> {

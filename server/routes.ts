@@ -301,9 +301,13 @@ export async function registerRoutes(
       return res.status(400).json({ message: "This reset link has expired.", code: "TOKEN_EXPIRED" });
     }
 
+    const claimed = await storage.claimPasswordResetToken(token);
+    if (!claimed) {
+      return res.status(400).json({ message: "This reset link is no longer valid.", code: "INVALID_TOKEN" });
+    }
+
     const hashed = await hashPassword(newPassword);
-    await storage.updateUser(record.userId, { password: hashed });
-    await storage.markPasswordResetTokenUsed(token);
+    await storage.updateUser(claimed.userId, { password: hashed });
 
     res.json({ message: "Password reset successfully." });
   });
