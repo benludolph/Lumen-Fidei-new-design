@@ -2,9 +2,10 @@ import { Link, useLocation } from "wouter";
 import { PageContainer } from "./PageContainer";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import logoImg from "@assets/LOGO_1773954119275.png";
 
 interface DashboardLayoutProps {
@@ -15,7 +16,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, navigate] = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const { data: user } = useQuery<{ name: string; email: string; role: string }>({
     queryKey: ["/api/user"],
@@ -172,6 +175,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
                   )}
                   <button
+                    data-testid="button-change-password"
+                    onClick={() => { setProfileOpen(false); setChangePasswordOpen(true); }}
+                    className="type-body-md"
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "none", border: "none", color: "var(--white-70)", cursor: "pointer", transition: "color 0.15s, background 0.15s", textAlign: "left" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--white-5)"; (e.currentTarget as HTMLButtonElement).style.color = "white"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; (e.currentTarget as HTMLButtonElement).style.color = "var(--white-70)"; }}
+                  >
+                    <KeyRound size={14} />
+                    Change Password
+                  </button>
+                  <button
                     data-testid="button-sign-out"
                     onClick={() => logoutMutation.mutate()}
                     disabled={logoutMutation.isPending}
@@ -290,6 +304,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <p className="type-body-md font-medium" style={{ color: "white", margin: "0 0 2px" }}>{user.name}</p>
             <p className="type-body-xs" style={{ color: "var(--white-40)", margin: "0 0 12px" }}>{user.email}</p>
             <button
+              data-testid="button-change-password-mobile"
+              onClick={() => { closeDrawer(); setChangePasswordOpen(true); }}
+              className="type-body-md"
+              style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", color: "var(--white-50)", cursor: "pointer", padding: "0 0 10px" }}
+            >
+              <KeyRound size={14} />
+              Change Password
+            </button>
+            <button
               data-testid="button-sign-out-mobile"
               onClick={() => { closeDrawer(); logoutMutation.mutate(); }}
               disabled={logoutMutation.isPending}
@@ -311,6 +334,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         )}
       </div>
+
+      {/* Change Password Modal */}
+      {changePasswordOpen && (
+        <ChangePasswordDialog
+          onClose={() => setChangePasswordOpen(false)}
+          onSuccess={() => {
+            setChangePasswordOpen(false);
+            toast({ title: "Password changed", description: "Your new password is now active." });
+          }}
+        />
+      )}
 
       {/* Page content */}
       <div className="relative z-10 pt-[72px] min-h-screen">
@@ -374,5 +408,151 @@ function DrawerLink({
         {children}
       </span>
     </Link>
+  );
+}
+
+function ChangePasswordDialog({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await apiRequest("PATCH", "/api/user/password", { currentPassword, newPassword });
+      onSuccess();
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    background: "var(--white-5)",
+    border: "1px solid var(--white-8)",
+    borderRadius: "6px",
+    height: "36px",
+    width: "100%",
+    color: "white",
+    padding: "0 36px 0 12px",
+    outline: "none",
+    boxSizing: "border-box",
+    fontSize: "14px",
+  };
+
+  const PasswordInput = ({
+    id, value, show, onChange, onToggle, placeholder, testId,
+  }: {
+    id: string; value: string; show: boolean;
+    onChange: (v: string) => void; onToggle: () => void;
+    placeholder?: string; testId: string;
+  }) => (
+    <div style={{ position: "relative" }}>
+      <input
+        id={id}
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        data-testid={testId}
+        className="type-body-md"
+        style={inputStyle}
+        onFocus={(e) => { e.currentTarget.style.borderColor = "var(--white-20)"; }}
+        onBlur={(e) => { e.currentTarget.style.borderColor = "var(--white-8)"; }}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--white-40)", cursor: "pointer", padding: 0, display: "flex" }}
+      >
+        {show ? <EyeOff size={14} /> : <Eye size={14} />}
+      </button>
+    </div>
+  );
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{ background: "var(--surface-raised)", border: "1px solid var(--white-8)", borderRadius: "12px", padding: "28px 28px 24px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.6)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          <p className="type-caption-lg" style={{ color: "white", margin: 0 }}>Change Password</p>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--white-40)", cursor: "pointer", padding: 0, display: "flex" }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="cp-current" className="type-body-md" style={{ color: "var(--white-70)" }}>Current Password</label>
+            <PasswordInput id="cp-current" value={currentPassword} show={showCurrent} onChange={setCurrentPassword} onToggle={() => setShowCurrent(v => !v)} testId="input-current-password" />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="cp-new" className="type-body-md" style={{ color: "var(--white-70)" }}>New Password</label>
+            <PasswordInput id="cp-new" value={newPassword} show={showNew} onChange={setNewPassword} onToggle={() => setShowNew(v => !v)} placeholder="Minimum 8 characters" testId="input-new-password-dialog" />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="cp-confirm" className="type-body-md" style={{ color: "var(--white-70)" }}>Confirm New Password</label>
+            <PasswordInput id="cp-confirm" value={confirmPassword} show={showConfirm} onChange={setConfirmPassword} onToggle={() => setShowConfirm(v => !v)} testId="input-confirm-password-dialog" />
+          </div>
+
+          {error && (
+            <p className="type-body-sm" style={{ color: "#ef4444", margin: 0, background: "rgba(239,68,68,0.08)", padding: "8px 12px", borderRadius: "6px" }}>
+              {error}
+            </p>
+          )}
+
+          <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="type-body-md"
+              style={{ flex: 1, height: "36px", background: "none", border: "1px solid var(--white-12)", borderRadius: "6px", color: "var(--white-60)", cursor: "pointer" }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              data-testid="button-save-password"
+              className="type-body-md font-medium"
+              style={{ flex: 1, height: "36px", background: "var(--white-10)", border: "1px solid var(--white-15)", borderRadius: "6px", color: "white", cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.5 : 1 }}
+            >
+              {isLoading ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }

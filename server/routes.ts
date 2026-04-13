@@ -1,7 +1,9 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { setupAuth, hashPassword } from "./auth";
+import { setupAuth, hashPassword, verifyPassword } from "./auth";
 import { storage } from "./storage";
+import { sendPasswordResetEmail } from "./email";
+import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, type User } from "@shared/schema";
@@ -209,6 +211,101 @@ export async function registerRoutes(
   // Apply stricter rate limiting to auth endpoints
   app.use("/api/register", authLimiter);
   app.use("/api/login", authLimiter);
+  app.use("/api/auth/forgot-password", authLimiter);
+  app.use("/api/auth/reset-password", authLimiter);
+
+  // === Password Management ===
+
+  // Change password (authenticated)
+  app.patch("/api/user/password", requireAuth, async (req, res) => {
+    const schema = z.object({
+      currentPassword: z.string().min(1),
+      newPassword: z.string().min(8, "New password must be at least 8 characters"),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0].message });
+    }
+    const { currentPassword, newPassword } = parsed.data;
+
+    const user = await storage.getUser(req.user!.id);
+    if (!user) return res.sendStatus(404);
+
+    const isHashed = user.password.startsWith("$2");
+    const valid = isHashed
+      ? await verifyPassword(currentPassword, user.password)
+      : user.password === currentPassword;
+
+    if (!valid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const hashed = await hashPassword(newPassword);
+    await storage.updateUser(user.id, { password: hashed });
+    res.json({ message: "Password updated successfully" });
+  });
+
+  // Forgot password — send reset email (public)
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    const schema = z.object({ email: z.string().email() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.json({ message: "If that email exists, a reset link has been sent." });
+    }
+
+    const { email } = parsed.data;
+    const user = await storage.getUserByUsername(email.toLowerCase().trim());
+
+    if (user) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      await storage.createPasswordResetToken(user.id, token, expiresAt);
+
+      const baseUrl = process.env.APP_URL ||
+        (req.headers.origin as string) ||
+        `${req.protocol}://${req.get("host")}`;
+      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+
+      try {
+        await sendPasswordResetEmail(user.email, resetUrl);
+      } catch (err) {
+        console.error("Failed to send password reset email:", err);
+      }
+    }
+
+    // Always return success to prevent user enumeration
+    res.json({ message: "If that email exists, a reset link has been sent." });
+  });
+
+  // Reset password via token (public)
+  app.post("/api/auth/reset-password", async (req, res) => {
+    const schema = z.object({
+      token: z.string().min(1),
+      newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0].message });
+    }
+    const { token, newPassword } = parsed.data;
+
+    const record = await storage.getPasswordResetToken(token);
+    if (!record) {
+      return res.status(400).json({ message: "Invalid or expired reset link.", code: "INVALID_TOKEN" });
+    }
+    if (record.usedAt) {
+      return res.status(400).json({ message: "This reset link has already been used.", code: "TOKEN_USED" });
+    }
+    if (new Date() > record.expiresAt) {
+      return res.status(400).json({ message: "This reset link has expired.", code: "TOKEN_EXPIRED" });
+    }
+
+    const hashed = await hashPassword(newPassword);
+    await storage.updateUser(record.userId, { password: hashed });
+    await storage.markPasswordResetTokenUsed(token);
+
+    res.json({ message: "Password reset successfully." });
+  });
 
   // === Users ===
   

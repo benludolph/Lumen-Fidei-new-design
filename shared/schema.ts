@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, uniqueIndex, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, uniqueIndex, unique, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -206,6 +206,21 @@ export const moduleOverlays = pgTable("module_overlays", {
 
 export type ModuleOverlay = typeof moduleOverlays.$inferSelect;
 export type InsertModuleOverlay = typeof moduleOverlays.$inferInsert;
+
+// Password reset tokens — one-time use, expire after 1 hour
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+}, (table) => [
+  index("prt_user_idx").on(table.userId),
+  index("prt_token_idx").on(table.token),
+]);
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
 // Prayer completion tracking - records when users complete morning/evening prayers
 export const prayerCompletions = pgTable("prayer_completions", {

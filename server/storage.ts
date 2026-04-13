@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
-  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts,
+  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -17,6 +17,7 @@ import {
   type ModuleOverlay,
   type Testimony, type InsertTestimony,
   type TestimonyPart, type InsertTestimonyPart,
+  type PasswordResetToken,
 } from "@shared/schema";
 import { eq, and, or, lt, desc, asc, min, max, count, inArray, sql } from "drizzle-orm";
 
@@ -115,6 +116,11 @@ export interface IStorage {
   deleteTestimonyPart(id: number): Promise<void>;
   // Unlock derivation: returns a set of unlockKeys that are unlocked for this user
   getUnlockedKeysForUser(userId: number): Promise<Set<string>>;
+
+  // Password reset tokens
+  createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenUsed(token: string): Promise<void>;
 
   // session store
   sessionStore: any;
@@ -645,6 +651,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTestimonyPart(id: number): Promise<void> {
     await db.delete(testimonyParts).where(eq(testimonyParts.id, id));
+  }
+
+  // Password reset tokens
+  async createPasswordResetToken(userId: number, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    const [row] = await db.insert(passwordResetTokens).values({ userId, token, expiresAt }).returning();
+    return row;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [row] = await db.select().from(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+    return row;
+  }
+
+  async markPasswordResetTokenUsed(token: string): Promise<void> {
+    await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.token, token));
   }
 
   async getUnlockedKeysForUser(userId: number): Promise<Set<string>> {

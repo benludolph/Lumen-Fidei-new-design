@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import landscapeImg from "@assets/OilPaintingBG_1774227836014.webp";
 import logoImg from "@assets/NewLogo_(1)_1774128194728.webp";
 
@@ -275,9 +275,18 @@ export default function Login() {
                 </button>
               </form>
 
-              <p className="type-body-sm text-center" style={{ color: "var(--white-30)", margin: "4px 0 0" }}>
-                Having trouble? Contact bludolph@archchicago.org
-              </p>
+              <div className="flex flex-col gap-1" style={{ marginTop: "4px" }}>
+                <p className="type-body-sm text-center" style={{ color: "var(--white-30)", margin: 0 }}>
+                  <Link href="/forgot-password">
+                    <span data-testid="link-forgot-password" style={{ color: "var(--white-40)", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                      Forgot your password?
+                    </span>
+                  </Link>
+                </p>
+                <p className="type-body-sm text-center" style={{ color: "var(--white-30)", margin: 0 }}>
+                  Having trouble? Contact bludolph@archchicago.org
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/Login";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import Begin from "@/pages/Begin";
 import Dashboard from "@/pages/Dashboard";
 import MentorPortal from "@/pages/MentorPortal";
@@ -62,6 +64,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/begin" component={Begin} />
 
       {/* Root redirect */}
