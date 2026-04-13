@@ -2719,7 +2719,46 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
   const [showReference, setShowReference] = useState(false);
   const [showAudioPanel, setShowAudioPanel] = useState(false);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const { toast } = useToast();
+
+  // ── Parse current videoUrl from chat flow JSON ──
+  const chatFlowVideoUrl = useMemo(() => {
+    try { return (JSON.parse(content || "{}") as { videoUrl?: string }).videoUrl || null; }
+    catch { return null; }
+  }, [content]);
+
+  const handleVideoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append("video", file);
+      const res = await fetch("/api/admin/upload-video", { method: "POST", body: formData, credentials: "include" });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      const p = JSON.parse(content);
+      p.videoUrl = data.url;
+      onChange(JSON.stringify(p, null, 2));
+      toast({ title: "Video uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsUploadingVideo(false);
+      e.target.value = "";
+    }
+  }, [content, onChange, toast]);
+
+  const handleRemoveVideo = useCallback(() => {
+    try {
+      const p = JSON.parse(content);
+      delete p.videoUrl;
+      onChange(JSON.stringify(p, null, 2));
+    } catch {
+      toast({ title: "Could not remove video", variant: "destructive" });
+    }
+  }, [content, onChange, toast]);
 
   // ── Parse narrator messages for audio panel ──
   const narratorMessages = useMemo(() => {
@@ -2952,6 +2991,44 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
         placeholder={'{\n  "steps": [\n    { "id": "s1", "type": "narrator", "content": "Hello!" }\n  ]\n}'}
         data-testid={`textarea-chatflow-json-${index}`}
       />
+
+      {/* ── Video asset ── */}
+      <div className="border rounded-md p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <Video className="w-4 h-4 text-muted-foreground shrink-0" />
+          <span className="text-xs font-medium">Video asset (looping, top of chat)</span>
+        </div>
+        {chatFlowVideoUrl ? (
+          <div className="flex items-center gap-2">
+            <Play className="w-3 h-3 text-green-600 dark:text-green-400 shrink-0" />
+            <span className="text-[11px] text-muted-foreground truncate flex-1 min-w-0">
+              {chatFlowVideoUrl.split("/").pop()}
+            </span>
+            <button
+              onClick={handleRemoveVideo}
+              className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+              title="Remove video"
+              data-testid={`button-chatflow-video-remove-${index}`}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ) : (
+          <label
+            className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded border cursor-pointer transition-colors w-fit ${isUploadingVideo ? "opacity-50 pointer-events-none" : "hover:bg-muted"}`}
+            data-testid={`button-chatflow-video-upload-${index}`}
+          >
+            {isUploadingVideo ? "Uploading…" : <><Upload className="w-3 h-3" /> Upload MP4 / WebM</>}
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+              className="hidden"
+              onChange={handleVideoUpload}
+              disabled={isUploadingVideo}
+            />
+          </label>
+        )}
+      </div>
 
       {/* ── Audio clips panel (collapsible) ── */}
       <div>

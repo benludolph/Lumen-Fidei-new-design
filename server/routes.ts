@@ -49,6 +49,19 @@ const audioUpload = multer({
   },
 });
 
+const videoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo", "video/ogg"];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only MP4, WebM, MOV, and OGG video files are allowed"));
+    }
+  },
+});
+
 const csvUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -713,6 +726,33 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Audio upload error:", error);
       res.status(500).json({ message: "Failed to save audio" });
+    }
+  });
+
+  app.post('/api/admin/upload-video', requireRole('admin'), uploadLimiter, videoUpload.single('video'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No video file provided" });
+    }
+    try {
+      const ext = path.extname(req.file.originalname);
+      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${base}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+
+      await db.insert(uploadedImages).values({
+        filename,
+        mimeType: req.file.mimetype,
+        data: base64Data,
+      }).onConflictDoUpdate({
+        target: uploadedImages.filename,
+        set: { data: base64Data, mimeType: req.file.mimetype },
+      });
+
+      const filePath = `/api/images/${filename}`;
+      res.json({ url: filePath });
+    } catch (error) {
+      console.error("Video upload error:", error);
+      res.status(500).json({ message: "Failed to save video" });
     }
   });
 

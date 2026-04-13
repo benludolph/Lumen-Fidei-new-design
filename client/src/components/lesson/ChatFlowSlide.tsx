@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Send, RotateCw, ArrowRight } from "lucide-react";
+import { X, Send, RotateCw, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
@@ -419,6 +419,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     return map;
   }, [flatSteps, optionSets]);
 
+  // ── Video asset at top of chat card ──
+  const videoUrl = useMemo(() => {
+    try { return (JSON.parse(content || "{}") as { videoUrl?: string }).videoUrl || null; }
+    catch { return null; }
+  }, [content]);
+
   // ── Ambient music ──
   useEffect(() => {
     const audio = new Audio(bgMusicSrc);
@@ -441,6 +447,9 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   const [flowComplete, setFlowComplete] = useState(false);
   const [isRestoredFlow, setIsRestoredFlow] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
+
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -998,15 +1007,47 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               background: "var(--surface-ground)",
               border: "1px solid var(--white-5)",
               borderRadius: "8px 8px 0 0",
-              padding: "24px",
               boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.05)",
             }}
           >
+            {/* ── Looping video asset at top ── */}
+            {videoUrl && (
+              <div className="shrink-0 relative overflow-hidden" style={{ aspectRatio: "590 / 181" }}>
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  loop
+                  autoPlay
+                  playsInline
+                  muted={isMuted}
+                  className="w-full h-full object-cover block"
+                />
+                <button
+                  onClick={() => setIsMuted(m => !m)}
+                  className="absolute bottom-2 right-2 flex items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-60"
+                  style={{
+                    width: "28px", height: "28px",
+                    background: "rgba(0,0,0,0.55)",
+                    backdropFilter: "blur(6px)",
+                    color: "rgba(255,255,255,0.9)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                  }}
+                  title={isMuted ? "Unmute video" : "Mute video"}
+                  data-testid="button-chat-video-mute"
+                >
+                  {isMuted
+                    ? <VolumeX className="w-3 h-3" />
+                    : <Volume2 className="w-3 h-3" />
+                  }
+                </button>
+              </div>
+            )}
+
             {/* Messages list */}
             <div
               ref={scrollContainerRef}
               className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
-              style={{ scrollbarWidth: "none" }}
+              style={{ scrollbarWidth: "none", padding: "24px 24px 0" }}
             >
               {renderedMessages.map((msg, i) => {
                 const prev = renderedMessages[i - 1];
@@ -1132,7 +1173,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             {/* ── Input row ── */}
             {(flowComplete ||
               (inputReady && currentStep && currentStep.inputType !== "single_select")) && (
-              <div className="shrink-0 pt-2">
+              <div className="shrink-0 pt-2 px-6">
                 {flowComplete || currentStep?.inputType === "none" ? (
                   <button
                     onClick={handleSubmit}
