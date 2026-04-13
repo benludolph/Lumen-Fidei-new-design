@@ -117,7 +117,7 @@ const messageLimiter = rateLimit({
 
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 200,
   message: { message: "Too many uploads, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
