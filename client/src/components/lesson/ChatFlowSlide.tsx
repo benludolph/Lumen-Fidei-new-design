@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Send, RotateCw, ArrowRight, Volume2, VolumeX } from "lucide-react";
+import { X, Send, RotateCw, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
@@ -425,20 +425,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     catch { return null; }
   }, [content]);
 
-  // React's `muted` prop sets the HTML attribute, not the DOM property, so
-  // toggling it via JSX doesn't work reliably across browsers. Drive it imperatively.
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    el.muted = isMuted;
-    if (!isMuted) {
-      el.play().catch(() => {
-        // Autoplay policy blocked unmuted play — fall back to muted
-        setIsMuted(true);
-      });
-    }
-  }, [isMuted]);
-
   // ── Ambient music ──
   useEffect(() => {
     const audio = new Audio(bgMusicSrc);
@@ -462,7 +448,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   const [isRestoredFlow, setIsRestoredFlow] = useState(false);
   const [loadedFromServer, setLoadedFromServer] = useState(false);
 
-  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1026,7 +1011,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           >
             {/* ── Looping video asset at top ── */}
             {videoUrl && (
-              <div className="shrink-0 relative overflow-hidden" style={{ aspectRatio: "590 / 181" }}>
+              <div className="shrink-0 overflow-hidden" style={{ aspectRatio: "590 / 181" }}>
                 <video
                   ref={videoRef}
                   src={videoUrl}
@@ -1036,25 +1021,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
                   muted
                   className="w-full h-full object-cover block"
                 />
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setIsMuted(m => !m); }}
-                  className="absolute bottom-2 right-2 flex items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-60"
-                  style={{
-                    width: "28px", height: "28px",
-                    background: "rgba(0,0,0,0.55)",
-                    backdropFilter: "blur(6px)",
-                    color: "rgba(255,255,255,0.9)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                  }}
-                  title={isMuted ? "Unmute video" : "Mute video"}
-                  data-testid="button-chat-video-mute"
-                >
-                  {isMuted
-                    ? <VolumeX className="w-3 h-3" />
-                    : <Volume2 className="w-3 h-3" />
-                  }
-                </button>
               </div>
             )}
 
@@ -1062,7 +1028,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             <div
               ref={scrollContainerRef}
               className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
-              style={{ scrollbarWidth: "none", padding: "24px 24px 0" }}
+              style={{ scrollbarWidth: "none", padding: "24px" }}
             >
               {renderedMessages.map((msg, i) => {
                 const prev = renderedMessages[i - 1];
