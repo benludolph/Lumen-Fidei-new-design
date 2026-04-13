@@ -118,8 +118,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
             <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
-            {user?.role === 'participant' && (
+            {(user?.role === 'participant' || user?.role === 'superuser') && (
               <NavLink href="/testimonies" active={location === "/testimonies"}>Testimonies</NavLink>
+            )}
+            {(user?.role === 'participant' || user?.role === 'superuser') && (
+              <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
             )}
 
             {/* Profile / sign-out button */}
@@ -291,9 +294,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <DrawerLink href="/collections" active={location === "/collections"} onClick={closeDrawer}>
             Collection
           </DrawerLink>
-          {user?.role === 'participant' && (
+          {(user?.role === 'participant' || user?.role === 'superuser') && (
             <DrawerLink href="/testimonies" active={location === "/testimonies"} onClick={closeDrawer}>
               Testimonies
+            </DrawerLink>
+          )}
+          {(user?.role === 'participant' || user?.role === 'superuser') && (
+            <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>
+              Journal
             </DrawerLink>
           )}
         </nav>
