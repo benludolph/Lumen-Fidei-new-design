@@ -18,7 +18,6 @@ import Admin from "@/pages/Admin";
 import Resources from "@/pages/Resources";
 import ResourceDetail from "@/pages/ResourceDetail";
 import Collections from "@/pages/Collections";
-import TestimoniesPage from "@/pages/Testimonies";
 import Journal from "@/pages/Journal";
 import PreviewLesson from "@/pages/PreviewLesson";
 
@@ -105,7 +104,7 @@ function Router() {
       </Route>
 
       <Route path="/testimonies">
-        <ProtectedRoute component={TestimoniesPage} allowedRoles={['participant', 'superuser']} />
+        <Redirect to="/collections?tab=testimonies" />
       </Route>
 
       <Route path="/journal">

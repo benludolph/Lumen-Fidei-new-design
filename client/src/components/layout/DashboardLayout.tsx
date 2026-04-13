@@ -117,10 +117,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
-            <NavLink href="/collections" active={location === "/collections"}>Collection</NavLink>
-            {(user?.role === 'participant' || user?.role === 'superuser') && (
-              <NavLink href="/testimonies" active={location === "/testimonies"}>Testimonies</NavLink>
-            )}
+            <NavLink href="/collections" active={location.startsWith("/collections")}>Collection</NavLink>
             {(user?.role === 'participant' || user?.role === 'superuser') && (
               <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
             )}
@@ -291,14 +288,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>
             Resources
           </DrawerLink>
-          <DrawerLink href="/collections" active={location === "/collections"} onClick={closeDrawer}>
+          <DrawerLink href="/collections" active={location.startsWith("/collections")} onClick={closeDrawer}>
             Collection
           </DrawerLink>
-          {(user?.role === 'participant' || user?.role === 'superuser') && (
-            <DrawerLink href="/testimonies" active={location === "/testimonies"} onClick={closeDrawer}>
-              Testimonies
-            </DrawerLink>
-          )}
           {(user?.role === 'participant' || user?.role === 'superuser') && (
             <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>
               Journal
