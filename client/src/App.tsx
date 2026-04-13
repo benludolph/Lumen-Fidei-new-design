@@ -57,6 +57,7 @@ function RootRedirect() {
   if (!user) return <Redirect to="/login" />;
   if (user.role === 'admin') return <Redirect to="/admin" />;
   if (user.role === 'mentor') return <Redirect to="/mentor" />;
+  if (user.role === 'superuser') return <Redirect to="/dashboard" />;
   return <Redirect to="/dashboard" />;
 }
 
@@ -72,7 +73,7 @@ function Router() {
       <Route path="/" component={RootRedirect} />
 
       <Route path="/dashboard">
-        <ProtectedRoute component={Dashboard} allowedRoles={['participant']} />
+        <ProtectedRoute component={Dashboard} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/mentor">
@@ -100,15 +101,15 @@ function Router() {
       </Route>
 
       <Route path="/collections">
-        <ProtectedRoute component={Collections} allowedRoles={['participant']} />
+        <ProtectedRoute component={Collections} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/testimonies">
-        <ProtectedRoute component={TestimoniesPage} allowedRoles={['participant']} />
+        <ProtectedRoute component={TestimoniesPage} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/journal">
-        <ProtectedRoute component={Journal} allowedRoles={['participant']} />
+        <ProtectedRoute component={Journal} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/preview/track-a/:day">

@@ -738,6 +738,7 @@ function CreateUserDialog() {
                   <SelectItem value="participant">Participant</SelectItem>
                   <SelectItem value="mentor">Mentor</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="superuser">Superuser</SelectItem>
                 </SelectContent>
               </Select>
             </div>

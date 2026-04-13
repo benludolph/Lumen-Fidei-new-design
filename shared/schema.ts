@@ -10,7 +10,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(), // Acts as username
   password: text("password").notNull(),
-  role: text("role", { enum: ["participant", "mentor", "admin"] }).default("participant").notNull(),
+  role: text("role", { enum: ["participant", "mentor", "admin", "superuser"] }).default("participant").notNull(),
   track: text("track", { enum: ["A", "B", "C"] }), // Nullable for non-participants
   mentorId: integer("mentor_id"), // Self-referencing FK
   startDate: timestamp("start_date"),

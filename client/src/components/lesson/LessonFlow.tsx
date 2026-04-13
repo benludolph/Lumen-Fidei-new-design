@@ -655,10 +655,10 @@ export function LessonFlow({
           <div className="max-w-[780px] w-full flex items-center justify-end">
             <button
               onClick={handleNext}
-              disabled={navBlocked || (canScroll && !hasReachedBottom)}
+              disabled={navBlocked || (!previewMode && canScroll && !hasReachedBottom)}
               className={cn(
                 "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] whitespace-nowrap",
-                (navBlocked || (canScroll && !hasReachedBottom)) ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
+                (navBlocked || (!previewMode && canScroll && !hasReachedBottom)) ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{
                 background: "var(--surface-float)",

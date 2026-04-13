@@ -74,7 +74,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           Menu
         </div>
         
-        {user.role === 'participant' && (
+        {(user.role === 'participant' || user.role === 'superuser') && (
           <>
             <NavItem href="/dashboard" icon={BookOpen} label="My Journey" onClick={onNavClick} />
             <NavItem href="/journal" icon={NotebookPen} label="Journal" onClick={onNavClick} />

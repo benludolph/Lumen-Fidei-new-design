@@ -175,7 +175,7 @@ export default function Dashboard() {
   
   const { data: prelimModulesData, isLoading: prelimLoading } = useQuery<PrelimModuleWithStatus[]>({
     queryKey: ["/api/prelim-modules"],
-    enabled: !!user && user.role === 'participant',
+    enabled: !!user && (user.role === 'participant' || user.role === 'superuser'),
   });
   const allPrelimsComplete = !!(prelimModulesData?.length && prelimModulesData.every(m => m.completed));
 
@@ -212,7 +212,7 @@ export default function Dashboard() {
   
   const isLoading = isTrackA ? isLoadingA : isLoadingB;
   
-  if (!user || user.role !== 'participant') return null;
+  if (!user || (user.role !== 'participant' && user.role !== 'superuser')) return null;
   
   // Show a spinner while we load prelim status for the first time
   if (prelimLoading) {
@@ -342,6 +342,7 @@ export default function Dashboard() {
             dayNumber={-selectedPrelimPosition}
             onExit={handlePrelimExit}
             onComplete={() => handlePrelimComplete(selectedPrelimPosition)}
+            previewMode={user?.role === 'superuser'}
           />
         );
       })() : isTrackA && viewMode === "detail" ? (
@@ -364,6 +365,7 @@ export default function Dashboard() {
               }
               handleBackToGrid(selectedDay);
             }}
+            previewMode={user?.role === 'superuser'}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">

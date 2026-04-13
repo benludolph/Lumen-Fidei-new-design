@@ -838,7 +838,7 @@ export async function registerRoutes(
 
   // === Journal ===
 
-  app.get('/api/journal', requireRole('participant'), async (req, res) => {
+  app.get('/api/journal', requireRole('participant', 'superuser'), async (req, res) => {
     const modules = await storage.getJournalEntries(req.user!.id);
     res.json(modules);
   });
@@ -1849,7 +1849,7 @@ export async function registerRoutes(
     const modules = await storage.getPrelimModules();
     const userId = req.user!.id;
     let completedPositions: number[] = [];
-    if (req.user!.role === 'participant') {
+    if (req.user!.role === 'participant' || req.user!.role === 'superuser') {
       const completions = await storage.getUserPrelimCompletions(userId);
       completedPositions = completions.map(c => c.modulePosition);
     }
@@ -1862,7 +1862,7 @@ export async function registerRoutes(
 
   // POST /api/prelim-modules/:position/complete — mark a prelim module as done
   app.post('/api/prelim-modules/:position/complete', requireAuth, async (req, res) => {
-    if (req.user!.role !== 'participant') {
+    if (req.user!.role !== 'participant' && req.user!.role !== 'superuser') {
       return res.status(403).json({ message: "Only participants can complete prelim modules." });
     }
     const position = Number(req.params.position);
