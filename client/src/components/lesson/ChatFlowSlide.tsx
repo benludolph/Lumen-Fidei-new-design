@@ -11,11 +11,12 @@ import bgMusicSrc from "@assets/BG_Msic_1774239770169.mp3";
 
 /** Rich (new) schema — set via JSON with `type` on each step */
 interface RichStepOption { id: string; text: string; }
+type RichMessage = string | { text: string; audio?: string };
 interface RichStep {
   id?: string;
   type?: "narrator" | "single_select" | "open_text" | "final";
   content?: string;
-  messages?: string[];
+  messages?: RichMessage[];
   question?: string;
   options?: RichStepOption[];
   allow_other?: boolean;
@@ -51,6 +52,7 @@ interface LegacyStep {
 interface NStep {
   id: string;
   messages: string[];
+  messageAudios: (string | null)[];
   dynamicReflectionTemplate: string | null;
   inputType: "none" | "single_select" | "multi_select" | "text_input";
   options: Array<{ id: string; label: string; value: string }>;
@@ -106,9 +108,16 @@ function slug(s: string): string {
 function normalizeRichStep(raw: RichStep, fallbackIdx: number): NStep {
   const id = raw.id || `step_${fallbackIdx + 1}`;
   const msgs: string[] = [];
-  if (raw.content) msgs.push(raw.content);
-  if (Array.isArray(raw.messages)) msgs.push(...raw.messages.map(String));
-  if (raw.question && !msgs.includes(raw.question)) msgs.push(raw.question);
+  const msgAudios: (string | null)[] = [];
+
+  if (raw.content) { msgs.push(raw.content); msgAudios.push(null); }
+  if (Array.isArray(raw.messages)) {
+    for (const m of raw.messages) {
+      if (typeof m === "string") { msgs.push(m); msgAudios.push(null); }
+      else { msgs.push(m.text || ""); msgAudios.push(m.audio || null); }
+    }
+  }
+  if (raw.question && !msgs.includes(raw.question)) { msgs.push(raw.question); msgAudios.push(null); }
 
   let inputType: NStep["inputType"] = "none";
   let options: NStep["options"] = [];
@@ -134,6 +143,7 @@ function normalizeRichStep(raw: RichStep, fallbackIdx: number): NStep {
   return {
     id,
     messages: msgs.length > 0 ? msgs : [""],
+    messageAudios: msgs.length > 0 ? msgAudios : [null],
     dynamicReflectionTemplate: raw.dynamic_reflection?.template || null,
     inputType,
     options,
@@ -162,6 +172,7 @@ function normalizeLegacyStep(raw: LegacyStep, idx: number): NStep {
   return {
     id: raw.id || `step_${idx + 1}`,
     messages: msgs.length > 0 ? msgs : [""],
+    messageAudios: (msgs.length > 0 ? msgs : [""]).map(() => null),
     dynamicReflectionTemplate: null,
     inputType,
     options,
@@ -440,6 +451,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   const revealCancelRef = useRef(false);
   const skipRevealRef = useRef(false);
   const hasUserMessageRef = useRef(false);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   // Keep answers in a ref so reveal closures see the latest value
   const answersRef = useRef(answers);
   useEffect(() => { answersRef.current = answers; }, [answers]);
@@ -548,13 +560,29 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
       }
 
       if (narratorMode) {
-        // Narrator: no typing indicator, just a brief breath between messages
+        // Narrator: no typing indicator — just show message, then play audio (or breath delay)
         schedule(() => {
           setRenderedMessages(prev => [
             ...prev,
             { id: `msg-${msgStartId + msgIdx}`, role: "system", text: messages[msgIdx], stepId: step.id, isAfterUser: false },
           ]);
-          schedule(() => reveal(msgIdx + 1, messages), rand(350, 550));
+          const audioUrl = step.messageAudios[msgIdx];
+          if (audioUrl) {
+            // Stop any previous clip
+            if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
+            const clip = new Audio(audioUrl);
+            activeAudioRef.current = clip;
+            clip.play().catch(() => {});
+            const onEnd = () => {
+              if (revealCancelRef.current) return;
+              activeAudioRef.current = null;
+              // Small breath after audio ends, then next
+              schedule(() => reveal(msgIdx + 1, messages), rand(200, 400));
+            };
+            clip.addEventListener("ended", onEnd, { once: true });
+          } else {
+            schedule(() => reveal(msgIdx + 1, messages), rand(350, 550));
+          }
         }, msgIdx === 0 ? rand(150, 300) : rand(350, 550));
       } else {
         // Mentor (post-answer): typing indicator then message
@@ -607,6 +635,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     return () => {
       revealCancelRef.current = true;
       if (revealTimer.current) clearTimeout(revealTimer.current);
+      if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queue, loadedFromServer, flowComplete]);
