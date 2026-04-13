@@ -91,12 +91,15 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           <NavItem href="/admin" icon={Settings} label="Admin Portal" onClick={onNavClick} />
         )}
 
-        <div className="pt-6 px-3 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          Support
-        </div>
-        
-        <NavItem href="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={onNavClick} />
-        <NavItem href="/resources" icon={Library} label="Resources" onClick={onNavClick} />
+        {user.role !== 'admin' && (
+          <>
+            <div className="pt-6 px-3 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Support
+            </div>
+            <NavItem href="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={onNavClick} />
+            <NavItem href="/resources" icon={Library} label="Resources" onClick={onNavClick} />
+          </>
+        )}
       </div>
 
       <div className="pt-6 border-t border-border mt-auto">
