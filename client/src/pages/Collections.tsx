@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
@@ -666,9 +666,10 @@ function TabToggle({ active, onChange }: { active: Tab; onChange: (t: Tab) => vo
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Collections() {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
+  const search = useSearch();
 
-  const params = new URLSearchParams(location.includes("?") ? location.split("?")[1] : "");
+  const params = new URLSearchParams(search);
   const rawTab = params.get("tab");
   const activeTab: Tab = rawTab === "testimonies" ? "testimonies" : "saints";
 

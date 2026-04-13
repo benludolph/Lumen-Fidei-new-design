@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { BookOpen, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { JournalModule } from "@shared/schema";
@@ -20,26 +20,31 @@ function EntryCard({ dayNumber, centralTheme, content, createdAt }: {
 }) {
   return (
     <div
-      className="rounded-lg border border-border bg-secondary/20 p-4 sm:p-5 space-y-2"
       data-testid={`journal-entry-${dayNumber}`}
+      style={{
+        background: "var(--white-5)",
+        border: "1px solid var(--white-8)",
+        borderRadius: "8px",
+        padding: "16px 20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+      }}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-0.5 min-w-0">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
+          <p className="type-body-sm" style={{ color: "var(--white-40)", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
             Day {dayNumber}
           </p>
-          <h3 className="font-serif text-base sm:text-lg font-semibold text-foreground leading-tight">
+          <h3 className="type-caption-lg" style={{ color: "white", margin: 0, lineHeight: 1.3 }}>
             {centralTheme}
           </h3>
         </div>
-        <time
-          className="text-xs text-muted-foreground whitespace-nowrap shrink-0 pt-1"
-          dateTime={createdAt}
-        >
+        <time className="type-body-sm" style={{ color: "var(--white-35)", whiteSpace: "nowrap", flexShrink: 0, paddingTop: "2px" }}>
           {formatDate(createdAt)}
         </time>
       </div>
-      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-wrap">
+      <p className="type-body-md" style={{ color: "var(--white-60)", margin: 0, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
         {content}
       </p>
     </div>
@@ -50,41 +55,60 @@ function ModuleSection({ mod, defaultOpen }: { mod: JournalModule; defaultOpen: 
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden" data-testid={`journal-module-${mod.weekNumber}`}>
+    <div
+      data-testid={`journal-module-${mod.weekNumber}`}
+      style={{
+        border: "1px solid var(--white-8)",
+        borderRadius: "10px",
+        overflow: "hidden",
+      }}
+    >
       <button
-        className={cn(
-          "w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-secondary/30",
-          open ? "bg-secondary/20" : "bg-background"
-        )}
+        className={cn("w-full text-left transition-colors")}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "16px",
+          padding: "16px 20px",
+          background: open ? "var(--white-5)" : "transparent",
+          cursor: "pointer",
+          border: "none",
+          outline: "none",
+        }}
         onClick={() => setOpen(v => !v)}
         aria-expanded={open}
         data-testid={`button-journal-module-${mod.weekNumber}`}
       >
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
+        <div style={{ minWidth: 0 }}>
+          <p className="type-body-sm" style={{ color: "var(--white-40)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 2px" }}>
             Week {mod.weekNumber}
           </p>
-          <h2 className="font-serif text-base sm:text-lg font-semibold text-foreground leading-tight">
+          <h2 className="type-caption-lg" style={{ color: "white", margin: 0, lineHeight: 1.3 }}>
             {mod.moduleTitle}
           </h2>
           {mod.moduleSubtitle && (
-            <p className="text-xs text-muted-foreground mt-0.5">{mod.moduleSubtitle}</p>
+            <p className="type-body-sm" style={{ color: "var(--white-40)", margin: "3px 0 0" }}>{mod.moduleSubtitle}</p>
           )}
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+          <span className="type-body-sm" style={{
+            background: "var(--white-8)",
+            color: "var(--white-50)",
+            borderRadius: "20px",
+            padding: "2px 10px",
+          }}>
             {mod.entries.length} {mod.entries.length === 1 ? "entry" : "entries"}
           </span>
-          {open ? (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          )}
+          {open
+            ? <ChevronDown className="w-4 h-4" style={{ color: "var(--white-40)" }} />
+            : <ChevronRight className="w-4 h-4" style={{ color: "var(--white-40)" }} />
+          }
         </div>
       </button>
 
       {open && (
-        <div className="px-4 pb-4 pt-1 space-y-3">
+        <div style={{ padding: "4px 16px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
           {mod.entries.map(entry => (
             <EntryCard key={`${entry.dayNumber}-${entry.createdAt}`} {...entry} />
           ))}
@@ -106,54 +130,62 @@ export default function Journal() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:py-8 space-y-6">
-        <div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">Journal</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Your written reflections from each lesson, organized by module.
-          </p>
-        </div>
+      <PageContainer variant="narrow" className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]">
+        <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
 
-        {isLoading && (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="rounded-xl border border-border p-5 space-y-3">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-6 w-56" />
+          <h1 className="type-display-xl text-center" style={{ color: "white", margin: 0 }}>
+            Journal
+          </h1>
+
+          {isLoading && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[1, 2, 3].map(i => (
+                <div
+                  key={i}
+                  style={{ border: "1px solid var(--white-8)", borderRadius: "10px", padding: "20px" }}
+                >
+                  <div style={{ height: "12px", width: "80px", background: "var(--white-8)", borderRadius: "4px", marginBottom: "8px" }} />
+                  <div style={{ height: "18px", width: "200px", background: "var(--white-8)", borderRadius: "4px" }} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && !hasEntries && (
+            <div
+              data-testid="journal-empty-state"
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", textAlign: "center", gap: "16px" }}
+            >
+              <div style={{
+                width: "56px", height: "56px", borderRadius: "50%",
+                background: "var(--white-5)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <BookOpen className="w-7 h-7" style={{ color: "var(--white-40)" }} />
               </div>
-            ))}
-          </div>
-        )}
-
-        {!isLoading && !hasEntries && (
-          <div
-            className="flex flex-col items-center justify-center py-20 text-center gap-4"
-            data-testid="journal-empty-state"
-          >
-            <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center">
-              <BookOpen className="w-7 h-7 text-muted-foreground" />
+              <div>
+                <p className="type-caption-lg" style={{ color: "white", margin: "0 0 4px" }}>No journal entries yet</p>
+                <p className="type-body-md" style={{ color: "var(--white-50)", margin: 0 }}>
+                  Your responses from lessons will appear here, grouped by module.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-foreground">No journal entries yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Your responses from Text Input slides will appear here, grouped by module.
-              </p>
-            </div>
-          </div>
-        )}
+          )}
 
-        {!isLoading && hasEntries && (
-          <div className="space-y-3">
-            {modules.map((mod) => (
-              <ModuleSection
-                key={mod.weekNumber}
-                mod={mod}
-                defaultOpen={mod.entries.length > 0}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          {!isLoading && hasEntries && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {modules.map((mod) => (
+                <ModuleSection
+                  key={mod.weekNumber}
+                  mod={mod}
+                  defaultOpen={mod.entries.length > 0}
+                />
+              ))}
+            </div>
+          )}
+
+        </div>
+      </PageContainer>
     </DashboardLayout>
   );
 }
