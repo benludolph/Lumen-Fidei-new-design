@@ -264,12 +264,25 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Merge: all modules present, entries may be empty
-    return allModules.map(mod => ({
+    const result: import("@shared/schema").JournalModule[] = allModules.map(mod => ({
       weekNumber: mod.weekNumber,
       moduleTitle: mod.title,
       moduleSubtitle: mod.subtitle,
       entries: entryMap.get(mod.weekNumber) ?? [],
     }));
+
+    // Prepend Introduction (week 0 / day 0) entries if any exist
+    const introEntries = entryMap.get(0) ?? [];
+    if (introEntries.length > 0) {
+      result.unshift({
+        weekNumber: 0,
+        moduleTitle: "Introduction",
+        moduleSubtitle: "Goal of the Next 30 Days",
+        entries: introEntries,
+      });
+    }
+
+    return result;
   }
 
   // Chat

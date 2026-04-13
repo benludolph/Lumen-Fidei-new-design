@@ -34,7 +34,7 @@ function EntryCard({ dayNumber, centralTheme, content, createdAt }: {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: 0 }}>
           <p className="type-body-sm" style={{ color: "var(--white-40)", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0 }}>
-            Day {dayNumber}
+            {dayNumber === 0 ? "Introduction" : `Day ${dayNumber}`}
           </p>
           <h3 className="type-caption-lg" style={{ color: "white", margin: 0, lineHeight: 1.3 }}>
             {centralTheme}
@@ -82,7 +82,7 @@ function ModuleSection({ mod, defaultOpen }: { mod: JournalModule; defaultOpen: 
       >
         <div style={{ minWidth: 0 }}>
           <p className="type-body-sm" style={{ color: "var(--white-40)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 2px" }}>
-            Week {mod.weekNumber}
+            {mod.weekNumber === 0 ? "Introduction" : `Week ${mod.weekNumber}`}
           </p>
           <h2 className="type-caption-lg" style={{ color: "white", margin: 0, lineHeight: 1.3 }}>
             {mod.moduleTitle}
