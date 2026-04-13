@@ -1044,20 +1044,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             )}
 
             {/* Messages list */}
-            <div className="flex-1 relative min-h-0">
-              {/* Gradient fade — masks text as it scrolls under the top edge */}
-              <div
-                className="absolute inset-x-0 top-0 pointer-events-none z-10"
-                style={{
-                  height: "72px",
-                  background: "linear-gradient(to bottom, #0B0B0B 0%, transparent 100%)",
-                }}
-              />
-              <div
-                ref={scrollContainerRef}
-                className="h-full overflow-y-auto flex flex-col gap-4"
-                style={{ scrollbarWidth: "none", padding: "24px 24px 0" }}
-              >
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
+              style={{ scrollbarWidth: "none", padding: "24px 24px 0" }}
+            >
               {renderedMessages.map((msg, i) => {
                 const prev = renderedMessages[i - 1];
                 const isFirstInStep = !prev || prev.role !== "system" || prev.stepId !== msg.stepId;
@@ -1177,7 +1168,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               )}
 
               <div ref={chatEndRef} className="h-16 shrink-0" />
-              </div>
             </div>
 
             {/* ── Input row ── */}
