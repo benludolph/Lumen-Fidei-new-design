@@ -1,0 +1,275 @@
+{
+  "steps": [
+    {
+      "id": "intro",
+      "type": "narrator",
+      "messages": [
+        {
+          "text": "Many of us carry wounds — emotional, mental, and spiritual wounds that linger deep in the heart. While we may understand that God loves us and desires our healing, we may be too bound in fear and darkness to experience it.",
+          "audio": "/api/images/Many_of_us_carry_wounds_emotio_Balance_Eleven_v3_019d88b5-df97-7f3f-8d3b-5018210b4b0e_1776115864940.mp3"
+        },
+        {
+          "text": "Meditating on the Sacred Heart of Jesus can change all this. This beautiful practice reveals the boundless compassion and mercy of Jesus, Our Savior.",
+          "audio": "/api/images/Meditating_on_the_Sacred_Heart_Balance_Eleven_v3_019d8894-89c9-7017-8bfe-5a326ad5b050__1__1776115867417.mp3"
+        },
+        {
+          "text": "If you've been struggling with pain, grief, or inner wounds, this reflection is meant to help you bring those burdens before the Heart of Christ — the source of true healing and life.",
+          "audio": "/api/images/If_youve_been_struggling_with_Balance_Eleven_v3_019d88b6-3415-7d16-8ac2-9b22a42dbb7c_1776115870866.mp3"
+        },
+        {
+          "text": "Let's begin…",
+          "audio": "/api/images/Lets_begin_Balance_Eleven_v3_019d88b4-d78b-7487-a0dd-8cb97936a75d_1776115874769.mp3"
+        }
+      ],
+      "branches": [
+        {
+          "goTo": "quiet_mind"
+        }
+      ]
+    },
+    {
+      "id": "quiet_mind",
+      "type": "narrator",
+      "messages": [
+        {
+          "text": "We need to take a moment and quiet our minds, asking the Holy Spirit to guide us during this time of prayer.",
+          "audio": "/api/images/We_need_to_take_a_moment_and_q_Balance_Eleven_v3_019d88b6-d08e-76c3-94d5-1743f6b8e4a1_1776115877767.mp3"
+        },
+        {
+          "text": "We set aside the concerns and stresses of daily life.",
+          "audio": "/api/images/We_set_aside_the_concerns_and_Balance_Eleven_v3_019d88b7-393d-7419-a670-575387d29d14_1776115881292.mp3"
+        },
+        {
+          "text": "Start to become more aware of the current state of your heart.",
+          "audio": "/api/images/Start_to_become_more_aware_of_Balance_Eleven_v3_019d88b7-5c42-7681-91c0-d1c2f6667aec_1776115884470.mp3"
+        }
+      ],
+      "branches": [
+        {
+          "goTo": "current_feeling_intro"
+        }
+      ]
+    },
+    {
+      "id": "current_feeling_intro",
+      "type": "narrator",
+      "messages": [
+        {
+          "text": "Do you feel anxious, stressed, concerned, or preoccupied?",
+          "audio": "/api/images/Do_you_feel_anxious_stressed_c_Balance_Eleven_v3_019d88c5-8312-7638-b189-8fe56011c556_1776116252468.mp3"
+        },
+        {
+          "text": "Are you tired, saddened, or numb?",
+          "audio": "/api/images/Are_you_tired_saddened_or_numb_Balance_Eleven_v3_019d88c5-65dc-7695-9a0e-31e1e6ae0e28_1776116236973.mp3"
+        },
+        {
+          "text": "What surrounds your heart right now?",
+          "audio": "/api/images/What_surrounds_your_heart_righ_Balance_Eleven_v3_019d88c5-4c2e-7cd1-a386-bf20fb526d72_1776116216300.mp3"
+        }
+      ],
+      "branches": [
+        {
+          "goTo": "write_heart_state"
+        }
+      ]
+    },
+    {
+      "id": "write_heart_state",
+      "type": "open_text",
+      "question": "Take a moment. Write down what is present in your heart right now.",
+      "variable": "heart_state",
+      "branches": [
+        {
+          "goTo": "acknowledge"
+        }
+      ]
+    },
+    {
+      "id": "acknowledge",
+      "type": "narrator",
+      "messages": [
+        {
+          "text": "Do not be afraid to acknowledge whatever is there.",
+          "audio": "/api/images/Do_not_be_afraid_to_acknowledg_Balance_Eleven_v3_019d88c4-f346-76f1-b000-ca91a557d327_1776116199769.mp3"
+        }
+      ],
+      "branches": [
+        {
+          "goTo": "need_intro"
+        }
+      ]
+    },
+    {
+      "id": "need_intro",
+      "type": "narrator",
+      "messages": [
+        {
+          "text": "What do you need most from God right now?",
+          "audio": "/api/images/What_do_you_need_most_from_God_Balance_Eleven_v3_019d88c4-d9cf-7932-83ba-986816977ca8_1776116196688.mp3"
+        },
+        {
+          "text": "Perhaps you need clarity to make decisions, peace, relief from torment, or a sense of purpose.",
+          "audio": "/api/images/Perhaps_you_need_clarity_to_ma_Balance_Eleven_v3_019d88c4-bd48-738d-8112-3dc2869ba46e_1776116181807.mp3"
+        },
+        {
+          "text": "Maybe you need reassurance that God truly sees what’s happening or how you’ve been hurt or wounded.",
+          "audio": "/api/images/Maybe_you_need_reassurance_tha_Balance_Eleven_v3_019d88c4-999f-7ffc-8e40-9773ca3310ae_1776116177628.mp3"
+        }
+      ],
+      "branches": [
+        {
+          "goTo": "need_from_god"
+        }
+      ]
+    },
+    {
+      "id": "need_from_god",
+      "type": "open_text",
+      "question": "Take a moment. What do you need most from God right now?",
+      "variable": "need_from_god",
+      "branches": [
+        {
+          "goTo": "quiet_again"
+        }
+      ]
+    },
+    {
+      "id": "quiet_again",
+      "type": "narrator",
+      "messages": [
+        "Quiet your mind again. Remind yourself that you are always safe with God.",
+        "Allow your emotions, whatever they are, to surface.",
+        "Be authentic with yourself and God.",
+        "Present everything you're going through to the Heart of Jesus.",
+        "Jesus is listening and receives everything you're saying."
+      ],
+      "branches": [
+        {
+          "goTo": "express_trust"
+        }
+      ]
+    },
+    {
+      "id": "express_trust",
+      "type": "open_text",
+      "question": "Express to Him in your own words that you trust Him and know He cares.",
+      "variable": "trust_expression",
+      "branches": [
+        {
+          "goTo": "wounds_intro"
+        }
+      ]
+    },
+    {
+      "id": "wounds_intro",
+      "type": "narrator",
+      "messages": [
+        "Aware of your need and the pain you're experiencing inside, we must examine the wounds.",
+        "Perhaps you have many wounds, or you can only name one. Maybe you've never really given this much thought."
+      ],
+      "branches": [
+        {
+          "goTo": "wounds"
+        }
+      ]
+    },
+    {
+      "id": "wounds",
+      "type": "open_text",
+      "question": "Take a moment. What hurts most right now, and why?",
+      "variable": "wounds",
+      "branches": [
+        {
+          "goTo": "wounds_context"
+        }
+      ]
+    },
+    {
+      "id": "wounds_context",
+      "type": "narrator",
+      "messages": [
+        "Examining your wounds gives God permission to examine them as well to offer you a remedy.",
+        "Remember, even if your wounds are a result of your own sin, God is not looking to condemn or punish you. Jesus longs to heal your heart."
+      ],
+      "branches": [
+        {
+          "goTo": "look_at_jesus"
+        }
+      ]
+    },
+    {
+      "id": "look_at_jesus",
+      "type": "narrator",
+      "messages": [
+        "Now that you're more aware of your wounds, turn to look at the wounds of Jesus.",
+        "See the nail marks in His hands and feet.",
+        "Look at the crown of thorns that pierced His head.",
+        "Now gaze deeply at the wounds of His Sacred Heart."
+      ],
+      "branches": [
+        {
+          "goTo": "sacred_heart"
+        }
+      ]
+    },
+    {
+      "id": "sacred_heart",
+      "type": "narrator",
+      "messages": [
+        "He is intimately aware of the pain and suffering you endure.",
+        "And despite Jesus' many wounds, His heart is not crushed, cold, hidden away, or filled with bitterness. It's fully alive, strong and unwavering in His love for you.",
+        "The fire of His love draws you closer.",
+        "You feel completely understood and fully at home."
+      ],
+      "branches": [
+        {
+          "goTo": "jesus_asks"
+        }
+      ]
+    },
+    {
+      "id": "jesus_asks",
+      "type": "open_text",
+      "messages": [
+        "Jesus asks, \"What would you like me to do for you?\"",
+        "Let your heart respond.",
+        "Do not be afraid.",
+        "Simply remain open, trusting, and at peace."
+      ],
+      "question": "Speak to Him from your heart.",
+      "variable": "heart_response",
+      "branches": [
+        {
+          "goTo": "rest"
+        }
+      ]
+    },
+    {
+      "id": "rest",
+      "type": "narrator",
+      "messages": [
+        "Before ending your time in prayer, rest in His love that He generously and constantly pours out for you.",
+        "Be confident that everything you shared was important and this time was special to Jesus.",
+        "Let's conclude everything with a beautiful prayer to the Sacred Heart."
+      ],
+      "branches": [
+        {
+          "goTo": "prayer"
+        }
+      ]
+    },
+    {
+      "id": "prayer",
+      "type": "narrator",
+      "messages": [
+        "O Sacred Heart of Jesus, font of love and mercy, and source of every blessing — pour out your love upon my wounded and suffering heart.",
+        "O Sacred Heart of Jesus, burning with the fire of charity for every soul — purify my heart and draw me ever closer to your divine embrace.",
+        "O Sacred Heart of Jesus, wounded by my own sin and familiar with all suffering — forgive me of my sins and restore me to life.",
+        "O Sacred Heart of Jesus, through which every heart finds solace and refuge — be my strength, my courage, my fortress, and my defender.",
+        "O Sacred Heart of Jesus, proof of the Father's love and desire for me — I place all my trust in you.",
+        "Amen."
+      ]
+    }
+  ],
+  "summaryTemplate": "Your heart: {{heart_state}}. What you needed: {{need_from_god}}. Your wounds: {{wounds}}. What you asked of Jesus: {{heart_response}}."
+}

@@ -18,6 +18,7 @@ interface RichStep {
   content?: string;
   messages?: RichMessage[];
   question?: string;
+  questionAudio?: string;
   options?: RichStepOption[];
   allow_other?: boolean;
   other_placeholder?: string;
@@ -117,7 +118,7 @@ function normalizeRichStep(raw: RichStep, fallbackIdx: number): NStep {
       else { msgs.push(m.text || ""); msgAudios.push(m.audio || null); }
     }
   }
-  if (raw.question && !msgs.includes(raw.question)) { msgs.push(raw.question); msgAudios.push(null); }
+  if (raw.question && !msgs.includes(raw.question)) { msgs.push(raw.question); msgAudios.push(raw.questionAudio || null); }
 
   let inputType: NStep["inputType"] = "none";
   let options: NStep["options"] = [];
@@ -582,7 +583,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           }
         }, msgIdx === 0 ? rand(150, 300) : rand(350, 550));
       } else {
-        // Mentor (post-answer): typing indicator then message
+        // Mentor (post-answer): typing indicator then message; still plays audio if clip available
         setShowTyping(true);
         schedule(() => {
           setShowTyping(false);
@@ -590,7 +591,21 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             ...prev,
             { id: `msg-${msgStartId + msgIdx}`, role: "system", text: messages[msgIdx], stepId: step.id, isAfterUser: true },
           ]);
-          schedule(() => reveal(msgIdx + 1, messages), rand(450, 700));
+          const audioUrl = step.messageAudios[msgIdx];
+          if (audioUrl) {
+            if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
+            const clip = new Audio(audioUrl);
+            activeAudioRef.current = clip;
+            clip.play().catch(() => {});
+            const onEnd = () => {
+              if (revealCancelRef.current) return;
+              activeAudioRef.current = null;
+              schedule(() => reveal(msgIdx + 1, messages), rand(200, 400));
+            };
+            clip.addEventListener("ended", onEnd, { once: true });
+          } else {
+            schedule(() => reveal(msgIdx + 1, messages), rand(450, 700));
+          }
         }, rand(850, 1200));
       }
     };

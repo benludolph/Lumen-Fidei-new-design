@@ -2726,7 +2726,7 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
     try {
       const p = JSON.parse(content || "{}");
       if (!Array.isArray(p.steps)) return [];
-      const result: Array<{ stepId: string; msgIdx: number; text: string; audio: string | null }> = [];
+      const result: Array<{ stepId: string; msgIdx: number; text: string; audio: string | null; isQuestion: boolean }> = [];
       for (const step of p.steps) {
         if (step.type !== "narrator" && step.type !== "open_text") continue;
         const rawMsgs: Array<string | { text: string; audio?: string }> = [
@@ -2736,20 +2736,24 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
         rawMsgs.forEach((m, i) => {
           const text = typeof m === "string" ? m : (m.text || "");
           const audio = typeof m === "string" ? null : (m.audio || null);
-          if (text.trim()) result.push({ stepId: step.id || "", msgIdx: i, text, audio });
+          if (text.trim()) result.push({ stepId: step.id || "", msgIdx: i, text, audio, isQuestion: false });
         });
+        // Also include the question field for open_text steps
+        if (step.type === "open_text" && step.question && step.question.trim()) {
+          result.push({ stepId: step.id || "", msgIdx: -1, text: step.question, audio: step.questionAudio || null, isQuestion: true });
+        }
       }
       return result;
     } catch { return []; }
   }, [content]);
 
-  // ── Upload audio for a narrator message ──
+  // ── Upload audio for a narrator message or question prompt ──
   const handleNarratorAudioUpload = useCallback(async (
-    e: React.ChangeEvent<HTMLInputElement>, stepId: string, msgIdx: number
+    e: React.ChangeEvent<HTMLInputElement>, stepId: string, msgIdx: number, isQuestion: boolean
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const key = `${stepId}-${msgIdx}`;
+    const key = `${stepId}-${isQuestion ? "q" : msgIdx}`;
     setUploadingKey(key);
     try {
       const formData = new FormData();
@@ -2758,21 +2762,25 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       const audioUrl = data.url as string;
-      // Patch the JSON
       const p = JSON.parse(content);
       const step = p.steps.find((s: any) => s.id === stepId);
       if (!step) throw new Error("Step not found");
-      // Merge content into messages array if needed
-      const rawMsgs: Array<string | { text: string; audio?: string }> = [
-        ...(step.content ? [step.content as string] : []),
-        ...(Array.isArray(step.messages) ? step.messages : []),
-      ];
-      if (step.content) { delete step.content; }
-      step.messages = rawMsgs.map((m, i) => {
-        if (i !== msgIdx) return m;
-        const txt = typeof m === "string" ? m : (m.text || "");
-        return { text: txt, audio: audioUrl };
-      });
+      if (isQuestion) {
+        // Patch questionAudio on the step directly
+        step.questionAudio = audioUrl;
+      } else {
+        // Patch the messages array entry
+        const rawMsgs: Array<string | { text: string; audio?: string }> = [
+          ...(step.content ? [step.content as string] : []),
+          ...(Array.isArray(step.messages) ? step.messages : []),
+        ];
+        if (step.content) { delete step.content; }
+        step.messages = rawMsgs.map((m, i) => {
+          if (i !== msgIdx) return m;
+          const txt = typeof m === "string" ? m : (m.text || "");
+          return { text: txt, audio: audioUrl };
+        });
+      }
       onChange(JSON.stringify(p, null, 2));
       toast({ title: "Audio uploaded" });
     } catch (err: any) {
@@ -2783,22 +2791,26 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
     }
   }, [content, onChange, toast]);
 
-  // ── Remove audio from a narrator message ──
-  const handleRemoveNarratorAudio = useCallback((stepId: string, msgIdx: number) => {
+  // ── Remove audio from a narrator message or question prompt ──
+  const handleRemoveNarratorAudio = useCallback((stepId: string, msgIdx: number, isQuestion: boolean) => {
     try {
       const p = JSON.parse(content);
       const step = p.steps.find((s: any) => s.id === stepId);
       if (!step) return;
-      const rawMsgs: Array<string | { text: string; audio?: string }> = [
-        ...(step.content ? [step.content as string] : []),
-        ...(Array.isArray(step.messages) ? step.messages : []),
-      ];
-      if (step.content) { delete step.content; }
-      step.messages = rawMsgs.map((m, i) => {
-        if (i !== msgIdx) return m;
-        const txt = typeof m === "string" ? m : (m.text || "");
-        return txt; // revert to plain string
-      });
+      if (isQuestion) {
+        delete step.questionAudio;
+      } else {
+        const rawMsgs: Array<string | { text: string; audio?: string }> = [
+          ...(step.content ? [step.content as string] : []),
+          ...(Array.isArray(step.messages) ? step.messages : []),
+        ];
+        if (step.content) { delete step.content; }
+        step.messages = rawMsgs.map((m, i) => {
+          if (i !== msgIdx) return m;
+          const txt = typeof m === "string" ? m : (m.text || "");
+          return txt;
+        });
+      }
       onChange(JSON.stringify(p, null, 2));
     } catch {
       toast({ title: "Could not remove audio", variant: "destructive" });
@@ -2961,19 +2973,24 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
             {narratorMessages.length === 0 ? (
               <p className="text-xs text-muted-foreground p-3">No narrator messages found. Add steps with <code className="bg-muted px-1 rounded">type: "narrator"</code> and messages.</p>
             ) : (
-              narratorMessages.map(({ stepId, msgIdx, text, audio }) => {
-                const key = `${stepId}-${msgIdx}`;
+              narratorMessages.map(({ stepId, msgIdx, text, audio, isQuestion }) => {
+                const key = `${stepId}-${isQuestion ? "q" : msgIdx}`;
                 const isUploading = uploadingKey === key;
                 const filename = audio ? audio.split("/").pop()?.split("_").slice(0, -1).join("_") || audio.split("/").pop() : null;
                 return (
                   <div key={key} className="flex items-center gap-2 px-3 py-2">
-                    <p className="text-xs text-muted-foreground truncate flex-1 min-w-0">"{text}"</p>
+                    <div className="flex-1 min-w-0">
+                      {isQuestion && (
+                        <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide">question prompt · </span>
+                      )}
+                      <span className="text-xs text-muted-foreground truncate">"{text}"</span>
+                    </div>
                     {audio ? (
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Volume2 className="w-3 h-3 text-green-600 dark:text-green-400 shrink-0" />
                         <span className="text-[11px] text-muted-foreground max-w-[120px] truncate">{filename}</span>
                         <button
-                          onClick={() => handleRemoveNarratorAudio(stepId, msgIdx)}
+                          onClick={() => handleRemoveNarratorAudio(stepId, msgIdx, isQuestion)}
                           className="text-muted-foreground hover:text-destructive transition-colors"
                           title="Remove audio"
                           data-testid={`button-chatflow-audio-remove-${key}`}
@@ -2991,7 +3008,7 @@ function ChatFlowSlideEditor({ content, onChange, index }: { content: string; on
                           type="file"
                           accept="audio/*"
                           className="hidden"
-                          onChange={e => handleNarratorAudioUpload(e, stepId, msgIdx)}
+                          onChange={e => handleNarratorAudioUpload(e, stepId, msgIdx, isQuestion)}
                           disabled={isUploading}
                         />
                       </label>
