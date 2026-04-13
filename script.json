@@ -1,0 +1,255 @@
+{
+  "steps": [
+    {
+      "id": "intro",
+      "type": "narrator",
+      "messages": [
+        "Many of us carry wounds — emotional, mental, and spiritual wounds that linger deep in the heart. While we may understand that God loves us and desires our healing, we may be too bound in fear and darkness to experience it.",
+        "Meditating on the Sacred Heart of Jesus can change all this. This beautiful practice reveals the boundless compassion and mercy of Jesus, Our Savior.",
+        "If you've been struggling with pain, grief, or inner wounds, this reflection is meant to help you bring those burdens before the Heart of Christ — the source of true healing and life.",
+        "Let's begin…"
+      ],
+      "branches": [
+        {
+          "goTo": "quiet_mind"
+        }
+      ]
+    },
+    {
+      "id": "quiet_mind",
+      "type": "narrator",
+      "messages": [
+        "We need to take a moment and quiet our minds, asking the Holy Spirit to guide us during this time of prayer.",
+        "We set aside the concerns and stresses of daily life.",
+        "Start to become more aware of the current state of your heart."
+      ],
+      "branches": [
+        {
+          "goTo": "current_feeling"
+        }
+      ]
+    },
+    {
+      "id": "current_feeling",
+      "type": "multi_select",
+      "question": "Do you feel anxious, stressed, concerned, or preoccupied? Are you tired, saddened, or numb? What surrounds your heart right now?",
+      "options": [
+        {
+          "id": "anxious",
+          "text": "Anxious"
+        },
+        {
+          "id": "stressed",
+          "text": "Stressed"
+        },
+        {
+          "id": "concerned",
+          "text": "Concerned"
+        },
+        {
+          "id": "preoccupied",
+          "text": "Preoccupied"
+        },
+        {
+          "id": "tired",
+          "text": "Tired"
+        },
+        {
+          "id": "saddened",
+          "text": "Saddened"
+        },
+        {
+          "id": "numb",
+          "text": "Numb"
+        }
+      ],
+      "variable": "current_feeling",
+      "branches": [
+        {
+          "goTo": "acknowledge"
+        }
+      ]
+    },
+    {
+      "id": "acknowledge",
+      "type": "narrator",
+      "messages": ["Do not be afraid to acknowledge whatever is there."],
+      "branches": [
+        {
+          "goTo": "need_from_god"
+        }
+      ]
+    },
+    {
+      "id": "need_from_god",
+      "type": "single_select",
+      "question": "What do you need most from God right now?",
+      "options": [
+        {
+          "id": "clarity",
+          "text": "Clarity to make decisions"
+        },
+        {
+          "id": "peace",
+          "text": "Peace"
+        },
+        {
+          "id": "relief",
+          "text": "Relief from torment"
+        },
+        {
+          "id": "purpose",
+          "text": "A sense of purpose"
+        },
+        {
+          "id": "reassurance",
+          "text": "Reassurance that God truly sees what's happening or how I've been hurt"
+        }
+      ],
+      "variable": "need_from_god",
+      "branches": [
+        {
+          "goTo": "quiet_again"
+        }
+      ]
+    },
+    {
+      "id": "quiet_again",
+      "type": "narrator",
+      "messages": [
+        "Quiet your mind again. Remind yourself that you are always safe with God.",
+        "Allow your emotions, whatever they are, to surface.",
+        "Be authentic with yourself and God.",
+        "Present everything you're going through to the Heart of Jesus.",
+        "Jesus is listening and receives everything you're saying."
+      ],
+      "branches": [
+        {
+          "goTo": "express_trust"
+        }
+      ]
+    },
+    {
+      "id": "express_trust",
+      "type": "open_text",
+      "question": "Express to Him in your own words that you do trust Him, that you know He cares, and that you are confident that Jesus will heal your brokenness.",
+      "variable": "trust_expression",
+      "branches": [
+        {
+          "goTo": "wounds_intro"
+        }
+      ]
+    },
+    {
+      "id": "wounds_intro",
+      "type": "narrator",
+      "messages": [
+        "Aware of your need and the pain you're experiencing inside, we must examine the wounds.",
+        "Perhaps you have many wounds, or you can only name one. Maybe you've never really given this much thought."
+      ],
+      "branches": [
+        {
+          "goTo": "wounds"
+        }
+      ]
+    },
+    {
+      "id": "wounds",
+      "type": "open_text",
+      "question": "Write down or express what hurts most and why? Try to be as specific as possible and take time reflecting.",
+      "variable": "wounds",
+      "branches": [
+        {
+          "goTo": "wounds_context"
+        }
+      ]
+    },
+    {
+      "id": "wounds_context",
+      "type": "narrator",
+      "messages": [
+        "Examining your wounds gives God permission to examine them as well to offer you a remedy.",
+        "Remember, even if your wounds are a result of your own sin, God is not looking to condemn or punish you. Jesus longs to heal your heart."
+      ],
+      "branches": [
+        {
+          "goTo": "look_at_jesus"
+        }
+      ]
+    },
+    {
+      "id": "look_at_jesus",
+      "type": "narrator",
+      "messages": [
+        "Now that you're more aware of your wounds, turn to look at the wounds of Jesus.",
+        "See the nail marks in His hands and feet.",
+        "Look at the crown of thorns that pierced His head.",
+        "Now gaze deeply at the wounds of His Sacred Heart."
+      ],
+      "branches": [
+        {
+          "goTo": "sacred_heart"
+        }
+      ]
+    },
+    {
+      "id": "sacred_heart",
+      "type": "narrator",
+      "messages": [
+        "He is intimately aware of the pain and suffering you endure.",
+        "And despite Jesus' many wounds, His heart is not crushed, cold, hidden away, or filled with bitterness. It's fully alive, strong and unwavering in His love for you.",
+        "The fire of His love draws you closer.",
+        "You feel completely understood and fully at home."
+      ],
+      "branches": [
+        {
+          "goTo": "jesus_asks"
+        }
+      ]
+    },
+    {
+      "id": "jesus_asks",
+      "type": "open_text",
+      "messages": [
+        "Jesus asks, \"What would you like me to do for you?\"",
+        "Let your heart respond.",
+        "Do not be afraid.",
+        "Simply remain open, trusting, and at peace."
+      ],
+      "question": "Speak to Him… Converse with Jesus from your heart to His.",
+      "variable": "heart_response",
+      "branches": [
+        {
+          "goTo": "rest"
+        }
+      ]
+    },
+    {
+      "id": "rest",
+      "type": "narrator",
+      "messages": [
+        "Before ending your time in prayer, rest in His love that He generously and constantly pours out for you.",
+        "Be confident that everything you shared was important and this time was special to Jesus.",
+        "Let's conclude everything with a beautiful prayer to the Sacred Heart."
+      ],
+      "branches": [
+        {
+          "goTo": "prayer"
+        }
+      ]
+    },
+    {
+      "id": "prayer",
+      "type": "narrator",
+      "messages": [
+        "O Sacred Heart of Jesus, font of love and mercy, and source of every blessing — pour out your love upon my wounded and suffering heart.",
+        "O Sacred Heart of Jesus, burning with the fire of charity for every soul — purify my heart and draw me ever closer to your divine embrace.",
+        "O Sacred Heart of Jesus, wounded by my own sin and familiar with all suffering — forgive me of my sins and restore me to life.",
+        "O Sacred Heart of Jesus, through which every heart finds solace and refuge — be my strength, my courage, my fortress, and my defender.",
+        "O Sacred Heart of Jesus, proof of the Father's love and desire for me — I place all my trust in you.",
+        "Amen."
+      ]
+    }
+  ],
+  "summaryTemplate": "Your heart was carrying {{current_feeling}}. You needed {{need_from_god}}. Your wounds: {{wounds}}. What you asked of Jesus: {{heart_response}}."
+}
