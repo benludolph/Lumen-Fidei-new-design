@@ -333,12 +333,9 @@ function MessageBubble({
       )}
       style={{
         transitionDuration: "220ms",
-        marginTop: isCompact ? "4px" : undefined,
+        marginTop: isCompact ? "-12px" : undefined,
       }}
     >
-      {role === "system" && showAvatar && (
-        <MentorAvatar size={28} />
-      )}
       {role === "user" && onRewind && (
         <button
           onClick={onRewind}
@@ -1008,8 +1005,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               })}
 
               {showTyping && (
-                <div className="flex items-end gap-[8px] justify-start">
-                  <MentorAvatar size={28} />
+                <div className="flex items-end justify-start">
                   <TypingIndicator />
                 </div>
               )}
