@@ -16,6 +16,7 @@ type FormData = z.infer<typeof schema>;
 export default function ForgotPassword() {
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [networkError, setNetworkError] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -24,12 +25,19 @@ export default function ForgotPassword() {
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
+    setNetworkError(null);
     try {
       await apiRequest("POST", "/api/auth/forgot-password", { email: data.email });
-    } catch {
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("fetch") || msg.toLowerCase().includes("network") || msg.toLowerCase().includes("failed to")) {
+        setNetworkError("Could not reach the server. Please check your connection and try again.");
+      } else {
+        setSubmitted(true);
+      }
     } finally {
       setIsLoading(false);
-      setSubmitted(true);
     }
   };
 
@@ -162,6 +170,12 @@ export default function ForgotPassword() {
                       {isLoading ? "Sending…" : "Send reset link"}
                     </button>
                   </form>
+
+                  {networkError && (
+                    <p className="type-body-sm text-center" style={{ color: "#ef4444", margin: "4px 0 0" }}>
+                      {networkError}
+                    </p>
+                  )}
 
                   <p className="type-body-sm text-center" style={{ color: "var(--white-30)", margin: "4px 0 0" }}>
                     Remember your password?{" "}

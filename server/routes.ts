@@ -261,10 +261,11 @@ export async function registerRoutes(
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
       await storage.createPasswordResetToken(user.id, token, expiresAt);
 
-      const baseUrl = process.env.APP_URL ||
-        (req.headers.origin as string) ||
-        `${req.protocol}://${req.get("host")}`;
-      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+      if (!process.env.APP_URL) {
+        console.warn("[forgot-password] APP_URL env var is not set; reset emails will not be sent");
+        return res.json({ message: "If that email exists, a reset link has been sent." });
+      }
+      const resetUrl = `${process.env.APP_URL}/reset-password?token=${token}`;
 
       try {
         await sendPasswordResetEmail(user.email, resetUrl);

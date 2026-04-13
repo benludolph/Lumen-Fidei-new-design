@@ -51,13 +51,22 @@ export default function ResetPassword() {
       });
       toast({ title: "Password reset!", description: "You can now sign in with your new password." });
       navigate("/login");
-    } catch (err: any) {
-      const msg = err?.message || "Something went wrong";
-      if (msg.includes("expired") || msg.includes("used") || msg.includes("Invalid")) {
-        setTokenError(msg);
-      } else {
-        setTokenError(msg);
+    } catch (err: unknown) {
+      let displayMessage = "Something went wrong. Please request a new reset link.";
+      if (err instanceof Error) {
+        const raw = err.message;
+        try {
+          const colonIdx = raw.indexOf(":");
+          const jsonStr = colonIdx !== -1 ? raw.slice(colonIdx + 1).trim() : raw;
+          const parsed = JSON.parse(jsonStr) as { message?: string; code?: string };
+          if (parsed.message) displayMessage = parsed.message;
+        } catch {
+          if (raw && !raw.startsWith("{") && raw.length < 200) {
+            displayMessage = raw;
+          }
+        }
       }
+      setTokenError(displayMessage);
     } finally {
       setIsLoading(false);
     }
