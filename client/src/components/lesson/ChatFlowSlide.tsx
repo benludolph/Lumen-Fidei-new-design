@@ -268,26 +268,7 @@ function TypingIndicator() {
 // Message bubble
 // ============================================================
 
-function MentorAvatar({ photoUrl, name, size = 28 }: { photoUrl?: string | null; name?: string | null; size?: number }) {
-  if (photoUrl) {
-    return (
-      <img
-        src={photoUrl}
-        alt="Mentor"
-        style={{
-          width: size,
-          height: size,
-          borderRadius: "50%",
-          objectFit: "cover",
-          flexShrink: 0,
-          border: "1px solid rgba(255,255,255,0.1)",
-        }}
-      />
-    );
-  }
-  const initials = name
-    ? name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
-    : "M";
+function MentorAvatar({ size = 28 }: { photoUrl?: string | null; name?: string | null; size?: number }) {
   const fontSize = Math.max(10, Math.round(size * 0.38));
   return (
     <div
@@ -307,7 +288,7 @@ function MentorAvatar({ photoUrl, name, size = 28 }: { photoUrl?: string | null;
         letterSpacing: "0.02em",
       }}
     >
-      {initials}
+      M
     </div>
   );
 }
@@ -556,7 +537,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     const reveal = (msgIdx: number, messages: string[]) => {
       if (revealCancelRef.current) return;
       if (msgIdx >= messages.length) {
-        schedule(() => { setShowTyping(false); setInputReady(true); }, rand(300, 500));
+        schedule(() => { setShowTyping(false); setInputReady(true); }, rand(600, 900));
         return;
       }
       setShowTyping(true);
@@ -566,8 +547,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           ...prev,
           { id: `msg-${msgStartId + msgIdx}`, role: "system", text: messages[msgIdx], stepId: step.id },
         ]);
-        schedule(() => reveal(msgIdx + 1, messages), rand(300, 500));
-      }, rand(700, 1100));
+        schedule(() => reveal(msgIdx + 1, messages), rand(800, 1200));
+      }, rand(1600, 2400));
     };
 
     reveal(0, buildMessages());
