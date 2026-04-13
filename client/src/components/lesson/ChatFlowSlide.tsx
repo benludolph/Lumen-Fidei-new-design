@@ -902,7 +902,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   // ── Loading state ──
   if (!loadedFromServer) {
     return (
-      <div className="flex-1 flex flex-col overflow-hidden pt-6" style={{ background: "var(--surface-base)" }}>
+      <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--surface-base)" }}>
         <div className="flex-1 relative overflow-hidden" style={{ background: "var(--surface-ground)", borderRadius: "24px 24px 0 0" }}>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="type-body-sm" style={{ color: "var(--white-30)" }}>Loading…</div>
@@ -913,11 +913,22 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden pt-6" style={{ background: "var(--surface-base)" }}>
+    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--surface-base)" }}>
 
       {/* ── Header ── */}
       <div
-        className="flex items-center justify-between shrink-0 px-6 pb-6"
+        className="relative shrink-0 flex items-center justify-between"
+        style={{
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          background: "var(--black-60)",
+          borderBottom: "1px solid var(--white-5)",
+          boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+          paddingTop: "16px",
+          paddingBottom: "16px",
+        }}
       >
         <div className="w-[42px] h-[42px] shrink-0" />
 
