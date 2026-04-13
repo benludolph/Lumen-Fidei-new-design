@@ -611,19 +611,25 @@ export function LessonFlow({
           {/* Scroll hint — shown when content overflows and user hasn't reached bottom */}
           {canScroll && !hasReachedBottom && !hideFooter && (
             <div
-              className="absolute bottom-0 left-0 right-0 pointer-events-none flex flex-col items-center justify-end"
+              className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end"
               style={{
                 height: 100,
                 background: "linear-gradient(to bottom, transparent 0%, var(--surface-base) 70%)",
                 paddingBottom: 18,
+                pointerEvents: "none",
               }}
             >
               <div
-                className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 rounded-full"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer"
                 style={{
                   background: "var(--surface-float)",
                   border: "1px solid var(--white-10)",
                   animation: "bounce 1.6s ease-in-out infinite",
+                  pointerEvents: "auto",
+                }}
+                onClick={() => {
+                  const el = scrollContentRef.current;
+                  if (el) el.scrollBy({ top: el.clientHeight * 0.7, behavior: "smooth" });
                 }}
               >
                 <ChevronDown className="w-4 h-4 text-white" />
@@ -637,7 +643,7 @@ export function LessonFlow({
       </div>
 
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
-      {!hideFooter && (!canScroll || hasReachedBottom) && (
+      {!hideFooter && (
         <div
           key={animKey}
           className="relative z-10 shrink-0 flex flex-col items-center justify-center px-4 py-4 sm:px-8 lesson-footer-enter"
@@ -649,10 +655,10 @@ export function LessonFlow({
           <div className="max-w-[780px] w-full flex items-center justify-end">
             <button
               onClick={handleNext}
-              disabled={navBlocked}
+              disabled={navBlocked || (canScroll && !hasReachedBottom)}
               className={cn(
                 "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] whitespace-nowrap",
-                navBlocked ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
+                (navBlocked || (canScroll && !hasReachedBottom)) ? "opacity-40 cursor-not-allowed" : "opacity-100 hover:opacity-80"
               )}
               style={{
                 background: "var(--surface-float)",
