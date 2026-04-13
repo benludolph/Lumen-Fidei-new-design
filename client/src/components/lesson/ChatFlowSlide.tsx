@@ -425,6 +425,20 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     catch { return null; }
   }, [content]);
 
+  // React's `muted` prop sets the HTML attribute, not the DOM property, so
+  // toggling it via JSX doesn't work reliably across browsers. Drive it imperatively.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.muted = isMuted;
+    if (!isMuted) {
+      el.play().catch(() => {
+        // Autoplay policy blocked unmuted play — fall back to muted
+        setIsMuted(true);
+      });
+    }
+  }, [isMuted]);
+
   // ── Ambient music ──
   useEffect(() => {
     const audio = new Audio(bgMusicSrc);
@@ -1019,11 +1033,12 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
                   loop
                   autoPlay
                   playsInline
-                  muted={isMuted}
+                  muted
                   className="w-full h-full object-cover block"
                 />
                 <button
-                  onClick={() => setIsMuted(m => !m)}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setIsMuted(m => !m); }}
                   className="absolute bottom-2 right-2 flex items-center justify-center rounded-full transition-opacity hover:opacity-100 opacity-60"
                   style={{
                     width: "28px", height: "28px",
