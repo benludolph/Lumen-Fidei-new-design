@@ -1154,7 +1154,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             {/* ── Input row ── */}
             {(flowComplete ||
               (inputReady && currentStep && currentStep.inputType !== "single_select")) && (
-              <div className="shrink-0 pt-2 px-6">
+              <div className="shrink-0 pt-2 pb-6 px-6">
                 {flowComplete || currentStep?.inputType === "none" ? (
                   <button
                     onClick={handleSubmit}
