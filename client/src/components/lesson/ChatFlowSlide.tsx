@@ -72,6 +72,7 @@ interface RenderedMessage {
   role: "system" | "user";
   text: string;
   stepId: string;
+  isAfterUser: boolean;
 }
 
 /** Snapshot stored before each step's answer — used for rewind */
@@ -294,19 +295,19 @@ function MentorAvatar({ size = 28 }: { photoUrl?: string | null; name?: string |
 }
 
 function MessageBubble({
-  role, text, isNew, onRewind, mentorPhotoUrl, mentorName,
+  role, text, isNew, onRewind, showAvatar, isCompact,
 }: {
   role: "system" | "user";
   text: string;
   isNew?: boolean;
   onRewind?: () => void;
-  mentorPhotoUrl?: string | null;
-  mentorName?: string | null;
+  showAvatar?: boolean;
+  isCompact?: boolean;
 }) {
   const [visible, setVisible] = useState(!isNew);
   useEffect(() => {
     if (isNew) {
-      const t = setTimeout(() => setVisible(true), 30);
+      const t = setTimeout(() => setVisible(true), 20);
       return () => clearTimeout(t);
     }
   }, [isNew]);
@@ -316,13 +317,16 @@ function MessageBubble({
       className={cn(
         "flex items-end gap-[8px]",
         role === "system" ? "justify-start" : "justify-end",
-        "transition-all ease-out",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-[10px]",
+        "transition-opacity ease-out",
+        visible ? "opacity-100" : "opacity-0",
       )}
-      style={{ transitionDuration: "180ms" }}
+      style={{
+        transitionDuration: "220ms",
+        marginTop: isCompact ? "4px" : undefined,
+      }}
     >
-      {role === "system" && (
-        <MentorAvatar photoUrl={mentorPhotoUrl} name={mentorName} size={28} />
+      {role === "system" && showAvatar && (
+        <MentorAvatar size={28} />
       )}
       {role === "user" && onRewind && (
         <button
@@ -435,6 +439,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   const restoredCompletionRef = useRef(false);
   const revealCancelRef = useRef(false);
   const skipRevealRef = useRef(false);
+  const hasUserMessageRef = useRef(false);
   // Keep answers in a ref so reveal closures see the latest value
   const answersRef = useRef(answers);
   useEffect(() => { answersRef.current = answers; }, [answers]);
@@ -514,7 +519,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   }, [contextKey]);
 
   // ── Reveal messages for a given NStep ──
-  const revealMessagesForStep = useCallback((step: NStep, msgStartId: number) => {
+  const revealMessagesForStep = useCallback((step: NStep, msgStartId: number, narratorMode: boolean) => {
     revealCancelRef.current = false;
 
     const schedule = (fn: () => void, ms: number) => {
@@ -537,18 +542,32 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     const reveal = (msgIdx: number, messages: string[]) => {
       if (revealCancelRef.current) return;
       if (msgIdx >= messages.length) {
-        schedule(() => { setShowTyping(false); setInputReady(true); }, rand(600, 900));
+        if (!narratorMode) setShowTyping(false);
+        schedule(() => { setInputReady(true); }, narratorMode ? rand(200, 400) : rand(400, 600));
         return;
       }
-      setShowTyping(true);
-      schedule(() => {
-        setShowTyping(false);
-        setRenderedMessages(prev => [
-          ...prev,
-          { id: `msg-${msgStartId + msgIdx}`, role: "system", text: messages[msgIdx], stepId: step.id },
-        ]);
-        schedule(() => reveal(msgIdx + 1, messages), rand(800, 1200));
-      }, rand(1600, 2400));
+
+      if (narratorMode) {
+        // Narrator: no typing indicator, just a brief breath between messages
+        schedule(() => {
+          setRenderedMessages(prev => [
+            ...prev,
+            { id: `msg-${msgStartId + msgIdx}`, role: "system", text: messages[msgIdx], stepId: step.id, isAfterUser: false },
+          ]);
+          schedule(() => reveal(msgIdx + 1, messages), rand(350, 550));
+        }, msgIdx === 0 ? rand(150, 300) : rand(350, 550));
+      } else {
+        // Mentor (post-answer): typing indicator then message
+        setShowTyping(true);
+        schedule(() => {
+          setShowTyping(false);
+          setRenderedMessages(prev => [
+            ...prev,
+            { id: `msg-${msgStartId + msgIdx}`, role: "system", text: messages[msgIdx], stepId: step.id, isAfterUser: true },
+          ]);
+          schedule(() => reveal(msgIdx + 1, messages), rand(450, 700));
+        }, rand(850, 1200));
+      }
     };
 
     reveal(0, buildMessages());
@@ -582,7 +601,8 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     setOtherText("");
 
     const msgStartId = renderedMessages.length;
-    revealMessagesForStep(currentStep, msgStartId);
+    const narratorMode = !hasUserMessageRef.current;
+    revealMessagesForStep(currentStep, msgStartId, narratorMode);
 
     return () => {
       revealCancelRef.current = true;
@@ -681,9 +701,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
 
     if (displayText) {
       revealTimer.current = setTimeout(() => {
+        hasUserMessageRef.current = true;
         setRenderedMessages(prev => [
           ...prev,
-          { id: `user-${Date.now()}`, role: "user", text: displayText, stepId: step.id },
+          { id: `user-${Date.now()}`, role: "user", text: displayText, stepId: step.id, isAfterUser: false },
         ]);
         revealTimer.current = setTimeout(doAdvance, preResponseDelay);
       }, userBubbleDelay);
@@ -724,6 +745,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     revealCancelRef.current = true;
     if (revealTimer.current) clearTimeout(revealTimer.current);
 
+    hasUserMessageRef.current = snap.renderedMessages.some(m => m.role === "user");
     setAnswers(snap.answers);
     setRenderedMessages(snap.renderedMessages);
     setQueue(snap.queue);
@@ -934,25 +956,31 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
               style={{ scrollbarWidth: "none" }}
             >
-              {renderedMessages.map((msg, i) => (
-                <MessageBubble
-                  key={msg.id}
-                  role={msg.role}
-                  text={msg.text}
-                  isNew={i === renderedMessages.length - 1}
-                  mentorPhotoUrl={msg.role === "system" ? mentorPhotoUrl : undefined}
-                  mentorName={msg.role === "system" ? mentorName : undefined}
-                  onRewind={
-                    msg.role === "user" && msg.stepId && !msg.stepId.startsWith("__refl")
-                      ? () => handleRewind(msg.stepId)
-                      : undefined
-                  }
-                />
-              ))}
+              {renderedMessages.map((msg, i) => {
+                const prev = renderedMessages[i - 1];
+                const isFirstInStep = !prev || prev.role !== "system" || prev.stepId !== msg.stepId;
+                const showAvatar = msg.role === "system" && isFirstInStep && msg.isAfterUser;
+                const isCompact = msg.role === "system" && !isFirstInStep;
+                return (
+                  <MessageBubble
+                    key={msg.id}
+                    role={msg.role}
+                    text={msg.text}
+                    isNew={i === renderedMessages.length - 1}
+                    showAvatar={showAvatar}
+                    isCompact={isCompact}
+                    onRewind={
+                      msg.role === "user" && msg.stepId && !msg.stepId.startsWith("__refl")
+                        ? () => handleRewind(msg.stepId)
+                        : undefined
+                    }
+                  />
+                );
+              })}
 
               {showTyping && (
                 <div className="flex items-end gap-[8px] justify-start">
-                  <MentorAvatar photoUrl={mentorPhotoUrl} name={mentorName} size={28} />
+                  <MentorAvatar size={28} />
                   <TypingIndicator />
                 </div>
               )}
