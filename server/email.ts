@@ -1,6 +1,17 @@
 import { Resend } from "resend";
 
-let connectionSettings: any;
+interface ResendConnectionSettings {
+  api_key: string;
+  from_email?: string;
+}
+
+interface ResendConnection {
+  settings: ResendConnectionSettings;
+}
+
+interface ResendConnectionsResponse {
+  items?: ResendConnection[];
+}
 
 async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
@@ -12,7 +23,7 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
 
   if (hostname && xReplitToken) {
     try {
-      connectionSettings = await fetch(
+      const resp = await fetch(
         "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=resend",
         {
           headers: {
@@ -20,17 +31,19 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
             "X-Replit-Token": xReplitToken,
           },
         }
-      )
-        .then((res) => res.json())
-        .then((data) => data.items?.[0]);
-
-      if (connectionSettings?.settings?.api_key) {
-        return {
-          apiKey: connectionSettings.settings.api_key,
-          fromEmail: connectionSettings.settings.from_email || "onboarding@resend.dev",
-        };
+      );
+      if (resp.ok) {
+        const data = (await resp.json()) as ResendConnectionsResponse;
+        const conn = data.items?.[0];
+        if (conn?.settings?.api_key) {
+          return {
+            apiKey: conn.settings.api_key,
+            fromEmail: conn.settings.from_email || "onboarding@resend.dev",
+          };
+        }
       }
-    } catch {
+    } catch (err) {
+      console.warn("[email] Could not reach Replit connectors API:", (err as Error).message);
     }
   }
 
@@ -39,9 +52,11 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
     return { apiKey, fromEmail: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev" };
   }
 
-  throw new Error("Resend not configured: no API key found");
+  throw new Error("Resend not configured: no API key found via connectors API or RESEND_API_KEY env var");
 }
 
+// WARNING: Never cache this client — access tokens expire.
+// Always call getCredentials() fresh to ensure the token is current.
 async function getResendClient(): Promise<{ client: Resend; fromEmail: string }> {
   const { apiKey, fromEmail } = await getCredentials();
   return { client: new Resend(apiKey), fromEmail };
@@ -78,10 +93,14 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
     </html>
   `;
 
-  await client.emails.send({
+  const result = await client.emails.send({
     from: `Lumen Fidei <${fromEmail}>`,
     to,
     subject: "Reset your Lumen Fidei password",
     html,
   });
+
+  if (result.error) {
+    throw new Error(`Resend API error: ${result.error.message}`);
+  }
 }
