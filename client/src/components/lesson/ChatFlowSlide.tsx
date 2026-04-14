@@ -1101,53 +1101,6 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
                 </div>
               )}
 
-              {/* Summary card when complete */}
-              {flowComplete && (
-                <div
-                  className="relative overflow-hidden"
-                  style={{
-                    background: "var(--surface-base)",
-                    border: "1px solid var(--white-5)",
-                    borderRadius: "6px",
-                    padding: "20px",
-                  }}
-                >
-                  <div
-                    className="absolute pointer-events-none mix-blend-lighten"
-                    style={{
-                      top: "-48px", left: "-48px",
-                      width: "160px", height: "160px",
-                      opacity: 0.04,
-                      background: "radial-gradient(circle, #F07830 0%, transparent 70%)",
-                      borderRadius: "50%",
-                    }}
-                  />
-                  <p
-                    className="type-caption-sm mb-3"
-                    style={{ color: "var(--white-40)" }}
-                  >
-                    Your Reflection
-                  </p>
-                  {summaryText ? (
-                    <p className="type-body-lg" style={{ lineHeight: "22px", color: "var(--white-85)" }}>
-                      {summaryText}
-                    </p>
-                  ) : (
-                    <p className="type-body-md italic" style={{ color: "var(--white-50)" }}>
-                      Your answers have been recorded.
-                    </p>
-                  )}
-                  <button
-                    onClick={handleRedo}
-                    className="mt-4 type-body-sm transition-opacity hover:opacity-70"
-                    style={{ color: "var(--white-35)", background: "none", border: "none", padding: 0, cursor: "pointer" }}
-                    data-testid="button-redo-reflection"
-                  >
-                    Redo this reflection
-                  </button>
-                </div>
-              )}
-
               <div ref={chatEndRef} className="h-16 shrink-0" />
             </div>
 
