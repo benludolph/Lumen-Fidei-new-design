@@ -89,13 +89,32 @@ export function LessonFlow({
     if (rawSlides[currentSlide]?.type === "media") {
       return;
     }
-    const t = setTimeout(() => {
-      el.scrollTop = 0;
+
+    let settled = false;
+    const check = (resetScroll: boolean) => {
+      if (resetScroll) el.scrollTop = 0;
       const scrollable = el.scrollHeight > el.clientHeight + 8;
-      setCanScroll(scrollable);
-      setHasReachedBottom(!scrollable);
-    }, 80);
-    return () => clearTimeout(t);
+      if (!settled || scrollable) {
+        settled = true;
+        setCanScroll(scrollable);
+        setHasReachedBottom(!scrollable);
+      }
+    };
+
+    // First pass at 80ms for desktop (fast layout)
+    const t1 = setTimeout(() => check(true), 80);
+    // Second pass at 500ms for mobile (slower CSS/image layout)
+    const t2 = setTimeout(() => check(false), 500);
+
+    // ResizeObserver catches dynamic content changes (images loading, etc.)
+    const ro = new ResizeObserver(() => check(false));
+    ro.observe(el);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      ro.disconnect();
+    };
   }, [currentSlide, content.slides]);
 
   const handleContentScroll = useCallback(() => {
@@ -611,7 +630,7 @@ export function LessonFlow({
           {/* Scroll hint — shown when content overflows and user hasn't reached bottom */}
           {canScroll && !hasReachedBottom && !hideFooter && (
             <div
-              className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-end"
+              className="absolute bottom-0 left-0 right-0 z-10 flex flex-col items-center justify-end"
               style={{
                 height: 100,
                 background: "linear-gradient(to bottom, transparent 0%, var(--surface-base) 70%)",
