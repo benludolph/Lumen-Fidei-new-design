@@ -490,20 +490,42 @@ export class DatabaseStorage implements IStorage {
       for (const oldDay of dayNumbers) {
         await tx.execute(sql`UPDATE track_a_content SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
       }
-      // Step 2: move related user data to the same temp values
+      // Step 2: cascade temp values to Track A user data only, to avoid touching other tracks' records
       for (const oldDay of dayNumbers) {
-        await tx.execute(sql`UPDATE user_answers SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
-        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
-        await tx.execute(sql`UPDATE survey_responses SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
+        await tx.execute(sql`
+          UPDATE user_answers SET day_number = ${oldDay + 10000}
+          WHERE day_number = ${oldDay}
+            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+        `);
+        await tx.execute(sql`
+          UPDATE prayer_completions SET day_number = ${oldDay + 10000}
+          WHERE day_number = ${oldDay}
+            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+        `);
+        await tx.execute(sql`
+          UPDATE survey_responses SET day_number = ${oldDay + 10000}
+          WHERE day_number = ${oldDay} AND track = 'A'
+        `);
       }
       // Step 3: write final day_number values — dayNumbers[i] (old) becomes sortedDays[i] (new)
       for (let i = 0; i < dayNumbers.length; i++) {
         const tempDay = dayNumbers[i] + 10000;
         const newDay = sortedDays[i];
         await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
-        await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
-        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
-        await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+        await tx.execute(sql`
+          UPDATE user_answers SET day_number = ${newDay}
+          WHERE day_number = ${tempDay}
+            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+        `);
+        await tx.execute(sql`
+          UPDATE prayer_completions SET day_number = ${newDay}
+          WHERE day_number = ${tempDay}
+            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+        `);
+        await tx.execute(sql`
+          UPDATE survey_responses SET day_number = ${newDay}
+          WHERE day_number = ${tempDay} AND track = 'A'
+        `);
       }
     });
   }
