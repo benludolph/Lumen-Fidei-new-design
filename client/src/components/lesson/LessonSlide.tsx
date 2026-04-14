@@ -1632,7 +1632,7 @@ function TextInputSlide({
         value={journalContent}
         onChange={(e) => handleChange(e.target.value)}
         placeholder="Write your response here..."
-        className="min-h-[150px] w-full bg-[var(--white-5)] border-[var(--white-10)] text-white placeholder:text-[var(--white-30)] type-body-lg focus:border-[var(--white-20)]"
+        className="min-h-[150px] w-full bg-[var(--white-5)] border-[var(--white-10)] text-white placeholder:text-[var(--white-30)] type-body-lg focus:border-[var(--white-20)] focus-visible:ring-0 focus-visible:ring-offset-0"
         data-testid="input-text-response"
       />
       <div className="flex justify-end">

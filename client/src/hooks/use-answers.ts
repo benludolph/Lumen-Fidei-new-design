@@ -31,9 +31,9 @@ export function useCreateAnswer() {
       if (!res.ok) throw new Error("Failed to save answer");
       return api.answers.create.responses[201].parse(await res.json());
     },
-    onSuccess: (_, variables) => {
-      // Invalidate both personal list and admin/mentor lists
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.answers.list.path] });
+      queryClient.invalidateQueries({ queryKey: ['/api/journal'] });
     },
   });
 }
