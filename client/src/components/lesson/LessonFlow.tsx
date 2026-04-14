@@ -299,13 +299,15 @@ export function LessonFlow({
   }, [currentSlide]);
 
   const handleContinue = useCallback(() => {
-    if (overlayConfig?.enabled && !overlayShownRef.current) {
+    const alreadySeen = localStorage.getItem(`overlay-seen-${overlayContextKey}`) === "true";
+    if (overlayConfig?.enabled && !overlayShownRef.current && !alreadySeen) {
       overlayShownRef.current = true;
+      localStorage.setItem(`overlay-seen-${overlayContextKey}`, "true");
       setFlowState("overlay");
     } else {
       onComplete();
     }
-  }, [onComplete, overlayConfig]);
+  }, [onComplete, overlayConfig, overlayContextKey]);
 
   const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
     setQuizAnswers((prev) => ({
