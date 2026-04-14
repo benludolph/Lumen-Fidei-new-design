@@ -1,0 +1,196 @@
+{
+  "steps": [
+
+    {
+      "id": "step_01_open",
+      "type": "narrator",
+      "messages": [
+        "Most people carry two versions of God.",
+        "The one they'd describe if someone asked. And the one they feel when things fall apart.",
+        "This is about the second one."
+      ]
+    },
+
+    {
+      "id": "step_02_felt_image",
+      "type": "single_select",
+      "question": "When you fail or struggle, what do you actually expect from God?",
+      "options": [
+        { "id": "disappointed", "text": "He's disappointed in me" },
+        { "id": "distant",      "text": "He feels far away" },
+        { "id": "watching",     "text": "He's watching to see what I do" },
+        { "id": "demanding",    "text": "He expects more from me" },
+        { "id": "silent",       "text": "He goes quiet" },
+        { "id": "patient",      "text": "He's patient with me" },
+        { "id": "close",        "text": "He stays close" },
+        { "id": "unsure",       "text": "I honestly don't know" }
+      ],
+      "variable": "god_expectation"
+    },
+
+    {
+      "id": "step_03_trace_intro",
+      "type": "narrator",
+      "messages": [
+        "That feeling came from somewhere. Let's see if we can find it."
+      ]
+    },
+
+    {
+      "id": "step_04_source",
+      "type": "single_select",
+      "question": "Where do you think it comes from most?",
+      "options": [
+        { "id": "parent",    "text": "How a parent or caregiver loved me" },
+        { "id": "church",    "text": "What I absorbed from church" },
+        { "id": "failure",   "text": "Something I haven't forgiven myself for" },
+        { "id": "silence",   "text": "Prayers that felt unanswered" },
+        { "id": "suffering", "text": "Something painful I never reconciled with God" },
+        { "id": "unknown",   "text": "I'm not sure. It's always just been there" }
+      ],
+      "variable": "wound_source",
+      "branch_reflections": {
+        "parent":    "How we're first loved tends to shape what we come to expect from love.",
+        "church":    "What we're taught about God early can outlast what we actually believe later.",
+        "failure":   "When we haven't forgiven ourselves, it's hard to believe someone else has.",
+        "silence":   "Unanswered prayer changes what we let ourselves expect. That makes sense.",
+        "suffering": "When something painful was never resolved, it tends to stay in the room with God.",
+        "unknown":   "Sometimes an image just forms slowly. No single moment. Just accumulation."
+      }
+    },
+
+    {
+      "id": "step_05_pivot",
+      "type": "narrator",
+      "messages": [
+        "Now think of a moment when you felt genuinely loved.",
+        "A real one. A person. A place. Something specific."
+      ]
+    },
+
+    {
+      "id": "step_06_describe",
+      "type": "open_text",
+      "question": "Who was there? What happened? What did you feel?",
+      "variable": "moment_detail",
+      "required": true
+    },
+
+    {
+      "id": "step_07_felt_sense",
+      "type": "open_text",
+      "question": "What did that feel like from the inside? One or two words.",
+      "variable": "felt_sense",
+      "required": true
+    },
+
+    {
+      "id": "step_08_bridge_q",
+      "type": "single_select",
+      "question": "Where do you think that kind of love comes from?",
+      "options": [
+        { "id": "people", "text": "The people around us" },
+        { "id": "god",    "text": "Ultimately, from God" },
+        { "id": "unsure", "text": "I'm not sure" }
+      ],
+      "variable": "love_source_belief"
+    },
+
+    {
+      "id": "step_09_scripture",
+      "type": "narrator",
+      "messages": [
+        "Scripture says: \"God is love.\" (1 John 4:8)",
+        "Not that He's loving. That love is what He is.",
+        "Which means every real experience of love reflects something of Him — however imperfectly."
+      ]
+    },
+
+    {
+      "id": "step_10_qualities",
+      "type": "single_select",
+      "question": "Look back at that moment. What was most present in it?",
+      "options": [
+        { "id": "closeness",  "text": "Closeness" },
+        { "id": "patience",   "text": "Patience" },
+        { "id": "known",      "text": "Being fully known" },
+        { "id": "accepted",   "text": "Being accepted as I am" },
+        { "id": "delight",    "text": "Someone delighting in me" },
+        { "id": "safety",     "text": "Safety" },
+        { "id": "joy",        "text": "Joy" },
+        { "id": "peace",      "text": "Peace" },
+        { "id": "not_alone",  "text": "Not being alone in it" }
+      ],
+      "variable": "love_quality"
+    },
+
+    {
+      "id": "step_11_gap",
+      "type": "narrator",
+      "dynamic_reflection": {
+        "template": "In that moment you felt {felt_sense}. And yet you expect God to feel {god_expectation}."
+      },
+      "messages": [
+        "Those two things don't fit together."
+      ]
+    },
+
+    {
+      "id": "step_12_gap_feel",
+      "type": "open_text",
+      "question": "What does that gap feel like?",
+      "variable": "gap_feeling",
+      "required": true
+    },
+
+    {
+      "id": "step_13_gap_locate",
+      "type": "single_select",
+      "question": "Which feels closer to true right now?",
+      "options": [
+        { "id": "want_different", "text": "Part of me wants to believe He's different than I expect" },
+        { "id": "head_not_heart", "text": "I believe it in my head, but can't feel it" },
+        { "id": "not_sure",       "text": "I genuinely don't know" },
+        { "id": "dont_think_so",  "text": "I don't think He is different" }
+      ],
+      "variable": "gap_position",
+      "branch_reflections": {
+        "want_different": "That want is worth paying attention to.",
+        "head_not_heart": "That gap between knowing and feeling is where most of this work lives.",
+        "not_sure":       "Not knowing is an honest place to start.",
+        "dont_think_so":  "That's honest. Stay with the question anyway."
+      }
+    },
+
+    {
+      "id": "step_14_reframe",
+      "type": "narrator",
+      "messages": [
+        "If God is love itself, He can't be less than the best love you've ever felt.",
+        "He'd be where it came from."
+      ]
+    },
+
+    {
+      "id": "step_15_carry",
+      "type": "open_text",
+      "question": "What would change if He were at least as good as what you felt in that moment?",
+      "variable": "carry_reflection",
+      "required": true
+    },
+
+    {
+      "id": "step_16_close",
+      "type": "final",
+      "messages": [
+        "This week, when you feel genuinely loved by anyone — pause.",
+        "Ask: is this what He is like?",
+        "Let the moments answer.",
+        "Your image of God isn't fixed. It formed. It can change."
+      ]
+    }
+
+  ],
+
+  "summaryTemplate": "You expect God to feel {god_expectation}, shaped by {wound_source}. In a real moment you felt {felt_sense}. The gap feels like: \"{gap_feeling}\". You carried this: what would change if He were at least that good?"
+}
