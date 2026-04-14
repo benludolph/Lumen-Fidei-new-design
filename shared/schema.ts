@@ -110,7 +110,7 @@ export const userAnswers = pgTable("user_answers", {
   dayNumber: integer("day_number").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [uniqueIndex("user_answers_user_day_unique").on(t.userId, t.dayNumber)]);
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),

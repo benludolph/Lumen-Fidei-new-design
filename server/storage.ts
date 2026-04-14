@@ -229,7 +229,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUserAnswer(answer: InsertUserAnswer): Promise<UserAnswer> {
-    const [newAnswer] = await db.insert(userAnswers).values(answer).returning();
+    const [newAnswer] = await db
+      .insert(userAnswers)
+      .values(answer)
+      .onConflictDoUpdate({
+        target: [userAnswers.userId, userAnswers.dayNumber],
+        set: { content: answer.content },
+      })
+      .returning();
     return newAnswer;
   }
 

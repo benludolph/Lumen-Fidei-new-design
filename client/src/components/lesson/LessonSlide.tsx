@@ -1601,10 +1601,6 @@ function TextInputSlide({
     setJournalContent(value);
     setSaved(false);
     onJournalChange?.(value);
-    if (value.trim() && !interactedRef.current) {
-      interactedRef.current = true;
-      onInteracted?.();
-    }
   };
 
   const handleSave = () => {
@@ -1614,6 +1610,10 @@ function TextInputSlide({
         onSuccess: () => {
           setSaved(true);
           lastSavedContent.current = journalContent;
+          if (!interactedRef.current) {
+            interactedRef.current = true;
+            onInteracted?.();
+          }
         },
       }
     );
