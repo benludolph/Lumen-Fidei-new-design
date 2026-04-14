@@ -2328,7 +2328,6 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
-  sortOrder: number;
 };
 
 const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene"] as const;
@@ -5347,7 +5346,7 @@ function TrackAContentManagementView() {
     if (allContent && selectedModule !== null) {
       const daysInModule = allContent
         .filter(c => c.weekNumber === selectedModule)
-        .sort((a, b) => (a.sortOrder ?? a.dayNumber) - (b.sortOrder ?? b.dayNumber))
+        .sort((a, b) => a.dayNumber - b.dayNumber)
         .map(c => c.dayNumber);
       setLocalDayOrder(daysInModule);
     }

@@ -56,8 +56,8 @@ function getWeekTheme(weekNumber: number, isTrackA: boolean, trackBSummaries?: C
   return `Week ${weekNumber}`;
 }
 
-// Returns the Track A content at program position N (1-30), respecting admin sort_order.
-// The all-content API returns items sorted by (week, sort_order, day_number) — day 0 is special.
+// Returns the Track A content at program position N (1-30).
+// The all-content API returns items sorted by (week, day_number) — day 0 is special.
 function getTrackAAtPosition(position: number, summaries?: TrackAContent[]): TrackAContent | undefined {
   if (!summaries) return undefined;
   const programDays = summaries.filter(c => c.dayNumber > 0);

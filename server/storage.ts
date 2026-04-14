@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
-  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens,
+  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -473,20 +473,38 @@ export class DatabaseStorage implements IStorage {
 
   async getAllTrackAContent(): Promise<TrackAContent[]> {
     return await db.select().from(trackAContent).orderBy(
-      sql`ceil(${trackAContent.dayNumber}::float / 6)`,
-      asc(trackAContent.sortOrder),
+      asc(trackAContent.weekNumber),
       asc(trackAContent.dayNumber)
     );
   }
 
   async reorderTrackAContent(dayNumbers: number[]): Promise<void> {
-    await Promise.all(
-      dayNumbers.map((dayNumber, index) =>
-        db.update(trackAContent)
-          .set({ sortOrder: index })
-          .where(eq(trackAContent.dayNumber, dayNumber))
-      )
-    );
+    if (dayNumbers.length === 0) return;
+    const sortedDays = [...dayNumbers].sort((a, b) => a - b);
+    const hasChanges = dayNumbers.some((d, i) => d !== sortedDays[i]);
+    if (!hasChanges) return;
+
+    await db.transaction(async (tx) => {
+      // Step 1: move track_a_content rows to temp day_number values to avoid unique constraint violations
+      for (const oldDay of dayNumbers) {
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
+      }
+      // Step 2: move related user data to the same temp values
+      for (const oldDay of dayNumbers) {
+        await tx.execute(sql`UPDATE user_answers SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
+        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
+        await tx.execute(sql`UPDATE survey_responses SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
+      }
+      // Step 3: write final day_number values — dayNumbers[i] (old) becomes sortedDays[i] (new)
+      for (let i = 0; i < dayNumbers.length; i++) {
+        const tempDay = dayNumbers[i] + 10000;
+        const newDay = sortedDays[i];
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+        await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+        await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+      }
+    });
   }
 
   async upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent> {
