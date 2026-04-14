@@ -1587,7 +1587,6 @@ function TextInputSlide({
     if (existingAnswer !== undefined && existingAnswer !== lastSavedContent.current) {
       setJournalContent(existingAnswer);
       lastSavedContent.current = existingAnswer;
-      setSaved(true);
     }
   }, [existingAnswer]);
 
