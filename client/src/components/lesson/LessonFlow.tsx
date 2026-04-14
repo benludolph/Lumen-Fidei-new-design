@@ -385,7 +385,7 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice", "knowledge_quiz"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(effectiveSlideData.type) && !slideInteracted;
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
@@ -441,9 +441,7 @@ export function LessonFlow({
     />
   );
 
-  const isKnowledgeQuiz = effectiveSlideData.type === "knowledge_quiz";
-
-  if (isChatFlow || isKnowledgeQuiz) {
+  if (isChatFlow) {
     return createPortal(
       <div className="fixed inset-0 z-[200] flex flex-col bg-[var(--surface-base)]" data-testid="lesson-flow">
         {lessonSlideEl}
@@ -463,7 +461,7 @@ export function LessonFlow({
 
   // Slides that have their own in-card CTA button — hide the footer CONTINUE
   // while they still need interaction (avoids two stacked buttons on mobile)
-  const SELF_CTA_TYPES = new Set(["action", "text_input", "mentor_message"]);
+  const SELF_CTA_TYPES = new Set(["action", "text_input", "mentor_message", "knowledge_quiz"]);
   const hideFooter =
     (isValidKc && kcAnswered) ||
     (requiresInteraction && SELF_CTA_TYPES.has(effectiveSlideData.type));
@@ -601,7 +599,7 @@ export function LessonFlow({
         <div
           className={cn(
             "relative flex-1 min-h-0 flex flex-col w-full max-w-[780px]",
-            effectiveSlideData.type === "story_choice" ? "p-4 sm:p-6" : effectiveSlideData.type === "scripture_practice" ? "px-7 pb-7 pt-3 sm:px-12 sm:pb-12 sm:pt-4" : effectiveSlideData.type === "scene" ? "p-3 sm:p-4" : "p-7 sm:p-12"
+            effectiveSlideData.type === "story_choice" ? "p-4 sm:p-6" : effectiveSlideData.type === "scripture_practice" ? "px-7 pb-7 pt-3 sm:px-12 sm:pb-12 sm:pt-4" : effectiveSlideData.type === "scene" ? "p-3 sm:p-4" : effectiveSlideData.type === "knowledge_quiz" ? "p-0" : "p-7 sm:p-12"
           )}
           style={{
             background: "var(--surface-base)",

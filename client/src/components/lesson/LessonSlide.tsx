@@ -1288,11 +1288,11 @@ export function LessonSlide({
       ? "lesson-slide-in-right"
       : "lesson-slide-in-left";
 
-  // knowledge_quiz takes over the entire slide area with its own UI
+  // knowledge_quiz renders inside the standard slide card with its own internal progress
   if (type === "knowledge_quiz") {
     return (
       <div
-        className={cn("flex-1 flex flex-col overflow-hidden", animationClass)}
+        className={cn("min-h-full flex flex-col", animationClass)}
         data-testid="lesson-slide-knowledge_quiz"
       >
         <KnowledgeQuizSlide
@@ -2153,7 +2153,7 @@ function KnowledgeQuizSlide({ content, onComplete }: { content: string; onComple
   if (phase === "intro") {
     return (
       <div
-        className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8"
+        className="min-h-full flex flex-col items-center justify-center px-6 py-10 text-center gap-8"
         data-testid="kq-intro-screen"
       >
         <div className="space-y-3">
@@ -2181,7 +2181,7 @@ function KnowledgeQuizSlide({ content, onComplete }: { content: string; onComple
   if (phase === "question" && currentQuestion) {
     const progress = ((questionIndex + 1) / totalQuestions) * 100;
     return (
-      <div className="flex-1 flex flex-col px-6 py-6 gap-6 overflow-y-auto" data-testid="kq-question-screen">
+      <div className="flex flex-col px-6 py-6 gap-6" data-testid="kq-question-screen">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="type-caption-sm text-[var(--white-50)]">
@@ -2264,7 +2264,7 @@ function KnowledgeQuizSlide({ content, onComplete }: { content: string; onComple
 
   return (
     <div
-      className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8"
+      className="min-h-full flex flex-col items-center justify-center px-6 py-10 text-center gap-8"
       data-testid="kq-results-screen"
     >
       <div className="space-y-4">
