@@ -460,12 +460,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTrackAContentByPosition(position: number): Promise<TrackAContent | undefined> {
-    // Returns the Nth item (1-based) when content is ordered by week then sort_order within week.
+    // Returns the Nth item (1-based) when content is ordered by day_number.
+    // day_number is now the authoritative ordering — swapping day numbers via admin drag-and-drop
+    // reorders the unlock schedule accordingly.
     const all = await db.select().from(trackAContent)
       .where(sql`${trackAContent.dayNumber} > 0`)
       .orderBy(
-        sql`ceil(${trackAContent.dayNumber}::float / 6)`,
-        asc(trackAContent.sortOrder),
+        asc(trackAContent.weekNumber),
         asc(trackAContent.dayNumber)
       );
     return all[position - 1];
