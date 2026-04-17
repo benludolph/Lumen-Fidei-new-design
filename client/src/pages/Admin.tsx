@@ -5213,11 +5213,61 @@ function TrackAContentManagementView() {
   const csvFileRef = useRef<HTMLInputElement>(null);
   const [localModuleOrder, setLocalModuleOrder] = useState<number[]>([]);
   const [localDayOrder, setLocalDayOrder] = useState<number[]>([]);
+  const [snapshotName, setSnapshotName] = useState("");
+  const [snapshotExpanded, setSnapshotExpanded] = useState(false);
+  const [restoreConfirmId, setRestoreConfirmId] = useState<number | null>(null);
+  const [restoreConfirmName, setRestoreConfirmName] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const snapshotsQuery = useQuery<{ id: number; name: string; createdAt: string }[]>({
+    queryKey: ['/api/admin/track-a/snapshots'],
+    queryFn: () => fetch('/api/admin/track-a/snapshots', { credentials: 'include' }).then(r => r.json()),
+  });
+
+  const createSnapshotMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await apiRequest("POST", '/api/admin/track-a/snapshots', { name });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/track-a/snapshots'] });
+      setSnapshotName("");
+      setSnapshotExpanded(true);
+      toast({ title: "Snapshot saved", description: "You can restore it any time from this panel." });
+    },
+    onError: () => toast({ title: "Failed to save snapshot", variant: "destructive" }),
+  });
+
+  const restoreSnapshotMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("POST", `/api/admin/track-a/snapshots/${id}/restore`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/prelim-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/track-a/snapshots'] });
+      setRestoreConfirmId(null);
+      toast({ title: "Snapshot restored", description: "Track A content and pre-modules have been restored." });
+    },
+    onError: () => {
+      setRestoreConfirmId(null);
+      toast({ title: "Restore failed", variant: "destructive" });
+    },
+  });
+
+  const deleteSnapshotMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("DELETE", `/api/admin/track-a/snapshots/${id}`, {});
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/admin/track-a/snapshots'] }),
+    onError: () => toast({ title: "Failed to delete snapshot", variant: "destructive" }),
+  });
 
   const handleCsvExport = async () => {
     try {
@@ -5581,6 +5631,108 @@ function TrackAContentManagementView() {
             </Button>
           </div>
         </div>
+
+        {/* Content Snapshots */}
+        <div className="rounded-lg border border-dashed px-4 py-3 bg-muted/30">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mr-auto">
+              Content Snapshots
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                className="h-7 text-xs w-44"
+                placeholder="Snapshot name (optional)"
+                value={snapshotName}
+                onChange={e => setSnapshotName(e.target.value)}
+                data-testid="input-snapshot-name"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => createSnapshotMutation.mutate(snapshotName)}
+                disabled={createSnapshotMutation.isPending}
+                data-testid="button-create-snapshot"
+              >
+                <Save className="w-3.5 h-3.5 mr-1.5" />
+                {createSnapshotMutation.isPending ? "Saving…" : "Save Snapshot"}
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-muted-foreground"
+              onClick={() => setSnapshotExpanded(e => !e)}
+              data-testid="button-toggle-snapshots"
+            >
+              {snapshotExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </div>
+          {snapshotExpanded && (
+            <div className="mt-3 space-y-1">
+              {snapshotsQuery.isLoading && (
+                <p className="text-xs text-muted-foreground">Loading snapshots…</p>
+              )}
+              {!snapshotsQuery.isLoading && (!snapshotsQuery.data || snapshotsQuery.data.length === 0) && (
+                <p className="text-xs text-muted-foreground italic">No snapshots yet. Save one before making edits.</p>
+              )}
+              {snapshotsQuery.data?.map(snap => (
+                <div key={snap.id} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-muted/50">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{snap.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {format(new Date(snap.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 text-xs px-2 shrink-0"
+                    onClick={() => { setRestoreConfirmId(snap.id); setRestoreConfirmName(snap.name); }}
+                    data-testid={`button-restore-snapshot-${snap.id}`}
+                  >
+                    Restore
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => deleteSnapshotMutation.mutate(snap.id)}
+                    data-testid={`button-delete-snapshot-${snap.id}`}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Restore confirmation dialog */}
+        <Dialog open={restoreConfirmId !== null} onOpenChange={open => { if (!open) setRestoreConfirmId(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Restore Snapshot?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              This will replace all Track A days and pre-modules with the state saved in{" "}
+              <span className="font-medium text-foreground">"{restoreConfirmName}"</span>.
+              All current content will be overwritten. Consider saving a snapshot first if you haven't.
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setRestoreConfirmId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => { if (restoreConfirmId !== null) restoreSnapshotMutation.mutate(restoreConfirmId); }}
+                disabled={restoreSnapshotMutation.isPending}
+                data-testid="button-confirm-restore-snapshot"
+              >
+                {restoreSnapshotMutation.isPending ? "Restoring…" : "Yes, Restore"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Pre-Modules section */}
         <div>

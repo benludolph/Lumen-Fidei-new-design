@@ -1678,6 +1678,10 @@ export async function registerRoutes(
         return res.status(400).json({ message: "CSV file is empty or has no data rows" });
       }
 
+      // Auto-snapshot the current state before any import overwrites it
+      const autoSnapName = `Auto-save: before import – ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+      await storage.createTrackASnapshot(autoSnapName);
+
       const requiredColumns = ['dayNumber', 'weekNumber', 'centralTheme'];
       const firstRow = records[0];
       const missingColumns = requiredColumns.filter(col => !(col in firstRow));
@@ -1778,6 +1782,34 @@ export async function registerRoutes(
     } catch (err: any) {
       res.status(400).json({ message: err?.message || 'Failed to parse CSV' });
     }
+  });
+
+  // === Track A Snapshots (version control) ===
+
+  app.get('/api/admin/track-a/snapshots', requireRole('admin'), async (req, res) => {
+    const snaps = await storage.listTrackASnapshots();
+    res.json(snaps);
+  });
+
+  app.post('/api/admin/track-a/snapshots', requireRole('admin'), async (req, res) => {
+    const rawName = (req.body?.name ?? '').toString().trim();
+    const name = rawName || `Manual save – ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+    const snap = await storage.createTrackASnapshot(name);
+    res.json(snap);
+  });
+
+  app.post('/api/admin/track-a/snapshots/:id/restore', requireRole('admin'), async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
+    await storage.restoreTrackASnapshot(id);
+    res.json({ ok: true });
+  });
+
+  app.delete('/api/admin/track-a/snapshots/:id', requireRole('admin'), async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
+    await storage.deleteTrackASnapshot(id);
+    res.json({ ok: true });
   });
 
   app.get('/api/admin/backup', requireRole('admin'), async (req, res) => {

@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
-  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses,
+  prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -18,6 +18,7 @@ import {
   type Testimony, type InsertTestimony,
   type TestimonyPart, type InsertTestimonyPart,
   type PasswordResetToken,
+  type TrackASnapshot,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -122,6 +123,12 @@ export interface IStorage {
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenUsed(token: string): Promise<void>;
   claimPasswordResetToken(token: string): Promise<PasswordResetToken | null>;
+
+  // Track A Snapshots
+  listTrackASnapshots(): Promise<TrackASnapshot[]>;
+  createTrackASnapshot(name: string): Promise<TrackASnapshot>;
+  restoreTrackASnapshot(id: number): Promise<void>;
+  deleteTrackASnapshot(id: number): Promise<void>;
 
   // session store
   sessionStore: any;
@@ -785,6 +792,45 @@ export class DatabaseStorage implements IStorage {
     }
 
     return unlockedKeys;
+  }
+
+  async listTrackASnapshots(): Promise<TrackASnapshot[]> {
+    return await db.select().from(trackASnapshots).orderBy(desc(trackASnapshots.createdAt));
+  }
+
+  async createTrackASnapshot(name: string): Promise<TrackASnapshot> {
+    const [content, prelim] = await Promise.all([
+      this.getAllTrackAContent(),
+      this.getPrelimModules(),
+    ]);
+    const data = { track_a_content: content, prelim_modules: prelim };
+    const [snap] = await db.insert(trackASnapshots).values({ name, data }).returning();
+    return snap;
+  }
+
+  async restoreTrackASnapshot(id: number): Promise<void> {
+    const [snap] = await db.select().from(trackASnapshots).where(eq(trackASnapshots.id, id));
+    if (!snap) throw new Error(`Snapshot ${id} not found`);
+    const { track_a_content, prelim_modules } = snap.data as {
+      track_a_content: TrackAContent[];
+      prelim_modules: PrelimModule[];
+    };
+    await db.transaction(async (tx) => {
+      await tx.delete(trackAContent);
+      await tx.delete(prelimModules);
+      for (const row of track_a_content) {
+        const { id: _id, ...rest } = row;
+        await tx.insert(trackAContent).values(rest);
+      }
+      for (const row of prelim_modules) {
+        const { id: _id, ...rest } = row;
+        await tx.insert(prelimModules).values(rest);
+      }
+    });
+  }
+
+  async deleteTrackASnapshot(id: number): Promise<void> {
+    await db.delete(trackASnapshots).where(eq(trackASnapshots.id, id));
   }
 }
 

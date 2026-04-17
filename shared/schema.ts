@@ -221,6 +221,14 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
+// Track A content snapshots for version control
+export const trackASnapshots = pgTable("track_a_snapshots", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  data: json("data").notNull(), // { track_a_content: [...], prelim_modules: [...] }
+});
+
 // Prayer completion tracking - records when users complete morning/evening prayers
 export const prayerCompletions = pgTable("prayer_completions", {
   id: serial("id").primaryKey(),
@@ -343,6 +351,9 @@ export type InsertPrelimCompletion = z.infer<typeof insertPrelimCompletionSchema
 
 export type ChatFlowResponse = typeof chatFlowResponses.$inferSelect;
 export type InsertChatFlowResponse = z.infer<typeof insertChatFlowResponseSchema>;
+
+export type TrackASnapshot = typeof trackASnapshots.$inferSelect;
+export type InsertTrackASnapshot = typeof trackASnapshots.$inferInsert;
 
 // Prelim module with user completion status (returned from /api/prelim-modules)
 export type PrelimModuleWithStatus = PrelimModule & { completed: boolean };
