@@ -1580,11 +1580,48 @@ export async function registerRoutes(
   }
 
   app.get('/api/admin/export/track-a.csv', requireRole('admin'), async (req, res) => {
-    const allContent = await storage.getAllTrackAContent();
+    const [allContent, allPrelim] = await Promise.all([
+      storage.getAllTrackAContent(),
+      storage.getPrelimModules(),
+    ]);
 
     const headers = ['dayNumber', 'weekNumber', 'centralTheme', 'subtitle', 'dayImageUrl', 'completionMessage', 'slideIndex', 'slideType', 'slideContent'];
 
     const rows: string[] = [];
+
+    // Prelim modules exported with dayNumber = -position so they round-trip cleanly
+    for (const mod of allPrelim) {
+      const slides = (mod.slides || []) as { type: string; content: string }[];
+      if (slides.length === 0) {
+        rows.push([
+          escapeCSVContent(-mod.position),
+          escapeCSVContent(0),
+          escapeCSVContent(mod.title),
+          escapeCSVContent(mod.subtitle),
+          escapeCSVContent(mod.imageUrl),
+          '',
+          '',
+          '',
+          '',
+        ].join(','));
+      } else {
+        for (let i = 0; i < slides.length; i++) {
+          const slide = slides[i];
+          rows.push([
+            escapeCSVContent(-mod.position),
+            escapeCSVContent(0),
+            escapeCSVContent(mod.title),
+            escapeCSVContent(mod.subtitle),
+            escapeCSVContent(mod.imageUrl),
+            '',
+            escapeCSVContent(i),
+            escapeCSVContent(slide.type),
+            escapeCSVContent(slide.content),
+          ].join(','));
+        }
+      }
+    }
+
     for (const day of allContent) {
       const slides = (day.slides || []) as { type: string; content: string }[];
       if (slides.length === 0) {
@@ -1665,16 +1702,21 @@ export async function registerRoutes(
         const dayNum = parseInt(row.dayNumber, 10);
         if (isNaN(dayNum)) continue;
 
-        if (dayNum < 0 || dayNum > 30) {
-          return res.status(400).json({ message: `Invalid dayNumber ${row.dayNumber} on row — must be 0–30` });
+        // Negative dayNumbers are prelim modules (position = abs(dayNum))
+        // Track A days must be 0–30
+        if (dayNum > 30) {
+          return res.status(400).json({ message: `Invalid dayNumber ${row.dayNumber} on row — must be ≤ 30` });
         }
 
-        const weekNum = parseInt(row.weekNumber, 10);
-        if (!isNaN(weekNum) && weekNum !== 0 && (weekNum < 1 || weekNum > 5)) {
-          return res.status(400).json({ message: `Invalid weekNumber ${row.weekNumber} for day ${dayNum} — must be 0–5` });
+        if (dayNum >= 0) {
+          const weekNum = parseInt(row.weekNumber, 10);
+          if (!isNaN(weekNum) && weekNum !== 0 && (weekNum < 1 || weekNum > 5)) {
+            return res.status(400).json({ message: `Invalid weekNumber ${row.weekNumber} for day ${dayNum} — must be 0–5` });
+          }
         }
 
         if (!dayMap.has(dayNum)) {
+          const weekNum = parseInt(row.weekNumber, 10);
           dayMap.set(dayNum, {
             weekNumber: isNaN(weekNum) ? 0 : weekNum,
             centralTheme: row.centralTheme || '',
@@ -1698,28 +1740,37 @@ export async function registerRoutes(
 
       let updatedCount = 0;
       for (const [dayNum, data] of Array.from(dayMap.entries())) {
-        let imageUrl = data.dayImageUrl;
-
-        if (!imageUrl) {
-          const existing = await storage.getTrackAContent(dayNum);
-          if (existing) {
-            if (!imageUrl) imageUrl = existing.imageUrl || '';
-          }
-        }
-
         const slides = data.slides
           .sort((a: { slideIndex: number; type: string; content: string }, b: { slideIndex: number; type: string; content: string }) => a.slideIndex - b.slideIndex)
           .map(({ type, content }: { slideIndex: number; type: string; content: string }) => ({ type, content }));
 
-        await storage.upsertTrackAContent({
-          dayNumber: dayNum,
-          weekNumber: data.weekNumber,
-          centralTheme: data.centralTheme || 'Untitled',
-          subtitle: data.subtitle || null,
-          imageUrl: imageUrl || null,
-          completionMessage: data.completionMessage || null,
-          slides: slides.length > 0 ? slides : null,
-        });
+        if (dayNum < 0) {
+          // Prelim module — dayNumber encodes position as negative
+          const position = Math.abs(dayNum);
+          await storage.upsertPrelimModule({
+            position,
+            title: data.centralTheme || 'Untitled',
+            subtitle: data.subtitle || null,
+            imageUrl: data.dayImageUrl || null,
+            slides: slides.length > 0 ? slides : null,
+          });
+        } else {
+          let imageUrl = data.dayImageUrl;
+          if (!imageUrl) {
+            const existing = await storage.getTrackAContent(dayNum);
+            if (existing) imageUrl = existing.imageUrl || '';
+          }
+
+          await storage.upsertTrackAContent({
+            dayNumber: dayNum,
+            weekNumber: data.weekNumber,
+            centralTheme: data.centralTheme || 'Untitled',
+            subtitle: data.subtitle || null,
+            imageUrl: imageUrl || null,
+            completionMessage: data.completionMessage || null,
+            slides: slides.length > 0 ? slides : null,
+          });
+        }
         updatedCount++;
       }
 
