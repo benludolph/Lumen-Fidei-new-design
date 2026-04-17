@@ -1,0 +1,1783 @@
+dayNumber,weekNumber,centralTheme,subtitle,dayImageUrl,completionMessage,slideIndex,slideType,slideContent
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,0,text,"<h2>We are inviting you on a spiritual journey to explore your faith and encounter God in a new way. And, we hope that once you truly get to know God, you will love Him as much, or even more than we do.</h2><p>Some of what you may learn may seem familiar. Some daily meditations may surprise you. While others might challenge what you’ve believed about God for a long time.</p><p><strong>That’s okay. That’s the point.</strong></p>"
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,1,text,<h2>Here's what to expect each day.</h2><p><strong>Each daily meditation will last roughly 15 - 25 minutes.</strong></p><p><strong>It may include:</strong></p><ul><li><p>A short teaching</p></li><li><p>A scripture to sit with</p></li><li><p>Sometimes a video or song</p></li><li><p>A reflection or activity</p></li></ul><p></p>
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,2,media,"{""url"":""/api/images/Background_Border_1776099097148.png"",""text"":""<h2>You'll often be asked to meditate on scripture verses for 1-3 minutes.</h2><ol><li><p>Read slowly.</p></li><li><p>Notice what stands out.</p></li><li><p>Talk to God about it.</p></li></ol><p></p>""}"
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,3,scripture_practice,"{""duration"":120,""text"":""<h2>Let's practice it again</h2><blockquote><p>For I know the plans I have for you,” declares the Lord, \""plans for your welfare and not for harm, to give you a future and a hope. Then you will call upon me and come and pray to me, and I will hear you. You will seek me and find me, when you seek me with all your heart. I will be found by you,\"" declares the Lord</p></blockquote><p style=\""text-align: right;\""><strong>— Jeremiah 29:11–12</strong></p><p></p>"",""audioUrl"":""/api/images/For_I_know_the_plans_1776099154109.mp3"",""reference"":""Jeremiah 29:11–12"",""chunks"":[""For I know the plans I have for you,” declares the Lord,"",""\""plans for your welfare and not for harm,"",""to give you a future and a hope."",""Then you will call upon me and come and pray to me,"",""and I will hear you."",""You will seek me and find me,"",""when you seek me with all your heart."",""I will be found by you,\"" declares the Lord ""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,4,text,"<h2>You exercised an important spiritual skill.</h2><p>You practiced reading Scripture with attentiveness and invited the Holy Spirit to guide you. The Bible is the living word of God that offers meaning to our lives. It speaks to us! It explains the truth of how the world fell into chaos, because of sin, and God’s rescue plan to save us through His son Jesus.</p><p>The scriptures share with us God’s message of love and mercy and give us hope.</p>"
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,5,media,"{""url"":""/api/images/Mentor_1776100646497.png"",""text"":""<h2>You will also be assigned a Spiritual Mentor!</h2><p>We have provided a Lumen Fidei chat to share your thoughts, ask questions, or relay any difficulties as you journey through each week. This provides an easy way to ask for prayers too.</p><p><strong>In addition, your spiritual mentor will help you stay motivated and keep you accountable by monitoring your progress. They will briefly touch base with you every other week over the phone as well.&nbsp;</strong></p>""}"
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,6,mentor_message,<h2>Send a short message to your spiritual mentor.</h2><p><strong>Introduce yourself and share one thing you hope to gain from the next 30 days.</strong></p>
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,7,text_input,"<h2>After each module, you will have space to write down your reflections, thoughts, emotions, or questions.</h2><p>There are no right or wrong answers. This is simply a place to pause, process, and be honest about what is coming up.</p>"
+0,0,Goal of the Next 30 Days,,/api/images/Introduction_1773894618323.webp,,8,text,"<h2>This course is a prerequisite to prayer sessions.</h2><p>At the end, you’ll be invited to a personal prayer session with the ministry. Completing this 30 day journey is necessary to strengthen your relationship with Jesus and help determine whether you need deliverance.</p>"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",0,text,"<h2>In the Catholic understanding, prayer is a living relationship with God —</h2><p>through which a person grows in love and communion with Him. Prayer is both <strong>speaking and listening</strong>: offering praise, asking forgiveness, giving thanks, and presenting needs to God while remaining open to His grace.</p><p></p><p>Opening <strong><u>yourself to receive</u></strong> what He <strong><u>wants to offer you</u></strong>.</p>"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",1,single_select,"<h2>If prayer is <u>a relationship</u> with God…What is your relationship with Him now?</h2><h2><em>Select one</em></h2><p>☐ I only talk to Him when I need something</p><p>☐ I want something real with Him, but I don't know where to start</p><p>☐ I don't really have a relationship with God</p><p>☐ I talk to Him, but I’m not sure it’s real</p><p>☐ I feel distant from Him</p><p>☐ I never really thought of it as a relationship until now</p>"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",2,media,"{""url"":""https://res.cloudinary.com/dsv0rjvoi/image/upload/v1775575683/image-2_cjjmn5.gif"",""text"":""<h2>Relationships can fade...</h2><h2>The same is true with God.</h2><p></p>""}"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",3,media,"{""url"":""https://www.youtube.com/watch?v=qaO4cubck6g"",""text"":""<h2>Please watch the following video</h2><p></p>""}"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",4,media,"{""url"":""https://www.youtube.com/watch?v=aR6J1pPiRQo"",""text"":""<h2>Please watch the following video</h2><p></p>""}"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",5,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God.</p></blockquote><p style=\""text-align: right;\""><strong>— Philippians 4:6</strong>"",""reference"":""Philippians 4:6"",""chunks"":[""Do not be anxious about anything,"",""but in everything by prayer and supplication"",""with thanksgiving let your requests be made known to God.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up."",""audioUrl"":""/api/images/Do_not_be_anxious_verse_1776182465281.mp3""}"
+1,1,Pray more. Worry less.,It's simpler than you think,/api/images/WhatisPrayer_1773894430246.webp,"St. Padre Pio - ""Pray, hope, and don't worry. Worry is useless. God is merciful and will hear your prayer""",6,text,"<h2>Final Takeaways</h2><ul><li><p>If you want a&nbsp;<strong>real relationship</strong>&nbsp;with God, you must begin speaking to Him regularly.</p></li><li><p>Prayer is a relationship with God</p></li><li><p>It's something you have to work at, <strong>and it will allow God to bless you</strong></p></li></ul><p></p>"
+2,1,If you believe in demons… Why not believe in God?!,Well?,/api/images/Angel_1773894439787.webp,St. Augustine “He who denies the existence of God has some reason for wishing that God did not exist.”,0,single_select,<h2>What makes believing in God difficult for you (or at times)?</h2><p>☐ I’ve never experienced Him</p><p>☐ I've asked Him for help and and nothing has happened</p><p>☐ I can't reconcile all of the suffering in the world</p><p>☐ I’m scared I’ll be disappointed again</p><p>☐ I don't struggle with this</p>
+2,1,If you believe in demons… Why not believe in God?!,Well?,/api/images/Angel_1773894439787.webp,St. Augustine “He who denies the existence of God has some reason for wishing that God did not exist.”,1,image_carousel,"{""headline"":""Belief in God is not simply a matter of Faith"",""body"":""Human reason can also recognize signs of God’s existence in the order, beauty, and complexity of Creation. While faith ultimately involves trust in scripture and divine revelation. Belief in God is reasonable and supported by reflection and human experience.\n\nFaith does not mean you don’t ever have doubts. It means you are willing to search for God and grow to trust His divine plan."",""images"":[""/api/images/bearcla_The_Aurora_borealis_Solar_particles_colliding_with_th_ed180ca8-766d-4fca-85b9-ee8cbb6270b6_1_1775672454598.webp"",""/api/images/bearcla_microscopic_bacteria_--profile_dpfnc47_--v_7_864b1568-9a1f-436a-aaf7-b3574793e714_2_1775672408756.webp"",""/api/images/bearcla_The_microscopic_detail_on_a_bees_wing_--profile_dpfnc_1955cf4c-d310-406a-939a-b10622053758_2_1775672410008.webp"",""/api/images/bearcla_Growth_from_Decay_New_life_springing_from_a_fallen_lo_9c92febd-5418-427b-9717-3ef0040a4db3_0_1775672412868.webp"",""/api/images/bearcla_beautiful_laughter_--profile_dpfnc47_--v_7_a88a287d-ce64-45ce-b11b-4f77883d1466_0_1775672418283.webp""]}"
+2,1,If you believe in demons… Why not believe in God?!,Well?,/api/images/Angel_1773894439787.webp,St. Augustine “He who denies the existence of God has some reason for wishing that God did not exist.”,2,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>Anyone who comes to God must believe that He exists and that He rewards those who seek Him.</p></blockquote><p style=\""text-align: right;\""><strong>— Hebrews 11:6</strong></p><p style=\""text-align: left;\""><strong>"",""reference"":""Hebrews 11:6"",""chunks"":[""Anyone"",""who comes to God"",""must believe that He exists"",""and that He rewards"",""those who seek Him.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up."",""audioUrl"":""/api/images/Anyone_who_comes_to_God_must_b_Balance_Eleven_v3_019d8cba-6d03-7774-bbc6-05d235c8957f_1776182533135.mp3""}"
+2,1,If you believe in demons… Why not believe in God?!,Well?,/api/images/Angel_1773894439787.webp,St. Augustine “He who denies the existence of God has some reason for wishing that God did not exist.”,3,media,"{""url"":""https://www.youtube.com/watch?v=68FQV0iLFeA"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+2,1,If you believe in demons… Why not believe in God?!,Well?,/api/images/Angel_1773894439787.webp,St. Augustine “He who denies the existence of God has some reason for wishing that God did not exist.”,4,text,"<h2>Takeaways</h2><ul><li><p>Many people struggle with belief at times.</p></li><li><p>Doubt does not cancel faith.</p></li><li><p>Faith begins with being willing to seek.</p></li><li><p>Reason, beauty, and order in creation point to God.</p></li><li><p>Belief in God is not blind — it is reasonable.</p></li></ul><p></p>"
+3,1,What is your Image of God?,The way you see Him changes everything,/api/images/GodImage_1773894448630.webp,"""God loves each of us as if there were only one of us."" — St. Augustine",0,scripture_practice,"{""duration"":60,""text"":""<blockquote><p>God is love </p></blockquote><p style=\""text-align: right;\""><strong>— 1 John 4:8</strong></p>"",""audioUrl"":""/api/images/God_is_love_Balance_Eleven_v3_019d4be9-d2b3-7e67-885d-fc6ccfd8b73d_1775095418763.mp3"",""reference"":""1 John 4:8"",""chunks"":[""God is love""],""reflectionDuration"":60,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+3,1,What is your Image of God?,The way you see Him changes everything,/api/images/GodImage_1773894448630.webp,"""God loves each of us as if there were only one of us."" — St. Augustine",1,chat_flow,"{
+  ""steps"": [
+    {
+      ""id"": ""step_01_open"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""Most people hold two versions of God."",
+        ""The one they'd describe if someone asked. And the one they actually feel when things fall apart."",
+        ""This is about the second one.""
+      ]
+    },
+    {
+      ""id"": ""step_02_felt_image"",
+      ""type"": ""single_select"",
+      ""question"": ""When you fail or struggle — what do you feel like God is doing?"",
+      ""options"": [
+        {
+          ""id"": ""disappointed"",
+          ""text"": ""He's disappointed in me""
+        },
+        {
+          ""id"": ""distant"",
+          ""text"": ""He feels far away""
+        },
+        {
+          ""id"": ""watching"",
+          ""text"": ""He's watching to see what I do""
+        },
+        {
+          ""id"": ""demanding"",
+          ""text"": ""He expects more from me""
+        },
+        {
+          ""id"": ""silent"",
+          ""text"": ""He goes quiet""
+        },
+        {
+          ""id"": ""patient"",
+          ""text"": ""He's patient with me""
+        },
+        {
+          ""id"": ""close"",
+          ""text"": ""He stays close""
+        },
+        {
+          ""id"": ""unsure"",
+          ""text"": ""I honestly don't know""
+        }
+      ],
+      ""variable"": ""god_expectation"",
+      ""branches"": {
+        ""disappointed"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When things fall apart, part of you braces for His disappointment.""
+            ]
+          }
+        ],
+        ""distant"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When things fall apart, part of you feels like He steps back.""
+            ]
+          }
+        ],
+        ""watching"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When things fall apart, part of you feels like He's just watching — waiting to see what you'll do.""
+            ]
+          }
+        ],
+        ""demanding"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When things fall apart, part of you feels like He's keeping score.""
+            ]
+          }
+        ],
+        ""silent"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When things fall apart, part of you feels like He goes quiet.""
+            ]
+          }
+        ],
+        ""patient"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""Even when things fall apart, something in you trusts that He's still with you.""
+            ]
+          }
+        ],
+        ""close"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""Even in it, part of you senses He doesn't leave.""
+            ]
+          }
+        ],
+        ""unsure"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""You're not quite sure what to expect from Him. That's an honest place to start.""
+            ]
+          }
+        ]
+      }
+    },
+    {
+      ""id"": ""step_03_source_intro"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""That feeling came from somewhere. Let's see if we can find it.""
+      ]
+    },
+    {
+      ""id"": ""step_04_source"",
+      ""type"": ""single_select"",
+      ""question"": ""Where do you think it comes from most?"",
+      ""options"": [
+        {
+          ""id"": ""parent"",
+          ""text"": ""How a parent or caregiver loved me""
+        },
+        {
+          ""id"": ""church"",
+          ""text"": ""What I absorbed from church""
+        },
+        {
+          ""id"": ""failure"",
+          ""text"": ""Something I haven't forgiven myself for""
+        },
+        {
+          ""id"": ""silence"",
+          ""text"": ""Prayers that felt unanswered""
+        },
+        {
+          ""id"": ""suffering"",
+          ""text"": ""Something painful I never reconciled with God""
+        },
+        {
+          ""id"": ""unknown"",
+          ""text"": ""I'm not sure. It's always just been there""
+        }
+      ],
+      ""variable"": ""wound_source"",
+      ""branches"": {
+        ""parent"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""How we're first loved tends to shape what we come to expect from love.""
+            ]
+          }
+        ],
+        ""church"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""What we're taught about God early can outlast what we actually believe later.""
+            ]
+          }
+        ],
+        ""failure"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When we haven't forgiven ourselves, it's hard to believe someone else has.""
+            ]
+          }
+        ],
+        ""silence"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""Unanswered prayer changes what we let ourselves expect.""
+            ]
+          }
+        ],
+        ""suffering"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""When something painful was never resolved, it tends to stay in the room with God.""
+            ]
+          }
+        ],
+        ""unknown"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""Sometimes an image just forms slowly. No single moment. Just accumulation.""
+            ]
+          }
+        ]
+      }
+    },
+    {
+      ""id"": ""step_05_pivot"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""Now think of a moment when you felt genuinely loved."",
+        ""A real one. A person. A place. Something you can picture.""
+      ]
+    },
+    {
+      ""id"": ""step_06_who"",
+      ""type"": ""open_text"",
+      ""question"": ""Who was there?"",
+      ""variable"": ""moment_who"",
+      ""required"": true
+    },
+    {
+      ""id"": ""step_07_what"",
+      ""type"": ""open_text"",
+      ""question"": ""What happened?"",
+      ""variable"": ""moment_what"",
+      ""required"": true
+    },
+    {
+      ""id"": ""step_08_felt_sense"",
+      ""type"": ""open_text"",
+      ""question"": ""What did that feel like from the inside? One or two words."",
+      ""variable"": ""felt_sense"",
+      ""required"": true
+    },
+    {
+      ""id"": ""step_09_qualities"",
+      ""type"": ""single_select"",
+      ""question"": ""What was most present in that moment?"",
+      ""options"": [
+        {
+          ""id"": ""closeness"",
+          ""text"": ""Closeness""
+        },
+        {
+          ""id"": ""patience"",
+          ""text"": ""Patience""
+        },
+        {
+          ""id"": ""known"",
+          ""text"": ""Being fully known""
+        },
+        {
+          ""id"": ""accepted"",
+          ""text"": ""Being accepted as I am""
+        },
+        {
+          ""id"": ""delight"",
+          ""text"": ""Someone delighting in me""
+        },
+        {
+          ""id"": ""safety"",
+          ""text"": ""Safety""
+        },
+        {
+          ""id"": ""joy"",
+          ""text"": ""Joy""
+        },
+        {
+          ""id"": ""peace"",
+          ""text"": ""Peace""
+        },
+        {
+          ""id"": ""not_alone"",
+          ""text"": ""Not being alone in it""
+        }
+      ],
+      ""variable"": ""love_quality""
+    },
+    {
+      ""id"": ""step_10_gap"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""You just meditated on a God who is love itself."",
+        ""And yet the image you've been carrying doesn't quite match that."",
+        ""Hold both of those things at the same time.""
+      ]
+    },
+    {
+      ""id"": ""step_11_gap_notice"",
+      ""type"": ""single_select"",
+      ""question"": ""When you do — what do you notice?"",
+      ""options"": [
+        {
+          ""id"": ""sadness"",
+          ""text"": ""Something like sadness""
+        },
+        {
+          ""id"": ""longing"",
+          ""text"": ""I want it to be different""
+        },
+        {
+          ""id"": ""confusion"",
+          ""text"": ""Confusion — I don't know what to do with it""
+        },
+        {
+          ""id"": ""numb"",
+          ""text"": ""Not much. They feel separate""
+        },
+        {
+          ""id"": ""shifting"",
+          ""text"": ""Something shifting — like it could be true""
+        },
+        {
+          ""id"": ""other"",
+          ""text"": ""Something else""
+        }
+      ],
+      ""variable"": ""gap_reaction"",
+      ""allow_other"": true
+    },
+    {
+      ""id"": ""step_12_gap_locate"",
+      ""type"": ""single_select"",
+      ""question"": ""Which is closer to where you are right now?"",
+      ""options"": [
+        {
+          ""id"": ""want_different"",
+          ""text"": ""Part of me wants to believe He's different than I expect""
+        },
+        {
+          ""id"": ""head_not_heart"",
+          ""text"": ""I believe it in my head, but I can't feel it""
+        },
+        {
+          ""id"": ""not_sure"",
+          ""text"": ""I genuinely don't know""
+        },
+        {
+          ""id"": ""dont_think_so"",
+          ""text"": ""I don't think He is different""
+        }
+      ],
+      ""variable"": ""gap_position"",
+      ""branches"": {
+        ""want_different"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""That want is worth paying attention to.""
+            ]
+          }
+        ],
+        ""head_not_heart"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""That distance between knowing and feeling is where most of this work lives.""
+            ]
+          }
+        ],
+        ""not_sure"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""Not knowing is an honest place to start.""
+            ]
+          }
+        ],
+        ""dont_think_so"": [
+          {
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""That's honest. Stay with the question anyway.""
+            ]
+          }
+        ]
+      }
+    },
+    {
+      ""id"": ""step_13_reframe"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""If God is love itself, He can't be less than the best love you've ever felt."",
+        ""He'd be where it came from.""
+      ]
+    },
+    {
+      ""id"": ""step_14_close"",
+      ""type"": ""final"",
+      ""messages"": [
+        ""This week: when you feel genuinely loved by anyone, pause."",
+        ""Ask — is this what He is like?"",
+        ""Let the moments answer.""
+      ]
+    }
+  ],
+  ""summaryTemplate"": ""When things fall apart, you feel like {god_expectation} — shaped most by {wound_source}. In a real moment of love, you felt {felt_sense}. When you held both together, you noticed {gap_reaction}.""
+}"
+3,1,What is your Image of God?,The way you see Him changes everything,/api/images/GodImage_1773894448630.webp,"""God loves each of us as if there were only one of us."" — St. Augustine",2,text,"<h1>Takeaways</h1><ul><li><p>The way you imagine God shapes how you relate to Him.</p></li><li><p>Many people carry a distorted image of God.</p></li><li><p>Our experiences can shape that image.</p></li><li><p>God is not distant or indifferent.</p></li><li><p>If you have a negative image of God, he wants to heal that and reveal his true nature to you!</p></li></ul><p></p>"
+4,1,How the Enemy Works,Why resistance shows up,/api/images/Combat_1773894457619.webp,"St. Anthony of Padua: ""The devil is afraid of us when we pray and make sacrifices. He is also afraid when we are humble and good"".",0,scripture_practice,"{""duration"":120,""text"":""<blockquote><p><em>The thief comes only to steal and kill and destroy; I have come that they may have life, and have it to the full.</em></p></blockquote><p style=\""text-align: right;\""><strong>— John 10:10</strong></p>"",""audioUrl"":""/api/images/The_thief_comes_only_to_steal_Balance_Eleven_v3_019d8cbb-592b-754c-8e76-9f27892651dc_1776182590252.mp3"",""reference"":""— John 10:10"",""chunks"":[""The thief comes only to steal and kill and destroy;"",""I have come that they may have life,"",""and have it to the full.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+4,1,How the Enemy Works,Why resistance shows up,/api/images/Combat_1773894457619.webp,"St. Anthony of Padua: ""The devil is afraid of us when we pray and make sacrifices. He is also afraid when we are humble and good"".",1,media,<p><strong>Watch: Understanding Spiritual Warfare</strong></p><p>https://www.youtube.com/watch?v=j66KVi4vy0c</p>
+4,1,How the Enemy Works,Why resistance shows up,/api/images/Combat_1773894457619.webp,"St. Anthony of Padua: ""The devil is afraid of us when we pray and make sacrifices. He is also afraid when we are humble and good"".",2,media,"{""url"":""https://www.youtube.com/watch?v=xEFthlUVNlQ"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+4,1,How the Enemy Works,Why resistance shows up,/api/images/Combat_1773894457619.webp,"St. Anthony of Padua: ""The devil is afraid of us when we pray and make sacrifices. He is also afraid when we are humble and good"".",3,knowledge_quiz,"{""intro"":{""title"":""Test Your Spiritual Knowledge"",""subtitle"":""""},""questions"":[{""question"":""How should the devil be understood?"",""options"":[""A symbol only"",""A personal, created being"",""A myth from culture"",""A psychological state""],""correctIndex"":1},{""question"":""What is Satan in relation to God?"",""options"":[""Equal and opposite"",""A rival power"",""A created being under God"",""A force outside creation""],""correctIndex"":2},{""question"":""What was Satan originally created as?"",""options"":[""A human"",""A fallen god"",""A symbol"",""An angel""],""correctIndex"":3},{""question"":""What is the root of Satan’s rebellion?"",""options"":[""Fear"",""Pride"",""Weakness"",""Ignorance""],""correctIndex"":1},{""question"":""Why does Satan target human beings?"",""options"":[""Because he fears them"",""Because he envies what God has planned for them"",""Because they are stronger"",""Because they created him""],""correctIndex"":0},{""question"":""What is one sign that a thought or emotion may not be coming from you?"",""options"":[""It feels strong"",""It matches your situation"",""It appears suddenly without cause"",""It lasts a long time""],""correctIndex"":2},{""question"":""What can demonic influence do?"",""options"":[""Remove free will"",""Force sin"",""Influence thoughts and emotions"",""Control God""],""correctIndex"":2},{""question"":""What is required before confronting spiritual attacks?"",""options"":[""Strong personality"",""Knowledge only"",""Being in a state of grace and relationship with Jesus"",""Special training""],""correctIndex"":2},{""question"":""What is the proper response to a suspected spiritual attack?"",""options"":[""Ignore it"",""Analyze it endlessly"",""Command it to leave in the name of Jesus"",""Blame others""],""correctIndex"":2},{""question"":""Where should a Christian turn for truth and stability?"",""options"":[""Emotions"",""Culture"",""Scripture"",""Social media""],""correctIndex"":2}],""conclusion"":""There is a real spiritual battle. God is Creator. The enemy is a creature, not equal to Him. You are not powerless, and your choices matter. Not every struggle comes from the enemy, but influence is real. Learn to notice what leads you toward God and what pulls you away. Stay rooted in Scripture. Stay close to Jesus. That is where clarity and freedom begin.""}"
+4,1,How the Enemy Works,Why resistance shows up,/api/images/Combat_1773894457619.webp,"St. Anthony of Padua: ""The devil is afraid of us when we pray and make sacrifices. He is also afraid when we are humble and good"".",4,text,"<h2>Takeaways</h2><p>• The Christian life includes a real spiritual battle. <br>• The enemy works through lies, temptation, and discouragement. <br>• His goal is to pull people away from God. <br>• Jesus has already defeated Satan. <br>• Christians are called to live in trust, not fear. <br>• Prayer strengthens us in the battle.</p>"
+5,1,Made for Relationship,Not people in general. You specifically.,/api/images/God_Loves_1775095448862.webp,"""You are precious in my eyes, and I love you."" — God, through Isaiah 43:4",0,media,"{""url"":""/api/images/webbge_Gothic_baroque_marble_statue_of_Jesus_Christ_on_the_cros_4d37eb00-c84f-43e2-9efe-e5a924aff311_1776183443959.webp"",""text"":""<h2>God’s love for humanity is personal, faithful, and sacrificial.</h2><p>Every person is created in God’s image and is willed into existence out of love. This love is not abstract, but made visible in the crucifixion of Jesus Christ. God’s love is constant and unconditional, inviting each person into a living relationship with Him.</p>""}"
+5,1,Made for Relationship,Not people in general. You specifically.,/api/images/God_Loves_1775095448862.webp,"""You are precious in my eyes, and I love you."" — God, through Isaiah 43:4",1,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>For God so loved <strong>the world</strong> that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.</p></blockquote><p style=\""text-align: right;\""><strong>— John 3:16</strong></p>"",""audioUrl"":""/api/images/For_God_so_loved_the_world_tha_Balance_Eleven_v3_019d8cbc-092c-76d7-bf38-fdf6220884a1_1776182635212.mp3"",""reference"":""— John 3:16"",""chunks"":[""For God so loved the world"",""that he gave his one and only Son,"",""that whoever believes in him"",""shall not perish but have eternal life.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+5,1,Made for Relationship,Not people in general. You specifically.,/api/images/God_Loves_1775095448862.webp,"""You are precious in my eyes, and I love you."" — God, through Isaiah 43:4",2,media,"{""url"":""https://www.youtube.com/watch?v=ZiAWLJkxBpk"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+5,1,Made for Relationship,Not people in general. You specifically.,/api/images/God_Loves_1775095448862.webp,"""You are precious in my eyes, and I love you."" — God, through Isaiah 43:4",3,media,"{""url"":""https://www.youtube.com/watch?v=CqybaIesbuA"",""text"":""<h2>Bookmark this song, if you'd like to listen now or later</h2><p></p>"",""mediaType"":""music"",""title"":""Good Good Father — Chris Tomlin""}"
+5,1,Made for Relationship,Not people in general. You specifically.,/api/images/God_Loves_1775095448862.webp,"""You are precious in my eyes, and I love you."" — God, through Isaiah 43:4",4,text_input,<h2>Is it easier to believe God loves other people than to believe He loves you specifically?</h2><p></p>
+5,1,Made for Relationship,Not people in general. You specifically.,/api/images/God_Loves_1775095448862.webp,"""You are precious in my eyes, and I love you."" — God, through Isaiah 43:4",5,text,<h2><strong>Key Takeaways</strong></h2><p>• <strong>God’s love is personal. </strong>He knows you and desires a relationship with you.</p><p>•<strong> God’s love is faithful.</strong> It does not disappear when you fail.</p><p>•<strong> God’s love is sacrificial. </strong>Jesus gave His life so you could have new life.</p><p><strong>• Your value does not come from what you achieve. </strong>It comes from being loved by God.</p>
+6,1,The Love of God Revealed,The one thing that doesn't change,/api/images/GodHand_1773894476627.webp,"""Love Him totally who gave Himself totally for your love"". — St. Clare of Assisi",0,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>Whoever is without love does not know God, for God is love. In this way the love of God was revealed to us: God sent his only Son into the world so that we might have life through him.</p></blockquote><p style=\""text-align: right;\""><strong>&nbsp;— 1 John 4:8-9</strong></p>"",""audioUrl"":""/api/images/Whoever_is_without_love_does_n_Balance_Eleven_v3_019d8cbc-8cec-7b6a-ab3c-36ea8079833b_1776182670688.mp3"",""reference"":""1 John 4:8-9"",""chunks"":[""Whoever is without love does not know God,"",""for God is love."",""In this way the love of God was revealed to us:"",""God sent his only Son into the world so that we might have life through him.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+6,1,The Love of God Revealed,The one thing that doesn't change,/api/images/GodHand_1773894476627.webp,"""Love Him totally who gave Himself totally for your love"". — St. Clare of Assisi",1,media,"{""url"":""https://www.youtube.com/watch?v=XqafKxFiktQ"",""text"":""<h2>Please watch the following video</h2><p></p>""}"
+6,1,The Love of God Revealed,The one thing that doesn't change,/api/images/GodHand_1773894476627.webp,"""Love Him totally who gave Himself totally for your love"". — St. Clare of Assisi",2,media,"{""url"":""/api/images/Bridge_1775593576436.webp"",""text"":""<h2>God loves humanity, sin has separated us from Him, and salvation came through the crucifixion of Jesus.</h2><p>Through Him alone, death was defeated, Satan conquered, forgiveness offered, and new life made available to all who believe and repent.</p>""}"
+6,1,The Love of God Revealed,The one thing that doesn't change,/api/images/GodHand_1773894476627.webp,"""Love Him totally who gave Himself totally for your love"". — St. Clare of Assisi",3,mentor_message,"<h2>Message your spiritual mentor to close the week, using the following prompt:</h2><p><strong>What’s one thing that impacted you this week that will stay with you?</strong></p><p></p>"
+6,1,The Love of God Revealed,The one thing that doesn't change,/api/images/GodHand_1773894476627.webp,"""Love Him totally who gave Himself totally for your love"". — St. Clare of Assisi",4,survey,"{
+  ""title"": ""End of Week 1 Reflection"",
+  ""description"": ""A check in to reflect on your well-being the last week in and out of this program."",
+  ""questions"": [
+    {
+      ""id"": ""q1775156924928"",
+      ""type"": ""rating"",
+      ""label"": ""On a scale of 1-5 with 1 being terrible, and 5 being amazing, how did your week go?""
+    },
+    {
+      ""id"": ""q1775156937661"",
+      ""type"": ""text"",
+      ""label"": ""What's something that you're grateful for this past week?""
+    },
+    {
+      ""id"": ""q1775156981594"",
+      ""type"": ""text"",
+      ""label"": ""What's something that you've struggled with this past week?""
+    }
+  ]
+}"
+6,1,The Love of God Revealed,The one thing that doesn't change,/api/images/GodHand_1773894476627.webp,"""Love Him totally who gave Himself totally for your love"". — St. Clare of Assisi",5,text,"<h2>If you remember nothing else from this week, remember this:</h2><ul><li><p>You were made for love.</p></li><li><p>Your deepest identity is <strong>not your sin</strong>, <strong>your trauma</strong>, or <strong>your history.</strong></p></li><li><p>It is this: <strong>you are a child of God, the Father.</strong></p></li><li><p>A person’s identity is rooted in the fact that they are loved by God. Because of God’s love, each person has inherent dignity, value, and purpose, not because of what they achieve, but because they are created and cherished by Him.</p></li></ul><p></p>"
+7,2,Reality of Sin,Why we all need redemption.,/api/images/Link_1774149858216.webp,"""A humble knowledge of oneself is a surer way to God than a deep search after learning."" — Thomas à Kempis",0,media,"{""url"":""/api/images/Choice_card_____swipe_or_click_left_or_right__1__1775510634275.webp"",""text"":""<h2>Today we begin to look at the reality of sin and how it affects our lives.</h2><p>Sin wounds the human heart, distorts our desires, and damages our relationship with God and others. It’s typically a failure to love; an action, spoken words, or self-centered desire.</p><p>God created everyone good, but we are all inclined to sin.</p>""}"
+7,2,Reality of Sin,Why we all need redemption.,/api/images/Link_1774149858216.webp,"""A humble knowledge of oneself is a surer way to God than a deep search after learning."" — Thomas à Kempis",1,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>Now the works of the flesh are evident: sexual immorality, impurity, sensuality, idolatry, sorcery, enmity, strife, jealousy, fits of anger, rivalries, dissensions, divisions, envy, drunkenness, orgies, and things like these. I warn you, as I warned you before, that those who do such things will not inherit the kingdom of God.</p></blockquote><p style=\""text-align: right;\""><strong>— Gal 5:19-21</strong></p><p></p>"",""audioUrl"":""/api/images/Now_the_works_of_the_flesh_are_Balance_Eleven_v3_019d225c-f4cc-7b16-9ee5-8c1a5174261e_1774398034401.mp3"",""reference"":""— Gal 5:19-21"",""chunks"":[""Now the works of the flesh are evident: sexual immorality,"",""impurity,"",""sensuality,"",""idolatry,"",""sorcery,"",""enmity,"",""strife,"",""jealousy,"",""fits of anger,"",""rivalries,"",""dissensions,"",""divisions,"",""envy,"",""drunkenness,"",""orgies,"",""and things like these."",""I warn you, as I warned you before,"",""that those who do such things will not inherit the kingdom of God.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+7,2,Reality of Sin,Why we all need redemption.,/api/images/Link_1774149858216.webp,"""A humble knowledge of oneself is a surer way to God than a deep search after learning."" — Thomas à Kempis",2,media,https://www.youtube.com/watch?v=omyk2K3oG4I
+7,2,Reality of Sin,Why we all need redemption.,/api/images/Link_1774149858216.webp,"""A humble knowledge of oneself is a surer way to God than a deep search after learning."" — Thomas à Kempis",3,text,"<h3>Takeaway</h3><p>• Humanity was created good<br>• Something inside us has been wounded<br>• This explains the conflict many people feel<br>• Being able to identify the wound, helps us understand why we need healing</p>"
+8,2,Wounds of Sin,How sin shapes your life.,/api/images/Link-1_1774149864754.webp,"""Our hearts are restless until they rest in You."" — St. Augustine",0,before_after,"{""beforeImage"":""/api/images/Healthy_Plant__1__1775511025152.webp"",""afterImage"":""/api/images/Decaying_Plant__1__1775511029030.webp"",""headline"":""We each have real needs that we seek to meet, but sin does not satisfy them. It distorts them, entangles them, and leaves them unmet."",""body"":""""}"
+8,2,Wounds of Sin,How sin shapes your life.,/api/images/Link-1_1774149864754.webp,"""Our hearts are restless until they rest in You."" — St. Augustine",1,image_carousel,"{""headline"":""Many sins begin as attempts to meet real needs in unhealthy ways."",""body"":""• A person may want love but look for it in destructive places.\n• A person may want peace but turn toward habits that numb pain.\n• A person may want control and begin manipulating others.\n• A person may want answers and turn to the occult instead of truth.\nSin often grows from wounded desires."",""images"":[""/api/images/Choice_card_____swipe_or_click_left_or_right-1_1775511169004.webp"",""/api/images/crystal_ball_1775575957717.png"",""/api/images/Choice_card_____swipe_or_click_left_or_right_1775511173925.webp"",""/api/images/Addiction_Image_1775511180484.webp"",""/api/images/Choice_card_____swipe_or_click_left_or_right-2_1775511189430.webp""]}"
+8,2,Wounds of Sin,How sin shapes your life.,/api/images/Link-1_1774149864754.webp,"""Our hearts are restless until they rest in You."" — St. Augustine",2,media,"{""url"":""https://www.youtube.com/watch?v=xBlpk2Khc-U"",""text"":""<h2>Watch the following video to 10:00 mins</h2><p>(We encourage you to watch the whole thing if you can!)</p>""}"
+8,2,Wounds of Sin,How sin shapes your life.,/api/images/Link-1_1774149864754.webp,"""Our hearts are restless until they rest in You."" — St. Augustine",3,scripture_practice,"{""duration"":180,""text"":""<blockquote><p>Blessed is the man who perseveres in temptation, for when he has been proved he will receive the crown of life that he promised to those who love him. No one experiencing temptation should say, “I am being tempted by God”; for God is not subject to temptation to evil, and he himself tempts no one. Rather, each person is tempted when he is lured and enticed by his own desire. Then desire conceives and brings forth sin, and when sin reaches maturity it gives birth to death. </p></blockquote><p style=\""text-align: right;\""><strong>--- James 1:12-15</strong></p>"",""audioUrl"":""/api/images/Blessed_is_the_man_who_perseve_Balance_Eleven_v3_019d4bdd-040d-7718-a861-5bfca307ffc8_1775094433674.mp3"",""reference"":""James 1:12-15"",""chunks"":[""Blessed is the man who perseveres in temptation,"",""for when he has been proved he will receive the crown of life that he promised to those who love him."",""No one experiencing temptation should say, “I am being tempted by God”;"",""for God is not subject to temptation to evil,"",""and he himself tempts no one."",""Rather, each person is tempted when he is lured and enticed by his own desire."",""Then desire conceives and brings forth sin,"",""and when sin reaches maturity it gives birth to death.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+8,2,Wounds of Sin,How sin shapes your life.,/api/images/Link-1_1774149864754.webp,"""Our hearts are restless until they rest in You."" — St. Augustine",4,text_input,<h2>Have there been times in your life when you tried to fill a real need in a way that <strong>eventually caused more harm than good?</strong></h2><p></p>
+8,2,Wounds of Sin,How sin shapes your life.,/api/images/Link-1_1774149864754.webp,"""Our hearts are restless until they rest in You."" — St. Augustine",5,text,"<h2>Takeaways</h2><p>• Sin often begins with real human desires.<br>• When those desires are pursued apart from God, they become distorted.<br>• Sin does not deliver what it promises.<br>• Freedom begins with honesty.</p>"
+9,2,Examination of Conscience,Name what needs healing.,/api/images/Link-2_1774149877156.webp,"""Have patience with everyone, but above all with yourself."" — St. Francis de Sales",0,text,"<h2>Before healing can begin, honesty must come first.</h2><p>In the Catholic faith, we examine our past sins, and confess them to God.<br>An <strong>examination of conscience helps us reflect and ask:</strong></p><blockquote><p><strong><em>Where in my life have I drifted away from the love and truth of God?</em></strong></p></blockquote><p>This is not about condemning yourself or feeling overwhelmed by guilt.</p><p>God does not reveal our sins to shame us.<br>He reveals them so that He can forgive, heal, and restore us.</p>"
+9,2,Examination of Conscience,Name what needs healing.,/api/images/Link-2_1774149877156.webp,"""Have patience with everyone, but above all with yourself."" — St. Francis de Sales",1,media,https://www.youtube.com/watch?v=HEV0DYYx-Hw
+9,2,Examination of Conscience,Name what needs healing.,/api/images/Link-2_1774149877156.webp,"""Have patience with everyone, but above all with yourself."" — St. Francis de Sales",2,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>So whoever is in Christ is a new creation: the old things have passed away; behold, new things have come. And all this is from God, who has reconciled us to himself through Christ and given us the ministry of reconciliation, namely, God was reconciling the world to himself in Christ, not counting their trespasses against them and entrusting to us the message of reconciliation. </p></blockquote><p style=\""text-align: right;\""><strong>— 2 Cor 5:17-19</strong></p>"",""audioUrl"":""/api/images/So_whoever_is_in_Christ_is_a_n_Balance_Eleven_v3_019d4bdd-36ab-7059-bd3c-2c796aeaf568_1775094451738.mp3"",""reference"":""2 Cor 5:17-19"",""chunks"":[""So whoever is in Christ is a new creation: the old things have passed away;"",""behold, new things have come."",""And all this is from God,"",""who has reconciled us to himself through Christ and given us the ministry of reconciliation,"",""namely, God was reconciling the world to himself in Christ,"",""not counting their trespasses against them and entrusting to us the message of reconciliation.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+9,2,Examination of Conscience,Name what needs healing.,/api/images/Link-2_1774149877156.webp,"""Have patience with everyone, but above all with yourself."" — St. Francis de Sales",3,media,"{""url"":""/api/images/u1974654348_Photorealistic_full-body_shot_of_a_office_worker_in_2284f165-15e6-47d0-8660-b333559c7cd4_1775233781592.webp"",""text"":""<h2>Download this simple <a target=\""_blank\"" rel=\""noopener noreferrer nofollow\"" href=\""https://www.divinemercy.cc/documents/2021/5/Examination%20of%20Conscience.pdf\"">Examination of Conscience</a> to help you prepare for confession.</h2><p>You can reflect on these questions privately and bring them with you.</p>""}"
+10,2,The Centrality of Jesus,Jesus is the answer.,/api/images/Link-3_1774149884205.webp,"""He must increase; I must decrease."" — John the Baptist",0,media,"{""url"":""/api/images/chandat32_A_Baroque-style_painting_of_Jesus_Christ_illuminated__bd48380b-c5e6-4516-9c00-23dba245f4f0_1775234114354.webp"",""text"":""<h2>Christianity is not simply about becoming a better person.</h2><p>At the center is a person: <strong>Jesus Christ</strong>.</p><p>Everything in the Christian life ultimately points back to the cross. The cross reveals the depth of human brokenness, but even more importantly, it reveals the depth of God’s love.</p><p>Jesus did not come simply to teach about God. He came to restore what was broken between humanity and God through His sacrifice.</p><p>Today we will begin to look at why the cross is central to the Christian faith and why everything about healing and redemption flows from it.</p>""}"
+10,2,The Centrality of Jesus,Jesus is the answer.,/api/images/Link-3_1774149884205.webp,"""He must increase; I must decrease."" — John the Baptist",1,media,https://www.youtube.com/watch?v=CtcKV65-9uY
+10,2,The Centrality of Jesus,Jesus is the answer.,/api/images/Link-3_1774149884205.webp,"""He must increase; I must decrease."" — John the Baptist",2,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>He himself bore our sins in his body upon the cross, so that, free from sin, we might live for righteousness. By his wounds you have been healed. For you had gone astray like sheep, but you have now returned to the shepherd and guardian of your souls. </p></blockquote><p style=\""text-align: right;\""><strong>— Peter 2:24-25</strong></p>"",""audioUrl"":""/api/images/He_himself_bore_our_sins_in_hi_Balance_Eleven_v3_019d4bdc-89e1-780a-8949-dd68c60ce3ca_1775094467803.mp3"",""reference"":""Peter 2:24-25"",""chunks"":[""He himself bore our sins in his body upon the cross,"",""so that, free from sin, we might live for righteousness."",""By his wounds you have been healed."",""For you had gone astray like sheep,"",""but you have now returned to the shepherd and guardian of your souls.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+10,2,The Centrality of Jesus,Jesus is the answer.,/api/images/Link-3_1774149884205.webp,"""He must increase; I must decrease."" — John the Baptist",3,text,"<h2>Takeaways</h2><p>• Jesus is the center of Christianity.<br>• The Cross reveals both the seriousness of sin and the depth of God’s love.<br>• God cares, and He entered into human suffering.</p>"
+11,2,Meaning of the Passion & Cross,What His suffering did for you.,/api/images/Link-4_1774149891998.webp,"""I decided to know nothing among you except Jesus Christ, and him crucified."" — St. Paul",0,media,"{""url"":""/api/images/Jesus_on_the_Cross_1773426613380.webp"",""text"":""<h2>The suffering and death of Jesus was not an accident or a tragedy. It was the greatest act of love in human history.</h2><p>On the cross, Jesus took upon Himself the weight of human sin, suffering, and brokenness. What humanity could not repair on its own, God chose to heal through sacrifice.</p><p>The Passion of Christ shows us that God does not remain distant from human suffering. Instead, He enters directly into it.</p><p>Today we will reflect on the meaning of Christ’s suffering and how His wounds bring healing to our own.</p>""}"
+11,2,Meaning of the Passion & Cross,What His suffering did for you.,/api/images/Link-4_1774149891998.webp,"""I decided to know nothing among you except Jesus Christ, and him crucified."" — St. Paul",1,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>Yet it was our pain that he bore, our sufferings he endured. We thought of him as stricken, struck down by God and afflicted, But he was pierced for our sins, crushed for our iniquity. He bore the punishment that makes us whole, by his wounds we were healed. We had all gone astray like sheep, all following our own way; But the LORD laid upon him the guilt of us all.</p></blockquote><p style=\""text-align: right;\""><strong>— Isa 53:4-6</strong></p>"",""audioUrl"":""/api/images/Yet_it_was_our_pain_that_he_bo_Balance_Eleven_v3_019d4bdd-d19a-7ef5-8942-f56660e467b8_1775094478866.mp3"",""reference"":""Isa 53:4-6"",""chunks"":[""Yet it was our pain that he bore,"",""our sufferings he endured."",""We thought of him as stricken,"",""struck down by God and afflicted,"",""But he was pierced for our sins,"",""crushed for our iniquity."",""He bore the punishment that makes us whole,"",""by his wounds we were healed."",""We had all gone astray like sheep,"",""all following our own way;"",""But the LORD laid upon him the guilt of us all.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+11,2,Meaning of the Passion & Cross,What His suffering did for you.,/api/images/Link-4_1774149891998.webp,"""I decided to know nothing among you except Jesus Christ, and him crucified."" — St. Paul",2,media,"{""url"":""https://www.youtube.com/watch?v=j1JYsNwO-ZE"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+11,2,Meaning of the Passion & Cross,What His suffering did for you.,/api/images/Link-4_1774149891998.webp,"""I decided to know nothing among you except Jesus Christ, and him crucified."" — St. Paul",3,media,"{""url"":""https://www.youtube.com/watch?v=aUoImovOi-8"",""text"":""<h2>Watch the story of St. Bakhita and how God transformed her suffering to glory.</h2><p></p>""}"
+11,2,Meaning of the Passion & Cross,What His suffering did for you.,/api/images/Link-4_1774149891998.webp,"""I decided to know nothing among you except Jesus Christ, and him crucified."" — St. Paul",4,text,<h2>Takeaways</h2><ul><li><p>The Passion reveals the depth of God's love.</p></li><li><p>Jesus freely accepted suffering for humanity.</p></li><li><p>The Cross opened the way to salvation.</p></li></ul><p></p>
+12,2,Salvation Through Jesus Christ,Receive new life in Him.,/api/images/Link-5__1__1774149898501.webp,"""While we were still sinners, Christ died for us."" — Romans 5:8",0,text,"<h2>The message at the heart of Christianity is called the Gospel — the “good news.”</h2><p>The good news is this: <strong>God did not leave humanity trapped in sin and separated from His love.</strong></p><p>Salvation is not something we earn by our own effort or goodness. It is a gift that God freely offers to us through Jesus.</p><p>Through His death and resurrection, Jesus opens the path for forgiveness, new life, and restoration with God.</p><p>Today we will look at what it means to receive this gift and how the grace of God begins to transform a person’s life.</p>"
+12,2,Salvation Through Jesus Christ,Receive new life in Him.,/api/images/Link-5__1__1774149898501.webp,"""While we were still sinners, Christ died for us."" — Romans 5:8",1,media,"{""url"":""https://www.youtube.com/watch?v=EevRrWyBllY&t=11s"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+12,2,Salvation Through Jesus Christ,Receive new life in Him.,/api/images/Link-5__1__1774149898501.webp,"""While we were still sinners, Christ died for us."" — Romans 5:8",2,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>But when the kindness and generous love of God our savior appeared, not because of any righteous deeds we had done but because of his mercy, he saved us through the bath of rebirth and renewal by the holy Spirit, whom he richly poured out on us through Jesus Christ our savior, so that we might be justified by his grace and become heirs in hope of eternal life. </p></blockquote><p style=\""text-align: right;\""><strong>— Titus 3:4-7</strong></p>"",""audioUrl"":""/api/images/But_when_the_kindness_and_gene_Balance_Eleven_v3_019d4bde-e83c-7e41-9caa-1df412db3d32_1775094494018.mp3"",""reference"":""Titus 3:4-7"",""chunks"":[""But when the kindness and generous love of God our savior appeared,"",""not because of any righteous deeds we had done but because of his mercy,"",""he saved us through the bath of rebirth and renewal by the Holy Spirit,"",""whom he richly poured out on us through Jesus Christ our Savior,"",""so that we might be justified by His grace and become heirs in hope of eternal life.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+12,2,Salvation Through Jesus Christ,Receive new life in Him.,/api/images/Link-5__1__1774149898501.webp,"""While we were still sinners, Christ died for us."" — Romans 5:8",3,text,"<h2>Final Takeaways</h2><p>• Humanity cannot save itself from sin.</p><p>• Out of love, God sent His Son Jesus to save us.</p><p>• Jesus took our sins upon Himself through His death on the cross.</p><p>• Through His resurrection, new life is offered to every person.</p><p>• Salvation is not earned — it is a gift of God’s mercy.</p><p>• Anyone who turns to Christ with faith can receive forgiveness and new life.</p><p><strong>The Gospel in one sentence:</strong><br>Jesus died and rose again so that we could be forgiven, restored, and live in relationship with God.</p>"
+12,2,Salvation Through Jesus Christ,Receive new life in Him.,/api/images/Link-5__1__1774149898501.webp,"""While we were still sinners, Christ died for us."" — Romans 5:8",4,survey,"{
+  ""title"": ""End of Week 2 Reflection"",
+  ""description"": """",
+  ""questions"": [
+    {
+      ""id"": ""q1773694071419"",
+      ""type"": ""rating"",
+      ""label"": ""How do you think you are growing spiritually?""
+    },
+    {
+      ""id"": ""q1773694075880"",
+      ""type"": ""single_select"",
+      ""label"": ""Which topic impacted you the most this week?"",
+      ""options"": [
+        ""Examination of conscience"",
+        ""The Cross of Jesus"",
+        ""Christ’s sacrifice for our sins"",
+        ""Salvation through Jesus Christ""
+      ]
+    },
+    {
+      ""id"": ""q1773694123121"",
+      ""type"": ""single_select"",
+      ""label"": ""Did the examination of conscience help you recognize areas of your life that need healing or change?"",
+      ""options"": [
+        ""Yes, very clearly"",
+        ""Somewhat"",
+        ""Not really yet"",
+        ""I’m not sure""
+      ]
+    },
+    {
+      ""id"": ""q1773694140015"",
+      ""type"": ""single_select"",
+      ""label"": ""Have you been to the Sacrament of Reconciliation recently?"",
+      ""options"": [
+        ""Yes"",
+        ""No""
+      ]
+    }
+  ]
+}"
+13,3,Forgiving Others,Let go of what still holds you.,/api/images/Link_1774248316613.png,"""Lord, do not hold this sin against them."" — St. Stephen",0,media,"{""url"":""/api/images/John_Macallan_Swan_-_The_Prodigal_Son__1888_1775668449152.webp"",""text"":""<h2>Forgiveness is one of the most difficult teachings of Jesus. When someone hurts us, the natural reaction is to hold on to anger, resentment, or a desire for justice.</h2><p>But Jesus teaches something very different. He calls us to forgive others the same way God has forgiven us.</p><p>Forgiveness does not mean pretending the harm never happened. It does not mean saying what someone did was acceptable. Forgiveness means choosing to clear the debt someone owes you and placing the situation into God's hands.</p><p>Many people discover that unforgiveness becomes a heavy burden that quietly affects their peace, relationships, and spiritual life and <strong>HINDERS them from being delivered altogether.</strong></p>""}"
+13,3,Forgiving Others,Let go of what still holds you.,/api/images/Link_1774248316613.png,"""Lord, do not hold this sin against them."" — St. Stephen",1,chat_flow,"{
+  ""id"": ""forgiveness_guided_experience"",
+  ""title"": ""Do You Want to Be Well?"",
+  ""subtitle"": ""A guided experience through the terrain of forgiveness"",
+  ""estimated_duration_minutes"": 25,
+  ""steps"": [
+    {
+      ""id"": ""s1"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""Most people who struggle to forgive don't have a forgiveness problem."",
+        ""They have a misunderstanding problem."",
+        ""Forgiveness can feel like surrender — like letting someone off the hook. Like saying what happened didn't matter."",
+        ""That is not what forgiveness is."",
+        ""This experience is going to show you what it actually is — and walk you through it, at your own pace.""
+      ]
+    },
+    {
+      ""id"": ""s2"",
+      ""type"": ""single_select"",
+      ""question"": ""Are you willing to give this a try?"",
+      ""variable"": ""readiness"",
+      ""options"": [
+        {
+          ""id"": ""ready"",
+          ""text"": ""I am ready and I want to do this""
+        },
+        {
+          ""id"": ""hesitant"",
+          ""text"": ""I want to, but part of me is holding back""
+        },
+        {
+          ""id"": ""unsure"",
+          ""text"": ""I am not sure I am willing yet""
+        },
+        {
+          ""id"": ""present"",
+          ""text"": ""Someone is already in my mind""
+        }
+      ]
+    },
+    {
+      ""id"": ""s3"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""I appreciate your honesty."",
+        ""You don't need to be sure. You just need to be here."",
+        ""There is a moment in the gospel where Jesus finds a man who has been paralyzed for thirty-eight years, lying beside a healing pool."",
+        ""The first thing Jesus asks this person is not 'Do you believe?' — it's not 'Are you sorry?'"",
+        ""Instead He asks: 'Do you want to be well?'"",
+        ""Thirty-eight years is a long time to carry something."",
+        ""But the invitation to receive healing from Jesus always starts with the same fundamental question."",
+        ""Do you want to be well?""
+      ]
+    },
+    {
+      ""id"": ""s4"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""— THE WOUND —"",
+        ""Before you can release anything, you have to see what you are actually holding."",
+        ""Somewhere in your life there is a wound."",
+        ""Maybe one comes to mind immediately. Maybe several do."",
+        ""We are going to start with one — not the whole history, just one person or one moment.""
+      ]
+    },
+    {
+      ""id"": ""s5"",
+      ""type"": ""single_select"",
+      ""question"": ""Who or what comes to mind first?"",
+      ""variable"": ""wound_source"",
+      ""allow_other"": true,
+      ""options"": [
+        {
+          ""id"": ""family"",
+          ""text"": ""A parent or family member""
+        },
+        {
+          ""id"": ""partner"",
+          ""text"": ""A partner or spouse""
+        },
+        {
+          ""id"": ""friend"",
+          ""text"": ""A friend or community member""
+        },
+        {
+          ""id"": ""authority"",
+          ""text"": ""A church leader or authority figure""
+        },
+        {
+          ""id"": ""self"",
+          ""text"": ""Myself""
+        },
+        {
+          ""id"": ""god"",
+          ""text"": ""God""
+        }
+      ]
+    },
+    {
+      ""id"": ""s6"",
+      ""type"": ""open_text"",
+      ""question"": ""You can name them here — a first name, a role, or just 'this person.' Or leave it blank. God already knows."",
+      ""variable"": ""person_name"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s7"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""Anger gets a bad reputation."",
+        ""But Saint Thomas Aquinas taught that anger is actually a gift — a passion given to us to right what is wrong."",
+        ""Christ himself turned over tables in the temple. He was justly angry."",
+        ""The initial feeling of being hurt, of wanting the wrong corrected — that is not sin."",
+        ""That is a healthy soul responding to an injustice."",
+        ""The problem is not the anger. It is what happens to it."",
+        ""When it goes unnamed and unprocessed, it turns into resentment."",
+        ""And resentment is like drinking a little bit of poison every day — and hoping the other person dies.""
+      ]
+    },
+    {
+      ""id"": ""s8"",
+      ""type"": ""open_text"",
+      ""question"": ""What happened? Not the whole story — just the moment that still surfaces. Write as much or as little as you want."",
+      ""variable"": ""what_happened"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s9"",
+      ""type"": ""single_select"",
+      ""question"": ""When it happened, how did it land in you?"",
+      ""variable"": ""how_it_landed"",
+      ""allow_other"": true,
+      ""options"": [
+        {
+          ""id"": ""invisible"",
+          ""text"": ""I felt like I didn't matter""
+        },
+        {
+          ""id"": ""unsafe"",
+          ""text"": ""I felt unsafe""
+        },
+        {
+          ""id"": ""betrayed"",
+          ""text"": ""I felt betrayed by someone I trusted""
+        },
+        {
+          ""id"": ""stolen"",
+          ""text"": ""I felt like something was taken from me""
+        },
+        {
+          ""id"": ""abandoned"",
+          ""text"": ""I felt abandoned""
+        },
+        {
+          ""id"": ""ashamed"",
+          ""text"": ""I felt ashamed — like it was somehow my fault""
+        },
+        {
+          ""id"": ""shutdown"",
+          ""text"": ""I shut down and went numb""
+        }
+      ]
+    },
+    {
+      ""id"": ""s10"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""Whatever you named — it was real."",
+        ""You are allowed to say that it mattered."",
+        ""Naming it honestly is not wallowing in it."",
+        ""It is the first step toward releasing it.""
+      ]
+    },
+    {
+      ""id"": ""s11"",
+      ""type"": ""open_text"",
+      ""question"": ""If you want, say more. What did it feel like to carry this?"",
+      ""variable"": ""wound_words"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s12"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""— WHAT IT HAS COST YOU —"",
+        ""The wound happened once."",
+        ""But carrying it has had a daily price."",
+        ""Unforgiveness rarely announces itself."",
+        ""It shows up as tightness in the chest when their name comes up."",
+        ""As replaying what happened — rehearsing what you wish you had said."",
+        ""As walls you built to stay safe that also keep the good things out.""
+      ]
+    },
+    {
+      ""id"": ""s13"",
+      ""type"": ""single_select"",
+      ""question"": ""Looking honestly at your life — what has carrying this wound cost you most?"",
+      ""variable"": ""what_it_cost"",
+      ""allow_other"": true,
+      ""options"": [
+        {
+          ""id"": ""peace"",
+          ""text"": ""My peace""
+        },
+        {
+          ""id"": ""trust"",
+          ""text"": ""My ability to trust people""
+        },
+        {
+          ""id"": ""god_relation"",
+          ""text"": ""My relationship with God""
+        },
+        {
+          ""id"": ""identity"",
+          ""text"": ""My sense of who I am""
+        },
+        {
+          ""id"": ""relationship"",
+          ""text"": ""A relationship that could have been whole""
+        },
+        {
+          ""id"": ""time"",
+          ""text"": ""Time — years lived under this weight""
+        },
+        {
+          ""id"": ""joy"",
+          ""text"": ""My joy""
+        }
+      ]
+    },
+    {
+      ""id"": ""s14"",
+      ""type"": ""open_text"",
+      ""question"": ""Say more if you want — what has unforgiveness quietly been doing in your life?"",
+      ""variable"": ""cost_words"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s15"",
+      ""type"": ""single_select"",
+      ""question"": ""Beneath the wound, there is usually a sense that something is still owed. What does your heart feel is owed to you?"",
+      ""variable"": ""still_owed"",
+      ""allow_other"": true,
+      ""options"": [
+        {
+          ""id"": ""apology"",
+          ""text"": ""An apology — I want them to admit what they did""
+        },
+        {
+          ""id"": ""explanation"",
+          ""text"": ""An explanation — I need to understand why""
+        },
+        {
+          ""id"": ""restoration"",
+          ""text"": ""For things to be made right""
+        },
+        {
+          ""id"": ""justice"",
+          ""text"": ""Justice — I want them to face what they did""
+        },
+        {
+          ""id"": ""unfinished"",
+          ""text"": ""I don't know — something just feels unfinished""
+        },
+        {
+          ""id"": ""nothing"",
+          ""text"": ""Nothing — I just can't seem to release it""
+        }
+      ]
+    },
+    {
+      ""id"": ""s16"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""You deserve all of those things."",
+        ""And here is the hard truth:"",
+        ""You may never get them from this person."",
+        ""They may not be sorry. They may not even know the damage they caused."",
+        ""The question is not whether you deserve what is owed."",
+        ""The question is: who are you going to make the judge?""
+      ]
+    },
+    {
+      ""id"": ""s17"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""— THE TURNING POINT —"",
+        ""Saint Pope John Paul II wrote:"",
+        ""'Forgiveness is the restoration of freedom to oneself. It is the key held in our own hand to our prison cell.'"",
+        ""You are holding the key. Not to their prison. To yours."",
+        ""Forgiveness does not mean what they did was okay."",
+        ""It does not mean you trust them again."",
+        ""It does not require reconciliation — reconciliation takes two people willing to come back together. Forgiveness only requires one."",
+        ""It means you stop being the one who holds the debt."",
+        ""You hand that debt to God — the only truly just Judge — and you open your hand.""
+      ]
+    },
+    {
+      ""id"": ""s18"",
+      ""type"": ""single_select"",
+      ""question"": ""Right now, in this moment — are you willing to begin?"",
+      ""variable"": ""forgiveness_decision"",
+      ""options"": [
+        {
+          ""id"": ""yes"",
+          ""text"": ""Yes — I am choosing this""
+        },
+        {
+          ""id"": ""partial"",
+          ""text"": ""I want to, but part of me is still holding on""
+        },
+        {
+          ""id"": ""not_yet"",
+          ""text"": ""I need God to make me willing first""
+        },
+        {
+          ""id"": ""hard"",
+          ""text"": ""I don't know — this is harder than I expected""
+        }
+      ],
+      ""branches"": {
+        ""yes"": [
+          {
+            ""id"": ""s18b_yes"",
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""Then let's not wait."",
+              ""Read this slowly. Say it aloud if you can."",
+              ""Insert the name — or just 'this person' — where you see the space."",
+              ""If your heart resists at any line, pause there and name the resistance to God. Then continue."",
+              ""—"",
+              ""Lord Jesus Christ,"",
+              ""I come before You with this wound."",
+              ""I name what happened — I do not minimize it, and I do not pretend it did not matter."",
+              ""It mattered. It cost me. And I have been carrying it."",
+              ""But I no longer want to be the judge of [this person]."",
+              ""I hand that role back to You — the only just Judge."",
+              ""I choose, as an act of my will and not my feelings, to forgive."",
+              ""I release my claim to what is owed."",
+              ""I open my hand."",
+              ""I renounce every hold that bitterness, resentment, and unforgiveness have had over my heart."",
+              ""I close this door to the enemy."",
+              ""In the name of Jesus Christ, this wound no longer gives him a legal right in my life."",
+              ""Lord, heal what is still broken here."",
+              ""Pour Your peace into the space where the wound was."",
+              ""Amen.""
+            ]
+          }
+        ],
+        ""partial"": [
+          {
+            ""id"": ""s18b_partial"",
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""A half-open hand is still a hand beginning to open. That is enough."",
+              ""Read this slowly. Say it aloud if you can."",
+              ""—"",
+              ""Lord Jesus Christ,"",
+              ""I come before You with this wound."",
+              ""I name what happened — I do not minimize it, and I do not pretend it did not matter."",
+              ""It mattered. It cost me. And I have been carrying it."",
+              ""But I no longer want to be the judge of [this person]."",
+              ""I hand that role back to You — the only just Judge."",
+              ""I choose, as an act of my will and not my feelings, to forgive."",
+              ""I release my claim to what is owed."",
+              ""I open my hand — even the part that is still holding on."",
+              ""I renounce every hold that bitterness and unforgiveness have had over my heart."",
+              ""I close this door to the enemy."",
+              ""In the name of Jesus Christ, this wound no longer gives him a legal right in my life."",
+              ""Lord, heal what is still broken here."",
+              ""And help me to mean this more tomorrow than I do today."",
+              ""Amen.""
+            ]
+          }
+        ],
+        ""not_yet"": [
+          {
+            ""id"": ""s18b_notyet"",
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""That honesty is exactly where God can work."",
+              ""You don't need to manufacture a willingness you don't have."",
+              ""Read this slowly. Say it aloud if you can."",
+              ""—"",
+              ""Lord Jesus Christ,"",
+              ""I cannot get there on my own."",
+              ""I am not willing — or I don't know if I am."",
+              ""But I am here. I am asking."",
+              ""Give me the willingness to be willing."",
+              ""Start there, if that is all You have to work with today."",
+              ""I do not want to carry this anymore."",
+              ""Even if I cannot fully release it today,"",
+              ""I am opening the door and asking You to come in."",
+              ""I trust that what You begin, You will finish."",
+              ""Amen.""
+            ]
+          }
+        ],
+        ""hard"": [
+          {
+            ""id"": ""s18b_hard"",
+            ""type"": ""narrator"",
+            ""messages"": [
+              ""The hardest forgiveness is often the deepest. Don't stop here."",
+              ""You don't need to manufacture a willingness you don't have."",
+              ""Read this slowly. Say it aloud if you can."",
+              ""—"",
+              ""Lord Jesus Christ,"",
+              ""I cannot get there on my own."",
+              ""I am not willing — or I don't know if I am."",
+              ""But I am here. I am asking."",
+              ""Give me the willingness to be willing."",
+              ""Start there, if that is all You have to work with today."",
+              ""I do not want to carry this anymore."",
+              ""Even if I cannot fully release it today,"",
+              ""I am opening the door and asking You to come in."",
+              ""I trust that what You begin, You will finish."",
+              ""Amen.""
+            ]
+          }
+        ]
+      }
+    },
+    {
+      ""id"": ""s19"",
+      ""type"": ""open_text"",
+      ""question"": ""After sitting with that prayer — what is present in you right now? Peace, resistance, grief, numbness, something shifting. Anything at all."",
+      ""variable"": ""after_prayer_response"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s20"",
+      ""type"": ""dynamic_reflection"",
+      ""template"": ""You said: '{after_prayer_response}' — that response is worth staying with. Whatever is there is real, and God is already working in it.""
+    },
+    {
+      ""id"": ""s21"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""— THE OTHER DIRECTION —"",
+        ""Forgiveness runs two ways."",
+        ""You have been the one who was hurt."",
+        ""But you have also been the one who has hurt."",
+        ""Not as an accusation — as an invitation."",
+        ""The same mercy that is freeing you from what was done to you is available to the people you have wounded."",
+        ""And receiving God's mercy — deeply, personally, for yourself — is what makes it possible to extend it.""
+      ]
+    },
+    {
+      ""id"": ""s22"",
+      ""type"": ""single_select"",
+      ""question"": ""Is there someone in your life you know you have wounded — someone who may need your apology or repair?"",
+      ""variable"": ""also_need_mercy"",
+      ""options"": [
+        {
+          ""id"": ""yes"",
+          ""text"": ""Yes — someone comes to mind""
+        },
+        {
+          ""id"": ""maybe"",
+          ""text"": ""Possibly — I need to think about it""
+        },
+        {
+          ""id"": ""no"",
+          ""text"": ""Not that I can think of right now""
+        }
+      ]
+    },
+    {
+      ""id"": ""s23"",
+      ""type"": ""open_text"",
+      ""question"": ""If someone comes to mind, name what happened here. You don't need to know what to do about it yet — just bring it into the light."",
+      ""variable"": ""repair_reflection"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s24"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""One more thing before we close."",
+        ""The person who hurt you did not wound you from wholeness."",
+        ""They wounded you from their own brokenness."",
+        ""Hurt people hurt people."",
+        ""That does not excuse what they did."",
+        ""But understanding it can loosen the grip."",
+        ""They are also someone Jesus is asking: 'Do you want to be well?'""
+      ]
+    },
+    {
+      ""id"": ""s25"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""— THE ONGOING WORK —"",
+        ""This is not a one-time event."",
+        ""Tomorrow, the same feeling may resurface. The same face may come back."",
+        ""That is not a sign that forgiveness didn't happen."",
+        ""It is a sign that healing goes in layers."",
+        ""Think of it like tending a garden."",
+        ""You plant a seed, you water it, you come back."",
+        ""Weeds return — and you pull them again."",
+        ""What you did here today was plant a seed."",
+        ""Each time you choose forgiveness again, you are weakening the enemy's hold and allowing healing to go deeper.""
+      ]
+    },
+    {
+      ""id"": ""s26"",
+      ""type"": ""single_select"",
+      ""question"": ""As you prepare for the deliverance prayers ahead — what are you committing to in this area?"",
+      ""variable"": ""commitment_level"",
+      ""allow_other"": true,
+      ""options"": [
+        {
+          ""id"": ""return_prayer"",
+          ""text"": ""I will return to this prayer every time the wound resurfaces""
+        },
+        {
+          ""id"": ""seek_support"",
+          ""text"": ""I will bring this wound to a counselor or trusted person""
+        },
+        {
+          ""id"": ""daily_choice"",
+          ""text"": ""I will speak this forgiveness aloud each morning until my heart catches up""
+        },
+        {
+          ""id"": ""sacrament"",
+          ""text"": ""I will bring this to confession or spiritual direction""
+        }
+      ]
+    },
+    {
+      ""id"": ""s27"",
+      ""type"": ""open_text"",
+      ""question"": ""Put your commitment in your own words. A commitment made specific is a commitment made real."",
+      ""variable"": ""commitment_words"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s28"",
+      ""type"": ""dynamic_reflection"",
+      ""template"": ""You are committing to: '{commitment_words}' — God heard that.""
+    },
+    {
+      ""id"": ""s29"",
+      ""type"": ""open_text"",
+      ""question"": ""Before you go — what is one truth you want to carry with you from this experience? Not a task. Just a truth."",
+      ""variable"": ""closing_reflection"",
+      ""required"": false
+    },
+    {
+      ""id"": ""s30"",
+      ""type"": ""final"",
+      ""messages"": [
+        ""Father,"",
+        ""Thank You that You forgave me first."",
+        ""While I was still in my sin — still holding onto my own brokenness — You chose me."",
+        ""Give me that same heart for the person I have been carrying."",
+        ""Heal the wound that made forgiveness feel impossible."",
+        ""Close every door that unforgiveness has opened in my life."",
+        ""Prepare me for the freedom that is coming."",
+        ""Amen."",
+        ""—"",
+        ""The freedom ahead of you is real."",
+        ""The enemy has used this wound as a foothold long enough."",
+        ""This act of forgiveness is not just inner healing — it is warfare."",
+        ""You are taking back ground."",
+        ""Keep going.""
+      ]
+    }
+  ],
+  ""summaryTemplate"": ""This experience focused on a wound involving {wound_source} — {person_name}. What happened: {what_happened}. It landed as {how_it_landed} — {wound_words}. The greatest cost: {what_it_cost} — {cost_words}. What still felt owed: {still_owed}. Forgiveness decision: {forgiveness_decision}. After the prayer: {after_prayer_response}. Need to repair with others: {also_need_mercy} — {repair_reflection}. Commitment: {commitment_level} — {commitment_words}. Truth to carry: {closing_reflection}.""
+}"
+13,3,Forgiving Others,Let go of what still holds you.,/api/images/Link_1774248316613.png,"""Lord, do not hold this sin against them."" — St. Stephen",2,media,"{""url"":""https://www.youtube.com/watch?v=kQFLsgQnQpI"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+13,3,Forgiving Others,Let go of what still holds you.,/api/images/Link_1774248316613.png,"""Lord, do not hold this sin against them."" — St. Stephen",3,scripture_practice,"{""duration"":60,""text"":""<blockquote><p>Put on then, as God’s chosen ones, holy and beloved, heartfelt compassion, kindness, humility, gentleness, and patience, bearing with one another and forgiving one another, if one has a grievance against another; as the Lord has forgiven you, so must you also do. And over all these put on love, that is, the bond of perfection. </p></blockquote><p style=\""text-align: right;\""><strong>- Col 3:12-14</strong></p>"",""audioUrl"":""/api/images/p4-S9ZUTb5qL4GpCUilib_output_1774276321458.mp3"",""reference"":""Col 3:12-14"",""chunks"":[""Put on then, as God’s chosen ones, holy and beloved,"",""heartfelt compassion, kindness, humility, gentleness, and patience,"",""bearing with one another and forgiving one another,"",""if one has a grievance against another;"",""as the Lord has forgiven you, so must you also do."",""And over all these put on love, that is, the bond of perfection.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+13,3,Forgiving Others,Let go of what still holds you.,/api/images/Link_1774248316613.png,"""Lord, do not hold this sin against them."" — St. Stephen",4,text,"<h2>Takeaways</h2><p>• Forgiveness does not excuse wrongdoing.</p><p>• Choosing forgiveness is often the beginning of healing.</p><p>• Holding onto resentment harms us more than the other person.</p><p>• Forgiveness is an expectation Jesus gives to every Christian.</p><p>• Being unable to forgive, blocks our ability to be delivered from evil spirits</p>"
+14,3,Forgiveness in Practice,He restores what is wounded in you.,/api/images/Link-1_1774248324139.png,"""I want him in paradise with me."" — St. Maria Goretti, about the man who killed her",0,path_selector,"{
+  ""headline"": ""Pick a pathway of forgiveness to explore"",
+  ""options"": [
+    {
+      ""id"": ""answers"",
+      ""label"": ""St. Pope John Paul II"",
+      ""description"": ""He went to his prison cell  and forgave him face to face."",
+      ""imageUrl"": ""https://res.cloudinary.com/dsv0rjvoi/image/upload/v1775585404/Pope_John_Paull_II_ejxhmh.webp"",
+      ""nextContent"": {
+        ""type"": ""media"",
+        ""content"": ""https://www.youtube.com/watch?v=_4Gh7im5pRY""
+      }
+    },
+    {
+      ""id"": ""control"",
+      ""label"": ""St. Maria Goretti"",
+      ""description"": ""As she was dying,  she forgave him and desired his salvation."",
+      ""imageUrl"": ""https://res.cloudinary.com/dsv0rjvoi/image/upload/v1775585404/St._Maria_Goretti_lypibu.webp"",
+      ""nextContent"": {
+        ""type"": ""media"",
+        ""content"": ""https://www.youtube.com/watch?v=zZaR7aT37T4""
+      }
+    },
+    {
+      ""id"": ""loved"",
+      ""label"": ""St. Josephine Bahkita"",
+      ""description"": ""After years of slavery,  she released her captors without hatred."",
+      ""imageUrl"": ""https://res.cloudinary.com/dsv0rjvoi/image/upload/v1775585405/St._Josephine_Bakhita_nf7sto.webp"",
+      ""nextContent"": {
+        ""type"": ""media"",
+        ""content"": ""https://www.youtube.com/watch?v=VlYAbp3HbZ4""
+      }
+    }
+  ]
+}"
+14,3,Forgiveness in Practice,He restores what is wounded in you.,/api/images/Link-1_1774248324139.png,"""I want him in paradise with me."" — St. Maria Goretti, about the man who killed her",1,text_input,<h2>What stood out to you from your story of forgiveness that you chose?</h2><p></p>
+14,3,Forgiveness in Practice,He restores what is wounded in you.,/api/images/Link-1_1774248324139.png,"""I want him in paradise with me."" — St. Maria Goretti, about the man who killed her",2,scripture_practice,"{""duration"":60,""text"":""<blockquote><p>Forgive, and you will be forgiven </p></blockquote><p style=\""text-align: right;\""><strong>Luke 6:37</strong></p>"",""audioUrl"":""/api/images/Forgive_and_you_will_be_forgiv_Balance_Eleven_v3_019d8d2c-de96-73de-b158-ff817b92e96a_1776190111956.mp3"",""reference"":""Luke 6:37"",""chunks"":[""Forgive and you will be forgiven""],""reflectionDuration"":60,""reflectionTitle"":""""}"
+14,3,Forgiveness in Practice,He restores what is wounded in you.,/api/images/Link-1_1774248324139.png,"""I want him in paradise with me."" — St. Maria Goretti, about the man who killed her",3,text,"<h2>Forgiveness is NOT a feeling. It is a decision.</h2><p>Many people wait until their emotions change before forgiving, but Jesus asks us to make the decision first. Over time, God heals the emotions that follow.<br>We recommend going through the following prayer slowly and intentionally. As you pray, forgive every person in your life who may have hurt you — family members, friends, people from your past, and even yourself.</p><p>Take your time with this prayer.</p><p><a target=""_blank"" rel=""noopener noreferrer nofollow"" href=""https://uploads.weconnect.com/mce/f333160e6b20ba37686da89bbe5fab728a7d3d24/Forgiveness%20Prayer%20for%20Adults.pdf"">Forgiveness Prayer</a></p>"
+15,3,Jesus: Our Healer,He has authority over what oppresses you.,/api/images/Link-2_1774248332462.png,"""He heals the brokenhearted and binds up their wounds."" — Psalm 147:3",0,text,"<h2>Jesus' Name means ""God saves"".<br>The whole history of salvation is God's intervention into the world to bring healing to our entire being.</h2><p><strong>Jesus’ healing is an expression of God’s merciful love and compassion</strong></p><p>The world often treats the symptoms of what is happening in our lives.<br>God goes deeper. He consoles your heart.</p><p>True healing is not just relief. It is an encounter with God's love.<br>He reaches the deep roots of what is broken and restores us to wholeness and communion with Him.</p>"
+15,3,Jesus: Our Healer,He has authority over what oppresses you.,/api/images/Link-2_1774248332462.png,"""He heals the brokenhearted and binds up their wounds."" — Psalm 147:3",1,media,"{""url"":""https://www.youtube.com/watch?v=HPjYgkyDZ1k"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+15,3,Jesus: Our Healer,He has authority over what oppresses you.,/api/images/Link-2_1774248332462.png,"""He heals the brokenhearted and binds up their wounds."" — Psalm 147:3",2,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>He heals the brokenhearted and binds up their wounds.</p></blockquote><p style=\""text-align: right;\""><strong>— Psalm 147:3</strong></p>"",""audioUrl"":""/api/images/He_heals_the_brokenhearted_and_Balance_Eleven_v3_019d1b1a-d89d-792c-ac13-5d2c27bb48cd_1775241775942.mp3"",""reference"":""Psalm 147:3"",""chunks"":[""He heals the brokenhearted"",""and binds up their wounds.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+15,3,Jesus: Our Healer,He has authority over what oppresses you.,/api/images/Link-2_1774248332462.png,"""He heals the brokenhearted and binds up their wounds."" — Psalm 147:3",3,chat_flow,"{
+  ""steps"": [
+    {
+      ""id"": ""intro"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""Many of us carry wounds — emotional, mental, and spiritual wounds that linger deep in the heart. While we may understand that God loves us and desires our healing, we may be too bound in fear and darkness to experience it."",
+          ""audio"": ""/api/images/Many_of_us_carry_wounds_emotio_Balance_Eleven_v3_019d88b5-df97-7f3f-8d3b-5018210b4b0e_1776177358115.mp3""
+        },
+        {
+          ""text"": ""Meditating on the Sacred Heart of Jesus can change all this. This beautiful practice reveals the boundless compassion and mercy of Jesus, Our Savior."",
+          ""audio"": ""/api/images/Meditating_on_the_Sacred_Heart_Balance_Eleven_v3_019d8894-89c9-7017-8bfe-5a326ad5b050_1776177366237.mp3""
+        },
+        {
+          ""text"": ""If you've been struggling with pain, grief, or inner wounds, this reflection is meant to help you bring those burdens before the Heart of Christ — the source of true healing and life."",
+          ""audio"": ""/api/images/If_youve_been_struggling_with_Balance_Eleven_v3_019d88b6-3415-7d16-8ac2-9b22a42dbb7c_1776177371979.mp3""
+        },
+        {
+          ""text"": ""Let's begin…"",
+          ""audio"": ""/api/images/Lets_begin_Balance_Eleven_v3_019d88b4-d78b-7487-a0dd-8cb97936a75d_1776177377250.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""quiet_mind""
+        }
+      ]
+    },
+    {
+      ""id"": ""quiet_mind"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""We need to take a moment and quiet our minds, asking the Holy Spirit to guide us during this time of prayer."",
+          ""audio"": ""/api/images/We_need_to_take_a_moment_and_q_Balance_Eleven_v3_019d88b6-d08e-76c3-94d5-1743f6b8e4a1_1776177382755.mp3""
+        },
+        {
+          ""text"": ""We set aside the concerns and stresses of daily life."",
+          ""audio"": ""/api/images/We_set_aside_the_concerns_and_Balance_Eleven_v3_019d88b7-393d-7419-a670-575387d29d14_1776177388340.mp3""
+        },
+        {
+          ""text"": ""Start to become more aware of the current state of your heart."",
+          ""audio"": ""/api/images/Start_to_become_more_aware_of_Balance_Eleven_v3_019d88b7-5c42-7681-91c0-d1c2f6667aec_1776177394681.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""current_feeling_intro""
+        }
+      ]
+    },
+    {
+      ""id"": ""current_feeling_intro"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""Do you feel anxious, stressed, concerned, or preoccupied?"",
+          ""audio"": ""/api/images/Do_you_feel_anxious_stressed_c_Balance_Eleven_v3_019d88c5-8312-7638-b189-8fe56011c556_1776177406107.mp3""
+        },
+        {
+          ""text"": ""Are you tired, saddened, or numb?"",
+          ""audio"": ""/api/images/Are_you_tired_saddened_or_numb_Balance_Eleven_v3_019d88c5-65dc-7695-9a0e-31e1e6ae0e28_1776177416046.mp3""
+        },
+        {
+          ""text"": ""What surrounds your heart right now?"",
+          ""audio"": ""/api/images/What_surrounds_your_heart_righ_Balance_Eleven_v3_019d88c5-4c2e-7cd1-a386-bf20fb526d72__1__1776177422365.mp3""
+        },
+        {
+          ""text"": ""Do not be afraid to acknowledge whatever is there."",
+          ""audio"": ""/api/images/Do_not_be_afraid_to_acknowledg_Balance_Eleven_v3_019d88b7-7571-7b93-9b2e-55d3c2f7eaa3_1776178444449.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""write_heart_state""
+        }
+      ]
+    },
+    {
+      ""id"": ""write_heart_state"",
+      ""type"": ""open_text"",
+      ""question"": ""Take a moment. Write down what is present in your heart right now."",
+      ""variable"": ""heart_state"",
+      ""branches"": [
+        {
+          ""goTo"": ""need_from_god""
+        }
+      ],
+      ""questionAudio"": ""/api/images/Present_in_heart_1776178432675.mp3""
+    },
+    {
+      ""id"": ""need_from_god"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        {
+          ""text"": ""What do you need most from God right now?"",
+          ""audio"": ""/api/images/What_do_you_need_most_from_God_Balance_Eleven_v3_019d88c4-d9cf-7932-83ba-986816977ca8_1776177466024.mp3""
+        },
+        {
+          ""text"": ""Perhaps you need clarity to make decisions, peace, relief from torment, or a sense of purpose."",
+          ""audio"": ""/api/images/Perhaps_you_need_clarity_to_ma_Balance_Eleven_v3_019d88c4-bd48-738d-8112-3dc2869ba46e_1776177473528.mp3""
+        },
+        {
+          ""text"": ""Maybe you need reassurance that God truly sees what's happening or how you've been hurt or wounded."",
+          ""audio"": ""/api/images/Maybe_you_need_reassurance_tha_Balance_Eleven_v3_019d88c4-999f-7ffc-8e40-9773ca3310ae_1776177479624.mp3""
+        }
+      ],
+      ""question"": ""Take a moment. What do you need most from God right now?"",
+      ""variable"": ""need_from_god"",
+      ""branches"": [
+        {
+          ""goTo"": ""quiet_again""
+        }
+      ],
+      ""questionAudio"": ""/api/images/Need_most_1776178462075.mp3""
+    },
+    {
+      ""id"": ""quiet_again"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""Quiet your mind again. Remind yourself that you are always safe with God."",
+          ""audio"": ""/api/images/Quiet_your_mind_again_Remind_y_Balance_Eleven_v3_019d88b7-a025-7141-9045-890ee6bf8af6_1776177496862.mp3""
+        },
+        {
+          ""text"": ""Allow your emotions, whatever they are, to surface."",
+          ""audio"": ""/api/images/Allow_your_emotions_whatever_t_Balance_Eleven_v3_019d88cf-f611-76e2-bea5-33a46e6e5282_1776177501572.mp3""
+        },
+        {
+          ""text"": ""Be authentic with yourself and God, and present everything you're going through to the Heart of Jesus."",
+          ""audio"": ""/api/images/Be_authentic_and_present_everything_COMBINED.mp3""
+        },
+        {
+          ""text"": ""Jesus is listening and receives everything you're saying."",
+          ""audio"": ""/api/images/Jesus_is_listening_and_receive_Balance_Eleven_v3_019d88d0-4ed4-79ba-9e81-a298426abd65_1776177582151.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""express_trust""
+        }
+      ]
+    },
+    {
+      ""id"": ""express_trust"",
+      ""type"": ""open_text"",
+      ""question"": ""It may be difficult for you to truly believe that God cares, about what you're experiencing and what you've gone through, but at some point we need to learn to trust that God is good. So let's practice expressing to Him (in your own words) that you trust Him and know He cares."",
+      ""variable"": ""trust_expression"",
+      ""branches"": [
+        {
+          ""goTo"": ""wounds""
+        }
+      ],
+      ""questionAudio"": ""/api/images/Express_trust_updated_COMBINED.mp3""
+    },
+    {
+      ""id"": ""wounds"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        {
+          ""text"": ""Aware of your need and the pain you're experiencing inside, we must examine the wounds."",
+          ""audio"": ""/api/images/Aware_of_your_need_and_the_pai_Balance_Eleven_v3_019d88d1-3527-70cb-8ced-77ad1105e12a_1776177593625.mp3""
+        },
+        {
+          ""text"": ""Perhaps you have many wounds, or you can only name one. Maybe you've never really given this much thought."",
+          ""audio"": ""/api/images/Perhaps_you_have_many_wounds_o_Balance_Eleven_v3_019d88d1-dfdf-7cb4-8123-c9b64d433343_1776177599417.mp3""
+        }
+      ],
+      ""question"": ""Take a moment. What hurts most right now, and why?"",
+      ""variable"": ""wounds"",
+      ""branches"": [
+        {
+          ""goTo"": ""wounds_context""
+        }
+      ],
+      ""questionAudio"": ""/api/images/Hurts_1776178476757.mp3""
+    },
+    {
+      ""id"": ""wounds_context"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""Examining your wounds gives God permission to examine them as well to offer you a remedy."",
+          ""audio"": ""/api/images/Examining_your_wounds_gives_Go_Balance_Eleven_v3_019d88d5-b4bf-7d58-af14-047bc891d69c_1776177626049.mp3""
+        },
+        {
+          ""text"": ""Remember, even if your wounds are a result of your own sin, God is not looking to condemn or punish you. Jesus longs to heal your heart."",
+          ""audio"": ""/api/images/Remember_even_if_your_wounds_a_Balance_Eleven_v3_019d88d5-e188-708a-9dd4-263440332677_1776177631075.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""look_at_jesus""
+        }
+      ]
+    },
+    {
+      ""id"": ""look_at_jesus"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""Now that you're more aware of your wounds, turn to look at the wounds of Jesus."",
+          ""audio"": ""/api/images/Now_that_youre_more_aware_of_y_Balance_Eleven_v3_019d88d5-f96a-7484-8428-d65ba6ee6588_1776177635799.mp3""
+        },
+        {
+          ""text"": ""See the nail marks in His hands and feet."",
+          ""audio"": ""/api/images/See_the_nail_marks_in_His_hand_Balance_Eleven_v3_019d88d6-1b91-7b4a-af6a-a8e562dbaf5f_1776177641113.mp3""
+        },
+        {
+          ""text"": ""Look at the crown of thorns that pierced His head."",
+          ""audio"": ""/api/images/Look_at_the_crown_of_thorns_th_Balance_Eleven_v3_019d88d6-2f58-7247-ad75-bc0fe15671f7_1776177647530.mp3""
+        },
+        {
+          ""text"": ""Now gaze deeply at the wounds of His Sacred Heart."",
+          ""audio"": ""/api/images/Now_gaze_deeply_at_the_wounds_Balance_Eleven_v3_019d88d6-48b4-7633-bb83-95681e0cc8e7_1776177653512.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""jesus_asks""
+        }
+      ]
+    },
+    {
+      ""id"": ""jesus_asks"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        {
+          ""text"": ""He is intimately aware of the pain and suffering you endure."",
+          ""audio"": ""/api/images/He_is_intimately_aware_of_the_Balance_Eleven_v3_019d88d6-8b6f-7b15-a2ee-c532c1d6942d_1776177658666.mp3""
+        },
+        {
+          ""text"": ""And despite Jesus' many wounds, His heart is not crushed, cold, hidden away, or filled with bitterness. It's fully alive, strong and unwavering in His love for you."",
+          ""audio"": ""/api/images/And_despite_Jesus_many_wounds_Balance_Eleven_v3_019d88d6-b46b-7e40-b008-359db1529ebb_1776177664153.mp3""
+        },
+        {
+          ""text"": ""The fire of His love draws you closer."",
+          ""audio"": ""/api/images/The_fire_of_His_love_draws_you_Balance_Eleven_v3_019d88d6-c246-719a-a894-e1a9dbf8331f_1776177668590.mp3""
+        },
+        {
+          ""text"": ""You feel completely understood and fully at home."",
+          ""audio"": ""/api/images/You_feel_completely_understood_Balance_Eleven_v3_019d88d6-dca0-7404-b375-beffe25220e8_1776177673744.mp3""
+        },
+        {
+          ""text"": ""Jesus asks, \""What would you like me to do for you?\"""",
+          ""audio"": ""/api/images/Jesus_asks_What_would_you_like_Balance_Eleven_v3_019d88d7-1754-74ec-a224-e396bdcf5194_1776177678884.mp3""
+        },
+        {
+          ""text"": ""Let your heart respond."",
+          ""audio"": ""/api/images/Let_your_heart_respond_Balance_Eleven_v3_019d88d7-2687-788f-8f6b-d6dcac31f07a_1776177685231.mp3""
+        },
+        {
+          ""text"": ""Do not be afraid."",
+          ""audio"": ""/api/images/Do_not_be_afraid_Balance_Eleven_v3_019d88d7-3b14-7e03-a272-5579dd95d253_1776177690848.mp3""
+        },
+        {
+          ""text"": ""Simply remain open, trusting, and at peace."",
+          ""audio"": ""/api/images/Simply_remain_open_trusting_an_Balance_Eleven_v3_019d88d7-5249-7d5a-9bfd-e1eb55d5ce6a_1776177698012.mp3""
+        }
+      ],
+      ""question"": ""Speak to Him from your heart."",
+      ""variable"": ""heart_response"",
+      ""branches"": [
+        {
+          ""goTo"": ""rest""
+        }
+      ],
+      ""questionAudio"": ""/api/images/Speak_to_Him_from_your_heart_Balance_Eleven_v3_019d88d7-5d45-7644-b588-510f91156ca0_1776177704568.mp3""
+    },
+    {
+      ""id"": ""rest"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""Before ending your time in prayer, rest in His love that He generously and constantly pours out for you."",
+          ""audio"": ""/api/images/Before_ending_your_time_in_pra_Balance_Eleven_v3_019d88d7-bda1-7316-b655-575638da34dd_1776177710547.mp3""
+        },
+        {
+          ""text"": ""Be confident that everything you shared was important and this time was special to Jesus."",
+          ""audio"": ""/api/images/Be_confident_that_everything_y_Balance_Eleven_v3_019d88d7-d33d-799b-99e2-cc9514b89287_1776177716590.mp3""
+        },
+        {
+          ""text"": ""Let's conclude everything with a beautiful prayer to the Sacred Heart."",
+          ""audio"": ""/api/images/Lets_conclude_everything_with_Balance_Eleven_v3_019d88d7-e2ea-78af-893e-3c10e234e866_1776177729793.mp3""
+        }
+      ],
+      ""branches"": [
+        {
+          ""goTo"": ""prayer""
+        }
+      ]
+    },
+    {
+      ""id"": ""prayer"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        {
+          ""text"": ""O Sacred Heart of Jesus, font of love and mercy, and source of every blessing — pour out your love upon my wounded and suffering heart."",
+          ""audio"": ""/api/images/O_Sacred_Heart_of_Jesus_font_o_Balance_Eleven_v3_019d8c71-e034-767a-8fed-be42f3dce98d_1776177782272.mp3""
+        },
+        {
+          ""text"": ""O Sacred Heart of Jesus, burning with the fire of charity for every soul — purify my heart and draw me ever closer to your divine embrace."",
+          ""audio"": ""/api/images/O_Sacred_Heart_of_Jesus_burnin_Balance_Eleven_v3_019d8c72-6dc8-7e39-8c22-ff57ba03f4fc_1776177809697.mp3""
+        },
+        {
+          ""text"": ""O Sacred Heart of Jesus, wounded by my own sin and familiar with all suffering — forgive me of my sins and restore me to life."",
+          ""audio"": ""/api/images/O_Sacred_Heart_of_Jesus_wounde_Balance_Eleven_v3_019d8c72-9242-73eb-a557-5c7e548d726a_1776177829463.mp3""
+        },
+        {
+          ""text"": ""O Sacred Heart of Jesus, through which every heart finds solace and refuge — be my strength, my courage, my fortress, and my defender."",
+          ""audio"": ""/api/images/O_Sacred_Heart_of_Jesus_throug_Balance_Eleven_v3_019d8c72-e747-791f-80bd-bc07e622785f_1776177845437.mp3""
+        },
+        {
+          ""text"": ""O Sacred Heart of Jesus, proof of the Father's love and desire for me — I place all my trust in you."",
+          ""audio"": ""/api/images/O_Sacred_Heart_of_Jesus_proof_Balance_Eleven_v3_019d8c73-13f9-7897-8b6d-5dce05407f7f_1776177852829.mp3""
+        },
+        {
+          ""text"": ""Amen."",
+          ""audio"": ""/api/images/Amen_Balance_Eleven_v3_019d88da-5045-7d5e-935b-5453c8f08c16_1776177770940.mp3""
+        }
+      ]
+    }
+  ],
+  ""summaryTemplate"": ""Your heart: {{heart_state}}. What you needed: {{need_from_god}}. Your wounds: {{wounds}}. What you asked of Jesus: {{heart_response}}."",
+  ""videoUrl"": ""/api/images/Untitled__1000_x_1000_px___6__1776121621124.mp4""
+}"
+15,3,Jesus: Our Healer,He has authority over what oppresses you.,/api/images/Link-2_1774248332462.png,"""He heals the brokenhearted and binds up their wounds."" — Psalm 147:3",4,text,"<h2>Takeaways</h2><p>• Jesus sees the wounds people carry.<br>• He responds with compassion, and desires to heal our whole person</p>"
+16,3,Jesus: Our Deliverer,You are not alone—He is with you.,/api/images/Link-3_1774248340255.png,"""Now have salvation and power come, and the Kingdom of our God."" — Revelation 12:10",0,text,"<h2>In the Gospels, Jesus does more than teach and heal.</h2><p>He also confronts the demons that oppress and enslave people.</p><p>Many individuals came to Jesus who were tormented by fear, and darkness. When Jesus spoke, those forces lost their power.</p><p>Jesus has authority over every demon, including Satan.</p><p><strong>Where Christ is present, freedom becomes possible.</strong></p>"
+16,3,Jesus: Our Deliverer,You are not alone—He is with you.,/api/images/Link-3_1774248340255.png,"""Now have salvation and power come, and the Kingdom of our God."" — Revelation 12:10",1,media,"{""url"":""https://www.youtube.com/watch?v=6mHDKux38tQ"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+16,3,Jesus: Our Deliverer,You are not alone—He is with you.,/api/images/Link-3_1774248340255.png,"""Now have salvation and power come, and the Kingdom of our God."" — Revelation 12:10",2,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>For freedom Christ has set us free; stand firm therefore, and do not submit again to a yoke of slavery.</p></blockquote><p style=\""text-align: right;\""><strong>— Galatians 5:1</strong></p>"",""audioUrl"":""/api/images/For_freedom_Christ_has_set_us_Balance_Eleven_v3_019d1b1c-8523-7419-bad9-97f04adadea4_1775241492197.mp3"",""reference"":""Galatians 5:1"",""chunks"":[""For freedom Christ has set us free;"",""stand firm therefore,"",""and do not submit again to a yoke of slavery.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+16,3,Jesus: Our Deliverer,You are not alone—He is with you.,/api/images/Link-3_1774248340255.png,"""Now have salvation and power come, and the Kingdom of our God."" — Revelation 12:10",3,text,"<h2>Jesus did not cast out demons with rituals, chants, or special techniques.</h2><p>He spoke, and they left — because of who He is.</p><p>He also gave this authority to His followers. In Luke 10, He sent seventy-two disciples out in His name, and they came back amazed that it worked. Catholic deliverance ministry comes from this — not from folk tradition, but directly from the Gospels.</p><p><strong>Not every struggle is demonic. Most are not.</strong> But when evil has a foothold, Jesus has the authority, the right, and the will to break it. That is what our ministry will pray with you at the end of these 30 days.</p>"
+16,3,Jesus: Our Deliverer,You are not alone—He is with you.,/api/images/Link-3_1774248340255.png,"""Now have salvation and power come, and the Kingdom of our God."" — Revelation 12:10",4,single_select,<h2>Where do you most suspect the enemy may have a foothold in your life?</h2><p>☐ A sin pattern that feels bigger than my willpower</p><p>☐ A fear or anxiety that does not respond to the usual help</p><p>☐ Voices or thoughts that contradict what I know is true</p><p>☐ Family patterns that keep repeating</p><p>☐ Past involvement with the occult</p><p>☐ I am not sure yet</p>
+16,3,Jesus: Our Deliverer,You are not alone—He is with you.,/api/images/Link-3_1774248340255.png,"""Now have salvation and power come, and the Kingdom of our God."" — Revelation 12:10",5,text,<h2>Takeaways</h2><p>• Jesus has authority over every spiritual power.<br>• Christ came to bring freedom to those who are bound.<br>• Darkness loses power in the presence of Jesus.<br>• True freedom begins with turning toward Christ.</p>
+17,3,Jesus: Our Friend,He knows you and stays with you.,/api/images/Jesus_Friend2_1774281347715.webp,"""I have called you friends."" — John 15:15",0,text,"<h2>Many people see God as distant, demanding, or difficult to approach.</h2><p>But Jesus revealed something very different about God's heart.</p><p>He did not only call people servants or followers. He called them friends.</p><p>A friend walks with you, listens, and shares their life with you. Jesus invites people into this kind of relationship.</p><p><strong>Christian faith is not just about believing certain truths. It is about knowing Christ personally and walking with Him daily.</strong></p>"
+17,3,Jesus: Our Friend,He knows you and stays with you.,/api/images/Jesus_Friend2_1774281347715.webp,"""I have called you friends."" — John 15:15",1,media,"{""url"":""https://www.youtube.com/watch?v=RyiYKDTPSGc"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+17,3,Jesus: Our Friend,He knows you and stays with you.,/api/images/Jesus_Friend2_1774281347715.webp,"""I have called you friends."" — John 15:15",2,media,"{""url"":""https://www.youtube.com/watch?v=KwX1f2gYKZ4&list=RDKwX1f2gYKZ4&start_radio=1"",""text"":""<h2>Bookmark the the song above or listen right now.</h2><p></p>"",""mediaType"":""music""}"
+17,3,Jesus: Our Friend,He knows you and stays with you.,/api/images/Jesus_Friend2_1774281347715.webp,"""I have called you friends."" — John 15:15",3,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>This is my commandment, that you love one another as I have loved you. Greater love has no one than this, that someone lay down his life for his friends. You are my friends if you do what I command you. No longer do I call you servants, for the servant does not know what his master is doing; but I have called you friends, for all that I have heard from my Father I have made known to you.</p></blockquote><p style=\""text-align: right;\""><strong>— John 15:12-15</strong></p>"",""audioUrl"":""/api/images/This_is_my_commandment_that_yo_Balance_Eleven_v3_019d1b1d-1d6c-7ca0-992f-33c0b6b0080b_1775239484813.mp3"",""reference"":""John 15:12-15"",""chunks"":[""This is my commandment,"",""that you love one another as I have loved you."",""Greater love has no one than this,"",""that someone lay down his life for his friends."",""You are my friends if you do what I command you."",""No longer do I call you servants,"",""for the servant does not know what his master is doing;"",""but I have called you friends,"",""for all that I have heard from my Father I have made known to you.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+17,3,Jesus: Our Friend,He knows you and stays with you.,/api/images/Jesus_Friend2_1774281347715.webp,"""I have called you friends."" — John 15:15",4,text,"<h2>Takeaways</h2><p>• Jesus invites people <strong>into friendship with Him.</strong></p><p>• Faith grows through trusting in His plan and daily prayer.</p><p>• Jesus is present in <u>every</u> part of our lives.</p><p>• He is most present at in His Sacraments, especially the Mass and Eucharistic Adoration.</p>"
+18,3,Jesus: Our King,Surrender to the One who reigns.,/api/images/Link-4_1774248349252.png,"""My Lord and my God."" — St. Thomas the Apostle",0,text,"<h2>Jesus is King.</h2><p>After His resurrection, Jesus declared that all authority in heaven and on earth had been given to Him. This means that Christ is not simply someone we admire or learn from. He is the one who holds authority over all creation.</p><p>When Christians say <strong>“Jesus is Lord,”</strong> they are saying something deeply personal.</p><p>It means surrendering our whole lives to Jesus...our choices, our struggles, even the things we cannot control.</p>"
+18,3,Jesus: Our King,Surrender to the One who reigns.,/api/images/Link-4_1774248349252.png,"""My Lord and my God."" — St. Thomas the Apostle",1,media,"{""url"":""https://www.youtube.com/watch?v=8ZjodOy62qQ&list=RD8ZjodOy62qQ&start_radio=1"",""text"":""<h2>Listen and reflect</h2><p></p>""}"
+18,3,Jesus: Our King,Surrender to the One who reigns.,/api/images/Link-4_1774248349252.png,"""My Lord and my God."" — St. Thomas the Apostle",2,media,"{""url"":""https://www.youtube.com/watch?v=aabwei87sQM"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+18,3,Jesus: Our King,Surrender to the One who reigns.,/api/images/Link-4_1774248349252.png,"""My Lord and my God."" — St. Thomas the Apostle",3,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>Then Jesus approached and said to them, “All power in heaven and on earth has been given to me. Go, therefore, and make disciples of all nations, baptizing them in the name of the Father, and of the Son, and of the holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, until the end of the age.”</p></blockquote><p style=\""text-align: right;\""><strong>— Matt 28:18-20</strong></p>"",""audioUrl"":""/api/images/Then_Jesus_approached_and_said_Balance_Eleven_v3_019d1b1e-f13c-7512-9557-8832f0443753_1774276830250.mp3"",""reference"":""Matt 28:18-20"",""chunks"":[""Then Jesus approached and said to them,"",""“All power in heaven and on earth has been given to me."",""Go, therefore, and make disciples of all nations,"",""baptizing them in the name of the Father, and of the Son, and of the Holy Spirit,"",""teaching them to observe all that I have commanded you."",""And behold, I am with you always,"",""until the end of the age.”""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+18,3,Jesus: Our King,Surrender to the One who reigns.,/api/images/Link-4_1774248349252.png,"""My Lord and my God."" — St. Thomas the Apostle",4,text,<h2>Takeaways</h2><p>• Christ has authority over heaven and earth — He is King<br>• Saying “Jesus is Lord” means allowing Him access to our whole lives.<br>• Surrendering to Christ means trusting Him with what we cannot control.<br>• Nothing placed in God’s hands is ever wasted.</p>
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",0,media,"{""url"":""https://www.youtube.com/watch?v=X82AaeyPPe4"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",1,text,<h2>Faith is not just agreeing that God exists.<br>Faith is choosing to act as if what God says is true and trusting in Jesus.</h2><p></p>
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",2,text,"<h2>You committing to this 30-day program is an act of Faith!</h2><p><strong>If you act with the hope and belief that Jesus is Lord and Your Savior, you have faith.</strong></p><ul><li><p>You pray to Him → faith</p></li><li><p>You show up in hope for Him → faith</p></li><li><p>You keep going → faith</p></li></ul><p></p>"
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",3,scripture_practice,"{""duration"": 120, ""text"": ""<blockquote><p>Faith is the realization of what is hoped for and evidence of things not seen.</p></blockquote><p style=\""text-align: right;\""><strong>- Hebrews 11:1</strong></p><p></p>"", ""reference"": ""Hebrews 11:1"", ""chunks"": [""Faith is the realization"", ""of what is hoped for"", ""and evidence of things not seen.""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up."", ""audioUrl"": ""/api/images/Faith_is_the_realization_of_wh_Balance_Eleven_v3_019d8d8a-23b3-7353-bfb5-f73da61f8148_1776196290284.mp3""}"
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",4,path_selector,"{
+  ""headline"": ""Pick a path of Faith"",
+  ""options"": [
+    {
+      ""id"": ""answers"",
+      ""label"": ""She believed Jesus could heal her."",
+      ""description"": ""She grabbed onto his cloak."",
+      ""imageUrl"": """",
+      ""nextContent"": {
+        ""type"": ""media"",
+        ""content"": ""https://vimeo.com/1177577159?share=copy&fl=sv&fe=ci""
+      }
+    },
+    {
+      ""id"": ""control"",
+      ""label"": ""They brought him to Jesus."",
+      ""description"": ""The world is loud. You seek calm in breath and focus to gain power over your day. Yet, the unrest remains."",
+      ""imageUrl"": """",
+      ""nextContent"": {
+        ""type"": ""media"",
+        ""content"": ""https://vimeo.com/1177815632?fl=ip&fe=ec""
+      }
+    },
+    {
+      ""id"": ""loved"",
+      ""label"": ""He cried out to Jesus."",
+      ""description"": ""You long to be seen, known, and cherished. But love has felt distant or out of reach."",
+      ""imageUrl"": """",
+      ""nextContent"": {
+        ""type"": ""media"",
+        ""content"": ""https://vimeo.com/1177840022?share=copy&fl=sv&fe=ci""
+      }
+    }
+  ]
+}"
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",5,single_select,"<h2>Memorizing Scripture strengthens your faith in Jesus.<br>Choose one verse to memorize this week.</h2><p>☐ Faith is the realization of what is hoped for and evidence of things not seen. — Hebrews 11:1</p><p>☐ For by grace you have been saved through faith. — Ephesians 2:8-9</p><p>☐ If you have faith as small as a mustard seed... nothing will be impossible for you. — Matthew 17:20</p><p>☐ Faith without works is dead. — James 2:24</p><p>☐ Without faith, it is impossible to please God. — Hebrews 11:6</p>"
+19,4,What is Faith,Know where your authority comes from.,/api/images/Link__2__1774279868937.webp,"""Lord, I believe. Help my unbelief."" — Mark 9:24",6,text,<h2>Final Takeaways</h2><p>• Spiritual warfare is real<br>• Jesus has authority over all things<br>• You are not powerless in Christ<br>• Freedom begins by turning toward Him</p>
+20,4,Conversion,Turn back to God and begin again.,/api/images/Link-1__2__1774279875065.webp,"""If anyone is in Christ, they are a new creation."" — 2 Corinthians 5:17",0,text,"<h2>Following Jesus requires change.</h2><p>Not small adjustments, a new direction.</p><p>Conversion means turning away from what leads you into darkness<br>and choosing what leads you into life.</p>"
+20,4,Conversion,Turn back to God and begin again.,/api/images/Link-1__2__1774279875065.webp,"""If anyone is in Christ, they are a new creation."" — 2 Corinthians 5:17",1,media,"{""url"":""https://www.youtube.com/watch?v=erOoxEFF9vU"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+20,4,Conversion,Turn back to God and begin again.,/api/images/Link-1__2__1774279875065.webp,"""If anyone is in Christ, they are a new creation."" — 2 Corinthians 5:17",2,scripture_practice,"{""duration"":116,""text"":""<blockquote><p>For it is better to suffer for doing good, if that be the will of God, than for doing evil. For Christ also suffered for sins once, the righteous for the sake of the unrighteous, that he might lead you to God. Put to death in the flesh, he was brought to life in the spirit. </p></blockquote><p style=\""text-align: right;\""><strong>- 1 Peter 3:17-18</strong></p>"",""audioUrl"":""/api/images/For_it_is_better_to_suffer_for_Balance_Eleven_v3_019d1c40-1b22-71f0-ae62-b787231c757a_1774295779049.mp3"",""reference"":""1 Peter 3:17-18"",""chunks"":[""For it is better to suffer for doing good,"",""if that be the will of God,"",""than for doing evil."",""For Christ also suffered for sins once,"",""the righteous for the sake of the unrighteous,"",""that he might lead you to God."",""Put to death in the flesh,"",""he was brought to life in the spirit.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+20,4,Conversion,Turn back to God and begin again.,/api/images/Link-1__2__1774279875065.webp,"""If anyone is in Christ, they are a new creation."" — 2 Corinthians 5:17",3,text,"<h2>Final Takeaways</h2><p>• Change is part of following Christ<br>• Conversion is a decision, not a feeling<br>• God invites you into a new way of living</p>"
+21,4,Are You Ready to Change Your Life?,Be honest about where you stand.,/api/images/Link-2__2__1774279904975.webp,"""Choose this day whom you will serve."" — Joshua 24:15",0,chat_flow,"{
+  ""steps"": [
+    {
+      ""id"": ""step_1"",
+      ""type"": ""single_select"",
+      ""messages"": [
+        ""Let’s keep this simple."",
+        ""If nothing changes, nothing changes."",
+        ""So let’s be honest about where you are right now.""
+      ],
+      ""options"": [
+        {
+          ""id"": ""want"",
+          ""text"": ""I want to change""
+        },
+        {
+          ""id"": ""doubt"",
+          ""text"": ""I’m not sure I can""
+        },
+        {
+          ""id"": ""resist"",
+          ""text"": ""Part of me resists it""
+        },
+        {
+          ""id"": ""avoid"",
+          ""text"": ""I avoid thinking about it""
+        }
+      ],
+      ""variable"": ""reaction""
+    },
+    {
+      ""id"": ""step_2"",
+      ""type"": ""single_select"",
+      ""messages"": [
+        ""Is there something you already know needs to change?""
+      ],
+      ""options"": [
+        {
+          ""id"": ""clear"",
+          ""text"": ""Yes, I know exactly what it is""
+        },
+        {
+          ""id"": ""avoid"",
+          ""text"": ""I think so but I avoid it""
+        },
+        {
+          ""id"": ""stuck"",
+          ""text"": ""I feel stuck but can’t name it""
+        },
+        {
+          ""id"": ""none"",
+          ""text"": ""No""
+        }
+      ],
+      ""variable"": ""awareness""
+    },
+    {
+      ""id"": ""step_3"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        ""Be direct."",
+        ""Sometimes I…""
+      ],
+      ""variable"": ""pattern""
+    },
+    {
+      ""id"": ""step_4"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        ""What happens after?"",
+        ""After I do this, the result is…""
+      ],
+      ""variable"": ""effect""
+    },
+    {
+      ""id"": ""step_5"",
+      ""type"": ""narrator"",
+      ""messages"": [
+        ""That’s a pattern."",
+        ""And it’s costing you something.""
+      ]
+    },
+    {
+      ""id"": ""step_6"",
+      ""type"": ""single_select"",
+      ""messages"": [
+        ""What is it giving you, even temporarily?""
+      ],
+      ""options"": [
+        {
+          ""id"": ""control"",
+          ""text"": ""Control""
+        },
+        {
+          ""id"": ""relief"",
+          ""text"": ""Relief""
+        },
+        {
+          ""id"": ""connection"",
+          ""text"": ""Connection""
+        },
+        {
+          ""id"": ""escape"",
+          ""text"": ""Escape""
+        },
+        {
+          ""id"": ""other"",
+          ""text"": ""Something else""
+        }
+      ],
+      ""variable"": ""need"",
+      ""allow_other"": true
+    },
+    {
+      ""id"": ""step_7"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        ""Be specific."",
+        ""What has this cost you?""
+      ],
+      ""variable"": ""cost""
+    },
+    {
+      ""id"": ""step_8"",
+      ""type"": ""single_select"",
+      ""messages"": [
+        ""Right now, which is actually true?""
+      ],
+      ""options"": [
+        {
+          ""id"": ""ready"",
+          ""text"": ""I’m ready to change""
+        },
+        {
+          ""id"": ""unsure"",
+          ""text"": ""I want to but I’m not ready""
+        },
+        {
+          ""id"": ""resistant"",
+          ""text"": ""Part of me doesn’t want to""
+        },
+        {
+          ""id"": ""not_ready"",
+          ""text"": ""I’m not ready""
+        }
+      ],
+      ""variable"": ""readiness""
+    },
+    {
+      ""id"": ""step_9"",
+      ""type"": ""open_text"",
+      ""messages"": [
+        ""If you were free of this, what would be different?""
+      ],
+      ""variable"": ""vision""
+    },
+    {
+      ""id"": ""step_10"",
+      ""type"": ""final"",
+      ""messages"": [
+        ""You already see it."",
+        ""You already know the cost."",
+        ""Now it comes down to what you do next.""
+      ]
+    }
+  ]
+}"
+21,4,Are You Ready to Change Your Life?,Be honest about where you stand.,/api/images/Link-2__2__1774279904975.webp,"""Choose this day whom you will serve."" — Joshua 24:15",1,scripture_practice,"{""duration"":120,""text"":""<blockquote><p>I will give you a new heart, and a new spirit I will put within you. I will remove the heart of stone from your flesh and give you a heart of flesh. I will put my spirit within you so that you walk in my statutes, observe my ordinances, and keep them. You will live in the land I gave to your ancestors; you will be my people, and I will be your God. </p></blockquote><p style=\""text-align: right;\""><strong> — Ezekiel 36:26-28</strong></p>"",""audioUrl"":""/api/images/I_will_give_you_a_new_heart_an_Balance_Eleven_v3_019d1b39-b533-743d-a804-33a0df73d77d_1774278290802.mp3"",""reference"":""Ezekiel 36:26-28"",""chunks"":[""I will give you a new heart,"",""and a new spirit I will put within you."",""I will remove the heart of stone from your flesh and give you a heart of flesh."",""I will put my spirit within you so that you walk in my statutes,"",""observe my ordinances,"",""and keep them."",""You will live in the land I gave to your ancestors;"",""you will be my people,"",""and I will be your God.""],""reflectionDuration"":120,""reflectionTitle"":""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+22,4,Accepting the Invitation,Say yes to what God is offering.,/api/images/Link-3__2__1774279888938.webp,"""Let it be done to me according to your word."" — Mary",0,text,<h2>Jesus invites you into a new life.</h2><p>He does not force you.</p><p>He waits for your response.</p>
+22,4,Accepting the Invitation,Say yes to what God is offering.,/api/images/Link-3__2__1774279888938.webp,"""Let it be done to me according to your word."" — Mary",1,scripture_practice,"{""duration"": 120, ""text"": ""<blockquote><p>Behold, I stand at the door and knock. If anyone hears my voice and opens the door, I will come in to him and dine with him, and he with me.</p></blockquote><p style=\""text-align: right;\""><strong>— Revelation 3:20</strong></p>"", ""reference"": ""Revelation 3:20"", ""chunks"": [""Behold, I stand at the door"", ""and knock."", ""If anyone hears my voice"", ""and opens the door,"", ""I will come in to him"", ""and dine with him,"", ""and he with me.""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Is there a door He has been knocking at? What would it take to open it today?"", ""audioUrl"": """"}"
+22,4,Accepting the Invitation,Say yes to what God is offering.,/api/images/Link-3__2__1774279888938.webp,"""Let it be done to me according to your word."" — Mary",2,media,"{""url"":""https://www.youtube.com/watch?v=_QV_GPhYp3A"",""text"":""<h2 style=\""text-align: center;\"">Say this Prayer together</h2><p style=\""text-align: center;\"">Take, Lord, and receive all my liberty,<br>My memory, my understanding<br>And my entire will,<br>All I have and call my own.</p><p style=\""text-align: center;\"">You have given all to me.<br>To you, Lord, I return it.</p><p style=\""text-align: center;\"">Everything is yours; do with it what you will.<br>Give me only your love and your grace.<br>That is enough for me.</p><p style=\""text-align: center;\"">Amen.</p><p style=\""text-align: center;\""></p><p style=\""text-align: center;\""><em>Prayer of St. Ignatius of Loyola</em></p>"",""mediaType"":""music"",""title"":""Suscipe Prayer""}"
+22,4,Accepting the Invitation,Say yes to what God is offering.,/api/images/Link-3__2__1774279888938.webp,"""Let it be done to me according to your word."" — Mary",3,text_input,"<h2>Now in your own words.</h2><p>Write your own yes. Not the polite version, not what you think we want to see. What you are actually saying to God today.</p><p><strong>What are you handing over? What are you asking Him for? Where are you still holding back?</strong></p><p>This is what your prayer session will start from.</p>"
+22,4,Accepting the Invitation,Say yes to what God is offering.,/api/images/Link-3__2__1774279888938.webp,"""Let it be done to me according to your word."" — Mary",4,media,"{""url"":""https://www.youtube.com/watch?v=s7jXASBWwwI"",""text"":""<h2>We're going to set aside some time to praise and worship the Lord</h2><p></p>"",""mediaType"":""music""}"
+23,4,Sacred Space,Trust God beyond what you feel.,/api/images/Faith_1774280134224.webp,"""Go to your inner room, close the door, and pray to your Father in secret."" — Matthew 6:6",0,media,"{""url"":""/api/images/hopyeungan_04420_9-_A_final_serene_image_of_a_chosen_soul_stand_99de7c2b-23e6-44c2-87ba-7f9ad85dde55_1776197274184.webp"",""text"":""<h2>If you want to pray consistently, it helps to have a place where you do it.,</h2><h2>Without a set place, prayer usually gets pushed aside or forgotten.</h2><p>A small, consistent space removes that friction and makes it easier to show up each day.</p><p>This does not need to be elaborate. It needs to be simple enough that you will actually use it.</p><p></p>""}"
+23,4,Sacred Space,Trust God beyond what you feel.,/api/images/Faith_1774280134224.webp,"""Go to your inner room, close the door, and pray to your Father in secret."" — Matthew 6:6",1,media,"{""url"":""https://www.youtube.com/watch?v=TRgXQGr5LuA"",""text"":""<h2>Watch the following video on creating your Sacred Space</h2><p></p>""}"
+23,4,Sacred Space,Trust God beyond what you feel.,/api/images/Faith_1774280134224.webp,"""Go to your inner room, close the door, and pray to your Father in secret."" — Matthew 6:6",2,text_input,<h2>Where could you set up a space like this? Or do already have a dedicated prayer space?</h2><p></p>
+24,4,Baptism,Leave the old life behind and begin new.,/api/images/Change_your_Life_1774280537363.webp,"""We were buried with him through baptism into death."" — Romans 6:4",0,text,"<h2>When you choose Christ, something changes.</h2><h2>You are not the same person anymore.</h2><p>God begins to make you new.</p>"
+24,4,Baptism,Leave the old life behind and begin new.,/api/images/Change_your_Life_1774280537363.webp,"""We were buried with him through baptism into death."" — Romans 6:4",1,text,"<h2>Gift of Christian Baptism</h2><p>Through Baptism, a new life begins.</p><p>Old things pass away.</p><p>You are claimed by God.</p>"
+24,4,Baptism,Leave the old life behind and begin new.,/api/images/Change_your_Life_1774280537363.webp,"""We were buried with him through baptism into death."" — Romans 6:4",2,media,"{""url"":""https://www.youtube.com/watch?v=hZlUZ3ub4mg"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+24,4,Baptism,Leave the old life behind and begin new.,/api/images/Change_your_Life_1774280537363.webp,"""We were buried with him through baptism into death."" — Romans 6:4",3,scripture_practice,"{""duration"": 30, ""text"": ""<blockquote><p>Whoever believes and is baptized will be saved; whoever does not believe will be condemned. </p></blockquote><p style=\""text-align: right;\""><strong>- Mark 16:16</strong></p><p></p>"", ""audioUrl"": ""/api/images/Whoever_believes_and_is_baptiz_Balance_Eleven_v3_019d1b72-55e9-79c4-a690-fc33b577bc22_1774282007420.mp3"", ""reference"": ""Mark 16:16"", ""chunks"": [""Whoever believes and is baptized will be saved;"", ""whoever does not believe will be condemned."", ""- Mark 16:16""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+24,4,Baptism,Leave the old life behind and begin new.,/api/images/Change_your_Life_1774280537363.webp,"""We were buried with him through baptism into death."" — Romans 6:4",4,survey,"{
+  ""title"": ""Week 4 Survey"",
+  ""description"": ""Take a moment to reflect honestly on this past week."",
+  ""questions"": [
+    {
+      ""id"": ""q1774287617349"",
+      ""type"": ""rating"",
+      ""label"": ""How helpful was this week of the program? 1 = Not helpful 5 = Very helpful""
+    },
+    {
+      ""id"": ""q1774287699376"",
+      ""type"": ""rating"",
+      ""label"": ""How engaging did you find the content? 1 = Not engaging 5 = Very engaging""
+    },
+    {
+      ""id"": ""q1774287711169"",
+      ""type"": ""text"",
+      ""label"": ""Which module stood out to you this week?""
+    },
+    {
+      ""id"": ""q1774287820775"",
+      ""type"": ""text"",
+      ""label"": ""What would you change or improve?""
+    },
+    {
+      ""id"": ""q1774287721497"",
+      ""type"": ""text"",
+      ""label"": ""What is one way God worked in your life this week?""
+    }
+  ]
+}"
+24,4,Baptism,Leave the old life behind and begin new.,/api/images/Change_your_Life_1774280537363.webp,"""We were buried with him through baptism into death."" — Romans 6:4",5,text,<h2>Final Takeaways</h2><p>• God is making you new<br>• Your past does not define you<br>• A new life has begun<br>• Stay close to God as you move forward</p>
+25,5,Sunday Worship,Why it's important.,/api/images/Link-3__3__1774281014199.webp,"""Where two or three are gathered in my name, there am I in the midst of them."" — Matthew 18:20",0,text,"<h2>Most people who go to Mass have been going their whole life.</h2><p>Over time, it can start to feel routine — the same readings, the same prayers, the same pews.</p><p>Today we look at what the Church says is actually happening every time the Mass is offered.</p>"
+25,5,Sunday Worship,Why it's important.,/api/images/Link-3__3__1774281014199.webp,"""Where two or three are gathered in my name, there am I in the midst of them."" — Matthew 18:20",1,media,"{""url"":""https://www.youtube.com/watch?v=OOLZDaTgIaM"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+25,5,Sunday Worship,Why it's important.,/api/images/Link-3__3__1774281014199.webp,"""Where two or three are gathered in my name, there am I in the midst of them."" — Matthew 18:20",2,multi_select,"<p>After watching, what stood out most to you?</p><p>☐ I never realized what was happening spiritually<br>☐ Heaven and earth being connected<br>☐ The presence of angels and saints<br>☐ The sacrifice of Jesus being made present<br>☐ I’m not sure what to think</p>"
+25,5,Sunday Worship,Why it's important.,/api/images/Link-3__3__1774281014199.webp,"""Where two or three are gathered in my name, there am I in the midst of them."" — Matthew 18:20",3,scripture_practice,"{""duration"": 30, ""text"": ""<blockquote><p>They devoted themselves to the apostles’ teaching and to fellowship, to the breaking of bread and to prayer.</p></blockquote><p style=\""text-align: right;\""><strong>- Acts 2:42</strong></p><p></p>"", ""audioUrl"": ""/api/images/They_devoted_themselves_to_the_Balance_Eleven_v3_019d1bd0-3198-708d-8ef4-1f01ea8f0f1a_1774292979920.mp3"", ""reference"": ""Acts 2:42"", ""chunks"": [""They devoted themselves to the apostles’ teaching and to fellowship,"", ""to the breaking of bread and to prayer."", ""- Acts 2:42""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+25,5,Sunday Worship,Why it's important.,/api/images/Link-3__3__1774281014199.webp,"""Where two or three are gathered in my name, there am I in the midst of them."" — Matthew 18:20",4,text,<p>The first Christians didn’t gather out of habit.</p><p>They gathered because something real was happening.</p><p>The same reality is present at every Mass.</p>
+25,5,Sunday Worship,Why it's important.,/api/images/Link-3__3__1774281014199.webp,"""Where two or three are gathered in my name, there am I in the midst of them."" — Matthew 18:20",5,text,<h2>Final Takeaways</h2><p>• The Mass is not just routine<br>• Something real is happening<br>• You are invited into it</p>
+26,5,The Truth of God's Word,Let Scripture define what is true.,/api/images/Link-4__3__1774281035122.webp,"""Your word is a lamp unto my feet and a light unto my path."" — Psalm 119:105",0,text,"<h2>If you have tried to read the Bible before and it did not stick, you are not alone.</h2><p>It can feel confusing, distant, or hard to know where to start.</p><p>Today is about making it simpler.</p>"
+26,5,The Truth of God's Word,Let Scripture define what is true.,/api/images/Link-4__3__1774281035122.webp,"""Your word is a lamp unto my feet and a light unto my path."" — Psalm 119:105",1,media,"{""url"":""https://www.youtube.com/watch?v=6hb7nSL1gKU&t=7s"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+26,5,The Truth of God's Word,Let Scripture define what is true.,/api/images/Link-4__3__1774281035122.webp,"""Your word is a lamp unto my feet and a light unto my path."" — Psalm 119:105",2,scripture_practice,"{""duration"": 30, ""text"": ""<blockquote><p>Jesus then said to those Jews who believed in him,* “If you remain in my word, you will truly be my disciples, and you will know the truth, and the truth will set you free.” </p></blockquote><p style=\""text-align: right;\""><strong>- John 8:31-32</strong></p>"", ""audioUrl"": ""/api/images/Jesus_then_said_to_those_Jews_Balance_Eleven_v3_019d1c1d-a4b0-74a1-ac58-3a2fee524bec_1774293457626.mp3"", ""reference"": ""John 8:31-32"", ""chunks"": [""Jesus then said to those Jews who believed in him,* “If you remain in my word,"", ""you will truly be my disciples,"", ""and you will know the truth,"", ""and the truth will set you free.” - John 8:31-32""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+26,5,The Truth of God's Word,Let Scripture define what is true.,/api/images/Link-4__3__1774281035122.webp,"""Your word is a lamp unto my feet and a light unto my path."" — Psalm 119:105",3,single_select,"<h2>Right now, which is closest to you?</h2><p>☐ I don’t read Scripture consistently<br>☐ I start, but don’t stick with it<br>☐ I read sometimes<br>☐ I read regularly</p>"
+26,5,The Truth of God's Word,Let Scripture define what is true.,/api/images/Link-4__3__1774281035122.webp,"""Your word is a lamp unto my feet and a light unto my path."" — Psalm 119:105",4,text,<h2>Final Takeaways</h2><p>• God speaks through His Word<br>• Consistency matters more than intensity<br>• Scripture shapes how you live<br>• Start simple and stay with it</p>
+27,5,The Sacramental Life,What are the 7 sacraments?,/api/images/Link__3__1774281052062.webp,"""The sacraments are efficacious signs of grace."" — Catechism of the Catholic Church",0,text,"<h2>It is easy to think of the sacraments as rituals — things you go through, things that feel symbolic.</h2><p>Catholic teaching says something very different.</p><p><strong>Something real is happening in every one of them.</strong></p>"
+27,5,The Sacramental Life,What are the 7 sacraments?,/api/images/Link__3__1774281052062.webp,"""The sacraments are efficacious signs of grace."" — Catechism of the Catholic Church",1,media,"{""url"":""https://www.youtube.com/watch?v=PY-ugeRgNzQ"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+27,5,The Sacramental Life,What are the 7 sacraments?,/api/images/Link__3__1774281052062.webp,"""The sacraments are efficacious signs of grace."" — Catechism of the Catholic Church",2,scripture_practice,"{""duration"": 60, ""text"": ""<blockquote><p> And with that he breathed on them and said, ‘Receive the Holy Spirit. If you forgive anyone’s sins, their sins are forgiven; if you do not forgive them, they are not forgiven.’</p></blockquote><p style=\""text-align: right;\""><strong>- John 20:22-23</strong></p>"", ""audioUrl"": ""/api/images/And_with_that_he_breathed_on_Balance_Eleven_v3_019d1c25-aad4-713a-8266-e184517c5ee0_1774293831515.mp3"", ""reference"": ""John 20:22-23"", ""chunks"": [""And with that he breathed on them and said,"", ""‘Receive the Holy Spirit."", ""If you forgive anyone’s sins,"", ""their sins are forgiven;"", ""if you do not forgive them,"", ""they are not forgiven.’ - John 20:22-23""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+27,5,The Sacramental Life,What are the 7 sacraments?,/api/images/Link__3__1774281052062.webp,"""The sacraments are efficacious signs of grace."" — Catechism of the Catholic Church",3,single_select,"<p>After watching, what stood out most to you?</p><p>☐ They are more than symbols<br>☐ God is actually working through them<br>☐ I didn’t realize they were this important<br>☐ I’ve experienced this before<br>☐ I’m still unsure</p>"
+27,5,The Sacramental Life,What are the 7 sacraments?,/api/images/Link__3__1774281052062.webp,"""The sacraments are efficacious signs of grace."" — Catechism of the Catholic Church",4,text,"<h2>Final Takeaways</h2><p>• The sacraments are not just symbolic<br>• God acts through them<br>• Grace is given, not earned<br>• You are not meant to do this alone</p>"
+28,5,The Eucharist / Adoration,Remain in His presence.,/api/images/Link-2__3__1774280951810.webp,"""Could you not watch one hour with me?"" — Jesus, Matthew 26:40",0,text,"<h2>From the outside, the Eucharist can look like a small piece of bread — something ordinary.</h2><p>The Church teaches something extraordinary.</p><p>When Jesus said <strong>""this is my body,""</strong> He meant it.</p>"
+28,5,The Eucharist / Adoration,Remain in His presence.,/api/images/Link-2__3__1774280951810.webp,"""Could you not watch one hour with me?"" — Jesus, Matthew 26:40",1,media,"{""url"":""https://www.youtube.com/watch?v=UQPTfyxZLKI"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+28,5,The Eucharist / Adoration,Remain in His presence.,/api/images/Link-2__3__1774280951810.webp,"""Could you not watch one hour with me?"" — Jesus, Matthew 26:40",2,scripture_practice,"{""duration"": 60, ""text"": ""<blockquote><p>“Whoever eats my flesh and drinks my blood has eternal life.</p></blockquote><p style=\""text-align: right;\""><strong>— John 6:54–57</strong></p><p></p>"", ""audioUrl"": ""/api/images/Whoever_eats_my_flesh_and_drin_Balance_Eleven_v3_019d1c2e-9a57-71c4-afd5-4f21f5730469_1774294375824.mp3"", ""reference"": ""John 6:54-57"", ""chunks"": [""“Whoever eats my flesh and drinks my blood has eternal life."", ""— John 6:54–57""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+28,5,The Eucharist / Adoration,Remain in His presence.,/api/images/Link-2__3__1774280951810.webp,"""Could you not watch one hour with me?"" — Jesus, Matthew 26:40",3,single_select,"<p>Right now, which is closest to you?</p><p>☐ I believe this is really Jesus<br>☐ I want to believe it<br>☐ I’m unsure<br>☐ I’ve never thought about it like this</p>"
+28,5,The Eucharist / Adoration,Remain in His presence.,/api/images/Link-2__3__1774280951810.webp,"""Could you not watch one hour with me?"" — Jesus, Matthew 26:40",4,media,https://www.youtube.com/watch?v=WvKmEBCkOr4
+28,5,The Eucharist / Adoration,Remain in His presence.,/api/images/Link-2__3__1774280951810.webp,"""Could you not watch one hour with me?"" — Jesus, Matthew 26:40",5,text,"<h2>Final Takeaways</h2><p>• The Eucharist is not symbolic<br>• Jesus is truly present<br>• You are invited to be with Him<br>• This is an encounter, not a routine</p>"
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",0,text,"<h2>If you have tried to change before — tried harder, tried to be better — and found that it did not last, you are describing a universal human experience.</h2><p>Today is about the reason effort alone is not enough.</p>"
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",1,media,"{""url"":""https://www.youtube.com/watch?v=0g5Kn_tEGDs"",""text"":""<h2>Watch the following video</h2><p></p>""}"
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",2,scripture_practice,"{""duration"": 60, ""text"": ""<blockquote><p>For the grace of God has appeared, saving all and training us to reject godless ways and worldly desires and to live temperately, justly, and devoutly in this age, as we await the blessed hope, the appearance of the glory of the great God and of our savior Jesus Christ, who gave himself for us to deliver us from all lawlessness and to cleanse for himself a people as his own, eager to do what is good. </p></blockquote><p style=\""text-align: right;\""><strong>- Titus 2:11-14</strong></p>"", ""audioUrl"": ""/api/images/For_the_grace_of_God_has_appea_Balance_Eleven_v3_019d1c33-4954-7a4e-bc15-7c4d7b12ae25_1774294825189.mp3"", ""reference"": ""Titus 2:11-14"", ""chunks"": [""For the grace of God has appeared,"", ""saving all and training us to reject godless ways and worldly desires and to live temperately,"", ""justly,"", ""and devoutly in this age,"", ""as we await the blessed hope,"", ""the appearance of the glory of the great God and of our savior Jesus Christ,"", ""who gave himself for us to deliver us from all lawlessness and to cleanse for himself a people as his own,"", ""eager to do what is good."", ""- Titus 2:11-14""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",3,single_select,"<h2>Which feels most true for you?</h2><p>☐ I try, but fall back into the same patterns<br>☐ I want to change, but feel stuck<br>☐ I rely mostly on my own effort<br>☐ I’ve experienced real change before</p>"
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",4,text,<p>Change doesn’t come from effort alone.</p><p>It comes from grace.</p><p>Grace is God working in you.</p>
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",5,media,https://www.youtube.com/watch?v=LuvfMDhTyMA
+29,5,Sanctifying & Actual Grace,You cannot change by effort alone,/api/images/Link-1__3__1774280969464.webp,"""My grace is sufficient for you, for power is made perfect in weakness."" — 2 Corinthians 12:9",6,text,<p>Final Takeaways</p><p>• You cannot change by effort alone<br>• Grace is God working in you<br>• God gives help in real moments<br>• You are not alone in this</p>
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",0,text,"<h2>You did it.</h2><p>Thirty days ago, you answered a question we asked on Day 0 — what you most hoped would change in you over these 30 days.</p><p>Take a moment now to look back at what you wrote.</p><p>The work of this course is not finished, but something real has begun. The next step is your prayer session.</p>"
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",1,scripture_practice,"{""duration"": 60, ""text"": ""<blockquote><p>I am confident of this, that the one who began a good work in you will continue to complete it until the day of Christ Jesus.</p></blockquote><p style=\""text-align: right;\""><strong>- Phil 1:6</strong></p>"", ""audioUrl"": ""/api/images/I_am_confident_of_this_that_th_Balance_Eleven_v3_019d1c36-4c8f-7686-ac95-67641b280fd5_1774297425142.mp3"", ""reference"": ""Philippians 1:6"", ""chunks"": [""I am confident of this,"", ""that the one who began a good work in you will continue to complete it until the day of Christ Jesus."", ""- Phil 1:6""], ""reflectionDuration"": 120, ""reflectionTitle"": ""Stay with this and bring it to God.\nReflect on the thoughts that come up.""}"
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",2,text_input,<h2>Take a moment to look back at the version of you from Day 1.</h2><p>What has changed in you?<br>What do you see differently now?<br>What will you carry forward?</p>
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",3,text,"<h2>What your prayer session actually is.</h2><p>A prayer session with our ministry runs about 90 minutes. Two or three ministers are in the room, under the direction of a priest. You sit, you talk about what has come up in this course, and then prayer begins.</p><p>The prayer starts general and narrows. You will renounce specific things out loud, in your own voice. We will pray specific prayers of healing and, where appropriate, deliverance. It is not dramatic. It is often quiet. It is almost always powerful.</p><p><strong>Whatever you have seen in movies, put it aside.</strong> The real work is different.</p>"
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",4,text,"<h2>How to prepare for your session.</h2><p>Five things to do before you come:</p><ul><li><p><strong>Go to confession</strong> within the week before your session. If you have not been yet, go now. This is the single most important preparation.</p></li><li><p><strong>Fast the day of the session</strong>, if your health allows — bread and water, or skip a meal. Ask your mentor if unsure.</p></li><li><p><strong>Rest</strong> the night before. Do not come exhausted or rushed.</p></li><li><p><strong>Pray the Our Father, Hail Mary, and Glory Be</strong> the morning of. Just those three, slowly.</p></li><li><p><strong>Come with what you have named</strong> across these 30 days — the footholds, the forgivenesses, the yes. We will work through them together.</p></li></ul>"
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",5,text,<h2>After the session.</h2><p>The session is not the finish line. It is the door.</p><p>The first weeks after are the most important. Keep praying daily. Keep going to Sunday Mass. Go back to confession within a month. Stay close to the sacraments.</p><p><strong>Your mentor will walk with you through the first month. Use them.</strong></p>
+30,5,Conclusion,You did it!,/api/images/Link-5__2__1774281003423.webp,"""Be not afraid. Open wide the doors for Christ."" — St. John Paul II",6,text,"<h2>Help us tell the story.</h2><p>Your journey is unique. By sharing your experience in a brief exit interview, you help us understand the human heart of this program. Let’s talk about where you’re going next.<br><br><a target=""_blank"" rel=""noopener noreferrer nofollow"" href=""https://cal.com/spiritual-healing-chicago/lumen-fidei-exit-interview"">SCHEDULE HERE</a></p>"
