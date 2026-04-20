@@ -22,6 +22,9 @@ import {
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
+const _envLimit = parseInt(process.env.SNAPSHOT_MAX_AUTO_SAVES ?? '', 10);
+const MAX_AUTO_SNAPSHOTS = Number.isFinite(_envLimit) && _envLimit > 0 ? _envLimit : 20;
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
@@ -129,6 +132,7 @@ export interface IStorage {
   createTrackASnapshot(name: string): Promise<TrackASnapshot>;
   restoreTrackASnapshot(id: number): Promise<void>;
   deleteTrackASnapshot(id: number): Promise<void>;
+  pruneAutoSnapshots(maxCount?: number): Promise<void>;
 
   // session store
   sessionStore: any;
@@ -805,7 +809,22 @@ export class DatabaseStorage implements IStorage {
     ]);
     const data = { track_a_content: content, prelim_modules: prelim };
     const [snap] = await db.insert(trackASnapshots).values({ name, data }).returning();
+    if (name.startsWith('Auto-save:')) {
+      await this.pruneAutoSnapshots();
+    }
     return snap;
+  }
+
+  async pruneAutoSnapshots(maxCount: number = MAX_AUTO_SNAPSHOTS): Promise<void> {
+    const autoSaves = await db
+      .select({ id: trackASnapshots.id })
+      .from(trackASnapshots)
+      .where(sql`${trackASnapshots.name} LIKE 'Auto-save:%'`)
+      .orderBy(desc(trackASnapshots.createdAt));
+    if (autoSaves.length > maxCount) {
+      const toDelete = autoSaves.slice(maxCount).map((s) => s.id);
+      await db.delete(trackASnapshots).where(inArray(trackASnapshots.id, toDelete));
+    }
   }
 
   async restoreTrackASnapshot(id: number): Promise<void> {
