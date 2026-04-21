@@ -2152,22 +2152,22 @@ function KnowledgeQuizSlide({ content, onComplete }: { content: string; onComple
   if (phase === "intro") {
     return (
       <div
-        className="min-h-full flex flex-col items-center justify-center px-6 py-10 text-center gap-8"
+        className="min-h-full flex flex-col items-center justify-center px-6 py-10 gap-8"
         data-testid="kq-intro-screen"
       >
-        <div className="space-y-3">
-          <p className="type-display-xl font-bold text-white leading-tight">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <p className="type-display-xl text-white text-center">
             {data.intro.title}
           </p>
           {data.intro.subtitle && (
-            <p className="type-body-xl text-[var(--white-60)]">
+            <p className="type-body-xl text-[var(--white-60)] text-center">
               {data.intro.subtitle}
             </p>
           )}
         </div>
         <Button
           onClick={() => setPhase("question")}
-          className="bg-[#00b57a] hover:bg-[#00a06a] text-white px-8 py-3 text-base rounded-xl"
+          className="bg-[#00b57a] hover:bg-[#00a06a] text-white px-8 py-2.5 rounded-xl uppercase tracking-widest text-sm font-normal shadow-sm"
           data-testid="button-kq-start"
         >
           Start
