@@ -327,7 +327,7 @@ function MessageBubble({
   return (
     <div
       className={cn(
-        "w-full flex items-end gap-[8px]",
+        "flex items-end gap-[8px]",
         role === "system" ? "justify-start" : "justify-end",
         "transition-opacity ease-out",
         visible ? "opacity-100" : "opacity-0",
@@ -1036,7 +1036,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               />
             <div
               ref={scrollContainerRef}
-              className="h-full overflow-y-auto flex flex-col items-center gap-4"
+              className="h-full overflow-y-auto flex flex-col gap-4"
               style={{ scrollbarWidth: "none", padding: "24px" }}
             >
               {renderedMessages.map((msg, i) => {
@@ -1062,7 +1062,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               })}
 
               {showTyping && (
-                <div className="w-full flex items-end justify-start">
+                <div className="flex items-end justify-start">
                   <TypingIndicator />
                 </div>
               )}
@@ -1070,7 +1070,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               {/* Option buttons */}
               {inputReady && !flowComplete && currentStep &&
                 (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
-                <div className="flex flex-col gap-2 w-full">
+                <div className="grid grid-cols-2 gap-2">
                   {resolveOptions(currentStep).map(opt => (
                     <OptionButton
                       key={opt.value}
