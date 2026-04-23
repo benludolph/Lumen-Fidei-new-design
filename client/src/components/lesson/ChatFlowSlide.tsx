@@ -1062,7 +1062,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               })}
 
               {showTyping && (
-                <div className="flex items-end justify-start">
+                <div className="w-full flex items-end justify-start">
                   <TypingIndicator />
                 </div>
               )}
