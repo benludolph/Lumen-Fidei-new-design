@@ -1,0 +1,31 @@
+I have a swipeable card game using a JSON deck format. Each card has prompt, leftLabel, rightLabel, and optional effects, path, setPathOnChoice, end, and endText fields. Cards are shown top to bottom; a card with a path field only shows if the player is currently stamped with that path.
+I need you to add three features on top of the existing engine without breaking any of the existing fields.
+Feature 1: Three visible stat meters at the top of the screen
+The game tracks three stats: worth, safety, and belonging. Each starts at 50 and is clamped between 0 and 100. Any card's effects object can modify these with positive or negative integers. Render three horizontal meter bars at the top of the screen — one per stat — with a small label and icon next to each. Amber/gold fill when the stat is in a healthy middle range (20–80), red fill when it is below 20 or above 80. The meters should animate when a choice changes them.
+Feature 2: Wound tracking (effects keys that start with "R")
+Any effects key that starts with a capital R followed by a number (e.g. R1, R2, R5, R6, R9, R10) is a wound flag, not a stat. Do not display these in the meter bar. Instead, track them silently. When a card's effects install a wound the player didn't previously have (i.e. the flag goes from 0 to 1), show a small subtle notification in the corner of the screen for 3 seconds that says WOUND INSTALLED — nothing else. The wounds are revealed narratively inside the prompts themselves.
+Also keep an internal list of wound IDs the player has accumulated, in installation order. You will need this for Feature 3.
+Here is the mapping of wound IDs to their narrative text, in case you want to display them on a debug screen or final summary:
+
+R1: "Honesty is not worth it"
+R2: "I must be perfect to be loved"
+R4: "Love must be earned"
+R5: "I am alone"
+R6: "Authority is dangerous"
+R9: "God does not love me"
+R10: "I need control to be safe"
+
+Feature 3: An end-of-game reflection screen
+When the player reaches any card with end: true and the endText has been shown, add a Continue button below the endText. Tapping it takes the player to a reflection screen that shows:
+
+A header: "How did you get here?"
+A short fixed paragraph: "You made, at most, twenty-five choices in this game. Some of them were even virtuous — you said no when you should have. And still, you ended here. This is what sin actually does. It is a slow closing of doors by someone who was wounded before they knew what a door was. This is why we need Christ, and not just self-improvement. This is why we pray for deliverance."
+A list of the wounds the player installed during the playthrough, in installation order. Each line reads like this, with the full wound text from the mapping above:
+
+
+· "Honesty is not worth it"
+· "I am alone"
+· "I need control to be safe"
+
+
+A Play Again button that resets stats to 50/50/50, clears wounds, clears path, and returns to the first card.
