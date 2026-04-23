@@ -327,7 +327,7 @@ function MessageBubble({
   return (
     <div
       className={cn(
-        "flex items-end gap-[8px]",
+        "w-full flex items-end gap-[8px]",
         role === "system" ? "justify-start" : "justify-end",
         "transition-opacity ease-out",
         visible ? "opacity-100" : "opacity-0",
@@ -1025,9 +1025,18 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             )}
 
             {/* Messages list */}
+            <div className="flex-1 relative overflow-hidden min-h-0">
+              {/* Upward fade — messages dissolve as they scroll behind this */}
+              <div
+                className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
+                style={{
+                  height: "100px",
+                  background: "linear-gradient(to bottom, #0B0B0B 0%, transparent 100%)",
+                }}
+              />
             <div
               ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto flex flex-col gap-4 min-h-0"
+              className="h-full overflow-y-auto flex flex-col items-center gap-4"
               style={{ scrollbarWidth: "none", padding: "24px" }}
             >
               {renderedMessages.map((msg, i) => {
@@ -1061,7 +1070,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               {/* Option buttons */}
               {inputReady && !flowComplete && currentStep &&
                 (currentStep.inputType === "single_select" || currentStep.inputType === "multi_select") && (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-2 w-full">
                   {resolveOptions(currentStep).map(opt => (
                     <OptionButton
                       key={opt.value}
@@ -1102,6 +1111,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               )}
 
               <div ref={chatEndRef} className="h-16 shrink-0" />
+            </div>
             </div>
 
             {/* ── Input row ── */}
