@@ -1,14 +1,20 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "wouter";
-import { ChevronRight, Play, Pause, X, Clock } from "lucide-react";
-import { useUserAnswers } from "@/hooks/use-answers";
+import { ChevronRight, Play, X, Clock, Copy, Check, Trash2, Maximize2, Plus } from "lucide-react";
+import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
 import { CaptivityBuilderSlide } from "@/components/lesson/CaptivityBuilderSlide";
+import { SPIRITS, type SavedState } from "@/components/lesson/captivity-builder-data";
 import heroImg from "@assets/bearcla_intrusive_thoughts_--ar_169_--profile_qin2lfz_--v_8.1__1778103896965.png";
 
 const STANDALONE_DAY = 0;
 const HOW_TO_VIDEO_URL = "https://res.cloudinary.com/dsv0rjvoi/video/upload/v1778103999/Captivity_Excercise_dhrmy9.mp4";
+
+interface PrayerItem extends SavedState {
+  id: string;
+  createdAt: string;
+}
 
 function Breadcrumb() {
   return (
@@ -52,6 +58,111 @@ function Breadcrumb() {
   );
 }
 
+function SavedPrayerCard({
+  prayer,
+  onCopy,
+  onDelete,
+  copied,
+}: {
+  prayer: PrayerItem;
+  onCopy: () => void;
+  onDelete: () => void;
+  copied: boolean;
+}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const spirit = SPIRITS.find(s => s.id === prayer.spiritId);
+  const lines = prayer.prayer.split("\n");
+
+  return (
+    <div
+      className="relative rounded-xl overflow-hidden"
+      style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)" }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-5 pt-4 pb-3"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      >
+        <div className="flex flex-col gap-0.5">
+          <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>
+            Saved prayer
+          </span>
+          {spirit && (
+            <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.5)", fontStyle: "italic" }}>
+              Against the spirit of{" "}
+              <span style={{ color: "rgba(255,255,255,0.7)", fontStyle: "normal" }}>{spirit.name}</span>
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {/* Copy */}
+          <button
+            type="button"
+            onClick={onCopy}
+            data-testid={`button-copy-prayer-${prayer.id}`}
+            className="p-1.5 rounded-md transition-colors"
+            style={{ color: "rgba(255,255,255,0.4)", background: "transparent" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+            title="Copy prayer"
+          >
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </button>
+          {/* Delete */}
+          {confirmDelete ? (
+            <div className="flex items-center gap-1.5 ml-1">
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(false)}
+                className="type-body-xs px-2 py-1 rounded transition-colors"
+                style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { setConfirmDelete(false); onDelete(); }}
+                data-testid={`button-delete-prayer-${prayer.id}`}
+                className="type-body-xs px-2 py-1 rounded transition-colors"
+                style={{ color: "#f87171", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}
+              >
+                Delete
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="p-1.5 rounded-md transition-colors"
+              style={{ color: "rgba(255,255,255,0.3)", background: "transparent" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(239,68,68,0.7)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}
+              title="Delete prayer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+      {/* Prayer text */}
+      <div className="px-5 py-5">
+        <div style={{ fontFamily: "'IvyOra Display', serif", fontSize: "1.05rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>
+          {lines.map((line, i) => (
+            <p key={i} style={{ margin: i > 0 ? "0.55em 0 0" : 0 }}>
+              {line || "\u00a0"}
+            </p>
+          ))}
+        </div>
+        {prayer.scriptureRef && (
+          <p className="type-body-sm" style={{ marginTop: "16px", color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
+            {prayer.scriptureRef}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function HowToVideoWidget({ onClose }: { onClose: () => void }) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -59,13 +170,14 @@ function HowToVideoWidget({ onClose }: { onClose: () => void }) {
   const toggle = () => {
     const el = videoRef.current;
     if (!el) return;
-    if (playing) {
-      el.pause();
-      setPlaying(false);
-    } else {
-      el.play();
-      setPlaying(true);
-    }
+    if (playing) { el.pause(); setPlaying(false); }
+    else { el.play(); setPlaying(true); }
+  };
+
+  const handleFullscreen = () => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (el.requestFullscreen) el.requestFullscreen();
   };
 
   return (
@@ -84,37 +196,8 @@ function HowToVideoWidget({ onClose }: { onClose: () => void }) {
         boxShadow: "inset 0px 2px 0px 0px rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.6)",
       }}
     >
-      {/* Close button */}
-      <button
-        data-testid="button-close-howto-video"
-        onClick={onClose}
-        style={{
-          position: "absolute",
-          top: "8px",
-          right: "8px",
-          zIndex: 10,
-          background: "rgba(0,0,0,0.5)",
-          border: "none",
-          borderRadius: "50%",
-          width: "24px",
-          height: "24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          color: "white",
-          flexShrink: 0,
-        }}
-        aria-label="Close video"
-      >
-        <X size={12} />
-      </button>
-
       {/* Video area */}
-      <div
-        style={{ position: "relative", aspectRatio: "320/180", overflow: "hidden", cursor: "pointer" }}
-        onClick={toggle}
-      >
+      <div style={{ position: "relative", aspectRatio: "320/180", overflow: "hidden", cursor: "pointer" }} onClick={toggle}>
         <video
           ref={videoRef}
           src={HOW_TO_VIDEO_URL}
@@ -123,50 +206,62 @@ function HowToVideoWidget({ onClose }: { onClose: () => void }) {
           playsInline
         />
         {/* Bottom fade */}
-        <div style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "60px",
-          background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5))",
-          pointerEvents: "none",
-        }} />
-        {/* Play / Pause overlay */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "60px", background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5))", pointerEvents: "none" }} />
+        {/* Play overlay */}
         <div
-          data-testid="button-play-pause-howto"
           style={{
             position: "absolute",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: "62px",
-            height: "62px",
+            width: "56px",
+            height: "56px",
             borderRadius: "999px",
-            background: "rgba(0,0,0,0.4)",
+            background: "rgba(0,0,0,0.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             opacity: playing ? 0 : 1,
             transition: "opacity 0.2s",
+            pointerEvents: "none",
           }}
         >
-          <Play style={{ width: "28px", height: "28px", color: "white", marginLeft: "2px" }} />
+          <Play style={{ width: "24px", height: "24px", color: "white", marginLeft: "2px" }} />
         </div>
-        {/* Border bottom on thumbnail */}
+        {/* Top action buttons */}
+        <div style={{ position: "absolute", top: "8px", right: "8px", display: "flex", gap: "4px", zIndex: 10 }} onClick={e => e.stopPropagation()}>
+          <button
+            onClick={handleFullscreen}
+            style={{ background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "white" }}
+            title="Full screen"
+            aria-label="Fullscreen"
+          >
+            <Maximize2 size={11} />
+          </button>
+          <button
+            data-testid="button-close-howto-video"
+            onClick={onClose}
+            style={{ background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "white" }}
+            aria-label="Close video"
+          >
+            <X size={11} />
+          </button>
+        </div>
         <div style={{ position: "absolute", inset: 0, borderBottom: "1px solid rgba(255,255,255,0.1)", pointerEvents: "none" }} />
       </div>
 
       {/* Info row */}
-      <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <span className="type-body-lg font-semibold" style={{ color: "white", letterSpacing: "-0.1px" }}>
-          How to Use this Tool
-        </span>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Clock style={{ width: "14px", height: "14px", color: "white", flexShrink: 0 }} />
-          <span className="type-body-md font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
-            Follow-along tutorial
+      <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <span className="type-body-lg font-semibold" style={{ color: "white", letterSpacing: "-0.1px" }}>
+            How to Use this Tool
           </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Clock style={{ width: "13px", height: "13px", color: "rgba(255,255,255,0.5)", flexShrink: 0 }} />
+            <span className="type-body-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+              Follow-along tutorial
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -175,9 +270,73 @@ function HowToVideoWidget({ onClose }: { onClose: () => void }) {
 
 export default function CaptivityBuilderResource() {
   const { data: answers = [], isLoading } = useUserAnswers();
+  const { mutate: savePrayers } = useCreateAnswer();
+  const [prayers, setPrayers] = useState<PrayerItem[]>([]);
+  const [showForm, setShowForm] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const existingAnswer = answers.find((a) => a.dayNumber === STANDALONE_DAY)?.content;
+
+  // Parse existing answers (supports legacy single-prayer and new multi-prayer format)
+  useEffect(() => {
+    if (!existingAnswer) return;
+    try {
+      const parsed = JSON.parse(existingAnswer);
+      if (Array.isArray(parsed.prayers)) {
+        setPrayers(parsed.prayers);
+      } else if (parsed.prayer) {
+        // Migrate legacy single-prayer format to array
+        setPrayers([{
+          id: crypto.randomUUID(),
+          thought: parsed.thought ?? "",
+          spiritId: parsed.spiritId ?? "",
+          antonym: parsed.antonym ?? "",
+          scriptureRef: parsed.scriptureRef ?? "",
+          scriptureText: parsed.scriptureText ?? "",
+          from: parsed.from ?? "",
+          to: parsed.to ?? "",
+          now: parsed.now ?? "",
+          prayer: parsed.prayer,
+          createdAt: new Date().toISOString(),
+        }]);
+      }
+    } catch {}
+  }, [existingAnswer]);
+
+  const persistPrayers = (updated: PrayerItem[]) => {
+    savePrayers({ dayNumber: STANDALONE_DAY, content: JSON.stringify({ prayers: updated }) });
+  };
+
+  const handleSavePrayer = (data: SavedState) => {
+    const newPrayer: PrayerItem = {
+      id: crypto.randomUUID(),
+      ...data,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [...prayers, newPrayer];
+    setPrayers(updated);
+    persistPrayers(updated);
+    setShowForm(false);
+  };
+
+  const handleDeletePrayer = (id: string) => {
+    const updated = prayers.filter((p) => p.id !== id);
+    setPrayers(updated);
+    persistPrayers(updated);
+  };
+
+  const handleCopyPrayer = async (prayerText: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(prayerText);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {}
+  };
+
+  // When there are no prayers yet and answers are loaded → show form directly
+  const hasPrayers = prayers.length > 0;
+  const formVisible = !hasPrayers || showForm;
 
   return (
     <DashboardLayout>
@@ -198,7 +357,7 @@ export default function CaptivityBuilderResource() {
             flexDirection: "column",
             alignItems: "center",
             paddingTop: "40px",
-            paddingBottom: "80px",
+            paddingBottom: "100px",
             paddingLeft: "20px",
             paddingRight: "20px",
             width: "100%",
@@ -221,7 +380,6 @@ export default function CaptivityBuilderResource() {
               flexDirection: "column",
             }}
           >
-            {/* Hero image */}
             <div
               aria-hidden="true"
               style={{
@@ -237,65 +395,20 @@ export default function CaptivityBuilderResource() {
               <img
                 src={heroImg}
                 alt="Captivity Builder"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: "center top",
-                }}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
               />
-              {/* Top fade */}
-              <div style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "99px",
-                background: "linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)",
-                pointerEvents: "none",
-              }} />
-              {/* Bottom fade */}
-              <div style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: "335px",
-                background: "linear-gradient(to bottom, transparent, var(--surface-ground))",
-                pointerEvents: "none",
-              }} />
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "99px", background: "linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "335px", background: "linear-gradient(to bottom, transparent, var(--surface-ground))", pointerEvents: "none" }} />
             </div>
-
-            {/* Card text */}
             <div
               className="px-5 sm:px-10"
-              style={{
-                position: "relative",
-                zIndex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: "9.25px",
-                alignItems: "flex-start",
-                width: "100%",
-                paddingBottom: "40px",
-              }}
+              style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "9.25px", alignItems: "flex-start", width: "100%", paddingBottom: "40px" }}
             >
-              <p className="type-caption-md" style={{ color: "#d0d6e0", margin: 0 }}>
-                Tool · Spiritual Warfare
-              </p>
+              <p className="type-caption-md" style={{ color: "#d0d6e0", margin: 0 }}>Tool · Spiritual Warfare</p>
               <h1
                 data-testid="resource-title"
                 className="font-serif"
-                style={{
-                  fontWeight: 500,
-                  fontSize: "clamp(36px, 6vw + 10px, 80.2px)",
-                  lineHeight: "1.01",
-                  color: "white",
-                  margin: 0,
-                }}
+                style={{ fontWeight: 500, fontSize: "clamp(36px, 6vw + 10px, 80.2px)", lineHeight: "1.01", color: "white", margin: 0 }}
               >
                 Captivity Builder
               </h1>
@@ -307,53 +420,108 @@ export default function CaptivityBuilderResource() {
                 Build your personalized rebuke prayer against an intrusive thought.
               </p>
             </div>
-
-            {/* Inner shadow */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                inset: 0,
-                pointerEvents: "none",
-                borderRadius: "inherit",
-                boxShadow: "inset 0px 1px 0px 0px var(--white-10)",
-              }}
-            />
+            <div aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none", borderRadius: "inherit", boxShadow: "inset 0px 1px 0px 0px var(--white-10)" }} />
           </div>
 
-          {/* Builder below hero */}
-          <div
-            style={{
-              maxWidth: "960px",
-              width: "100%",
-              marginTop: "30px",
-            }}
-          >
+          {/* Content below hero */}
+          <div style={{ maxWidth: "960px", width: "100%", marginTop: "30px" }}>
             {isLoading ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
                 <div
                   className="animate-spin"
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    border: "2px solid var(--white-10)",
-                    borderTopColor: "var(--white-50)",
-                    borderRadius: "50%",
-                  }}
+                  style={{ width: "24px", height: "24px", border: "2px solid var(--white-10)", borderTopColor: "var(--white-50)", borderRadius: "50%" }}
                 />
               </div>
             ) : (
-              <CaptivityBuilderSlide
-                dayNumber={STANDALONE_DAY}
-                existingAnswer={existingAnswer}
-              />
+              <div className="space-y-6">
+                {/* Saved prayer cards */}
+                {hasPrayers && (
+                  <div className="space-y-4">
+                    {prayers.map((p) => (
+                      <SavedPrayerCard
+                        key={p.id}
+                        prayer={p}
+                        onCopy={() => handleCopyPrayer(p.prayer, p.id)}
+                        onDelete={() => handleDeletePrayer(p.id)}
+                        copied={copiedId === p.id}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Build new prayer form */}
+                {formVisible && (
+                  <div>
+                    {hasPrayers && (
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
+                        <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)" }}>
+                          Build another prayer
+                        </span>
+                        <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
+                      </div>
+                    )}
+                    <CaptivityBuilderSlide
+                      dayNumber={STANDALONE_DAY}
+                      onSavePrayer={handleSavePrayer}
+                    />
+                    {hasPrayers && showForm && (
+                      <button
+                        type="button"
+                        onClick={() => setShowForm(false)}
+                        className="type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors mt-4"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* "Add another prayer" button — only when prayers exist and form is hidden */}
+                {hasPrayers && !showForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(true)}
+                    data-testid="button-add-new-prayer"
+                    className="flex items-center gap-2 type-body-md text-[var(--white-50)] hover:text-white border border-[var(--white-10)] hover:border-[var(--white-20)] rounded-lg px-4 py-3 transition-colors w-full justify-center"
+                    style={{ background: "rgba(255,255,255,0.03)" }}
+                  >
+                    <Plus size={16} />
+                    Build another prayer
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* How-to video widget */}
-      {showVideo && <HowToVideoWidget onClose={() => setShowVideo(false)} />}
+      {/* Video widget — open or collapsed to pill */}
+      {showVideo ? (
+        <HowToVideoWidget onClose={() => setShowVideo(false)} />
+      ) : (
+        <button
+          data-testid="button-reopen-howto-video"
+          onClick={() => setShowVideo(true)}
+          className="flex items-center gap-2 type-body-sm font-medium"
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            zIndex: 50,
+            background: "var(--surface-raised)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: "999px",
+            padding: "8px 16px 8px 12px",
+            cursor: "pointer",
+            color: "white",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+          }}
+        >
+          <Play size={12} style={{ marginLeft: "1px" }} />
+          Watch Tutorial
+        </button>
+      )}
     </DashboardLayout>
   );
 }
