@@ -312,7 +312,7 @@ export default function ResourceDetail() {
                   width: "100%",
                   height: "100%",
                   objectFit: "cover",
-                  objectPosition: "center top",
+                  objectPosition: "center center",
                 }}
               />
               {/* Top edge fade */}
