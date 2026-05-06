@@ -16,6 +16,7 @@ import { StoryChoiceSlide } from "./StoryChoiceSlide";
 import { ImageCarouselSlide } from "./ImageCarouselSlide";
 import { BeforeAfterSlide } from "./BeforeAfterSlide";
 import { PotBandageScene } from "./PotBandageScene";
+import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 
 import answersImg from "@assets/Answers_desktop_1775146558812.webp";
 import controlImg from "@assets/Control_desktop_1775146558812.webp";
@@ -61,7 +62,8 @@ export type SlideType =
   | "before_after"
   | "scripture_practice"
   | "knowledge_quiz"
-  | "scene";
+  | "scene"
+  | "captivity_builder";
 
 
 export interface QuizData {
@@ -1412,6 +1414,13 @@ export function LessonSlide({
             alreadyDone={timerAlreadyDone}
             existingChunkIndex={practiceChunkIndex}
             onChunkSelect={onPracticeChunkSelect}
+          />
+        ) : type === "captivity_builder" ? (
+          <CaptivityBuilderSlide
+            intro={(() => { try { return JSON.parse(content).intro || undefined; } catch { return undefined; } })()}
+            dayNumber={dayNumber}
+            existingAnswer={existingAnswer}
+            onInteracted={onInteracted}
           />
         ) : (
           <TextSlide content={content} />

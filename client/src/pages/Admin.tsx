@@ -2330,7 +2330,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2359,6 +2359,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   before_after: "Before / After Slider",
   scripture_practice: "Scripture Practice",
   scene: "Interactive Scene",
+  captivity_builder: "Captivity Builder",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2383,6 +2384,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   before_after: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
   scripture_practice: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   scene: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  captivity_builder: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
 };
 
 // ============================================================
@@ -5533,6 +5535,7 @@ function TrackAContentManagementView() {
     if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
     if (type === "before_after") return BEFORE_AFTER_DEFAULT;
     if (type === "scene") return "{}";
+    if (type === "captivity_builder") return JSON.stringify({ intro: "" });
     return "";
   };
 
@@ -6136,6 +6139,28 @@ function TrackAContentManagementView() {
                               <div className="rounded-md border border-dashed border-muted-foreground/30 p-4 text-center">
                                 <p className="text-xs text-muted-foreground">Pot &amp; Bandage Scene — no configuration required.</p>
                                 <p className="text-xs text-muted-foreground/60 mt-1">The interactive cracked-pot scene is self-contained and plays automatically when this slide is shown.</p>
+                              </div>
+                            ) : slide.type === "captivity_builder" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Intro text (optional)</label>
+                                  <textarea
+                                    value={(() => { try { return JSON.parse(slide.content).intro || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.intro = e.target.value;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ intro: e.target.value }));
+                                      }
+                                    }}
+                                    placeholder="Optional intro shown above the builder..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-y"
+                                    data-testid={`textarea-captivity-intro-${index}`}
+                                  />
+                                </div>
+                                <p className="text-xs text-muted-foreground/60">The 12 spirits and prayer template are built in — no further configuration needed.</p>
                               </div>
                             ) : (
                               <div className="space-y-1">
@@ -6799,6 +6824,7 @@ function PrelimContentManagementView() {
     if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
     if (type === "before_after") return BEFORE_AFTER_DEFAULT;
     if (type === "scene") return "{}";
+    if (type === "captivity_builder") return JSON.stringify({ intro: "" });
     return "";
   };
 
@@ -7085,6 +7111,28 @@ function PrelimContentManagementView() {
                               <div className="rounded-md border border-dashed border-muted-foreground/30 p-4 text-center">
                                 <p className="text-xs text-muted-foreground">Pot &amp; Bandage Scene — no configuration required.</p>
                                 <p className="text-xs text-muted-foreground/60 mt-1">The interactive cracked-pot scene is self-contained and plays automatically when this slide is shown.</p>
+                              </div>
+                            ) : slide.type === "captivity_builder" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Intro text (optional)</label>
+                                  <textarea
+                                    value={(() => { try { return JSON.parse(slide.content).intro || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.intro = e.target.value;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ intro: e.target.value }));
+                                      }
+                                    }}
+                                    placeholder="Optional intro shown above the builder..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-y"
+                                    data-testid={`textarea-prelim-captivity-intro-${index}`}
+                                  />
+                                </div>
+                                <p className="text-xs text-muted-foreground/60">The 12 spirits and prayer template are built in — no further configuration needed.</p>
                               </div>
                             ) : (
                               <div className="space-y-1">
