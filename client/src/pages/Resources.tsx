@@ -19,8 +19,8 @@ import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
 import type { LucideIcon } from "lucide-react";
 
-import intrusiveImg from "@assets/intrusive_1778103912220.png";
-import intrusiveHoverImg from "@assets/intrusive__hover_1778103912219.png";
+import intrusiveImg from "@assets/intrusive_(1)_1778105200675.webp";
+import intrusiveHoverImg from "@assets/intrusive__hover_(1)_1778105200676.webp";
 
 import retaliationImg from "@assets/Retaliation_1773942790197.webp";
 import catechismImg from "@assets/Catechism_1773942790213.webp";
