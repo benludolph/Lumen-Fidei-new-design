@@ -13,6 +13,7 @@ import {
   Shield,
   ArrowRight,
   ExternalLink,
+  Wrench,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
@@ -375,6 +376,46 @@ export default function Resources() {
                     <div key={i} style={{ height: "126px", border: "0.5px solid var(--white-3)", borderRadius: "6px", backgroundColor: "var(--surface-ground)" }} />
                   )
                 )}
+              </div>
+            </div>
+
+            {/* TOOLS */}
+            <div>
+              <SectionDivider label="TOOLS" />
+              <div className="resource-grid-equal gap-2 w-full">
+                <Link href="/resources/tools/captivity-builder">
+                  <div
+                    data-testid="card-tool-captivity-builder"
+                    className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
+                    style={{
+                      backgroundColor: "#0F1011",
+                      border: "0.5px solid var(--white-5)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <div className="flex items-start relative z-[3]">
+                      <div
+                        className="w-6 h-6 rounded flex items-center justify-center shrink-0"
+                        style={{ background: "var(--white-5)", boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)" }}
+                      >
+                        <Wrench style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-between w-full relative z-[3]">
+                      <div className="flex-1 min-w-0">
+                        <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: "#f7f8f8", letterSpacing: "-0.1402px" }}>
+                          Captivity Builder
+                        </p>
+                        <p className="type-body-xs" style={{ color: "#8a8f98" }}>
+                          Build a personalized rebuke prayer
+                        </p>
+                      </div>
+                      <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
+                        <ArrowRight style={{ width: "14px", height: "14px" }} />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               </div>
             </div>
 

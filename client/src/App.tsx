@@ -21,6 +21,7 @@ import Collections from "@/pages/Collections";
 import Journal from "@/pages/Journal";
 import PreviewLesson from "@/pages/PreviewLesson";
 import PrayerToolkit from "@/pages/PrayerToolkit";
+import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
 
 // Protected Route Wrapper
 function ProtectedRoute({ 
@@ -90,6 +91,10 @@ function Router() {
 
       <Route path="/admin">
         <ProtectedRoute component={Admin} allowedRoles={['admin']} />
+      </Route>
+
+      <Route path="/resources/tools/captivity-builder">
+        <ProtectedRoute component={CaptivityBuilderResource} />
       </Route>
 
       <Route path="/resources/:id">

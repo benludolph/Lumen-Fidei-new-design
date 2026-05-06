@@ -84,7 +84,7 @@ function PrayerCard({
               margin: 0,
             }}
           >
-            Day {dayNumber}
+            {dayNumber === 0 ? "Standalone Tool" : `Day ${dayNumber}`}
           </p>
           {data.spiritId && (
             <p
