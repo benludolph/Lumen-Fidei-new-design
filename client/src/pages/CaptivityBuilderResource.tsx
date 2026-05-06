@@ -1,12 +1,14 @@
+import { useState, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "wouter";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Play, Pause, X, Clock } from "lucide-react";
 import { useUserAnswers } from "@/hooks/use-answers";
 import { CaptivityBuilderSlide } from "@/components/lesson/CaptivityBuilderSlide";
-import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
+import heroImg from "@assets/bearcla_intrusive_thoughts_--ar_169_--profile_qin2lfz_--v_8.1__1778103896965.png";
 
 const STANDALONE_DAY = 0;
+const HOW_TO_VIDEO_URL = "https://res.cloudinary.com/dsv0rjvoi/video/upload/v1778103999/Captivity_Excercise_dhrmy9.mp4";
 
 function Breadcrumb() {
   return (
@@ -50,8 +52,130 @@ function Breadcrumb() {
   );
 }
 
+function HowToVideoWidget({ onClose }: { onClose: () => void }) {
+  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggle = () => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (playing) {
+      el.pause();
+      setPlaying(false);
+    } else {
+      el.play();
+      setPlaying(true);
+    }
+  };
+
+  return (
+    <div
+      data-testid="howto-video-widget"
+      style={{
+        position: "fixed",
+        bottom: "24px",
+        right: "24px",
+        zIndex: 50,
+        width: "300px",
+        borderRadius: "11px",
+        border: "1px solid rgba(255,255,255,0.1)",
+        background: "var(--surface-ground)",
+        overflow: "hidden",
+        boxShadow: "inset 0px 2px 0px 0px rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.6)",
+      }}
+    >
+      {/* Close button */}
+      <button
+        data-testid="button-close-howto-video"
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: "8px",
+          right: "8px",
+          zIndex: 10,
+          background: "rgba(0,0,0,0.5)",
+          border: "none",
+          borderRadius: "50%",
+          width: "24px",
+          height: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          color: "white",
+          flexShrink: 0,
+        }}
+        aria-label="Close video"
+      >
+        <X size={12} />
+      </button>
+
+      {/* Video area */}
+      <div
+        style={{ position: "relative", aspectRatio: "320/180", overflow: "hidden", cursor: "pointer" }}
+        onClick={toggle}
+      >
+        <video
+          ref={videoRef}
+          src={HOW_TO_VIDEO_URL}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          onEnded={() => setPlaying(false)}
+          playsInline
+        />
+        {/* Bottom fade */}
+        <div style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "60px",
+          background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.5))",
+          pointerEvents: "none",
+        }} />
+        {/* Play / Pause overlay */}
+        <div
+          data-testid="button-play-pause-howto"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "62px",
+            height: "62px",
+            borderRadius: "999px",
+            background: "rgba(0,0,0,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: playing ? 0 : 1,
+            transition: "opacity 0.2s",
+          }}
+        >
+          <Play style={{ width: "28px", height: "28px", color: "white", marginLeft: "2px" }} />
+        </div>
+        {/* Border bottom on thumbnail */}
+        <div style={{ position: "absolute", inset: 0, borderBottom: "1px solid rgba(255,255,255,0.1)", pointerEvents: "none" }} />
+      </div>
+
+      {/* Info row */}
+      <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <span className="type-body-lg font-semibold" style={{ color: "white", letterSpacing: "-0.1px" }}>
+          How to Use this Tool
+        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Clock style={{ width: "14px", height: "14px", color: "white", flexShrink: 0 }} />
+          <span className="type-body-md font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>
+            Follow-along tutorial
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CaptivityBuilderResource() {
   const { data: answers = [], isLoading } = useUserAnswers();
+  const [showVideo, setShowVideo] = useState(true);
 
   const existingAnswer = answers.find((a) => a.dayNumber === STANDALONE_DAY)?.content;
 
@@ -74,7 +198,7 @@ export default function CaptivityBuilderResource() {
             flexDirection: "column",
             alignItems: "center",
             paddingTop: "40px",
-            paddingBottom: "60px",
+            paddingBottom: "80px",
             paddingLeft: "20px",
             paddingRight: "20px",
             width: "100%",
@@ -111,7 +235,7 @@ export default function CaptivityBuilderResource() {
               }}
             >
               <img
-                src={candleBg}
+                src={heroImg}
                 alt="Captivity Builder"
                 style={{
                   position: "absolute",
@@ -227,6 +351,9 @@ export default function CaptivityBuilderResource() {
           </div>
         </div>
       </div>
+
+      {/* How-to video widget */}
+      {showVideo && <HowToVideoWidget onClose={() => setShowVideo(false)} />}
     </DashboardLayout>
   );
 }

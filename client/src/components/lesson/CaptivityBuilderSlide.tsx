@@ -101,6 +101,13 @@ export function CaptivityBuilderSlide({
   const interactedRef = useRef(!!existingAnswer);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (!existingAnswer) return false;
+    try {
+      const p: SavedState = JSON.parse(existingAnswer);
+      return !!(p?.prayer?.trim());
+    } catch { return false; }
+  });
 
   const [thought, setThought] = useState("");
   const [spiritId, setSpiritId] = useState("");
@@ -125,6 +132,9 @@ export function CaptivityBuilderSlide({
       setNow(parsed.now ?? "");
       if (parsed.spiritId) {
         interactedRef.current = true;
+      }
+      if (parsed.prayer?.trim()) {
+        setIsCollapsed(true);
       }
     } catch {}
   }, [existingAnswer]);
@@ -172,6 +182,7 @@ export function CaptivityBuilderSlide({
       {
         onSuccess: () => {
           setSaved(true);
+          setIsCollapsed(true);
           if (!interactedRef.current) {
             interactedRef.current = true;
             onInteracted?.();
@@ -191,6 +202,7 @@ export function CaptivityBuilderSlide({
     setTo("");
     setNow("");
     setSaved(false);
+    setIsCollapsed(false);
   };
 
   const handleCopy = async () => {
@@ -206,6 +218,84 @@ export function CaptivityBuilderSlide({
 
   const inputBase =
     "bg-transparent border-b border-[var(--white-20)] text-white placeholder:text-[var(--white-30)] focus:outline-none focus:border-[var(--white-50)] transition-colors";
+
+  if (isCollapsed) {
+    const prayerLines = prayer.split("\n");
+    return (
+      <div className="space-y-6" data-testid="slide-captivity-builder">
+        {/* Saved prayer card */}
+        <div
+          className="relative rounded-xl border overflow-hidden"
+          style={{ border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)" }}
+        >
+          {/* Card header */}
+          <div
+            className="flex items-center justify-between px-5 pt-4 pb-3"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <div className="flex flex-col gap-0.5">
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>
+                Your saved prayer
+              </span>
+              {selectedSpirit && (
+                <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.5)", fontStyle: "italic" }}>
+                  Against the spirit of{" "}
+                  <span style={{ color: "rgba(255,255,255,0.7)", fontStyle: "normal" }}>{selectedSpirit.name}</span>
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleCopy}
+              disabled={!prayer}
+              data-testid="button-captivity-copy"
+              className="p-1.5 rounded-md transition-colors disabled:opacity-30"
+              style={{ color: "rgba(255,255,255,0.4)", background: "transparent" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+              title="Copy prayer"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+          {/* Prayer text */}
+          <div className="px-5 py-5">
+            <div style={{ fontFamily: "'IvyOra Display', serif", fontSize: "1.05rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>
+              {prayerLines.map((line, i) => (
+                <p key={i} style={{ margin: i > 0 ? "0.55em 0 0" : 0 }}>
+                  {line || "\u00a0"}
+                </p>
+              ))}
+            </div>
+            {scriptureRef && (
+              <p className="type-body-sm" style={{ marginTop: "16px", color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>
+                {scriptureRef}
+              </p>
+            )}
+          </div>
+        </div>
+        {/* Actions */}
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleReset}
+            data-testid="button-captivity-reset"
+            className="type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors"
+          >
+            Start over
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(false)}
+            data-testid="button-captivity-edit"
+            className="bg-[var(--surface-float)] text-white hover:bg-[var(--surface-raised)] border border-[var(--white-10)] rounded-md px-4 py-2 type-body-md transition-colors"
+          >
+            Edit prayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8" data-testid="slide-captivity-builder">
