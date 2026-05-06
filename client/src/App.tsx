@@ -20,6 +20,7 @@ import ResourceDetail from "@/pages/ResourceDetail";
 import Collections from "@/pages/Collections";
 import Journal from "@/pages/Journal";
 import PreviewLesson from "@/pages/PreviewLesson";
+import PrayerToolkit from "@/pages/PrayerToolkit";
 
 // Protected Route Wrapper
 function ProtectedRoute({ 
@@ -109,6 +110,10 @@ function Router() {
 
       <Route path="/journal">
         <ProtectedRoute component={Journal} allowedRoles={['participant', 'superuser']} />
+      </Route>
+
+      <Route path="/toolkit">
+        <ProtectedRoute component={PrayerToolkit} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/preview/track-a/:day">

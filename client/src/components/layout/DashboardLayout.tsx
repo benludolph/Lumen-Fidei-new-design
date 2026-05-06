@@ -121,6 +121,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {(user?.role === 'participant' || user?.role === 'superuser') && (
               <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
             )}
+            {(user?.role === 'participant' || user?.role === 'superuser') && (
+              <NavLink href="/toolkit" active={location === "/toolkit"}>Toolkit</NavLink>
+            )}
 
             {/* Profile / sign-out button */}
             <div ref={profileRef} style={{ position: "relative", marginLeft: "8px" }}>
@@ -294,6 +297,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {(user?.role === 'participant' || user?.role === 'superuser') && (
             <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>
               Journal
+            </DrawerLink>
+          )}
+          {(user?.role === 'participant' || user?.role === 'superuser') && (
+            <DrawerLink href="/toolkit" active={location === "/toolkit"} onClick={closeDrawer}>
+              Toolkit
             </DrawerLink>
           )}
         </nav>
