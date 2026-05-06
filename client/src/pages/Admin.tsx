@@ -2359,7 +2359,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   before_after: "Before / After Slider",
   scripture_practice: "Scripture Practice",
   scene: "Interactive Scene",
-  captivity_builder: "Captivity Builder",
+  captivity_builder: "Breaking Lies",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {

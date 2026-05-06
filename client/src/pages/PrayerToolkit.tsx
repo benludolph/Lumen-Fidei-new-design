@@ -203,7 +203,7 @@ export default function PrayerToolkit() {
               className="type-body-md"
               style={{ color: "var(--white-50)", margin: 0, paddingLeft: "32px" }}
             >
-              Your saved rebuke prayers from the Captivity Builder.
+              Your saved rebuke prayers from the Breaking Lies tool.
             </p>
           </div>
 
@@ -248,7 +248,7 @@ export default function PrayerToolkit() {
                 className="type-body-md"
                 style={{ color: "var(--white-30)", margin: 0 }}
               >
-                Complete the Captivity Builder in a daily lesson to save your personalized rebuke prayer here.
+                Complete the Breaking Lies exercise in a daily lesson to save your personalized rebuke prayer here.
               </p>
             </div>
           ) : (

@@ -134,7 +134,7 @@ function ToolCard() {
         <div className="flex items-end justify-between w-full relative z-[3]">
           <div className="flex-1 min-w-0">
             <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: "#f7f8f8", letterSpacing: "-0.1402px" }}>
-              Captivity Builder
+              Breaking Lies
             </p>
             <p className="type-body-xs" style={{ color: "#8a8f98" }}>
               Build a personalized rebuke prayer

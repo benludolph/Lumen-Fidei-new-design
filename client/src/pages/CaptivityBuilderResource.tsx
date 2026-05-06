@@ -51,7 +51,7 @@ function Breadcrumb() {
           className="type-body-lg"
           style={{ color: "var(--white-60)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "300px" }}
         >
-          Captivity Builder
+          Breaking Lies
         </span>
       </PageContainer>
     </div>
@@ -394,7 +394,7 @@ export default function CaptivityBuilderResource() {
             >
               <img
                 src={heroImg}
-                alt="Captivity Builder"
+                alt="Breaking Lies"
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
               />
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "99px", background: "linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)", pointerEvents: "none" }} />
@@ -410,7 +410,7 @@ export default function CaptivityBuilderResource() {
                 className="font-serif"
                 style={{ fontWeight: 500, fontSize: "clamp(36px, 6vw + 10px, 80.2px)", lineHeight: "1.01", color: "white", margin: 0 }}
               >
-                Captivity Builder
+                Breaking Lies
               </h1>
               <p
                 data-testid="resource-subtitle"
