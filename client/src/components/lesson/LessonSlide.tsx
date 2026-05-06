@@ -1416,12 +1416,21 @@ export function LessonSlide({
             onChunkSelect={onPracticeChunkSelect}
           />
         ) : type === "captivity_builder" ? (
-          <CaptivityBuilderSlide
-            intro={(() => { try { return JSON.parse(content).intro || undefined; } catch { return undefined; } })()}
-            dayNumber={dayNumber}
-            existingAnswer={existingAnswer}
-            onInteracted={onInteracted}
-          />
+          (() => {
+            const intro = (() => { try { return JSON.parse(content).intro || ""; } catch { return ""; } })();
+            return (
+              <div className="space-y-6">
+                {intro && (
+                  <p className="type-body-xl leading-[1.4] text-[var(--white-80)]">{intro}</p>
+                )}
+                <CaptivityBuilderSlide
+                  dayNumber={dayNumber}
+                  existingAnswer={existingAnswer}
+                  onInteracted={onInteracted}
+                />
+              </div>
+            );
+          })()
         ) : (
           <TextSlide content={content} />
         )}

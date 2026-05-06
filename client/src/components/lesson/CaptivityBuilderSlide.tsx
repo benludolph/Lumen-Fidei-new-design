@@ -55,7 +55,6 @@ const SPIRITS = [
 ];
 
 interface CaptivityBuilderSlideProps {
-  intro?: string;
   dayNumber: number;
   existingAnswer?: string;
   onInteracted?: () => void;
@@ -94,7 +93,6 @@ function blank(val: string): string {
 }
 
 export function CaptivityBuilderSlide({
-  intro,
   dayNumber,
   existingAnswer,
   onInteracted,
@@ -160,9 +158,8 @@ export function CaptivityBuilderSlide({
     setSaved(false);
   };
 
-  const prayer = selectedSpirit
-    ? assemblePrayer(selectedSpirit.name, thought, now, antonym, scriptureRef, scriptureText)
-    : "";
+  const spiritNameForPrayer = selectedSpirit ? selectedSpirit.name : "___";
+  const prayer = assemblePrayer(spiritNameForPrayer, thought, now, antonym, scriptureRef, scriptureText);
 
   const isEmpty = !thought.trim() && !spiritId && !from.trim() && !to.trim() && !now.trim();
 
@@ -212,10 +209,6 @@ export function CaptivityBuilderSlide({
 
   return (
     <div className="space-y-8" data-testid="slide-captivity-builder">
-      {intro && (
-        <p className="type-body-xl leading-[1.4] text-[var(--white-80)]">{intro}</p>
-      )}
-
       {/* Field 1: Thought */}
       <div className="space-y-2">
         <label
@@ -417,7 +410,7 @@ export function CaptivityBuilderSlide({
         <button
           type="button"
           onClick={handleCopy}
-          disabled={isEmpty || !selectedSpirit}
+          disabled={isEmpty}
           data-testid="button-captivity-copy"
           className="absolute top-3 right-3 p-1.5 rounded-md transition-colors disabled:opacity-30"
           style={{ color: "rgba(255,255,255,0.4)", background: "transparent" }}
@@ -429,7 +422,7 @@ export function CaptivityBuilderSlide({
         </button>
 
         <div className="px-5 pb-5 pt-2 min-h-[100px]">
-          {isEmpty || !selectedSpirit ? (
+          {isEmpty ? (
             <p
               style={{ fontFamily: "'IvyOra Display', serif", fontSize: "1rem", color: "rgba(255,255,255,0.2)", lineHeight: 1.7, fontStyle: "italic" }}
             >
@@ -438,7 +431,9 @@ export function CaptivityBuilderSlide({
           ) : (
             <div style={{ fontFamily: "'IvyOra Display', serif", fontSize: "1.05rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.75 }}>
               <p>
-                <strong style={{ fontWeight: 600 }}>{selectedSpirit.name}</strong>
+                <strong style={{ fontWeight: 600, color: selectedSpirit ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.35)" }}>
+                  {selectedSpirit ? selectedSpirit.name : "___"}
+                </strong>
                 {", I rebuke you in the name of Jesus."}
               </p>
               <p style={{ marginTop: "0.6em" }}>
