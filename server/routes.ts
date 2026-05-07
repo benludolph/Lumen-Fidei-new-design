@@ -2090,6 +2090,106 @@ export async function registerRoutes(
     }
   });
 
+  // === Confession Finder ===
+
+  app.post('/api/confession-finder/search', requireAuth, async (req, res) => {
+    const apiKey = process.env.MASSTIMES_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ message: "Confession finder is not configured. Please contact your administrator." });
+    }
+
+    const zipSchema = z.object({ zipCode: z.string().regex(/^\d{5}$/, "Please enter a valid 5-digit ZIP code.") });
+    const parsed = zipSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0]?.message || "Invalid ZIP code." });
+    }
+    const { zipCode } = parsed.data;
+
+    let latitude: number;
+    let longitude: number;
+    try {
+      const geoRes = await fetch(`https://api.zippopotam.us/us/${zipCode}`);
+      if (!geoRes.ok) {
+        return res.status(422).json({ message: "We could not find that ZIP code. Please check it and try again." });
+      }
+      const geoData = await geoRes.json() as { places?: Array<{ latitude?: string; longitude?: string }> };
+      const place = geoData.places?.[0];
+      if (!place?.latitude || !place?.longitude) {
+        return res.status(422).json({ message: "We could not find that ZIP code. Please check it and try again." });
+      }
+      latitude = parseFloat(place.latitude);
+      longitude = parseFloat(place.longitude);
+    } catch {
+      return res.status(502).json({ message: "Something went wrong while looking up your location. You can still check a parish website or ask your mentor for help." });
+    }
+
+    let churches: unknown[];
+    try {
+      const massUrl = `https://www.masstimes.org/Churchs/?lat=${latitude}&long=${longitude}&apikey=${apiKey}`;
+      const massRes = await fetch(massUrl);
+      if (!massRes.ok) {
+        return res.status(502).json({ message: "Something went wrong while searching. You can still check a parish website or ask your mentor for help." });
+      }
+      const massData = await massRes.json();
+      churches = Array.isArray(massData) ? massData : (Array.isArray((massData as Record<string, unknown>)?.churches) ? (massData as Record<string, unknown[]>).churches : []);
+    } catch {
+      return res.status(502).json({ message: "Something went wrong while searching. You can still check a parish website or ask your mentor for help." });
+    }
+
+    const CONFESSION_RE = /confession|reconciliation|penance/i;
+    const resultsWithConfessionTimes: unknown[] = [];
+    const nearbyParishesWithoutListedTimes: unknown[] = [];
+
+    for (const raw of churches) {
+      if (!raw || typeof raw !== "object") continue;
+      const c = raw as Record<string, unknown>;
+      const worshipTimes: unknown[] = Array.isArray(c.church_worship_times) ? c.church_worship_times : [];
+
+      const confessionTimes = worshipTimes
+        .filter((wt: unknown) => {
+          if (!wt || typeof wt !== "object") return false;
+          const t = wt as Record<string, unknown>;
+          return CONFESSION_RE.test(String(t.service_typename || "")) || CONFESSION_RE.test(String(t.comment || ""));
+        })
+        .map((wt: unknown) => {
+          const t = wt as Record<string, unknown>;
+          return {
+            dayOfWeek: String(t.service_day_name || ""),
+            timeStart: String(t.service_time || ""),
+            timeEnd: t.service_end_time ? String(t.service_end_time) : undefined,
+            comment: t.comment ? String(t.comment) : undefined,
+            raw: {},
+          };
+        });
+
+      const parishData = {
+        churchId: String(c.church_id ?? c.id ?? Math.random()),
+        name: String(c.church_name ?? c.name ?? "Unknown Parish"),
+        distance: parseFloat(String(c.church_distance ?? c.distance ?? "0")) || 0,
+        address: {
+          street: c.church_address ? String(c.church_address) : undefined,
+          city: c.church_city ? String(c.church_city) : undefined,
+          state: c.church_state ? String(c.church_state) : undefined,
+          postalCode: c.church_zip ? String(c.church_zip) : undefined,
+        },
+        phone: c.church_phone ? String(c.church_phone).replace(/\D/g, "") : undefined,
+        website: c.church_website ? String(c.church_website) : undefined,
+        latitude: parseFloat(String(c.church_lat ?? c.latitude ?? "")),
+        longitude: parseFloat(String(c.church_long ?? c.longitude ?? "")),
+        confessionTimes,
+        source: "MassTimes",
+      };
+
+      if (confessionTimes.length > 0) {
+        resultsWithConfessionTimes.push(parishData);
+      } else {
+        nearbyParishesWithoutListedTimes.push(parishData);
+      }
+    }
+
+    res.json({ searchLocation: { zipCode, latitude, longitude }, resultsWithConfessionTimes, nearbyParishesWithoutListedTimes });
+  });
+
   // === Testimonies (Participant) ===
 
   app.get('/api/testimonies', requireAuth, async (req, res) => {

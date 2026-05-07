@@ -71,6 +71,7 @@ export function LessonFlow({
   const [pendingInjectedSlide, setPendingInjectedSlide] = useState<{ type: SlideType; content: string } | null>(null);
   const [isShowingInjected, setIsShowingInjected] = useState(false);
   const [practiceChunkSelections, setPracticeChunkSelections] = useState<Record<number, number>>({});
+  const [sessionVars, setSessionVars] = useState<Record<string, unknown>>({});
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -298,6 +299,10 @@ export function LessonFlow({
     setPracticeChunkSelections((prev) => ({ ...prev, [currentSlide]: chunkIndex }));
   }, [currentSlide]);
 
+  const handleSaveSessionVar = useCallback((key: string, value: unknown) => {
+    setSessionVars((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
   const handleContinue = useCallback(() => {
     const alreadySeen = localStorage.getItem(`overlay-seen-${overlayContextKey}`) === "true";
     if (overlayConfig?.enabled && !overlayShownRef.current && !alreadySeen) {
@@ -387,7 +392,7 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice", "knowledge_quiz"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice", "knowledge_quiz", "confession_finder"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(effectiveSlideData.type) && !slideInteracted;
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
@@ -440,6 +445,8 @@ export function LessonFlow({
       practiceChunkIndex={effectiveSlideData.type === "scripture_practice" ? (practiceChunkSelections[currentSlide] ?? undefined) : undefined}
       onPracticeChunkSelect={effectiveSlideData.type === "scripture_practice" ? handlePracticeChunkSelect : undefined}
       onKnowledgeQuizComplete={effectiveSlideData.type === "knowledge_quiz" ? handleNext : undefined}
+      sessionVars={sessionVars}
+      onSaveSessionVar={effectiveSlideData.type === "confession_finder" ? handleSaveSessionVar : undefined}
     />
   );
 

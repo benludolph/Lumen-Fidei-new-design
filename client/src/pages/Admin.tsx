@@ -2360,6 +2360,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   scripture_practice: "Scripture Practice",
   scene: "Interactive Scene",
   captivity_builder: "Breaking Lies",
+  confession_finder: "Confession Finder",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2385,6 +2386,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   scripture_practice: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   scene: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   captivity_builder: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
+  confession_finder: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
 };
 
 // ============================================================

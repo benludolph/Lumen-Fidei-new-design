@@ -17,6 +17,7 @@ import { ImageCarouselSlide } from "./ImageCarouselSlide";
 import { BeforeAfterSlide } from "./BeforeAfterSlide";
 import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
+import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
 
 import answersImg from "@assets/Answers_desktop_1775146558812.webp";
 import controlImg from "@assets/Control_desktop_1775146558812.webp";
@@ -63,7 +64,8 @@ export type SlideType =
   | "scripture_practice"
   | "knowledge_quiz"
   | "scene"
-  | "captivity_builder";
+  | "captivity_builder"
+  | "confession_finder";
 
 
 export interface QuizData {
@@ -1251,6 +1253,9 @@ interface LessonSlideProps {
   onPracticeChunkSelect?: (chunkIndex: number) => void;
   // knowledge_quiz specific
   onKnowledgeQuizComplete?: () => void;
+  // confession_finder / session vars
+  sessionVars?: Record<string, unknown>;
+  onSaveSessionVar?: (key: string, value: unknown) => void;
 }
 
 export function LessonSlide({
@@ -1284,7 +1289,21 @@ export function LessonSlide({
   practiceChunkIndex,
   onPracticeChunkSelect,
   onKnowledgeQuizComplete,
+  sessionVars = {},
+  onSaveSessionVar,
 }: LessonSlideProps) {
+
+  function resolveVars(template: string, vars: Record<string, unknown>): string {
+    return template.replace(/\{\{([^}]+)\}\}/g, (_, path: string) => {
+      const parts = path.trim().split(".");
+      let val: unknown = vars;
+      for (const part of parts) {
+        if (val == null || typeof val !== "object") return "";
+        val = (val as Record<string, unknown>)[part];
+      }
+      return val != null ? String(val) : "";
+    });
+  }
   const animationClass =
     direction === "forward"
       ? "lesson-slide-in-right"
@@ -1366,7 +1385,7 @@ export function LessonSlide({
         ) : type === "action" ? (
           <ActionSlide content={content} onInteracted={onInteracted} />
         ) : type === "mentor_message" ? (
-          <MentorMessageSlide content={content} mentorId={mentorId} onInteracted={onInteracted} />
+          <MentorMessageSlide content={resolveVars(content, sessionVars)} mentorId={mentorId} onInteracted={onInteracted} />
         ) : type === "timer" ? (
           <TimerSlide content={content} dayNumber={dayNumber} onTimerComplete={onTimerComplete} alreadyDone={timerAlreadyDone} />
         ) : type === "knowledge_check" ? (
@@ -1431,6 +1450,12 @@ export function LessonSlide({
               </div>
             );
           })()
+        ) : type === "confession_finder" ? (
+          <ConfessionFinderSlide
+            content={content}
+            onSaveSessionVar={onSaveSessionVar}
+            onInteracted={onInteracted}
+          />
         ) : (
           <TextSlide content={content} />
         )}
