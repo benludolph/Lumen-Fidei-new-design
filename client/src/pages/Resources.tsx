@@ -445,7 +445,7 @@ export default function Resources() {
                 <style>{`
                   .resource-grid-equal {
                     display: grid;
-                    grid-template-columns: 1fr;
+                    grid-template-columns: repeat(2, 1fr);
                   }
                   @media (min-width: 640px) {
                     .resource-grid-equal {
@@ -481,7 +481,7 @@ export default function Resources() {
                 <style>{`
                   .resource-grid-additional {
                     display: grid;
-                    grid-template-columns: 1fr;
+                    grid-template-columns: repeat(2, 1fr);
                   }
                   @media (min-width: 640px) {
                     .resource-grid-additional {
