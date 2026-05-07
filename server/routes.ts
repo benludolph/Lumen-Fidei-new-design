@@ -2125,8 +2125,16 @@ export async function registerRoutes(
 
     let churches: unknown[];
     try {
-      const massUrl = `https://www.masstimes.org/Churchs/?lat=${latitude}&long=${longitude}&apikey=${apiKey}`;
-      const massRes = await fetch(massUrl);
+      const massUrl = `https://masstimes.org/Churchs/?lat=${latitude}&long=${longitude}&pg=1&apikey=${apiKey}`;
+      const massRes = await fetch(massUrl, {
+        headers: {
+          'Referer': 'https://masstimes.org/',
+          'Origin': 'https://masstimes.org',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json, text/plain, */*',
+          'User-Agent': 'Mozilla/5.0',
+        },
+      });
       if (!massRes.ok) {
         return res.status(502).json({ message: "Something went wrong while searching. You can still check a parish website or ask your mentor for help." });
       }
