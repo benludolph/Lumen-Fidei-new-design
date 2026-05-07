@@ -814,3 +814,33 @@
 .resource-card-hover:hover {
   border-color: var(--white-12) !important;
 }
+
+/* ── Global dark scrollbar ────────────────────────────────────────────
+   Thumb: #9F9F9F  Track: #2C2C2C
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Firefox */
+* {
+  scrollbar-color: #9F9F9F #2C2C2C;
+  scrollbar-width: thin;
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #2C2C2C;
+}
+::-webkit-scrollbar-thumb {
+  background: #9F9F9F;
+  border-radius: 4px;
+  border: 2px solid #2C2C2C;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8b8b8;
+}
+::-webkit-scrollbar-corner {
+  background: #2C2C2C;
+}
