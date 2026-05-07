@@ -538,7 +538,7 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
               <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.45)" }}>
                 Listed Confession times found
               </p>
-              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.92rem", color: "rgba(255,255,255,0.75)", marginTop: "4px", lineHeight: 1.5 }}>
+              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.92rem", color: "rgba(147,197,253,0.9)", marginTop: "4px", lineHeight: 1.5 }}>
                 These are listed Confession times near you. Parish schedules can change — please verify on the parish website or by calling before you go.
               </p>
             </div>
