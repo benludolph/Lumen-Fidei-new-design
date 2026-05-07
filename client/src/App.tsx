@@ -22,6 +22,7 @@ import Journal from "@/pages/Journal";
 import PreviewLesson from "@/pages/PreviewLesson";
 import PrayerToolkit from "@/pages/PrayerToolkit";
 import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
+import ConfessionFinderResource from "@/pages/ConfessionFinderResource";
 
 // Protected Route Wrapper
 function ProtectedRoute({ 
@@ -95,6 +96,10 @@ function Router() {
 
       <Route path="/resources/tools/captivity-builder">
         <ProtectedRoute component={CaptivityBuilderResource} />
+      </Route>
+
+      <Route path="/resources/tools/confession-finder">
+        <ProtectedRoute component={ConfessionFinderResource} />
       </Route>
 
       <Route path="/resources/:id">
