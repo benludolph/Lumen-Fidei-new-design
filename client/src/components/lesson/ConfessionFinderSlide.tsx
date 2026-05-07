@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { MapPin, Phone, Globe, Check, ArrowLeft, Edit3, Calendar, CheckCircle2, Bell } from "lucide-react";
+import { MapPin, Phone, Globe, Check, ArrowLeft, Edit3, CheckCircle2, Bell, Mail } from "lucide-react";
+import { SiGooglecalendar, SiApple } from "react-icons/si";
 import { cn } from "@/lib/utils";
 import { useSendMessage } from "@/hooks/use-chat";
 
@@ -98,6 +99,97 @@ function generateCalendarLink(plan: ConfessionPlan): string {
   if (plan.address) params.set("location", plan.address);
   if (startStr && endStr) params.set("dates", `${startStr}/${endStr}`);
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function generateOutlookLink(plan: ConfessionPlan): string {
+  const title = plan.parishName ? `Confession at ${plan.parishName}` : "Confession";
+  const DAY_INDEX: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const fmtISO = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+
+  let startStr = "";
+  let endStr = "";
+  if (plan.day && plan.time && DAY_INDEX[plan.day] !== undefined) {
+    const targetDay = DAY_INDEX[plan.day];
+    const now = new Date();
+    let daysUntil = (targetDay - now.getDay() + 7) % 7;
+    if (daysUntil === 0) daysUntil = 7;
+    const start = new Date(now);
+    start.setDate(now.getDate() + daysUntil);
+    const match = plan.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      let h = parseInt(match[1]);
+      const m = parseInt(match[2]);
+      if (match[3].toUpperCase() === "PM" && h !== 12) h += 12;
+      if (match[3].toUpperCase() === "AM" && h === 12) h = 0;
+      start.setHours(h, m, 0, 0);
+    }
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    startStr = fmtISO(start);
+    endStr = fmtISO(end);
+  }
+
+  const params = new URLSearchParams({ subject: title, body: "Scheduled via Lumen Fidei" });
+  if (plan.address) params.set("location", plan.address);
+  if (startStr) params.set("startdt", startStr);
+  if (endStr) params.set("enddt", endStr);
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+}
+
+function downloadAppleCalendar(plan: ConfessionPlan): void {
+  const title = plan.parishName ? `Confession at ${plan.parishName}` : "Confession";
+  const DAY_INDEX: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const fmtICS = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+
+  let dtStart = "";
+  let dtEnd = "";
+  if (plan.day && plan.time && DAY_INDEX[plan.day] !== undefined) {
+    const targetDay = DAY_INDEX[plan.day];
+    const now = new Date();
+    let daysUntil = (targetDay - now.getDay() + 7) % 7;
+    if (daysUntil === 0) daysUntil = 7;
+    const start = new Date(now);
+    start.setDate(now.getDate() + daysUntil);
+    const match = plan.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      let h = parseInt(match[1]);
+      const m = parseInt(match[2]);
+      if (match[3].toUpperCase() === "PM" && h !== 12) h += 12;
+      if (match[3].toUpperCase() === "AM" && h === 12) h = 0;
+      start.setHours(h, m, 0, 0);
+    }
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    dtStart = fmtICS(start);
+    dtEnd = fmtICS(end);
+  }
+
+  const uid = `${Date.now()}@lumenfidei`;
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Lumen Fidei//Confession Finder//EN",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `SUMMARY:${title}`,
+    ...(dtStart ? [`DTSTART:${dtStart}`] : []),
+    ...(dtEnd ? [`DTEND:${dtEnd}`] : []),
+    ...(plan.address ? [`LOCATION:${plan.address}`] : []),
+    "DESCRIPTION:Scheduled via Lumen Fidei",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ];
+  const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "confession.ics";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function formatAddress(addr?: ParishResult["address"]): string {
@@ -724,27 +816,62 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
           </div>
         )}
 
-        <div className="space-y-3">
-          <a
-            href={calendarUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="link-confession-add-calendar"
-            className="w-full rounded-md px-4 py-3 transition-colors flex items-center justify-center gap-2"
-            style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.18)", fontFamily: "'Afacad', sans-serif", fontSize: "0.95rem", fontWeight: 600, color: "rgba(255,255,255,0.75)", textDecoration: "none" }}
-          >
-            <Calendar className="w-4 h-4" />
+        <div>
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.35)", textAlign: "center", marginBottom: "16px" }}>
             Add to Calendar
-          </a>
-          <button
-            type="button"
-            onClick={() => onInteracted?.()}
-            data-testid="button-confession-confirmed-continue"
-            className="w-full rounded-md px-4 py-3 transition-colors"
-            style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.2)", fontFamily: "'Afacad', sans-serif", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.95)" }}
-          >
-            Continue
-          </button>
+          </p>
+          <div className="flex items-center justify-center gap-8">
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-confession-calendar-google"
+              onClick={() => onInteracted?.()}
+              className="flex flex-col items-center gap-2 group"
+              style={{ textDecoration: "none" }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all group-hover:scale-105"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}
+              >
+                <SiGooglecalendar className="w-5 h-5" style={{ color: "rgba(255,255,255,0.75)" }} />
+              </div>
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Google</span>
+            </a>
+
+            <a
+              href={generateOutlookLink(pendingPlan)}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="link-confession-calendar-outlook"
+              onClick={() => onInteracted?.()}
+              className="flex flex-col items-center gap-2 group"
+              style={{ textDecoration: "none" }}
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all group-hover:scale-105"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}
+              >
+                <Mail className="w-5 h-5" style={{ color: "rgba(255,255,255,0.75)" }} />
+              </div>
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Outlook</span>
+            </a>
+
+            <button
+              type="button"
+              data-testid="button-confession-calendar-apple"
+              onClick={() => { downloadAppleCalendar(pendingPlan); onInteracted?.(); }}
+              className="flex flex-col items-center gap-2 group"
+            >
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all group-hover:scale-105"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}
+              >
+                <SiApple className="w-5 h-5" style={{ color: "rgba(255,255,255,0.75)" }} />
+              </div>
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>Apple</span>
+            </button>
+          </div>
         </div>
       </div>
     );
