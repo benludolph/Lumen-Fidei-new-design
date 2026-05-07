@@ -1,0 +1,439 @@
+Masstimes API - V4
+
+Advailable Objects:
+
+churchs
+
+
+/{id}?apikey={API_KEY}
+
+Notes:
+-Do not cache references to church id field, as church ids will change in the future
+-The only guaranteed fields are id, name, and church_address_country_territory_name
+
+Sample:
+GET /Churchs/3221?apikey=74e45c40-7f11-11e1-b0c4-0800200c9a66
+
+?
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+{ "church_address_city_name" : "Buenos Aires",
+  "church_address_country_territory_name" : "Argentina",
+  "church_address_county" : null,
+  "church_address_postal_code" : "C1406DAL",
+  "church_address_providence_name" : "Capital Federal",
+  "church_address_street_address" : "Curapaligue 1185",
+  "church_type_name" : "Parish",
+  "church_worship_times" : [ 
+        { 
+            "comment" : "",
+            "day_of_week" : "99",
+            "id" : "932059",
+            "is_perpetual" : false,
+            "language" : "English ",
+            "service_typename" : "Devotions",
+            "time_end" : "1/1/1900 12:00:00 AM",
+            "time_start" : "1/1/1900 12:00:00 AM"
+      } 
+  ],
+  "comments" : "",
+  "diocese_name" : "Buenos Aires",
+  "diocese_type_name" : null,
+  "directions" : "",
+  "distance" : null,
+  "email" : "",
+  "id" : "3221",
+  "language_name" : "Spanish ",
+  "last_update" : "3/21/2012 3:00:30 AM",
+  "lat_long_source" : null,
+  "latitude" : "-25.9100003333333",
+  "longitude" : "-49.6227773333333",
+  "military_time" : true,
+  "name" : "Our Lady of the Miraculous Medal",
+  "pastors_name" : "Guillermo Rosales",
+  "phone_number" : "541149212165",
+  "rite_type_name" : "Roman-Latin",
+  "url" : "www.arzbaires.org.ar/",
+  "wheel_chair_access" : false
+}
+
+/Churchs/?lat={latitude}&long={longitude}&apikey={API_KEY}
+
+Notes:
+-Do not cache references to church id field, as church ids will change in the future
+-The only guaranteed fields are id, name, church_address_country_territory_name, latitude, longitude, and distance
+-There is no guaranteed result
+-Results are ordered by distance from search location
+-Search is for a 100 mi (US) radius from given point
+-A maximum of 30 results will be returned
+-Future versions will allow for specifying search radius, result count, and paging
+
+Sample:
+GET /Churchs/?lat=56&long=-117&apikey=74e45c40-7f11-11e1-b0c4-0800200c9a66
+
+?
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+[ { "church_address_city_name" : "Puchenstuben",
+    "church_address_country_territory_name" : "Austria",
+    "church_address_county" : null,
+    "church_address_postal_code" : "3214",
+    "church_address_providence_name" : "Lower Austria",
+    "church_address_street_address" : "5 Puchenstuben Rd.",
+    "church_type_name" : "Parish",
+    "church_worship_times" : [ { "comment" : "",
+          "day_of_week" : "99",
+          "id" : "935441",
+          "is_perpetual" : false,
+          "language" : "English ",
+          "service_typename" : "Devotions",
+          "time_end" : "1/1/1900 12:00:00 AM",
+          "time_start" : "1/1/1900 12:00:00 AM"
+        },
+        { "comment" : "",
+          "day_of_week" : "0",
+          "id" : "935442",
+          "is_perpetual" : false,
+          "language" : "German ",
+          "service_typename" : "Weekend",
+          "time_end" : null,
+          "time_start" : "1/1/1900 10:00:00 AM"
+        },
+        { "comment" : "Nov - Dec",
+          "day_of_week" : "6",
+          "id" : "1250169",
+          "is_perpetual" : false,
+          "language" : "German ",
+          "service_typename" : "Weekend",
+          "time_end" : "1/1/1900 12:00:00 AM",
+          "time_start" : "1/1/1900 5:00:00 PM"
+        }
+      ],
+    "comments" : "",
+    "diocese_name" : "Sankt Pollten",
+    "diocese_type_name" : null,
+    "directions" : "",
+    "distance" : "21.413402072542",
+    "email" : "bo.stpoelten@kirche.at",
+    "id" : "5634",
+    "language_name" : "German ",
+    "last_update" : "3/21/2012 3:00:30 AM",
+    "lat_long_source" : null,
+    "latitude" : "47.9299467",
+    "longitude" : "15.2618797",
+    "military_time" : true,
+    "name" : "St.Ann",
+    "pastors_name" : " ",
+    "phone_number" : "0748248201",
+    "rite_type_name" : "Roman-Latin",
+    "url" : "www.kirche.at/stpoelten/pfarren/pfarrinfo.php?links=Puchenstuben",
+    "wheel_chair_access" : true
+  },
+  { "church_address_city_name" : "Hoogkarspel",
+    "church_address_country_territory_name" : "Netherlands",
+    "church_address_county" : null,
+    "church_address_postal_code" : "",
+    "church_address_providence_name" : "Noord-Holland",
+    "church_address_street_address" : "218 Streekweg St.",
+    "church_type_name" : "Parish",
+    "church_worship_times" : [ { "comment" : "",
+          "day_of_week" : "99",
+          "id" : "1048412",
+          "is_perpetual" : false,
+          "language" : "English ",
+          "service_typename" : "Devotions",
+          "time_end" : "1/1/1900 12:00:00 AM",
+          "time_start" : "1/1/1900 12:00:00 AM"
+        } ],
+    "comments" : "",
+    "diocese_name" : "Haarlem-Amsterdam",
+    "diocese_type_name" : null,
+    "directions" : "",
+    "distance" : "19.2298257130681",
+    "email" : "",
+    "id" : "82673",
+    "language_name" : "English ",
+    "last_update" : "3/21/2012 3:00:30 AM",
+    "lat_long_source" : null,
+    "latitude" : "52.7",
+    "longitude" : "5.2",
+    "military_time" : true,
+    "name" : "Saint Lawrence",
+    "pastors_name" : null,
+    "phone_number" : "0228563841",
+    "rite_type_name" : "Roman-Latin",
+    "url" : "",
+    "wheel_chair_access" : null
+  },
+  { "church_address_city_name" : "Schiedam",
+    "church_address_country_territory_name" : "Netherlands",
+    "church_address_county" : null,
+    "church_address_postal_code" : "3114",
+    "church_address_providence_name" : "South Holland",
+    "church_address_street_address" : "1 Rijnstraat St.",
+    "church_type_name" : "Parish",
+    "church_worship_times" : [ { "comment" : "",
+          "day_of_week" : "99",
+          "id" : "1048729",
+          "is_perpetual" : false,
+          "language" : "English ",
+          "service_typename" : "Devotions",
+          "time_end" : "1/1/1900 12:00:00 AM",
+          "time_start" : "1/1/1900 12:00:00 AM"
+        } ],
+    "comments" : "",
+    "diocese_name" : "Rotterdam",
+    "diocese_type_name" : null,
+    "directions" : "",
+    "distance" : "14.009775319559",
+    "email" : "h.hartkerk@wanadoo.nl",
+    "id" : "82804",
+    "language_name" : "English ",
+    "last_update" : "3/21/2012 3:00:30 AM",
+    "lat_long_source" : null,
+    "latitude" : "51.9166667",
+    "longitude" : "4.4",
+    "military_time" : true,
+    "name" : "Sacred Heart of Jesus",
+    "pastors_name" : null,
+    "phone_number" : "0104268648",
+    "rite_type_name" : "Roman-Latin",
+    "url" : "www.heilighartkerk.nl/",
+    "wheel_chair_access" : null
+  },
+  { "church_address_city_name" : "Wateringen",
+    "church_address_country_territory_name" : "Netherlands",
+    "church_address_county" : null,
+    "church_address_postal_code" : "2291",
+    "church_address_providence_name" : "South Holland",
+    "church_address_street_address" : "37 Harry Hoekstraat St.",
+    "church_type_name" : "Parish",
+    "church_worship_times" : [ { "comment" : "",
+          "day_of_week" : "99",
+          "id" : "1048731",
+          "is_perpetual" : false,
+          "language" : "English ",
+          "service_typename" : "Devotions",
+          "time_end" : "1/1/1900 12:00:00 AM",
+          "time_start" : "1/1/1900 12:00:00 AM"
+        } ],
+    "comments" : "",
+    "diocese_name" : "Rotterdam",
+    "diocese_type_name" : null,
+    "directions" : "",
+    "distance" : "19.3166893948935",
+    "email" : "joseph@waterheul.nl",
+    "id" : "82806",
+    "language_name" : "English ",
+    "last_update" : "3/21/2012 3:00:30 AM",
+    "lat_long_source" : null,
+    "latitude" : "52.0333333",
+    "longitude" : "4.2833333",
+    "military_time" : true,
+    "name" : "Saint Joseph",
+    "pastors_name" : null,
+    "phone_number" : "0174292197",
+    "rite_type_name" : "Roman-Latin",
+    "url" : "www.waterheul.nl/index.php?option=com_content&task=view&id=128&Itemid=258",
+    "wheel_chair_access" : null
+  }
+]
