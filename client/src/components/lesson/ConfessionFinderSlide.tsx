@@ -737,7 +737,7 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
 
           {cfg.confirmationReminder && (
             <div className="px-5 pb-4 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", lineHeight: 1.55 }}>
+              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.92rem", color: "rgba(147,197,253,0.9)", lineHeight: 1.55 }}>
                 {cfg.confirmationReminder}
               </p>
             </div>
