@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Phone, Globe, Check, ArrowLeft, Edit3 } from "lucide-react";
+import { MapPin, Phone, Globe, Check, ArrowLeft, Edit3, Calendar, CheckCircle2, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSendMessage } from "@/hooks/use-chat";
 
@@ -54,7 +54,7 @@ interface SlideContent {
   saveVariable?: string;
 }
 
-type UIState = "intro" | "loading" | "results" | "manual_entry" | "saved";
+type UIState = "intro" | "loading" | "results" | "manual_entry" | "saved" | "confirmed";
 
 export interface ConfessionFinderSlideProps {
   content: string;
@@ -64,6 +64,41 @@ export interface ConfessionFinderSlideProps {
 }
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function generateCalendarLink(plan: ConfessionPlan): string {
+  const title = plan.parishName ? `Confession at ${plan.parishName}` : "Confession";
+  const DAY_INDEX: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const fmtLocal = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+
+  let startStr = "";
+  let endStr = "";
+  if (plan.day && plan.time && DAY_INDEX[plan.day] !== undefined) {
+    const targetDay = DAY_INDEX[plan.day];
+    const now = new Date();
+    let daysUntil = (targetDay - now.getDay() + 7) % 7;
+    if (daysUntil === 0) daysUntil = 7;
+    const start = new Date(now);
+    start.setDate(now.getDate() + daysUntil);
+    const match = plan.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      let h = parseInt(match[1]);
+      const m = parseInt(match[2]);
+      if (match[3].toUpperCase() === "PM" && h !== 12) h += 12;
+      if (match[3].toUpperCase() === "AM" && h === 12) h = 0;
+      start.setHours(h, m, 0, 0);
+    }
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    startStr = fmtLocal(start);
+    endStr = fmtLocal(end);
+  }
+
+  const params = new URLSearchParams({ action: "TEMPLATE", text: title, details: "Scheduled via Lumen Fidei" });
+  if (plan.address) params.set("location", plan.address);
+  if (startStr && endStr) params.set("dates", `${startStr}/${endStr}`);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 
 function formatAddress(addr?: ParishResult["address"]): string {
   if (!addr) return "";
@@ -269,7 +304,7 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
         : "";
       sendMessage({ receiverId: mentorId, content: `I've made a plan to go to Confession${locationPart}. Please check in with me afterward.` });
     }
-    onInteracted?.();
+    setUiState("confirmed");
   };
 
   const handleManualSave = () => {
@@ -351,16 +386,14 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
           >
             Find Confession Times
           </button>
-          {cfg.allowSkip && (
-            <button
-              type="button"
-              onClick={handleSkip}
-              data-testid="button-confession-skip"
-              className="w-full type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors py-1"
-            >
-              {cfg.skipText || "I'm not able to find a time right now"}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onInteracted?.()}
+            data-testid="button-confession-skip-not-initiated"
+            className="w-full type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors py-1"
+          >
+            I am not yet initiated into the Catholic faith — skip this step
+          </button>
         </div>
       </div>
     );
@@ -438,6 +471,13 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
           </div>
         )}
 
+        <div className="rounded-xl px-4 py-3.5" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}>
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>
+            <strong style={{ color: "rgba(255,255,255,0.6)", fontWeight: 600 }}>Going back to Confession after a long time?</strong>{" "}
+            Consider emailing or calling the parish directly to schedule a time with a priest — many are happy to accommodate.
+          </p>
+        </div>
+
         {cfg.manualEntryEnabled !== false && (
           <button
             type="button"
@@ -447,17 +487,6 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
             style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.5)" }}
           >
             Enter a time manually
-          </button>
-        )}
-
-        {cfg.allowSkip && (
-          <button
-            type="button"
-            onClick={handleSkip}
-            data-testid="button-confession-skip-results"
-            className="w-full type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors py-1"
-          >
-            {cfg.skipText || "I'm not able to find a time right now"}
           </button>
         )}
       </div>
@@ -624,11 +653,6 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
         </div>
 
         <div className="space-y-3">
-          {mentorId && (
-            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.55, textAlign: "center" }}>
-              When you save, your mentor will be notified and will check in with you after your confession.
-            </p>
-          )}
           <button
             type="button"
             onClick={handleSaveAndContinue}
@@ -660,6 +684,67 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
               Edit manually
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (uiState === "confirmed" && pendingPlan) {
+    const calendarUrl = generateCalendarLink(pendingPlan);
+    return (
+      <div className="space-y-6 py-4" data-testid="slide-confession-finder-confirmed">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
+            <CheckCircle2 className="w-7 h-7" style={{ color: "rgba(255,255,255,0.85)" }} />
+          </div>
+          <div>
+            <p style={{ fontFamily: "'IvyOra Display', serif", fontSize: "1.35rem", color: "rgba(255,255,255,0.92)", lineHeight: 1.3 }}>
+              Your plan is saved
+            </p>
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", lineHeight: 1.5 }}>
+              {pendingPlan.parishName
+                ? `${pendingPlan.parishName}${pendingPlan.day ? ` · ${pendingPlan.day}` : ""}${pendingPlan.time ? ` at ${pendingPlan.time}` : ""}`
+                : "Confession plan recorded"}
+            </p>
+          </div>
+        </div>
+
+        {mentorId && (
+          <div
+            className="rounded-xl px-4 py-3.5 flex items-start gap-3"
+            style={{ border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}
+          >
+            <Bell className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }} />
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.88rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
+              Your mentor has been notified and will check in with you after your confession.
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <a
+            href={calendarUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-confession-add-calendar"
+            className="w-full rounded-md px-4 py-3 transition-colors flex items-center justify-center gap-2"
+            style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.18)", fontFamily: "'Afacad', sans-serif", fontSize: "0.95rem", fontWeight: 600, color: "rgba(255,255,255,0.75)", textDecoration: "none" }}
+          >
+            <Calendar className="w-4 h-4" />
+            Add to Calendar
+          </a>
+          <button
+            type="button"
+            onClick={() => onInteracted?.()}
+            data-testid="button-confession-confirmed-continue"
+            className="w-full rounded-md px-4 py-3 transition-colors"
+            style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.2)", fontFamily: "'Afacad', sans-serif", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.95)" }}
+          >
+            Continue
+          </button>
         </div>
       </div>
     );
