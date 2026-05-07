@@ -1344,7 +1344,7 @@ export function LessonSlide({
         data-testid="lesson-slide-chat_flow"
       >
         <ChatFlowSlide
-          content={content}
+          content={resolveVars(content, sessionVars)}
           contextKey={chatFlowContextKey || `chat-flow-${dayNumber}`}
           totalSlides={chatFlowTotalSlides}
           slideIndex={chatFlowSlideIndex}
@@ -1367,7 +1367,7 @@ export function LessonSlide({
     >
       <div className={cn("flex flex-col", type === "before_after" ? "h-full" : "min-h-full", (type === "story_choice" || type === "before_after") ? "justify-start" : "justify-center")}>
         {type === "text" ? (
-          <TextSlide content={content} />
+          <TextSlide content={resolveVars(content, sessionVars)} />
         ) : type === "multi_select" ? (
           <MultiSelectList content={content} onInteracted={onInteracted} />
         ) : type === "single_select" ? (
