@@ -34,7 +34,7 @@ interface ConfessionPlan {
   phone?: string;
   website?: string;
   needsConfirmation?: boolean;
-  source: string;
+  source: "MassTimes" | "user_manual" | "user_skipped";
   searchedZipCode: string | null;
   savedAt: string;
 }
@@ -249,7 +249,7 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
   };
 
   const handleSkip = () => {
-    const plan: ConfessionPlan = { status: "needs_help", searchedZipCode: searchedZip, source: "MassTimes", savedAt: new Date().toISOString() };
+    const plan: ConfessionPlan = { status: "needs_help", searchedZipCode: searchedZip, source: "user_skipped", savedAt: new Date().toISOString() };
     onSaveSessionVar?.(saveVariable, plan);
     onInteracted?.();
   };
@@ -275,7 +275,7 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
       phone: manualPhone.trim() || undefined,
       website: manualWebsite.trim() || undefined,
       needsConfirmation: manualNeedsConfirmation,
-      source: "manual",
+      source: "user_manual",
       searchedZipCode: searchedZip,
       savedAt: new Date().toISOString(),
     });
