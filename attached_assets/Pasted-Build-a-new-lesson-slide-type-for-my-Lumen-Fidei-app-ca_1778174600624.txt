@@ -1,0 +1,343 @@
+Build a new lesson slide type for my Lumen Fidei app called:
+
+confession_finder
+
+Purpose:
+This slide helps a user find and save a real Confession plan.
+
+It should help the user:
+1. Search for nearby Catholic parishes by ZIP code.
+2. View listed Confession times when available.
+3. Choose a Confession time.
+4. Manually enter a Confession time if needed.
+5. Save the selected plan to lesson/session state so later slides can use it.
+
+Important:
+Do not include mentor messaging inside this slide type. I already have a mentor message slide type. This slide should only save the Confession plan. A later slide will use the saved plan to help the user message their mentor.
+
+The slide should feel like part of the lesson flow, not a separate app page or dashboard.
+
+Slide type name:
+confession_finder
+
+Admin JSON example:
+
+{
+  "id": "confession_finder_01",
+  "type": "confession_finder",
+  "title": "Find a Confession Time",
+  "subtitle": "Choose a real place and time you can attend this week.",
+  "introText": "Confession is easier to follow through on when you choose a real place and time. Enter your ZIP code to look for nearby Catholic parishes with listed Confession times.",
+  "searchLabel": "Enter your ZIP code",
+  "searchPlaceholder": "60611",
+  "confirmationReminder": "Parish schedules can change. Please confirm the time on the parish website or by calling the parish office before you go.",
+  "emptyStateText": "No listed Confession times were found nearby. This does not mean Confession is unavailable. Check a parish website, call the parish office, or ask your mentor for help.",
+  "manualEntryEnabled": true,
+  "allowSkip": true,
+  "skipText": "I need help finding a time",
+  "saveVariable": "confession_plan"
+}
+
+Core user flow:
+1. User reaches the confession_finder slide.
+2. User enters a ZIP code.
+3. Backend converts the ZIP code to latitude and longitude.
+4. Backend calls the MassTimes API using those coordinates.
+5. App displays nearby parishes.
+6. App separates results into:
+   - parishes with listed Confession times
+   - nearby parishes without listed Confession times
+7. User chooses a listed Confession time, or manually enters one.
+8. The selected plan is saved to lesson/session state under saveVariable.
+9. The user continues to the next lesson slide.
+
+Do not say:
+“These are all Confession times near you.”
+
+Instead say:
+“These are listed Confession times near you.”
+
+Reason:
+The data may be incomplete, and parish schedules can change.
+
+Backend requirements:
+1. Store the MassTimes API key in environment variables only.
+2. Do not expose the API key to the client.
+3. Create a backend route:
+
+POST /api/confession-finder/search
+
+Request body:
+{
+  "zipCode": "60611"
+}
+
+Response body:
+{
+  "searchLocation": {
+    "zipCode": "60611",
+    "latitude": 41.8925,
+    "longitude": -87.6231
+  },
+  "resultsWithConfessionTimes": [],
+  "nearbyParishesWithoutListedTimes": []
+}
+
+Technical flow:
+1. Validate ZIP code.
+2. Geocode ZIP code into latitude and longitude.
+3. Call MassTimes API server-side:
+
+GET /Churchs/?lat={latitude}&long={longitude}&apikey={API_KEY}
+
+4. Parse returned churches.
+5. For each church, inspect church_worship_times.
+6. Identify Confession-related entries when any of these words appear in service_typename or comment:
+   - confession
+   - confessions
+   - reconciliation
+   - sacrament of reconciliation
+   - penance
+
+7. Split results into two groups:
+   A. resultsWithConfessionTimes
+   B. nearbyParishesWithoutListedTimes
+
+Important MassTimes API notes:
+- Do not permanently rely on church id values because the API says church ids may change.
+- Only some fields are guaranteed.
+- The UI must not break if address, phone, website, worship times, comments, or time fields are missing.
+- Nearby search may return no results.
+- Nearby search may return parishes but no Confession times.
+- Treat all listed times as needing confirmation.
+
+Data shape for parish result:
+
+{
+  "churchId": "3221",
+  "name": "St. Example Parish",
+  "distance": 1.4,
+  "address": {
+    "street": "123 Main St",
+    "city": "Chicago",
+    "state": "IL",
+    "postalCode": "60611",
+    "country": "United States"
+  },
+  "phone": "3125551234",
+  "website": "https://example.org",
+  "latitude": 41.8925,
+  "longitude": -87.6231,
+  "confessionTimes": [
+    {
+      "dayOfWeek": "Saturday",
+      "timeStart": "3:00 PM",
+      "timeEnd": "4:00 PM",
+      "comment": "Also available by appointment.",
+      "raw": {}
+    }
+  ],
+  "source": "MassTimes"
+}
+
+UI states:
+
+1. Intro/search state
+
+Show:
+- title
+- subtitle
+- introText
+- ZIP code input
+- “Find Confession Times” button
+- “I need help finding a time” button if allowSkip is true
+
+The skip/help button should save:
+
+{
+  "status": "needs_help",
+  "searchedZipCode": null,
+  "source": "MassTimes",
+  "savedAt": "ISO_TIMESTAMP"
+}
+
+2. Loading state
+
+Show calm loading text:
+
+“Searching nearby parishes…”
+
+3. Results state
+
+Show two sections.
+
+Section 1 title:
+“Listed Confession times found”
+
+Each parish card should show:
+- parish name
+- distance
+- address if available
+- website button if available
+- call button if phone is available
+- listed Confession times
+- “Choose this time” button for each time
+
+Section 2 title:
+“Nearby parishes without listed Confession times”
+
+Each parish card should show:
+- parish name
+- distance
+- address if available
+- website button if available
+- call button if phone is available
+- this text:
+  “Confession times were not listed. Check the parish website or call the parish office.”
+
+Also include:
+- “Enter a time manually” button
+
+4. Manual entry state
+
+If the user finds a time on a parish website, from a phone call, or from another source, let them manually enter:
+
+- Parish name
+- Address, optional
+- Day
+- Time
+- Website, optional
+- Phone, optional
+- Needs confirmation: yes/no
+
+Manual entry should save in the same confession_plan shape.
+
+5. Saved plan state
+
+After the user chooses or manually enters a time, show:
+
+“Your Confession Plan”
+
+Then show:
+
+“I plan to go to Confession at [parish name] on [day] at [time].”
+
+Also show:
+- parish name
+- day
+- time
+- address if available
+- website if available
+- phone if available
+- confirmationReminder
+
+Buttons:
+- Save and continue
+- Choose a different time
+- Edit manually
+
+Saved lesson/session state:
+When the user saves a plan, store it under saveVariable.
+
+Example saved value:
+
+{
+  "status": "selected",
+  "parishName": "Holy Name Cathedral",
+  "address": "735 N State St, Chicago, IL 60654",
+  "day": "Saturday",
+  "time": "9:00 AM",
+  "phone": "3127878040",
+  "website": "https://holynamecathedral.org",
+  "needsConfirmation": true,
+  "source": "MassTimes",
+  "searchedZipCode": "60611",
+  "savedAt": "ISO_TIMESTAMP"
+}
+
+If the user skips or cannot find a time, save:
+
+{
+  "status": "needs_help",
+  "searchedZipCode": "60611",
+  "source": "MassTimes",
+  "savedAt": "ISO_TIMESTAMP"
+}
+
+Later slide integration:
+Later slides should be able to use:
+
+{{confession_plan.status}}
+{{confession_plan.parishName}}
+{{confession_plan.address}}
+{{confession_plan.day}}
+{{confession_plan.time}}
+{{confession_plan.phone}}
+{{confession_plan.website}}
+{{confession_plan.needsConfirmation}}
+{{confession_plan.searchedZipCode}}
+
+A later mentor message slide will handle the message.
+
+Example mentor message if status is selected:
+
+Hi, I found a Confession time.
+
+I plan to go to Confession at {{confession_plan.parishName}} on {{confession_plan.day}} at {{confession_plan.time}}.
+
+Please pray for me.
+
+Example mentor message if status is needs_help:
+
+Hi, I am trying to find a Confession time, but I am not sure where to go.
+
+Could you help me find a parish and time that works this week?
+
+Error handling:
+Show helpful messages for:
+- invalid ZIP code
+- geocoding failure
+- MassTimes API failure
+- no nearby parishes returned
+- nearby parishes returned but no Confession times found
+- missing fields in MassTimes response
+
+Error message examples:
+
+“Something went wrong while searching. You can still check a parish website or ask your mentor for help.”
+
+“No listed Confession times were found nearby. This does not mean Confession is unavailable.”
+
+“Parish schedules can change. Please confirm the time on the parish website or by calling the parish office.”
+
+Security:
+- API key must only be used server-side.
+- Do not expose the API key to the client.
+- Do not save sensitive Confession notes in this slide.
+- Only save the practical Confession plan the user chooses.
+- Do not log the user’s ZIP code with personal identifiers unless needed and allowed by the app’s privacy policy.
+
+Design requirements:
+- Mobile-first.
+- Calm, simple Catholic visual style.
+- Use existing lesson slide components where possible.
+- Use existing buttons, cards, inputs, and lesson navigation.
+- Do not make this feel like a technical search tool.
+- Make it feel like a guided practical step in preparing for Confession.
+- Keep copy simple and direct.
+- Avoid clutter.
+- Do not show a map in the first version unless it is already easy to support. Cards are enough.
+
+Acceptance criteria:
+1. Admin can add a confession_finder slide through JSON.
+2. User can enter a ZIP code and search.
+3. Backend geocodes ZIP and calls MassTimes securely.
+4. Results are split between parishes with listed Confession times and nearby parishes without listed times.
+5. User can choose a listed Confession time.
+6. User can manually enter a Confession plan.
+7. User can skip and save status as needs_help.
+8. Saved plan is available to later slides through confession_plan.
+9. Slide does not generate or display mentor messages.
+10. App does not crash if MassTimes fields are missing.
+11. App clearly says schedules should be confirmed.
+12. App never claims the listed times are complete.
