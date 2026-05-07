@@ -347,7 +347,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Page content */}
-      <div className="relative z-10 pt-[72px] min-h-screen">
+      <div className="z-10 overflow-y-auto" style={{ position: "fixed", top: "72px", left: 0, right: 0, bottom: 0 }}>
         {children}
       </div>
     </div>

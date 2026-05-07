@@ -129,7 +129,7 @@ export default function Messages() {
         variant="fullMd"
         className="flex"
         style={{
-          height: "calc(100vh - 72px)",
+          height: "100%",
           backgroundColor: "var(--surface-ground)",
           overflow: "hidden",
         }}

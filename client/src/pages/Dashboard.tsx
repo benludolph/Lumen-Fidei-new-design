@@ -295,7 +295,7 @@ export default function Dashboard() {
             </div>
           </DialogContent>
         </Dialog>
-        <div className="h-[calc(100vh-72px)]">
+        <div className="h-full">
           <DayGridView
             currentDay={currentDay}
             isTrackA={isTrackA}
