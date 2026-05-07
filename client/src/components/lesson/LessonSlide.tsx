@@ -1453,6 +1453,7 @@ export function LessonSlide({
         ) : type === "confession_finder" ? (
           <ConfessionFinderSlide
             content={content}
+            mentorId={mentorId}
             onSaveSessionVar={onSaveSessionVar}
             onInteracted={onInteracted}
           />

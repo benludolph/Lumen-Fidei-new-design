@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MapPin, Phone, Globe, Check, ArrowLeft, Edit3 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSendMessage } from "@/hooks/use-chat";
 
 interface ConfessionTime {
   dayOfWeek: string;
@@ -57,6 +58,7 @@ type UIState = "intro" | "loading" | "results" | "manual_entry" | "saved";
 
 export interface ConfessionFinderSlideProps {
   content: string;
+  mentorId?: number | null;
   onSaveSessionVar?: (key: string, value: unknown) => void;
   onInteracted?: () => void;
 }
@@ -179,9 +181,10 @@ function ParishCard({
   );
 }
 
-export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted }: ConfessionFinderSlideProps) {
+export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onInteracted }: ConfessionFinderSlideProps) {
   const cfg: SlideContent = (() => { try { return JSON.parse(content); } catch { return {}; } })();
   const saveVariable = cfg.saveVariable || "confession_plan";
+  const { mutate: sendMessage } = useSendMessage();
 
   const [uiState, setUiState] = useState<UIState>("intro");
   const [zipCode, setZipCode] = useState("");
@@ -251,12 +254,21 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
   const handleSkip = () => {
     const plan: ConfessionPlan = { status: "needs_help", searchedZipCode: searchedZip, source: "user_skipped", savedAt: new Date().toISOString() };
     onSaveSessionVar?.(saveVariable, plan);
+    if (mentorId) {
+      sendMessage({ receiverId: mentorId, content: "I wasn't able to find a Confession time near me and may need some help finding one." });
+    }
     onInteracted?.();
   };
 
   const handleSaveAndContinue = () => {
     if (!pendingPlan) return;
     onSaveSessionVar?.(saveVariable, { ...pendingPlan, savedAt: new Date().toISOString() });
+    if (mentorId) {
+      const locationPart = pendingPlan.parishName
+        ? ` at ${pendingPlan.parishName}${pendingPlan.day ? ` on ${pendingPlan.day}` : ""}${pendingPlan.time ? ` at ${pendingPlan.time}` : ""}`
+        : "";
+      sendMessage({ receiverId: mentorId, content: `I've made a plan to go to Confession${locationPart}. Please check in with me afterward.` });
+    }
     onInteracted?.();
   };
 
@@ -280,6 +292,7 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
       savedAt: new Date().toISOString(),
     });
     setUiState("saved");
+    // Mentor message sent when they click "Save and continue" from the saved screen
   };
 
   const prefillManual = (plan: ConfessionPlan) => {
@@ -345,7 +358,7 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
               data-testid="button-confession-skip"
               className="w-full type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors py-1"
             >
-              {cfg.skipText || "I need help finding a time"}
+              {cfg.skipText || "I'm not able to find a time right now"}
             </button>
           )}
         </div>
@@ -444,7 +457,7 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
             data-testid="button-confession-skip-results"
             className="w-full type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors py-1"
           >
-            {cfg.skipText || "I need help finding a time"}
+            {cfg.skipText || "I'm not able to find a time right now"}
           </button>
         )}
       </div>
@@ -611,6 +624,11 @@ export function ConfessionFinderSlide({ content, onSaveSessionVar, onInteracted 
         </div>
 
         <div className="space-y-3">
+          {mentorId && (
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.55, textAlign: "center" }}>
+              When you save, your mentor will be notified and will check in with you after your confession.
+            </p>
+          )}
           <button
             type="button"
             onClick={handleSaveAndContinue}
