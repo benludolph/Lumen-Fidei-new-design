@@ -2144,6 +2144,21 @@ export async function registerRoutes(
       return res.status(502).json({ message: "Something went wrong while searching. You can still check a parish website or ask your mentor for help." });
     }
 
+    // Format a raw time string from the MassTimes API (e.g. "14:30:00" or "1/1/1900 12:00:00 AM") to "2:30 PM"
+    function formatMassTime(raw: string): string {
+      if (!raw) return "";
+      // Placeholder value the API uses when there is no specific time
+      if (raw.startsWith("1/1/1900")) return "";
+      const match = raw.match(/(\d{1,2}):(\d{2})(?::\d{2})?/);
+      if (!match) return raw;
+      let hour = parseInt(match[1], 10);
+      const min = match[2];
+      const ampm = hour >= 12 ? "PM" : "AM";
+      if (hour > 12) hour -= 12;
+      if (hour === 0) hour = 12;
+      return min === "00" ? `${hour} ${ampm}` : `${hour}:${min} ${ampm}`;
+    }
+
     const CONFESSION_RE = /confession|reconciliation|penance/i;
     const resultsWithConfessionTimes: unknown[] = [];
     const nearbyParishesWithoutListedTimes: unknown[] = [];
@@ -2161,29 +2176,40 @@ export async function registerRoutes(
         })
         .map((wt: unknown) => {
           const t = wt as Record<string, unknown>;
+          // day_of_week is a full name string with trailing spaces (e.g. "Saturday  ")
+          // "99" means perpetual / no specific day
+          const rawDay = String(t.day_of_week || "").trim();
+          const dayOfWeek = rawDay === "99" ? "By appointment" : rawDay;
+          const timeStart = formatMassTime(String(t.time_start || ""));
+          const timeEnd = formatMassTime(String(t.time_end || ""));
           return {
-            dayOfWeek: String(t.service_day_name || ""),
-            timeStart: String(t.service_time || ""),
-            timeEnd: t.service_end_time ? String(t.service_end_time) : undefined,
-            comment: t.comment ? String(t.comment) : undefined,
-            raw: {},
+            dayOfWeek,
+            timeStart,
+            timeEnd: timeEnd || undefined,
+            comment: t.comment ? String(t.comment).trim() : undefined,
           };
         });
 
+      // Normalize website URL
+      const rawUrl = c.url ? String(c.url).trim() : "";
+      const website = rawUrl
+        ? rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`
+        : undefined;
+
       const parishData = {
-        churchId: String(c.church_id ?? c.id ?? Math.random()),
-        name: String(c.church_name ?? c.name ?? "Unknown Parish"),
-        distance: parseFloat(String(c.church_distance ?? c.distance ?? "0")) || 0,
+        churchId: String(c.id ?? Math.random()),
+        name: String(c.name ?? "Unknown Parish"),
+        distance: parseFloat(String(c.distance ?? "0")) || 0,
         address: {
-          street: c.church_address ? String(c.church_address) : undefined,
-          city: c.church_city ? String(c.church_city) : undefined,
-          state: c.church_state ? String(c.church_state) : undefined,
-          postalCode: c.church_zip ? String(c.church_zip) : undefined,
+          street: c.church_address_street_address ? String(c.church_address_street_address) : undefined,
+          city: c.church_address_city_name ? String(c.church_address_city_name) : undefined,
+          state: c.church_address_providence_name ? String(c.church_address_providence_name) : undefined,
+          postalCode: c.church_address_postal_code ? String(c.church_address_postal_code) : undefined,
         },
-        phone: c.church_phone ? String(c.church_phone).replace(/\D/g, "") : undefined,
-        website: c.church_website ? String(c.church_website) : undefined,
-        latitude: parseFloat(String(c.church_lat ?? c.latitude ?? "")),
-        longitude: parseFloat(String(c.church_long ?? c.longitude ?? "")),
+        phone: c.phone_number ? String(c.phone_number).trim() : undefined,
+        website,
+        latitude: parseFloat(String(c.latitude ?? "")),
+        longitude: parseFloat(String(c.longitude ?? "")),
         confessionTimes,
         source: "MassTimes",
       };
