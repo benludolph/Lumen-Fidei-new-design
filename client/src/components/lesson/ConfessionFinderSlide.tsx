@@ -478,14 +478,6 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
           >
             Find Confession Times
           </button>
-          <button
-            type="button"
-            onClick={() => onInteracted?.()}
-            data-testid="button-confession-skip-not-initiated"
-            className="w-full type-body-sm text-[var(--white-30)] hover:text-[var(--white-60)] transition-colors py-1"
-          >
-            I am not yet initiated into the Catholic faith — skip this step
-          </button>
         </div>
       </div>
     );
