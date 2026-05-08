@@ -41,6 +41,20 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+function redactSensitiveFields(obj: unknown): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map(redactSensitiveFields);
+  }
+  if (obj !== null && typeof obj === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      result[key] = key === "password" ? "[REDACTED]" : redactSensitiveFields(value);
+    }
+    return result;
+  }
+  return obj;
+}
+
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -68,7 +82,8 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        const redacted = redactSensitiveFields(capturedJsonResponse);
+        logLine += ` :: ${JSON.stringify(redacted)}`;
       }
 
       log(logLine);

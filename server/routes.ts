@@ -391,17 +391,8 @@ export async function registerRoutes(
   });
 
   app.post(api.users.create.path, async (req, res) => {
-    // Only admin can create users usually, but for demo maybe open? 
-    // Let's restrict to admin for now, or allow open registration for 'participant'
-    // For simplicity, let's allow open registration but force role='participant' if not admin
-    
-    // Actually, prompt says Admin creates users. So strict check.
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-       // Allow creating the FIRST admin if no users exist? 
-       const allUsers = await storage.getAllUsers();
-       if (allUsers.length > 0) {
-           return res.status(403).json({ message: "Only admins can create users" });
-       }
+      return res.status(403).json({ message: "Only admins can create users" });
     }
 
     try {
@@ -435,7 +426,12 @@ export async function registerRoutes(
     const userId = Number(req.params.id);
     const input = api.users.update.input.parse(req.body);
     
-    const updated = await storage.updateUser(userId, input);
+    // Hash the password if it is being updated
+    const updateData = input.password
+      ? { ...input, password: await hashPassword(input.password) }
+      : input;
+
+    const updated = await storage.updateUser(userId, updateData);
     res.json(sanitizeUser(updated));
   });
 
@@ -2618,37 +2614,59 @@ async function seed() {
     // Seed users if needed
     const users = await storage.getAllUsers();
     if (users.length === 0) {
-        console.log("Seeding users...");
-        
-        // Hash passwords for security
-        const adminHash = await hashPassword("admin");
-        const passwordHash = await hashPassword("password");
-        
-        await storage.createUser({
-            name: "Admin User",
-            email: "admin@example.com",
-            password: adminHash,
-            role: "admin",
-            startDate: new Date(),
-        });
-        
-        const mentor = await storage.createUser({
-            name: "Mentor Mike",
-            email: "mentor@example.com",
-            password: passwordHash,
-            role: "mentor",
-            startDate: new Date(),
-        });
-        
-        await storage.createUser({
-            name: "Participant Paul",
-            email: "paul@example.com",
-            password: passwordHash,
-            role: "participant",
-            track: "A",
-            mentorId: mentor.id,
-            startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // Started 3 days ago
-        });
+        if (process.env.NODE_ENV !== "production") {
+            // Development-only: seed demo accounts with known credentials
+            console.log("Seeding demo users (development only)...");
+            const adminHash = await hashPassword("admin");
+            const passwordHash = await hashPassword("password");
+
+            await storage.createUser({
+                name: "Admin User",
+                email: "admin@example.com",
+                password: adminHash,
+                role: "admin",
+                startDate: new Date(),
+            });
+
+            const mentor = await storage.createUser({
+                name: "Mentor Mike",
+                email: "mentor@example.com",
+                password: passwordHash,
+                role: "mentor",
+                startDate: new Date(),
+            });
+
+            await storage.createUser({
+                name: "Participant Paul",
+                email: "paul@example.com",
+                password: passwordHash,
+                role: "participant",
+                track: "A",
+                mentorId: mentor.id,
+                startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+            });
+        } else {
+            // Production: create admin only from explicit environment variables
+            const adminEmail = process.env.ADMIN_EMAIL;
+            const adminPassword = process.env.ADMIN_PASSWORD;
+            if (adminEmail && adminPassword) {
+                console.log("Creating initial admin account from environment variables...");
+                const adminHash = await hashPassword(adminPassword);
+                await storage.createUser({
+                    name: "Admin",
+                    email: adminEmail.toLowerCase().trim(),
+                    password: adminHash,
+                    role: "admin",
+                    startDate: new Date(),
+                });
+            } else {
+                console.error(
+                    "SECURITY WARNING: Production deployment has no users and ADMIN_EMAIL/ADMIN_PASSWORD " +
+                    "environment variables are not set. The application is running without an administrator " +
+                    "account. Set ADMIN_EMAIL and ADMIN_PASSWORD before restarting to create the initial admin."
+                );
+            }
+        }
     }
 
     // Seed track requirements if needed

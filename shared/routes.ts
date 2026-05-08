@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings } from './schema';
 
+export type SafeUser = Omit<typeof users.$inferSelect, 'password'>;
+
 export const errorSchemas = {
   validation: z.object({
     message: z.string(),
@@ -27,7 +29,7 @@ export const api = {
       path: '/api/login',
       input: z.object({ username: z.string(), password: z.string() }),
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<SafeUser>(),
         401: errorSchemas.unauthorized,
       },
     },
@@ -42,7 +44,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/user',
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<SafeUser>(),
         401: errorSchemas.unauthorized,
       },
     },
@@ -53,7 +55,7 @@ export const api = {
       path: '/api/users',
       input: z.object({ role: z.enum(["participant", "mentor"]).optional() }).optional(),
       responses: {
-        200: z.array(z.custom<typeof users.$inferSelect>()),
+        200: z.array(z.custom<SafeUser>()),
         403: errorSchemas.forbidden,
       },
     },
@@ -62,7 +64,7 @@ export const api = {
       path: '/api/users',
       input: insertUserSchema,
       responses: {
-        201: z.custom<typeof users.$inferSelect>(),
+        201: z.custom<SafeUser>(),
         400: errorSchemas.validation,
       },
     },
@@ -71,7 +73,7 @@ export const api = {
       path: '/api/users/:id',
       input: insertUserSchema.partial(),
       responses: {
-        200: z.custom<typeof users.$inferSelect>(),
+        200: z.custom<SafeUser>(),
         400: errorSchemas.validation,
         404: errorSchemas.notFound,
       },
@@ -442,6 +444,7 @@ export type ContentBackup = {
 // Type exports
 export type LoginRequest = z.infer<typeof api.auth.login.input>;
 export type User = typeof users.$inferSelect;
+export type { SafeUser };
 export type SendMessageRequest = z.infer<typeof api.chat.send.input>;
 export type CreateUserRequest = z.infer<typeof api.users.create.input>;
 export type UpdateUserRequest = z.infer<typeof api.users.update.input>;

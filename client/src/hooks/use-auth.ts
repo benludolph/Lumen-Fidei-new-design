@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type LoginRequest, type User } from "@shared/routes";
+import { api, type LoginRequest, type SafeUser } from "@shared/routes";
 import { useLocation } from "wouter";
 
 export function useAuth() {

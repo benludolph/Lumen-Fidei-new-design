@@ -7,6 +7,11 @@ import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { type User as SchemaUser } from "@shared/schema";
 
+export function sanitizeUser(user: SchemaUser): Omit<SchemaUser, 'password'> {
+  const { password, ...safeUser } = user;
+  return safeUser;
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
@@ -67,18 +72,10 @@ export function setupAuth(app: Express) {
         if (!user) {
           return done(null, false, { message: "Incorrect email." });
         }
-        // Check password - support both hashed and plain text for demo
-        const isValidHash = user.password.startsWith('$2');
-        if (isValidHash) {
-          const isValid = await verifyPassword(password, user.password);
-          if (!isValid) {
-            return done(null, false, { message: "Incorrect password." });
-          }
-        } else {
-          // Plain text comparison for demo accounts
-          if (user.password !== password) {
-            return done(null, false, { message: "Incorrect password." });
-          }
+        // Check password - always compare against bcrypt hash
+        const isValid = await verifyPassword(password, user.password);
+        if (!isValid) {
+          return done(null, false, { message: "Incorrect password." });
         }
         return done(null, user);
       } catch (err) {
@@ -113,7 +110,7 @@ export function setupAuth(app: Express) {
         if (err) {
           return next(err);
         }
-        return res.json(user);
+        return res.json(sanitizeUser(user));
       });
     })(req, res, next);
   });
@@ -131,7 +128,7 @@ export function setupAuth(app: Express) {
   // Current user route
   app.get("/api/user", (req, res) => {
     if (req.isAuthenticated()) {
-      return res.json(req.user);
+      return res.json(sanitizeUser(req.user as SchemaUser));
     }
     res.status(401).json({ message: "Not authenticated" });
   });
