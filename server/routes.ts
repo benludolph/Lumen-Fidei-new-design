@@ -341,18 +341,12 @@ export async function registerRoutes(
       return res.json(sanitizeUsers(validPartners));
     }
     
-    // Mentors: if requesting all users, return everyone for new conversation dialog
+    // Mentors: always scoped to their own mentees plus admins only
     if (req.user!.role === 'mentor') {
-      if (all) {
-        const allUsers = await storage.getAllUsers();
-        return res.json(sanitizeUsers(allUsers.filter(u => u.id !== req.user!.id)));
-      }
-      // Default: see their own mentees plus admins (for communication)
       const allUsers = await storage.getAllUsers();
       const mentees = allUsers.filter(u => u.mentorId === req.user!.id);
       const admins = allUsers.filter(u => u.role === 'admin');
-      // Combine mentees and admins (admins first for easy access)
-      const contacts = [...admins, ...mentees];
+      const contacts = [...admins, ...mentees].filter(u => u.id !== req.user!.id);
       return res.json(sanitizeUsers(contacts));
     }
     
