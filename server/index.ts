@@ -16,6 +16,7 @@ declare module "http" {
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 
 // Larger body limit for admin content restore (includes base64 images)

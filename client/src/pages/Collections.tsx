@@ -265,7 +265,7 @@ function getEmbedUrl(raw: string): string {
     if (u.hostname.includes("youtube.com") || u.hostname.includes("youtu.be")) {
       let id = u.searchParams.get("v");
       if (!id) id = u.pathname.split("/").filter(Boolean).pop() ?? "";
-      return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
     }
     if (u.hostname.includes("vimeo.com")) {
       const id = u.pathname.split("/").filter(Boolean).pop() ?? "";
@@ -322,6 +322,7 @@ function VideoModal({
                 title={title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
               />
             )}
           </div>
