@@ -71,3 +71,6 @@ integrations = ["resend:1.0.0"]
 
 [userenv.development]
 APP_URL = "https://62492d7b-747b-431b-b4ea-119a665943ae-00-1gvabqqkfi1x3.spock.replit.dev"
+
+[userenv.shared]
+ADMIN_EMAIL = "admin@example.com"

@@ -2687,6 +2687,21 @@ async function seed() {
         }
     }
 
+    // If ADMIN_EMAIL + ADMIN_PASSWORD are set, always sync the admin password on startup.
+    // This lets you recover access by setting these env vars and redeploying.
+    {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (adminEmail && adminPassword) {
+            const existing = await storage.getUserByUsername(adminEmail.toLowerCase().trim());
+            if (existing && existing.role === "admin") {
+                const newHash = await hashPassword(adminPassword);
+                await storage.updateUser(existing.id, { password: newHash });
+                console.log(`Admin password synced from environment variable for ${adminEmail}.`);
+            }
+        }
+    }
+
     // Seed track requirements if needed
     const existingReqs = await storage.getAllTrackRequirements("A");
     if (existingReqs.length === 0) {
