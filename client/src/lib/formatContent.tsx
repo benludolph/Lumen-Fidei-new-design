@@ -4,33 +4,52 @@ export function formatInlineStyles(text: string): (string | JSX.Element)[] {
   let key = 0;
 
   while (remaining.length > 0) {
+    const linkMatch = remaining.match(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/);
     const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
     const italicMatch = remaining.match(/\*([^*]+)\*/);
 
-    if (
-      boldMatch &&
-      boldMatch.index !== undefined &&
-      (!italicMatch || italicMatch.index === undefined || boldMatch.index <= italicMatch.index)
-    ) {
-      if (boldMatch.index > 0) parts.push(remaining.slice(0, boldMatch.index));
-      parts.push(
-        <strong key={key++} style={{ fontWeight: 600, color: "var(--white-90)" }}>
-          {boldMatch[1]}
-        </strong>
-      );
-      remaining = remaining.slice(boldMatch.index + boldMatch[0].length);
-    } else if (italicMatch && italicMatch.index !== undefined) {
-      if (italicMatch.index > 0) parts.push(remaining.slice(0, italicMatch.index));
-      parts.push(
-        <em key={key++} style={{ fontStyle: "italic", color: "var(--white-70)" }}>
-          {italicMatch[1]}
-        </em>
-      );
-      remaining = remaining.slice(italicMatch.index + italicMatch[0].length);
-    } else {
+    const candidates = [
+      linkMatch ? { match: linkMatch, type: "link" as const } : null,
+      boldMatch ? { match: boldMatch, type: "bold" as const } : null,
+      italicMatch ? { match: italicMatch, type: "italic" as const } : null,
+    ].filter(Boolean) as { match: RegExpMatchArray; type: "link" | "bold" | "italic" }[];
+
+    candidates.sort((a, b) => (a.match.index ?? 0) - (b.match.index ?? 0));
+    const first = candidates[0];
+
+    if (!first) {
       parts.push(remaining);
       break;
     }
+
+    if ((first.match.index ?? 0) > 0) parts.push(remaining.slice(0, first.match.index));
+
+    if (first.type === "link") {
+      parts.push(
+        <a
+          key={key++}
+          href={first.match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "var(--brand, #a78bfa)", textDecoration: "underline", textUnderlineOffset: "3px" }}
+        >
+          {first.match[1]}
+        </a>
+      );
+    } else if (first.type === "bold") {
+      parts.push(
+        <strong key={key++} style={{ fontWeight: 600, color: "var(--white-90)" }}>
+          {first.match[1]}
+        </strong>
+      );
+    } else {
+      parts.push(
+        <em key={key++} style={{ fontStyle: "italic", color: "var(--white-70)" }}>
+          {first.match[1]}
+        </em>
+      );
+    }
+    remaining = remaining.slice((first.match.index ?? 0) + first.match[0].length);
   }
   return parts;
 }

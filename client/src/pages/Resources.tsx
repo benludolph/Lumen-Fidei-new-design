@@ -42,6 +42,9 @@ import examenHoverImg from "@assets/Examen_hover_1773947410450.webp";
 import miraclePrayerHoverImg from "@assets/Miracle_hover_1773947410449.webp";
 import penitentHoverImg from "@assets/Penitent_hover_1773947410450.webp";
 
+import forgivenessImg from "@assets/Forgiveness_1778525053441.webp";
+import forgivenessHoverImg from "@assets/Forgiveness_hover_1778525053441.webp";
+
 const IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "retaliation", img: retaliationImg },
   { match: "catechism", img: catechismImg },
@@ -52,6 +55,7 @@ const IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "examen", img: examenImg },
   { match: "miracle prayer", img: miraclePrayerImg },
   { match: "penitent", img: penitentImg },
+  { match: "forgiveness prayer", img: forgivenessImg },
 ];
 
 const HOVER_IMAGE_MAP: Array<{ match: string; img: string }> = [
@@ -64,6 +68,7 @@ const HOVER_IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "examen", img: examenHoverImg },
   { match: "miracle prayer", img: miraclePrayerHoverImg },
   { match: "penitent", img: penitentHoverImg },
+  { match: "forgiveness prayer", img: forgivenessHoverImg },
 ];
 
 const ICON_MAP: Array<{ match: string; icon: LucideIcon }> = [
@@ -76,6 +81,7 @@ const ICON_MAP: Array<{ match: string; icon: LucideIcon }> = [
   { match: "catechism", icon: Church },
   { match: "baltimore", icon: Church },
   { match: "penitent", icon: Shield },
+  { match: "forgiveness prayer", icon: Heart },
 ];
 
 function getResourceImage(name: string): string | undefined {
@@ -103,6 +109,7 @@ const RESOURCE_SUBTEXTS: { match: string; subtext: string }[] = [
   { match: "lectio", subtext: "Slow, prayerful Scripture reading" },
   { match: "rosary", subtext: "Meditation on Christ's life" },
   { match: "divine mercy", subtext: "Prayer of trust in mercy" },
+  { match: "forgiveness prayer", subtext: "Releasing others through grace" },
 ];
 
 function getResourceSubtext(name: string): string {

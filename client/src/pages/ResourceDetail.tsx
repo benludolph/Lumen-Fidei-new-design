@@ -12,6 +12,7 @@ import retaliationDetailImg from "@assets/Retaliation_image_1773954733102.webp";
 import miracleDetailImg from "@assets/Miracle_1773955016570.jpg";
 import lectioDetailImg from "@assets/u8467352577_Oil_painting._A_wise_elderly_man_in_biblical_robe_1775059011679.webp";
 import examenDetailImg from "@assets/Examenn_1773955016571.png";
+import forgivenessHeroImg from "@assets/Forgiveness_Hero_1778525181267.webp";
 
 const DETAIL_IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "divine mercy", img: divineMercyDetailImg },
@@ -19,6 +20,7 @@ const DETAIL_IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "miracle prayer", img: miracleDetailImg },
   { match: "lectio", img: lectioDetailImg },
   { match: "examen", img: examenDetailImg },
+  { match: "forgiveness prayer", img: forgivenessHeroImg },
 ];
 
 function getDetailImage(name: string): string | null {

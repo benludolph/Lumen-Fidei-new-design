@@ -3027,6 +3027,43 @@ I ask Jesus, the Son of the living God, to pour His shed Blood over every aspect
 
 Amen.`,
             },
+            {
+                name: "Forgiveness Prayer for Adults",
+                type: "prayer" as const,
+                order: 7,
+                subtitle: "Releasing others through grace",
+                content: `**Forgiveness Prayer for Adults**
+
+This prayer guides you through the sacred act of releasing those who have hurt you, drawing on the grace of Christ to free your heart from the burden of resentment and anger.
+
+[View & Download the Full Prayer (PDF)](https://uploads.weconnect.com/mce/f333160e6b20ba37686da89bbe5fab728a7d3d24/Forgiveness%20Prayer%20for%20Adults.pdf)
+
+---
+
+**Why Forgiveness Matters**
+
+Forgiveness is not condoning what was done. It is the decision to release another person from the debt we feel they owe us — and in doing so, to free ourselves. As Christ forgave from the Cross, He invites us to follow Him into this profound act of mercy.
+
+**Before You Begin**
+
+Find a quiet place. Take a few slow breaths. Ask the Holy Spirit to be present and to guide your heart through each name and each wound.
+
+**The Prayer**
+
+Heavenly Father, I come before You in the name of Jesus. I acknowledge that I have been hurt by *(name the person or persons)*, and I have carried this wound in my heart.
+
+Lord, I choose now, by an act of my will, to forgive *(name)* for *(name the offense)*. I release them from any judgment I have held against them. I cancel the debt I believe they owe me.
+
+I ask You, Lord, to heal the wound this has caused in me. Take from me any anger, bitterness, or resentment that remains. Fill those places with Your peace and Your love.
+
+I bless *(name)* in the name of Jesus, and I place them into Your hands.
+
+In Jesus' name, Amen.
+
+---
+
+*For the complete guided version of this prayer, open the PDF above.*`,
+            },
         ];
 
         for (const resource of canonicalResources) {
