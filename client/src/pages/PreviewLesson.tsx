@@ -25,7 +25,13 @@ export default function PreviewLesson() {
 
   if (!user || user.role !== "admin") return null;
 
-  const handleExit = () => setLocation("/admin");
+  const handleExit = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      setLocation("/admin");
+    }
+  };
 
   if (isLoading) {
     return (
