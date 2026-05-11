@@ -1037,7 +1037,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             <div
               ref={scrollContainerRef}
               className="h-full overflow-y-auto flex flex-col gap-4"
-              style={{ scrollbarWidth: "none", padding: "24px" }}
+              style={{ scrollbarWidth: "none", padding: "24px", paddingTop: "108px" }}
             >
               {renderedMessages.map((msg, i) => {
                 const prev = renderedMessages[i - 1];
