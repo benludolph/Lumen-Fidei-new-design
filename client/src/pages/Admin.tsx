@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -5032,15 +5032,22 @@ function SortableDayCard({
   dayContent,
   onOpen,
   onPreview,
+  modules,
+  currentWeekNumber,
+  onMove,
 }: {
   dayNumber: number;
   dayContent: TrackAContentData | undefined;
   onOpen: (dayNumber: number) => void;
   onPreview: (dayNumber: number) => void;
+  modules?: TrackAModuleData[];
+  currentWeekNumber?: number;
+  onMove?: (dayNumber: number, newWeekNumber: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: dayNumber });
   const slideCount = dayContent?.slides?.length || 0;
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  const otherModules = modules?.filter(m => m.weekNumber !== currentWeekNumber) ?? [];
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -5078,7 +5085,29 @@ function SortableDayCard({
                 {dayContent?.imageUrl ? " · Has image" : ""}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              {onMove && otherModules.length > 0 && (
+                <Select
+                  value=""
+                  onValueChange={(val) => onMove(dayNumber, Number(val))}
+                >
+                  <SelectTrigger
+                    className="h-7 w-auto px-2 text-xs border-dashed text-muted-foreground gap-1 focus:ring-0"
+                    data-testid={`select-move-day-${dayNumber}`}
+                  >
+                    <ArrowLeftRight className="w-3 h-3" />
+                    <span className="hidden sm:inline">Move</span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectLabel className="text-[11px]">Move to module…</SelectLabel>
+                    {otherModules.map(m => (
+                      <SelectItem key={m.weekNumber} value={String(m.weekNumber)} data-testid={`option-move-week-${m.weekNumber}`}>
+                        Week {m.weekNumber}: {m.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               {slideCount > 0 && (
                 <Button
                   variant="ghost"
@@ -5444,6 +5473,29 @@ function TrackAContentManagementView() {
       console.error("Track A save error:", error);
       toast({ title: "Failed to save", description: error?.message || "Unknown error", variant: "destructive" });
     },
+  });
+
+  const moveDayMutation = useMutation({
+    mutationFn: async ({ dayNumber, newWeekNumber }: { dayNumber: number; newWeekNumber: number }) => {
+      const content = allContent?.find(c => c.dayNumber === dayNumber);
+      if (!content) throw new Error("Day content not found");
+      const res = await apiRequest("POST", '/api/admin/track-a-content', {
+        dayNumber: content.dayNumber,
+        weekNumber: newWeekNumber,
+        centralTheme: content.centralTheme,
+        subtitle: content.subtitle ?? null,
+        slides: content.slides ?? [],
+        imageUrl: content.imageUrl ?? null,
+        completionMessage: content.completionMessage ?? null,
+      });
+      return res.json();
+    },
+    onSuccess: (_data, { newWeekNumber }) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      const targetModule = modules?.find(m => m.weekNumber === newWeekNumber);
+      toast({ title: "Lesson moved", description: `Moved to Week ${newWeekNumber}${targetModule ? `: ${targetModule.title}` : ""}.` });
+    },
+    onError: () => toast({ title: "Failed to move lesson", variant: "destructive" }),
   });
 
   const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
@@ -5872,6 +5924,9 @@ function TrackAContentManagementView() {
                   dayContent={allContent?.find(c => c.dayNumber === dayNumber)}
                   onOpen={openDay}
                   onPreview={(dn) => setLocation(`/preview/track-a/${dn}`)}
+                  modules={modules}
+                  currentWeekNumber={selectedModule ?? undefined}
+                  onMove={(dn, wk) => moveDayMutation.mutate({ dayNumber: dn, newWeekNumber: wk })}
                 />
               ))}
             </div>
