@@ -2001,7 +2001,7 @@ function KnowledgeCheckSlide({
         <p className="type-display-lg font-bold text-white">
           {data.question}
         </p>
-        <div className="space-y-2">
+        <div className="space-y-2 px-0.5 py-0.5">
           {data.options.map((option, idx) => {
             const answered = selectedIndex !== null;
             const isThis = selectedIndex === idx;
@@ -2246,7 +2246,7 @@ function KnowledgeQuizSlide({ content, onComplete }: { content: string; onComple
 
         <div
           className={cn(
-            "space-y-3 transition-transform",
+            "space-y-3 px-0.5 py-0.5 transition-transform",
             shaking && "animate-[shake_0.4s_ease]"
           )}
         >
@@ -2647,7 +2647,7 @@ function QuizQuestionSlide({
       <p className="type-display-lg font-bold text-white">
         {q.question}
       </p>
-      <div className="space-y-2">
+      <div className="space-y-2 px-0.5 py-0.5">
         {q.options.map((option, idx) => {
           const letter = QUIZ_LETTERS[idx] || String.fromCharCode(65 + idx);
           const isSelected = currentAnswer === letter;
