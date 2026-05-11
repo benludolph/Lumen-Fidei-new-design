@@ -105,10 +105,12 @@ function computeCurrentProgramDay(cohortStartDateStr: string | null): number {
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // 200 requests per 15 minutes
+  max: 500,
   message: { message: "Too many requests, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
+  // Admins are trusted and do heavy content editing — skip limiting for them
+  skip: (req) => !!(req.isAuthenticated?.() && (req.user as any)?.role === 'admin'),
 });
 
 const authLimiter = rateLimit({
