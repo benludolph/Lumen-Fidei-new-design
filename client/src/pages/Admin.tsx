@@ -5044,6 +5044,7 @@ function SortableDayCard({
   currentWeekNumber?: number;
   onMove?: (dayNumber: number, newWeekNumber: number) => void;
 }) {
+  const [moveSelectKey, setMoveSelectKey] = useState(0);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: dayNumber });
   const slideCount = dayContent?.slides?.length || 0;
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
@@ -5088,8 +5089,11 @@ function SortableDayCard({
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               {onMove && otherModules.length > 0 && (
                 <Select
-                  value=""
-                  onValueChange={(val) => onMove(dayNumber, Number(val))}
+                  key={moveSelectKey}
+                  onValueChange={(val) => {
+                    onMove(dayNumber, Number(val));
+                    setMoveSelectKey(k => k + 1);
+                  }}
                 >
                   <SelectTrigger
                     className="h-7 w-auto px-2 text-xs border-dashed text-muted-foreground gap-1 focus:ring-0"
@@ -5099,12 +5103,14 @@ function SortableDayCard({
                     <span className="hidden sm:inline">Move</span>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectLabel className="text-[11px]">Move to module…</SelectLabel>
-                    {otherModules.map(m => (
-                      <SelectItem key={m.weekNumber} value={String(m.weekNumber)} data-testid={`option-move-week-${m.weekNumber}`}>
-                        Week {m.weekNumber}: {m.title}
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectLabel className="text-[11px]">Move to module…</SelectLabel>
+                      {otherModules.map(m => (
+                        <SelectItem key={m.weekNumber} value={String(m.weekNumber)} data-testid={`option-move-week-${m.weekNumber}`}>
+                          Week {m.weekNumber}: {m.title}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               )}
