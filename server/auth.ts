@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { type Express } from "express";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import createMemoryStore from "memorystore";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
@@ -36,28 +37,44 @@ declare global {
 }
 
 export function setupAuth(app: Express) {
-  const MemoryStore = createMemoryStore(session);
-  
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret && process.env.NODE_ENV === "production") {
     throw new Error("SESSION_SECRET must be set in production");
   }
-  
+
+  const isProduction = app.get("env") === "production";
+  if (isProduction) {
+    app.set("trust proxy", 1);
+  }
+
+  // Use PostgreSQL session store in production so sessions survive autoscale
+  // restarts and are shared across all instances. Fall back to MemoryStore in dev.
+  let store: session.Store;
+  if (isProduction && process.env.DATABASE_URL) {
+    const PgSession = connectPgSimple(session);
+    store = new PgSession({
+      conString: process.env.DATABASE_URL,
+      tableName: "session",
+      createTableIfMissing: true,
+      ttl: 86400, // 24 hours in seconds
+    });
+  } else {
+    const MemoryStore = createMemoryStore(session);
+    store = new MemoryStore({ checkPeriod: 86400000 });
+  }
+
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret || "spiritual-program-dev-secret-only",
     resave: false,
     saveUninitialized: false,
     cookie: {
       maxAge: 86400000, // 24 hours
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
     },
-    store: new MemoryStore({
-      checkPeriod: 86400000,
-    }),
+    store,
   };
-
-  if (app.get("env") === "production") {
-    app.set("trust proxy", 1);
-  }
 
   app.use(session(sessionSettings));
   app.use(passport.initialize());
