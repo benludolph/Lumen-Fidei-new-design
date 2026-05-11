@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -5205,6 +5205,14 @@ function TrackAContentManagementView() {
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
+  const [slideClipboard, setSlideClipboard] = useState<TrackASlide | null>(() => {
+    try {
+      const stored = localStorage.getItem("trackA_slideClipboard");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [dayImageUrl, setDayImageUrl] = useState<string | null>(null);
   const [daySubtitle, setDaySubtitle] = useState("");
   const [completionMessage, setCompletionMessage] = useState("");
@@ -5563,6 +5571,22 @@ function TrackAContentManagementView() {
     });
     if (expandedSlide === index) setExpandedSlide(newIndex);
     else if (expandedSlide === newIndex) setExpandedSlide(index);
+  };
+
+  const copySlide = (index: number) => {
+    const slide = slides[index];
+    if (!slide) return;
+    const copied = { type: slide.type, content: slide.content };
+    setSlideClipboard(copied);
+    try { localStorage.setItem("trackA_slideClipboard", JSON.stringify(copied)); } catch {}
+    toast({ title: "Slide copied", description: `${SLIDE_TYPE_LABELS[slide.type] ?? slide.type} slide is ready to paste into any lesson.` });
+  };
+
+  const pasteSlide = () => {
+    if (!slideClipboard) return;
+    const pasted = { type: slideClipboard.type, content: slideClipboard.content };
+    setSlides(prev => [...prev, pasted]);
+    setExpandedSlide(slides.length);
   };
 
   const updateSlide = (index: number, field: "type" | "content", value: string) => {
@@ -6187,6 +6211,9 @@ function TrackAContentManagementView() {
                         <Button variant="ghost" size="icon" onClick={() => setExpandedSlide(isExpanded ? null : index)} data-testid={`button-slide-toggle-${index}`}>
                           {isExpanded ? <Eye className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
                         </Button>
+                        <Button variant="ghost" size="icon" title="Copy slide" onClick={() => copySlide(index)} data-testid={`button-slide-copy-${index}`}>
+                          <Copy className="w-4 h-4" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => removeSlide(index)} data-testid={`button-slide-delete-${index}`}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
@@ -6199,7 +6226,7 @@ function TrackAContentManagementView() {
           </div>
 
           <Card>
-            <CardContent className="pt-4 pb-4">
+            <CardContent className="pt-4 pb-4 space-y-3">
               <div className="flex items-center gap-3 flex-wrap">
                 <Select value={addSlideType} onValueChange={setAddSlideType}>
                   <SelectTrigger className="w-[180px]" data-testid="select-add-slide-type">
@@ -6216,6 +6243,18 @@ function TrackAContentManagementView() {
                   Add Slide
                 </Button>
               </div>
+              {slideClipboard && (
+                <div className="flex items-center gap-3 pt-1 border-t border-dashed">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1.5" data-testid="text-clipboard-indicator">
+                    <ClipboardPaste className="w-3.5 h-3.5" />
+                    Clipboard: <span className="font-medium text-foreground">{SLIDE_TYPE_LABELS[slideClipboard.type] ?? slideClipboard.type}</span> slide
+                  </span>
+                  <Button size="sm" variant="outline" onClick={pasteSlide} data-testid="button-paste-slide">
+                    <ClipboardPaste className="w-3.5 h-3.5 mr-1.5" />
+                    Paste Slide
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
