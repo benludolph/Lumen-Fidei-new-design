@@ -85,6 +85,7 @@ export interface IStorage {
   getTrackAContentByPosition(position: number): Promise<TrackAContent | undefined>;
   getAllTrackAContent(): Promise<TrackAContent[]>;
   reorderTrackAContent(dayNumbers: number[]): Promise<void>;
+  renumberTrackAContent(): Promise<{ oldDay: number; newDay: number }[]>;
   upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent>;
 
   // Cohort Settings
@@ -539,6 +540,40 @@ export class DatabaseStorage implements IStorage {
         `);
       }
     });
+  }
+
+  async renumberTrackAContent(): Promise<{ oldDay: number; newDay: number }[]> {
+    // Get all days (excluding day 0) ordered by week then current day number
+    const all = await db.select().from(trackAContent)
+      .where(sql`${trackAContent.dayNumber} > 0`)
+      .orderBy(asc(trackAContent.weekNumber), asc(trackAContent.dayNumber));
+
+    // Build old → new mapping (sequential 1, 2, 3...)
+    const mapping = all.map((row, i) => ({ oldDay: row.dayNumber, newDay: i + 1 }))
+      .filter(m => m.oldDay !== m.newDay);
+
+    if (mapping.length === 0) return [];
+
+    await db.transaction(async (tx) => {
+      // Step 1: move to temp values to avoid unique constraint violations
+      for (const { oldDay } of mapping) {
+        const tempDay = oldDay + 10000;
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${tempDay} WHERE day_number = ${oldDay}`);
+        await tx.execute(sql`UPDATE user_answers SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
+        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
+        await tx.execute(sql`UPDATE survey_responses SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track = 'A'`);
+      }
+      // Step 2: write final values
+      for (const { oldDay, newDay } of mapping) {
+        const tempDay = oldDay + 10000;
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+        await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${tempDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
+        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${tempDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
+        await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${tempDay} AND track = 'A'`);
+      }
+    });
+
+    return mapping;
   }
 
   async upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent> {

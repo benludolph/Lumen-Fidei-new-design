@@ -598,6 +598,15 @@ export async function registerRoutes(
     }
   });
 
+  app.post('/api/admin/track-a/renumber', requireRole('admin'), async (req, res) => {
+    try {
+      const changes = await storage.renumberTrackAContent();
+      res.json({ ok: true, changes });
+    } catch (error) {
+      throw error;
+    }
+  });
+
   // === Image Upload ===
 
   app.post('/api/admin/upload-image', requireRole('admin'), uploadLimiter, upload.single('image'), async (req, res) => {

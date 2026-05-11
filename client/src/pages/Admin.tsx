@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -5264,6 +5264,7 @@ function TrackAContentManagementView() {
   const [snapshotExpanded, setSnapshotExpanded] = useState(false);
   const [restoreConfirmId, setRestoreConfirmId] = useState<number | null>(null);
   const [restoreConfirmName, setRestoreConfirmName] = useState("");
+  const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -5504,6 +5505,20 @@ function TrackAContentManagementView() {
     onError: () => toast({ title: "Failed to move lesson", variant: "destructive" }),
   });
 
+  const renumberMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", '/api/admin/track-a/renumber', {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      setRenumberConfirmOpen(false);
+      const count = data.changes?.length ?? 0;
+      toast({ title: "Days renumbered", description: count > 0 ? `${count} day${count === 1 ? "" : "s"} updated to sequential numbering.` : "All day numbers were already in order." });
+    },
+    onError: () => toast({ title: "Failed to renumber days", variant: "destructive" }),
+  });
+
   const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
 
   const loadContentIntoState = (content: TrackAContentData | undefined) => {
@@ -5698,6 +5713,29 @@ function TrackAContentManagementView() {
           </DialogContent>
         </Dialog>
 
+        {/* Renumber Days Confirmation Dialog */}
+        <Dialog open={renumberConfirmOpen} onOpenChange={setRenumberConfirmOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Renumber All Days?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground pt-1">
+              This will reassign day numbers sequentially (1, 2, 3…) based on the current week order. Any participant progress is updated to match. This cannot be undone — consider saving a snapshot first.
+            </p>
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => setRenumberConfirmOpen(false)}>Cancel</Button>
+              <Button
+                variant="destructive"
+                onClick={() => renumberMutation.mutate()}
+                disabled={renumberMutation.isPending}
+                data-testid="button-confirm-renumber"
+              >
+                {renumberMutation.isPending ? "Renumbering…" : "Yes, Renumber Days"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* CSV Import / Export */}
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed px-4 py-3 bg-muted/30">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mr-auto">Bulk Edit via CSV</p>
@@ -5718,6 +5756,18 @@ function TrackAContentManagementView() {
               {csvImporting ? "Importing…" : "Import"}
             </Button>
           </div>
+        </div>
+
+        {/* Renumber Days */}
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed px-4 py-3 bg-muted/30">
+          <div className="mr-auto">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fix Day Numbering</p>
+            <p className="text-xs text-muted-foreground mt-0.5">After moving lessons between weeks, renumber days so they run sequentially again.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setRenumberConfirmOpen(true)} data-testid="button-renumber-days">
+            <Hash className="w-3.5 h-3.5 mr-1.5" />
+            Renumber Days
+          </Button>
         </div>
 
         {/* Content Snapshots */}
