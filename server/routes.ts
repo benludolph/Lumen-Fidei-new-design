@@ -184,7 +184,7 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   // Setup Authentication
-  setupAuth(app);
+  await setupAuth(app);
 
   const express = await import("express");
   app.use("/attached_assets", express.default.static(uploadDir));

@@ -6,6 +6,7 @@ import connectPgSimple from "connect-pg-simple";
 import createMemoryStore from "memorystore";
 import bcrypt from "bcryptjs";
 import { storage } from "./storage";
+import { pool } from "./db";
 import { type User as SchemaUser } from "@shared/schema";
 
 export function sanitizeUser(user: SchemaUser): Omit<SchemaUser, 'password'> {
@@ -36,7 +37,19 @@ declare global {
   }
 }
 
-export function setupAuth(app: Express) {
+async function ensureSessionTable(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS "session" (
+      "sid" varchar NOT NULL COLLATE "default",
+      "sess" json NOT NULL,
+      "expire" timestamp(6) NOT NULL,
+      CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+    );
+    CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+  `);
+}
+
+export async function setupAuth(app: Express) {
   const sessionSecret = process.env.SESSION_SECRET;
   if (!sessionSecret && process.env.NODE_ENV === "production") {
     throw new Error("SESSION_SECRET must be set in production");
@@ -51,11 +64,14 @@ export function setupAuth(app: Express) {
   // restarts and are shared across all instances. Fall back to MemoryStore in dev.
   let store: session.Store;
   if (isProduction && process.env.DATABASE_URL) {
+    // Create the session table ourselves so connect-pg-simple doesn't need
+    // to read table.sql from node_modules (which is absent after bundling).
+    await ensureSessionTable();
     const PgSession = connectPgSimple(session);
     store = new PgSession({
-      conString: process.env.DATABASE_URL,
+      pool,
       tableName: "session",
-      createTableIfMissing: true,
+      createTableIfMissing: false,
       ttl: 86400, // 24 hours in seconds
     });
   } else {
