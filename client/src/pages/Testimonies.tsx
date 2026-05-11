@@ -10,8 +10,8 @@ interface TestimonyPartWithStatus {
   testimonyId: number;
   partNumber: number;
   title: string;
-  videoUrl: string;
-  unlockKey: string;
+  videoUrl?: string;
+  lockHint: string;
   unlocked: boolean;
 }
 
@@ -21,21 +21,13 @@ interface TestimonyWithStatus {
   personName: string;
   description: string;
   thumbnailUrl: string;
-  fullVideoUrl: string;
+  fullVideoUrl?: string;
   parts: TestimonyPartWithStatus[];
   unlockedCount: number;
   totalParts: number;
   fullyUnlocked: boolean;
 }
 
-function unlockHintText(unlockKey: string): string {
-  if (unlockKey === "prelim") return "Complete Preliminary Modules";
-  const weekFirstMatch = unlockKey.match(/^week-(\d+)-first$/);
-  if (weekFirstMatch) return `Complete Week ${weekFirstMatch[1]} first lesson`;
-  const weekLastMatch = unlockKey.match(/^week-(\d+)-last$/);
-  if (weekLastMatch) return `Complete Week ${weekLastMatch[1]}`;
-  return "Complete more lessons";
-}
 
 function getEmbedUrl(raw: string): string {
   try {
@@ -125,13 +117,13 @@ function TestimonyCard({
   const [hovered, setHovered] = useState(false);
   const isLocked = testimony.unlockedCount === 0;
   const firstUnlockedPart = testimony.parts.find(p => p.unlocked);
-  const lockHint = testimony.parts[0] ? unlockHintText(testimony.parts[0].unlockKey) : "Complete more lessons";
+  const lockHint = testimony.parts[0]?.lockHint ?? "Complete more lessons";
 
   const handleClick = () => {
     if (isLocked) return;
     if (testimony.fullyUnlocked && testimony.fullVideoUrl) {
       onPlay(testimony.fullVideoUrl, `${testimony.personName} — Full Testimony`);
-    } else if (firstUnlockedPart) {
+    } else if (firstUnlockedPart && firstUnlockedPart.videoUrl) {
       onPlay(
         firstUnlockedPart.videoUrl,
         `${testimony.personName}${firstUnlockedPart.title ? ` — ${firstUnlockedPart.title}` : ` — Part ${firstUnlockedPart.partNumber}`}`

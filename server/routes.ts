@@ -2216,6 +2216,15 @@ export async function registerRoutes(
 
   // === Testimonies (Participant) ===
 
+  function testimonyUnlockHint(unlockKey: string): string {
+    if (unlockKey === "prelim") return "Complete Preliminary Modules";
+    const weekFirstMatch = unlockKey.match(/^week-(\d+)-first$/);
+    if (weekFirstMatch) return `Complete Week ${weekFirstMatch[1]} first lesson`;
+    const weekLastMatch = unlockKey.match(/^week-(\d+)-last$/);
+    if (weekLastMatch) return `Complete Week ${weekLastMatch[1]}`;
+    return "Complete more lessons";
+  }
+
   app.get('/api/testimonies', requireAuth, async (req, res) => {
     try {
       const userId = req.user!.id;
@@ -2226,17 +2235,26 @@ export async function registerRoutes(
 
       const result = await Promise.all(allTestimonies.map(async (testimony) => {
         const parts = await storage.getTestimonyParts(testimony.id);
-        const partsWithStatus = parts.map(part => ({
-          ...part,
-          unlocked: unlockedKeys.has(part.unlockKey),
-        }));
+        const partsWithStatus = parts.map(part => {
+          const unlocked = unlockedKeys.has(part.unlockKey);
+          const { videoUrl, unlockKey, ...rest } = part;
+          return {
+            ...rest,
+            lockHint: testimonyUnlockHint(unlockKey),
+            unlocked,
+            ...(unlocked ? { videoUrl } : {}),
+          };
+        });
         const unlockedCount = partsWithStatus.filter(p => p.unlocked).length;
+        const fullyUnlocked = parts.length > 0 && unlockedCount === parts.length;
+        const { fullVideoUrl, ...testimonyRest } = testimony;
         return {
-          ...testimony,
+          ...testimonyRest,
+          ...(fullyUnlocked ? { fullVideoUrl } : {}),
           parts: partsWithStatus,
           unlockedCount,
           totalParts: parts.length,
-          fullyUnlocked: parts.length > 0 && unlockedCount === parts.length,
+          fullyUnlocked,
         };
       }));
 
