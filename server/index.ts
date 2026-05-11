@@ -30,9 +30,11 @@ app.use(
   }),
 );
 
-// Default body limit for all other routes
+// Default body limit — raised to 5 MB to handle large admin lesson JSON
+// (Track A days with many slides, scripture text, and audio URLs can exceed 100 KB)
 app.use(
   express.json({
+    limit: '5mb',
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
