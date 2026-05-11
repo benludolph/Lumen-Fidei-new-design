@@ -1200,12 +1200,12 @@ export async function registerRoutes(
 
   // === Per-Module Reflection Overlay Settings ===
 
-  app.get('/api/admin/module-overlays', requireAuth, async (req, res) => {
+  app.get('/api/admin/module-overlays', requireRole('admin'), async (req, res) => {
     const overlays = await storage.listModuleOverlays();
     res.json(overlays);
   });
 
-  app.get('/api/admin/module-overlays/:contextKey', requireAuth, async (req, res) => {
+  app.get('/api/admin/module-overlays/:contextKey', requireRole('admin'), async (req, res) => {
     const overlay = await storage.getModuleOverlay(req.params.contextKey);
     res.json(overlay ?? { contextKey: req.params.contextKey, enabled: false, imageUrl: "", text: "Reflection Unlocked", subtext: "", label: "" });
   });
@@ -1238,7 +1238,7 @@ export async function registerRoutes(
 
   // === Reflection Overlay Settings (legacy global — kept for compatibility) ===
 
-  app.get('/api/admin/reflection-overlay', requireAuth, async (req, res) => {
+  app.get('/api/admin/reflection-overlay', requireRole('admin'), async (req, res) => {
     const [imageUrl, text, subtext] = await Promise.all([
       storage.getCohortSetting("reflection_overlay_image"),
       storage.getCohortSetting("reflection_overlay_text"),
