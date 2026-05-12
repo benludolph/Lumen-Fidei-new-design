@@ -866,15 +866,6 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onInteracted?.()}
-          data-testid="button-confession-confirmed-continue"
-          className="w-full rounded-md px-4 py-3 transition-colors"
-          style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.2)", fontFamily: "'Afacad', sans-serif", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.95)" }}
-        >
-          Continue
-        </button>
       </div>
     );
   }
