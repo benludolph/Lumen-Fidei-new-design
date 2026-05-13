@@ -2330,7 +2330,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2361,6 +2361,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   scene: "Interactive Scene",
   captivity_builder: "Breaking Lies",
   confession_finder: "Confession Finder",
+  pdf_download: "PDF Download",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2387,6 +2388,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   scene: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   captivity_builder: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
   confession_finder: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
+  pdf_download: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
 };
 
 // ============================================================
@@ -4434,6 +4436,87 @@ function TimerSlideEditor({ content, onChange, index }: { content: string; onCha
   );
 }
 
+function PdfDownloadEditor({ content, onChange, index, prefix }: { content: string; onChange: (val: string) => void; index: number; prefix: string }) {
+  let data: { url: string; label: string };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      url: typeof parsed.url === "string" ? parsed.url : "",
+      label: typeof parsed.label === "string" ? parsed.label : "",
+    };
+  } catch {
+    data = { url: "", label: "" };
+  }
+
+  const update = (fields: Partial<typeof data>) => {
+    onChange(JSON.stringify({ ...data, ...fields }));
+  };
+
+  const [uploading, setUploading] = useState(false);
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("pdf", file);
+      const res = await fetch("/api/admin/upload-pdf", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const json = await res.json();
+      update({ url: json.url });
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Label (e.g. "workbook", "guide")</label>
+        <input
+          type="text"
+          value={data.label}
+          onChange={(e) => update({ label: e.target.value })}
+          placeholder="e.g. workbook"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          data-testid={`input-${prefix}-pdf-label-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">PDF File</label>
+        {data.url && (
+          <p className="text-xs text-muted-foreground/80 truncate mb-1">Current: <span className="font-mono">{data.url}</span></p>
+        )}
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={uploading}
+            onClick={() => document.getElementById(`pdf-upload-${prefix}-${index}`)?.click()}
+            data-testid={`button-${prefix}-pdf-upload-${index}`}
+          >
+            <Upload className="w-3 h-3 mr-1" />
+            {uploading ? "Uploading…" : data.url ? "Replace PDF" : "Upload PDF"}
+          </Button>
+          <input
+            id={`pdf-upload-${prefix}-${index}`}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={handlePdfUpload}
+          />
+        </label>
+      </div>
+      <p className="text-xs text-muted-foreground/60">The slide will show the label in its title and a download button that opens the PDF in a new tab.</p>
+    </div>
+  );
+}
+
 function ScripturePracticeEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: {
     duration: number;
@@ -5620,6 +5703,7 @@ function TrackAContentManagementView() {
     if (type === "scene") return "{}";
     if (type === "captivity_builder") return JSON.stringify({ intro: "" });
     if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
+    if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     return "";
   };
 
@@ -6300,6 +6384,13 @@ function TrackAContentManagementView() {
                                 </div>
                                 <p className="text-xs text-muted-foreground/60">The 12 spirits and prayer template are built in — no further configuration needed.</p>
                               </div>
+                            ) : slide.type === "pdf_download" ? (
+                              <PdfDownloadEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                prefix="slide"
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -6979,6 +7070,7 @@ function PrelimContentManagementView() {
     if (type === "scene") return "{}";
     if (type === "captivity_builder") return JSON.stringify({ intro: "" });
     if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
+    if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     return "";
   };
 
@@ -7288,6 +7380,13 @@ function PrelimContentManagementView() {
                                 </div>
                                 <p className="text-xs text-muted-foreground/60">The 12 spirits and prayer template are built in — no further configuration needed.</p>
                               </div>
+                            ) : slide.type === "pdf_download" ? (
+                              <PdfDownloadEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                prefix="prelim"
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>

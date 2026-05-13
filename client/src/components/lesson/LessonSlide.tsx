@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } fro
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, Music } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, Music, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -18,6 +18,8 @@ import { BeforeAfterSlide } from "./BeforeAfterSlide";
 import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
+
+import folderImg from "@assets/Folder_1778623094806.png";
 
 import answersImg from "@assets/Answers_desktop_1775146558812.webp";
 import controlImg from "@assets/Control_desktop_1775146558812.webp";
@@ -65,7 +67,8 @@ export type SlideType =
   | "knowledge_quiz"
   | "scene"
   | "captivity_builder"
-  | "confession_finder";
+  | "confession_finder"
+  | "pdf_download";
 
 
 export interface QuizData {
@@ -1457,6 +1460,8 @@ export function LessonSlide({
             onSaveSessionVar={onSaveSessionVar}
             onInteracted={onInteracted}
           />
+        ) : type === "pdf_download" ? (
+          <PdfDownloadSlide content={content} onInteracted={onInteracted} />
         ) : (
           <TextSlide content={content} />
         )}
@@ -2733,6 +2738,52 @@ function QuizResultSlide({
           You answered {answered} of {total} questions.
         </p>
       )}
+    </div>
+  );
+}
+
+function PdfDownloadSlide({ content, onInteracted }: { content: string; onInteracted?: () => void }) {
+  let data: { url: string; label: string } = { url: "", label: "" };
+  try {
+    const parsed = JSON.parse(content || "{}");
+    data = {
+      url: typeof parsed.url === "string" ? parsed.url : "",
+      label: typeof parsed.label === "string" ? parsed.label : "",
+    };
+  } catch {
+    /* use defaults */
+  }
+
+  const handleDownload = () => {
+    onInteracted?.();
+    if (data.url) {
+      window.open(data.url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-8 py-8 text-center">
+      <p className="type-display-sm font-normal text-white leading-snug" style={{ fontFamily: "'Afacad', sans-serif" }}>
+        Download this{data.label ? ` ${data.label}` : ""} pdf
+      </p>
+      <img
+        src={folderImg}
+        alt="PDF folder"
+        className="w-[200px] select-none"
+        draggable={false}
+      />
+      <button
+        onClick={handleDownload}
+        disabled={!data.url}
+        className="inline-flex items-center gap-2 rounded-lg px-4 h-9 disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{ backgroundColor: "#18181b" }}
+        data-testid="button-pdf-download"
+      >
+        <Download className="w-4 h-4" style={{ color: "#fafafa" }} />
+        <span style={{ fontFamily: "'Afacad', sans-serif", fontWeight: 500, fontSize: "14px", color: "#fafafa", letterSpacing: "0.04em" }}>
+          DOWNLOAD
+        </span>
+      </button>
     </div>
   );
 }

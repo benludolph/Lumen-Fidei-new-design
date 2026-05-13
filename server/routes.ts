@@ -49,6 +49,18 @@ const audioUpload = multer({
   },
 });
 
+const pdfUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"));
+    }
+  },
+});
+
 const videoUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 },
@@ -700,6 +712,33 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Admin mentor photo upload error:", error);
       res.status(500).json({ message: "Failed to save photo" });
+    }
+  });
+
+  app.post('/api/admin/upload-pdf', requireRole('admin'), uploadLimiter, pdfUpload.single('pdf'), async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "No PDF file provided" });
+    }
+    try {
+      const ext = path.extname(req.file.originalname);
+      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${base}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+
+      await db.insert(uploadedImages).values({
+        filename,
+        mimeType: "application/pdf",
+        data: base64Data,
+      }).onConflictDoUpdate({
+        target: uploadedImages.filename,
+        set: { data: base64Data, mimeType: "application/pdf" },
+      });
+
+      const filePath = `/api/images/${filename}`;
+      res.json({ url: filePath });
+    } catch (error) {
+      console.error("PDF upload error:", error);
+      res.status(500).json({ message: "Failed to save PDF" });
     }
   });
 
