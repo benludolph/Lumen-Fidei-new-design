@@ -1,0 +1,196 @@
+Build a new slide type: Guided Prayer Process
+I need a new slide type for my Catholic deliverance prep program. It walks users through multi-step prayer processes where their text inputs from earlier steps get woven into the prayers in later steps.
+Why I need this
+Existing slide types (text, text_input, single_select) can collect inputs and show text, but they can't insert user inputs into prayer text on later slides. That live insertion is the whole point — the user writes "I am unforgivable" in step 3, then in step 4 sees the prayer "In the name of Jesus Christ, I renounce the lie that I am unforgivable..." with their own words inside the prayer.
+This is similar to the existing Breaking Lies slide type, but generalized. Keep Breaking Lies separate — don't refactor it. Build this as a new type called guided_prayer_process.
+How it works
+The slide is configured with an ordered array of steps. The component walks the user through them one at a time. User cannot skip ahead. User can go back to revise an earlier input; downstream prayers update with the new value.
+Step kinds
+The component must support these five step kinds:
+1. instruction — Display-only text. Has a heading and body. User clicks "Continue."
+2. input — Single text input. Has a heading, prompt, placeholder, and variable_name. User types, clicks "Continue." Continue is disabled until there's text.
+3. list_input — Captures a list of items. Heading, prompt, variable_name, add_button_label, optional placeholder, optional optional: true flag. UX: one text field with an "Add another" button below it. Each added item appears as an editable, deletable row above the input. Continue is enabled once at least one item is added (or always enabled if optional: true). No limit on number of items.
+4. choice — Single-select with branching. Heading, prompt, variable_name, and an options array. Each option has a label and a next_step (the step id to jump to). Used for things like "Was another person involved? Yes / No / Not sure" where Yes routes one way and No skips ahead.
+5. prayer — Displays a prayer for the user to pray out loud. Has a heading, optional instruction_above, and prayer_text. The prayer_text supports inline variable insertion with {{variable_name}} syntax. User must click "I prayed this" to continue — no auto-advance, no skip button. Supports an optional show_only_if field (e.g. "inner_vows.length > 0") so prayers tied to optional inputs only appear if the user has data for them.
+6. reflection — Like input, but a longer textarea framed as post-prayer journaling. Heading, prompt, variable_name, optional placeholder.
+Variable insertion in prayers
+This is the most important part to get right. When a prayer contains {{variable_name}}, the user's input is rendered inline. Rules:
+
+Single text input → just insert the text.
+List with 1 item → insert as plain text.
+List with 2 items → "X and Y"
+List with 3 items → "X, Y, and Z"
+List with 4 or more items → render as a block. Break the prayer text at the variable, render each item as its own indented line (no bullets, just indented and italicized), then continue the prayer below. Like this:
+
+
+Jesus, I have done
+the affair
+lying to my family for years
+the night with my brother
+missing my father's funeral
+I ask you now to forgive me for what I did and for everything that came from it.
+
+The user's inserted words should be visually distinct in all three formats — slightly different weight, color, or italicized — so the user can see their own words inside the prayer.
+Other behaviors
+
+Progress indicator at the top: "Step 4 of 15."
+Going back to a previous step preserves the user's input; revising the input updates any downstream prayers using that variable.
+All variables are saved to the user's record per slide completion, keyed by variable_name, stored as a JSON blob. Mentors will pull these up later — schema should make that easy.
+On the final step (or after the last step), show a summary of everything the user wrote, so they can see what they walked through.
+Prayer steps must require an explicit "I prayed this" click. No auto-advance. No skip.
+
+Visual design
+
+Instruction steps: standard body text, matches existing text slides.
+Input / list_input / reflection steps: prompt above, input below, Continue button.
+Prayer steps: visually distinct — soft background tint, indented block, serif or italic font, small "Pray out loud" label or icon at the top. The "I prayed this" button is styled as the primary action and is the only way to advance.
+Choice steps: clear button group or radio options.
+
+Sample config — Forgiving Yourself module
+Use this as the test case. If this config renders and works end to end, the component is done.
+json{
+  "slide_type": "guided_prayer_process",
+  "title": "Forgiving Yourself",
+  "subtitle": "Releasing what you've held against yourself.",
+  "steps": [
+    {
+      "id": "step_1",
+      "kind": "instruction",
+      "heading": "Why this one is hard",
+      "body": "Many people can forgive others before they can forgive themselves. They can release someone else's debt against them but cannot release their own. This is not humility. It is pride dressed up as humility. Today you give it up."
+    },
+    {
+      "id": "step_2",
+      "kind": "list_input",
+      "variable_name": "harms",
+      "heading": "Make an account",
+      "prompt": "List what you have done to damage yourself or harm other people. Add as many as come to mind. Name each one plainly.",
+      "add_button_label": "Add another"
+    },
+    {
+      "id": "step_3",
+      "kind": "list_input",
+      "variable_name": "effects",
+      "heading": "Name the effects",
+      "prompt": "What did your actions do? To you, to others, to your relationships, to your faith. List as many effects as you can name.",
+      "add_button_label": "Add another"
+    },
+    {
+      "id": "step_4",
+      "kind": "list_input",
+      "variable_name": "identity_lies",
+      "heading": "The identity lie(s)",
+      "prompt": "Ask the Holy Spirit: based on what I did, what do I now believe about myself? Write each lie as it sounds in your head.",
+      "placeholder": "I am...",
+      "add_button_label": "Add another lie"
+    },
+    {
+      "id": "step_5",
+      "kind": "prayer",
+      "heading": "Renounce the lie(s)",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "In the name of Jesus Christ, I renounce the lie that {{identity_lies}}. And in Jesus' name, and through the power of the Holy Spirit, I ask that you reveal the truth of my identity before the Father, where these identity lies have taken hold in my heart. Amen."
+    },
+    {
+      "id": "step_6",
+      "kind": "prayer",
+      "heading": "Ask Jesus to forgive you",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "Jesus, I have done {{harms}}. I have caused {{effects}}. I ask you now to forgive me for what I did and for everything that came from it. I receive your forgiveness."
+    },
+    {
+      "id": "step_7",
+      "kind": "prayer",
+      "heading": "Forgive yourself",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "In the name of Jesus, I forgive myself for {{harms}}. I release the debt I have held against myself. I accept the forgiveness Jesus has already won for me. I will no longer be my own judge in this matter."
+    },
+    {
+      "id": "step_8",
+      "kind": "prayer",
+      "heading": "Ask God to bless",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "Father, please bless me, and bless anyone I have hurt, by reversing the effects of what I did. Where there was damage, bring restoration. Where there was darkness, bring light. Where I tore down, build up. I commit them and myself to your care."
+    },
+    {
+      "id": "step_9",
+      "kind": "list_input",
+      "variable_name": "inner_vows",
+      "heading": "Inner vows",
+      "prompt": "After what you did, did you make any inner vow about yourself? Examples: 'I will never trust myself again.' 'I don't deserve to be happy.' 'I will never let anyone close again.' List any you can name. Skip this step if none come to mind.",
+      "add_button_label": "Add another vow",
+      "optional": true
+    },
+    {
+      "id": "step_10",
+      "kind": "prayer",
+      "heading": "Renounce the inner vows",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "Father, I acknowledge that I have tried to save myself rather than rely on you. Please forgive me for my pride and self-sufficiency. In the name of Jesus I renounce the inner vow(s) that {{inner_vows}}. I ask you to release me from the bondage of these vows now. Amen.",
+      "show_only_if": "inner_vows.length > 0"
+    },
+    {
+      "id": "step_11",
+      "kind": "choice",
+      "variable_name": "soul_tie_present",
+      "heading": "Was another person involved?",
+      "prompt": "Did any of what you listed involve another person sexually, emotionally, or through ongoing entanglement that was not godly?",
+      "options": [
+        { "label": "Yes", "next_step": "step_12" },
+        { "label": "Not sure", "next_step": "step_12" },
+        { "label": "No", "next_step": "step_14" }
+      ]
+    },
+    {
+      "id": "step_12",
+      "kind": "list_input",
+      "variable_name": "soul_tie_names",
+      "heading": "Their names",
+      "prompt": "List the people involved. First names are enough.",
+      "add_button_label": "Add another name"
+    },
+    {
+      "id": "step_13",
+      "kind": "prayer",
+      "heading": "Break the soul ties",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "In the name of Jesus, I renounce all unholy soul ties between me and {{soul_tie_names}}. I take the sword of the Spirit, which is the word of God, and I break and cut all mental, emotional, physical, spiritual, or sexual ties which are unholy between me and {{soul_tie_names}}. Restore me to wholeness in spirit, soul, and body, and reintegrate any part of me that was involved with those soul ties. In the name of Jesus I rebuke any evil spirits that have gained a foothold in me and command you to leave me and go to Jesus Christ for judgment. Amen."
+    },
+    {
+      "id": "step_14",
+      "kind": "prayer",
+      "heading": "Seal and bless",
+      "instruction_above": "Speak this out loud:",
+      "prayer_text": "Father, I thank you for this healing through the name of Jesus and by the power of your Holy Spirit. I ask now for you to seal this healing and to close any remaining doorways, by the precious blood of Jesus, and the gentle ministry of your Holy Spirit. Bless me now with a new infilling of your Spirit and a new understanding and authority of my identity in Jesus Christ. Amen."
+    },
+    {
+      "id": "step_15",
+      "kind": "instruction",
+      "heading": "Thank Him",
+      "body": "In your own words, thank God. Not for the sin — for the freedom. Thank Him for paying what you could not pay. For carrying what you could not carry. For seeing what you have done and still calling you His. Stay here as long as you want."
+    },
+    {
+      "id": "step_16",
+      "kind": "reflection",
+      "variable_name": "what_came_up",
+      "heading": "What came up?",
+      "prompt": "Write what surfaced today. What was hard. What released. What you suspect is still partly held. This is for you and your mentor."
+    }
+  ]
+}
+Requirements summary
+
+New slide type: guided_prayer_process
+Keep existing breaking_lies slide type untouched
+Six step kinds: instruction, input, list_input, choice, prayer, reflection
+Variable insertion in prayers with three rendering modes based on list length
+Prayer steps require explicit "I prayed this" click, no skip
+Branching via next_step on choice options
+Conditional display via show_only_if
+optional: true flag on list_input to allow zero items
+All inputs saved per slide completion as JSON keyed by variable_name
+Progress indicator
+Summary at the end
+Visual distinction between instruction text and prayer text
+
+Build the component, wire it into the slide rendering system, and use the Forgiving Yourself config above as the test case. The same component will be reused for Forgiving Another Person, Forgiving God, Renouncing Inner Vows, Breaking Soul Ties, and Renouncing Generational Sin — same component, different config each time.
