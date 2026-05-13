@@ -2338,7 +2338,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2370,6 +2370,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   captivity_builder: "Breaking Lies",
   confession_finder: "Confession Finder",
   pdf_download: "PDF Download",
+  guided_prayer_process: "Guided Prayer Process",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2397,7 +2398,31 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   captivity_builder: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-200",
   confession_finder: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   pdf_download: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  guided_prayer_process: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
 };
+
+// ============================================================
+// Guided Prayer Process — Forgiving Yourself default template
+// ============================================================
+
+const GUIDED_PRAYER_DEFAULT = JSON.stringify({
+  title: "Forgiving Yourself",
+  steps: [
+    { id: "step_1", kind: "instruction", heading: "An Invitation", body: "Before we begin, take a slow breath. This is not about condemnation. It is about freedom.\n\nWe are going to walk through the wounds you have caused — not to rehearse them in shame, but to hand them over." },
+    { id: "step_2", kind: "input", heading: "Name the Harm", prompt: "Think of the specific thing you did — or failed to do — that you have not been able to forgive yourself for. Write it here, simply and plainly.", placeholder: "e.g. I lied to someone I loved...", variable_name: "the_harm" },
+    { id: "step_3", kind: "list_input", heading: "Who Was Affected?", prompt: "Who were the people hurt by what you did? Add them one at a time.", variable_name: "those_affected", add_button_label: "Add a person", placeholder: "e.g. My daughter", optional: false },
+    { id: "step_4", kind: "list_input", heading: "The Wounds You Caused", prompt: "What were the effects — the real damages — that your action caused in their lives? Add each one.", variable_name: "the_wounds", add_button_label: "Add an effect", placeholder: "e.g. She lost her trust in me", optional: true },
+    { id: "step_5", kind: "instruction", heading: "Before We Go Further", body: "What you did is real. The damage is real. And Jesus saw all of it — and still came to earth and died so it could be forgiven.\n\nHe is not surprised. He is not disgusted. He is waiting." },
+    { id: "step_6", kind: "input", heading: "The Root", prompt: "Why did you do it? Not an excuse — just a plain account. What was driving you?", placeholder: "e.g. I was afraid. I was selfish. I didn't think it would matter.", variable_name: "the_root" },
+    { id: "step_7", kind: "list_input", heading: "Inner Vows Made", prompt: "After what happened, did you make any inner vows — things you swore to yourself? For example: I will never let myself feel again. Or: I don't deserve good things.", variable_name: "inner_vows", add_button_label: "Add a vow", placeholder: "e.g. I told myself I would never forgive myself.", optional: true },
+    { id: "step_8", kind: "instruction", heading: "Almost There", body: "You have named the harm, the wounded, the damage, and the root. That is a courageous act.\n\nNow we will pray — slowly — using your own words." },
+    { id: "step_9", kind: "prayer", heading: "The Confession Prayer", instruction_above: "Read this prayer aloud, slowly, as your own.", prayer_text: "Lord Jesus, I confess to you that I {{the_harm}}.\n\nI hurt {{those_affected}}. The wounds I caused include {{the_wounds}}.\n\nI did this because {{the_root}}.\n\nI am truly sorry. I ask you to forgive me, and I receive your forgiveness now." },
+    { id: "step_10", kind: "prayer", heading: "Breaking the Inner Vows", instruction_above: "If you named any inner vows, pray this now.", prayer_text: "Lord, I renounce the vow I made: {{inner_vows}}.\n\nI break its power over my life in the name of Jesus. I declare that I am free to receive mercy.", show_only_if: "inner_vows.length > 0" },
+    { id: "step_11", kind: "choice", heading: "One More Step", prompt: "Have you made restitution — or taken any concrete step to repair what you broke?", variable_name: "restitution_status", options: [ { label: "Yes, I have done what I could.", next_step: "step_13" }, { label: "No — I haven't yet.", next_step: "step_12" }, { label: "It's not possible in my situation.", next_step: "step_13" } ] },
+    { id: "step_12", kind: "reflection", heading: "Making It Right", prompt: "What is one concrete step you could take — however small — to begin repairing the harm?", variable_name: "restitution_plan", placeholder: "e.g. I will call her and apologize. I will return what I took." },
+    { id: "step_13", kind: "prayer", heading: "Receiving the Grace", instruction_above: "Pray this final prayer slowly — and mean it.", prayer_text: "Jesus, I have placed this before you: {{the_harm}}.\n\nI have confessed it. I have grieved it. And I now choose to receive your forgiveness — not because I deserve it, but because you paid for it.\n\nI forgive myself, in your name. I will not carry this anymore." }
+  ]
+}, null, 2);
 
 // ============================================================
 // Chat Flow — Origin of the Weight default template
@@ -5735,6 +5760,7 @@ function TrackAContentManagementView() {
     if (type === "captivity_builder") return JSON.stringify({ intro: "" });
     if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
     if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
+    if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
     return "";
   };
 
@@ -6422,6 +6448,17 @@ function TrackAContentManagementView() {
                                 index={index}
                                 prefix="slide"
                               />
+                            ) : slide.type === "guided_prayer_process" ? (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Steps (JSON)</label>
+                                <textarea
+                                  value={slide.content}
+                                  onChange={e => updateSlide(index, "content", e.target.value)}
+                                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono min-h-[200px] resize-y"
+                                  data-testid={`textarea-slide-gpp-${index}`}
+                                />
+                                <p className="text-[11px] text-muted-foreground/60">Edit the JSON to configure steps (instruction, input, list_input, choice, prayer, reflection). Variable names in prayer_text use {`{{variable_name}}`} syntax.</p>
+                              </div>
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -7041,6 +7078,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "captivity_builder") return JSON.stringify({ intro: "" });
   if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
   if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
+  if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
   return "";
 }
 
@@ -7422,6 +7460,17 @@ function PrelimContentManagementView() {
                                 index={index}
                                 prefix="prelim"
                               />
+                            ) : slide.type === "guided_prayer_process" ? (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Steps (JSON)</label>
+                                <textarea
+                                  value={slide.content}
+                                  onChange={e => updateSlide(index, "content", e.target.value)}
+                                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono min-h-[200px] resize-y"
+                                  data-testid={`textarea-prelim-gpp-${index}`}
+                                />
+                                <p className="text-[11px] text-muted-foreground/60">Edit the JSON to configure steps (instruction, input, list_input, choice, prayer, reflection). Variable names in prayer_text use {`{{variable_name}}`} syntax.</p>
+                              </div>
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>

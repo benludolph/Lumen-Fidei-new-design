@@ -868,6 +868,36 @@ export async function registerRoutes(
     }
   });
 
+  // === Guided Prayer Process Responses ===
+
+  app.get('/api/guided-prayer-responses', requireAuth, async (req, res) => {
+    try {
+      const contextKey = req.query.contextKey as string;
+      if (!contextKey) return res.status(400).json({ message: "contextKey required" });
+      const row = await storage.getGuidedPrayerResponse(req.user!.id, contextKey);
+      res.json(row ?? null);
+    } catch (e) {
+      console.error("Guided prayer GET error:", e);
+      res.status(500).json({ message: "Failed to fetch guided prayer response" });
+    }
+  });
+
+  app.post('/api/guided-prayer-responses', requireAuth, writeLimiter, async (req, res) => {
+    try {
+      const schema = z.object({
+        contextKey: z.string().min(1),
+        variables: z.record(z.union([z.string(), z.array(z.string())])),
+      });
+      const body = schema.parse(req.body);
+      const row = await storage.upsertGuidedPrayerResponse(req.user!.id, body.contextKey, body.variables);
+      res.status(201).json(row);
+    } catch (e) {
+      if (e instanceof z.ZodError) return res.status(400).json({ message: "Invalid request", errors: e.errors });
+      console.error("Guided prayer POST error:", e);
+      res.status(500).json({ message: "Failed to save guided prayer response" });
+    }
+  });
+
   // Admin: get all survey responses for a track + day
   app.get('/api/admin/survey-responses', requireRole('admin'), async (req, res) => {
     try {

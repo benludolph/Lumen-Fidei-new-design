@@ -18,6 +18,7 @@ import { BeforeAfterSlide } from "./BeforeAfterSlide";
 import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
+import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
 
 import folderImg from "@assets/Folder_1778623094806.png";
 
@@ -68,7 +69,8 @@ export type SlideType =
   | "scene"
   | "captivity_builder"
   | "confession_finder"
-  | "pdf_download";
+  | "pdf_download"
+  | "guided_prayer_process";
 
 
 export interface QuizData {
@@ -1259,6 +1261,8 @@ interface LessonSlideProps {
   // confession_finder / session vars
   sessionVars?: Record<string, unknown>;
   onSaveSessionVar?: (key: string, value: unknown) => void;
+  // guided_prayer_process specific
+  guidedPrayerContextKey?: string;
 }
 
 export function LessonSlide({
@@ -1294,6 +1298,7 @@ export function LessonSlide({
   onKnowledgeQuizComplete,
   sessionVars = {},
   onSaveSessionVar,
+  guidedPrayerContextKey,
 }: LessonSlideProps) {
 
   function resolveVars(template: string, vars: Record<string, unknown>): string {
@@ -1358,6 +1363,23 @@ export function LessonSlide({
             onChatFlowComplete?.();
           }}
           onExit={onChatFlowExit || (() => {})}
+        />
+      </div>
+    );
+  }
+
+  // guided_prayer_process takes over the full slide area with its own multi-step UI
+  if (type === "guided_prayer_process") {
+    return (
+      <div
+        className={cn("flex-1 flex flex-col overflow-hidden", animationClass)}
+        data-testid="lesson-slide-guided_prayer_process"
+      >
+        <GuidedPrayerProcessSlide
+          content={content}
+          dayNumber={dayNumber}
+          contextKey={guidedPrayerContextKey}
+          onInteracted={onInteracted}
         />
       </div>
     );

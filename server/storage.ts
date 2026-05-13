@@ -2,7 +2,7 @@ import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
-  healingModules, healingContent, healingCompletions, healingAnswers,
+  healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -24,6 +24,7 @@ import {
   type HealingContent, type InsertHealingContent,
   type HealingCompletion,
   type HealingAnswer,
+  type GuidedPrayerResponse,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -153,6 +154,10 @@ export interface IStorage {
   markHealingComplete(userId: number, moduleNumber: number): Promise<HealingCompletion>;
   getHealingAnswers(userId: number): Promise<HealingAnswer[]>;
   upsertHealingAnswer(userId: number, moduleNumber: number, content: string): Promise<HealingAnswer>;
+
+  // Guided Prayer Process
+  getGuidedPrayerResponse(userId: number, contextKey: string): Promise<GuidedPrayerResponse | undefined>;
+  upsertGuidedPrayerResponse(userId: number, contextKey: string, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse>;
 
   // session store
   sessionStore: any;
@@ -986,6 +991,25 @@ export class DatabaseStorage implements IStorage {
       .onConflictDoUpdate({
         target: [healingAnswers.userId, healingAnswers.moduleNumber],
         set: { content },
+      })
+      .returning();
+    return row;
+  }
+
+  // Guided Prayer Process
+  async getGuidedPrayerResponse(userId: number, contextKey: string): Promise<GuidedPrayerResponse | undefined> {
+    const [row] = await db.select().from(guidedPrayerResponses)
+      .where(and(eq(guidedPrayerResponses.userId, userId), eq(guidedPrayerResponses.contextKey, contextKey)));
+    return row;
+  }
+
+  async upsertGuidedPrayerResponse(userId: number, contextKey: string, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse> {
+    const [row] = await db
+      .insert(guidedPrayerResponses)
+      .values({ userId, contextKey, variables })
+      .onConflictDoUpdate({
+        target: [guidedPrayerResponses.userId, guidedPrayerResponses.contextKey],
+        set: { variables, completedAt: new Date() },
       })
       .returning();
     return row;

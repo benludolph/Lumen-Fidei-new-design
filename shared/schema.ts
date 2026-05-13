@@ -261,6 +261,21 @@ export type InsertHealingCompletion = z.infer<typeof insertHealingCompletionSche
 export type HealingAnswer = typeof healingAnswers.$inferSelect;
 export type InsertHealingAnswer = z.infer<typeof insertHealingAnswerSchema>;
 
+// Guided prayer process responses — stores collected variable values for each session
+export const guidedPrayerResponses = pgTable("guided_prayer_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  contextKey: text("context_key").notNull(), // e.g. "gpp-day-12"
+  variables: jsonb("variables").notNull().$type<Record<string, string | string[]>>(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("gpr_user_context_unique").on(table.userId, table.contextKey),
+]);
+
+export const insertGuidedPrayerResponseSchema = createInsertSchema(guidedPrayerResponses).omit({ id: true, completedAt: true });
+export type GuidedPrayerResponse = typeof guidedPrayerResponses.$inferSelect;
+export type InsertGuidedPrayerResponse = z.infer<typeof insertGuidedPrayerResponseSchema>;
+
 // Password reset tokens — one-time use, expire after 1 hour
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),
