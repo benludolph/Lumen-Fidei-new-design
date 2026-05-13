@@ -53,7 +53,9 @@ const pdfUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype === "application/pdf") {
+    const allowed = ["application/pdf", "application/octet-stream", "application/x-pdf", "binary/octet-stream"];
+    const looksLikePdf = file.originalname.toLowerCase().endsWith(".pdf");
+    if (allowed.includes(file.mimetype) && looksLikePdf) {
       cb(null, true);
     } else {
       cb(new Error("Only PDF files are allowed"));

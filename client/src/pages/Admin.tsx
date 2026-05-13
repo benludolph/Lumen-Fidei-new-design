@@ -4456,6 +4456,7 @@ function PdfDownloadEditor({ content, onChange, index, prefix }: { content: stri
   };
 
   const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -4465,13 +4466,17 @@ function PdfDownloadEditor({ content, onChange, index, prefix }: { content: stri
       const formData = new FormData();
       formData.append("pdf", file);
       const res = await fetch("/api/admin/upload-pdf", { method: "POST", body: formData });
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(err.message || "Upload failed");
+      }
       const json = await res.json();
       let latest: { url: string; label: string } = { url: "", label: "" };
       try { const p = JSON.parse(contentRef.current || "{}"); latest = { url: typeof p.url === "string" ? p.url : "", label: typeof p.label === "string" ? p.label : "" }; } catch { /* use defaults */ }
       onChange(JSON.stringify({ ...latest, url: json.url }));
-    } catch {
-      // silently fail — user can retry
+      toast({ title: "PDF uploaded", description: file.name });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.message || "Please try again.", variant: "destructive" });
     } finally {
       setUploading(false);
       e.target.value = "";
