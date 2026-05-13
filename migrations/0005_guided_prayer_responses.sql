@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS "guided_prayer_responses";
-
-CREATE TABLE "guided_prayer_responses" (
+CREATE TABLE IF NOT EXISTS "guided_prayer_responses" (
   "id" serial PRIMARY KEY NOT NULL,
   "user_id" integer NOT NULL REFERENCES "users"("id") ON DELETE cascade,
   "day_number" integer NOT NULL,
