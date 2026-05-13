@@ -30,22 +30,12 @@ app.use(
   }),
 );
 
-// PDF upload — base64-encoded PDF sent as JSON (20 MB covers ~15 MB binary file)
+// Default body limit — raised to 20 MB to accommodate base64-encoded PDF uploads
+// sent as JSON (a 15 MB PDF becomes ~20 MB of base64). All admin routes are
+// protected by requireRole('admin') and the upload limiter.
 app.use(
-  '/api/admin/upload-pdf',
   express.json({
     limit: '20mb',
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
-
-// Default body limit — raised to 5 MB to handle large admin lesson JSON
-// (Track A days with many slides, scripture text, and audio URLs can exceed 100 KB)
-app.use(
-  express.json({
-    limit: '5mb',
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
