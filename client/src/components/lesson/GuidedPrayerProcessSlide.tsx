@@ -92,6 +92,13 @@ function evaluateCondition(condition: string, vars: Record<string, VarValue>): b
   return true;
 }
 
+function shouldShowStep(step: Step, vars: Record<string, VarValue>): boolean {
+  if (step.kind === "prayer" && step.show_only_if) {
+    return evaluateCondition(step.show_only_if, vars);
+  }
+  return true;
+}
+
 function getNextStepId(
   currentId: string,
   steps: Step[],
@@ -105,21 +112,22 @@ function getNextStepId(
     const chosen = vars[current.variable_name] as string | undefined;
     const opt = current.options.find(o => o.label === chosen);
     if (opt) {
-      const target = steps.find(s => s.id === opt.next_step);
-      if (target) return target.id;
+      const targetIdx = steps.findIndex(s => s.id === opt.next_step);
+      if (targetIdx !== -1) {
+        let i = targetIdx;
+        while (i < steps.length) {
+          if (shouldShowStep(steps[i], vars)) return steps[i].id;
+          i++;
+        }
+        return null;
+      }
     }
   }
 
   let nextIdx = idx + 1;
   while (nextIdx < steps.length) {
-    const next = steps[nextIdx];
-    if (next.kind === "prayer" && next.show_only_if) {
-      if (!evaluateCondition(next.show_only_if, vars)) {
-        nextIdx++;
-        continue;
-      }
-    }
-    return next.id;
+    if (shouldShowStep(steps[nextIdx], vars)) return steps[nextIdx].id;
+    nextIdx++;
   }
 
   return null;
@@ -229,14 +237,14 @@ function PrayerTextRenderer({ text, vars }: { text: string; vars: Record<string,
 export interface GuidedPrayerProcessSlideProps {
   content: string;
   dayNumber: number;
-  contextKey?: string;
+  slideIndex: number;
   onInteracted?: () => void;
 }
 
 export function GuidedPrayerProcessSlide({
   content,
   dayNumber,
-  contextKey,
+  slideIndex,
   onInteracted,
 }: GuidedPrayerProcessSlideProps) {
   const config = useMemo<GuidedPrayerConfig>(() => {
@@ -244,15 +252,14 @@ export function GuidedPrayerProcessSlide({
   }, [content]);
 
   const steps = config.steps ?? [];
-  const resolvedContextKey = contextKey ?? `gpp-day-${dayNumber}`;
 
   const queryClient = useQueryClient();
 
   const { data: savedResponse, isLoading: loadingSaved } = useQuery<SavedResponse | null>({
-    queryKey: ["/api/guided-prayer-responses", resolvedContextKey],
+    queryKey: ["/api/guided-prayer-responses", dayNumber, slideIndex],
     queryFn: async () => {
       const res = await fetch(
-        `/api/guided-prayer-responses?contextKey=${encodeURIComponent(resolvedContextKey)}`,
+        `/api/guided-prayer-responses?dayNumber=${dayNumber}&slideIndex=${slideIndex}`,
         { credentials: "include" }
       );
       if (!res.ok) return null;
@@ -264,12 +271,13 @@ export function GuidedPrayerProcessSlide({
   const saveMutation = useMutation({
     mutationFn: (vars: Record<string, VarValue>) =>
       apiRequest("POST", "/api/guided-prayer-responses", {
-        contextKey: resolvedContextKey,
+        dayNumber,
+        slideIndex,
         variables: vars,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["/api/guided-prayer-responses", resolvedContextKey],
+        queryKey: ["/api/guided-prayer-responses", dayNumber, slideIndex],
       });
     },
   });

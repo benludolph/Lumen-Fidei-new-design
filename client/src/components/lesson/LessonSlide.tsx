@@ -1262,7 +1262,7 @@ interface LessonSlideProps {
   sessionVars?: Record<string, unknown>;
   onSaveSessionVar?: (key: string, value: unknown) => void;
   // guided_prayer_process specific
-  guidedPrayerContextKey?: string;
+  guidedPrayerSlideIndex?: number;
 }
 
 export function LessonSlide({
@@ -1298,7 +1298,7 @@ export function LessonSlide({
   onKnowledgeQuizComplete,
   sessionVars = {},
   onSaveSessionVar,
-  guidedPrayerContextKey,
+  guidedPrayerSlideIndex,
 }: LessonSlideProps) {
 
   function resolveVars(template: string, vars: Record<string, unknown>): string {
@@ -1378,7 +1378,7 @@ export function LessonSlide({
         <GuidedPrayerProcessSlide
           content={content}
           dayNumber={dayNumber}
-          contextKey={guidedPrayerContextKey}
+          slideIndex={guidedPrayerSlideIndex ?? 0}
           onInteracted={onInteracted}
         />
       </div>

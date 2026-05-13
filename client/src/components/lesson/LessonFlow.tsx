@@ -437,11 +437,7 @@ export function LessonFlow({
             ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
             : `track_a-day${dayNumber}-slide${currentSlide}`)
         : undefined}
-      guidedPrayerContextKey={effectiveSlideData.type === "guided_prayer_process"
-        ? (dayNumber < 0
-            ? `prelim-module${Math.abs(dayNumber)}-gpp-slide${currentSlide}`
-            : `track_a-day${dayNumber}-gpp-slide${currentSlide}`)
-        : undefined}
+      guidedPrayerSlideIndex={effectiveSlideData.type === "guided_prayer_process" ? currentSlide : undefined}
       chatFlowTotalSlides={slides.length}
       chatFlowSlideIndex={currentSlide}
       onChatFlowComplete={effectiveSlideData.type === "chat_flow" ? handleNext : undefined}

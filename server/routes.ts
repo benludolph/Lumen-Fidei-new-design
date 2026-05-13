@@ -872,8 +872,12 @@ export async function registerRoutes(
 
   app.get('/api/guided-prayer-responses', requireAuth, async (req, res) => {
     try {
-      const contextKey = req.query.contextKey as string;
-      if (!contextKey) return res.status(400).json({ message: "contextKey required" });
+      const dayNumber = parseInt(req.query.dayNumber as string, 10);
+      const slideIndex = parseInt(req.query.slideIndex as string, 10);
+      if (isNaN(dayNumber) || isNaN(slideIndex)) {
+        return res.status(400).json({ message: "dayNumber and slideIndex are required integers" });
+      }
+      const contextKey = `day:${dayNumber}:slide:${slideIndex}`;
       const row = await storage.getGuidedPrayerResponse(req.user!.id, contextKey);
       res.json(row ?? null);
     } catch (e) {
@@ -884,12 +888,14 @@ export async function registerRoutes(
 
   app.post('/api/guided-prayer-responses', requireAuth, writeLimiter, async (req, res) => {
     try {
-      const schema = z.object({
-        contextKey: z.string().min(1),
+      const bodySchema = z.object({
+        dayNumber: z.number().int(),
+        slideIndex: z.number().int().min(0),
         variables: z.record(z.union([z.string(), z.array(z.string())])),
       });
-      const body = schema.parse(req.body);
-      const row = await storage.upsertGuidedPrayerResponse(req.user!.id, body.contextKey, body.variables);
+      const body = bodySchema.parse(req.body);
+      const contextKey = `day:${body.dayNumber}:slide:${body.slideIndex}`;
+      const row = await storage.upsertGuidedPrayerResponse(req.user!.id, contextKey, body.variables);
       res.status(201).json(row);
     } catch (e) {
       if (e instanceof z.ZodError) return res.status(400).json({ message: "Invalid request", errors: e.errors });
