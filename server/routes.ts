@@ -877,8 +877,7 @@ export async function registerRoutes(
       if (isNaN(dayNumber) || isNaN(slideIndex)) {
         return res.status(400).json({ message: "dayNumber and slideIndex are required integers" });
       }
-      const contextKey = `day:${dayNumber}:slide:${slideIndex}`;
-      const row = await storage.getGuidedPrayerResponse(req.user!.id, contextKey);
+      const row = await storage.getGuidedPrayerResponse(req.user!.id, dayNumber, slideIndex);
       res.json(row ?? null);
     } catch (e) {
       console.error("Guided prayer GET error:", e);
@@ -894,13 +893,24 @@ export async function registerRoutes(
         variables: z.record(z.union([z.string(), z.array(z.string())])),
       });
       const body = bodySchema.parse(req.body);
-      const contextKey = `day:${body.dayNumber}:slide:${body.slideIndex}`;
-      const row = await storage.upsertGuidedPrayerResponse(req.user!.id, contextKey, body.variables);
+      const row = await storage.upsertGuidedPrayerResponse(req.user!.id, body.dayNumber, body.slideIndex, body.variables);
       res.status(201).json(row);
     } catch (e) {
       if (e instanceof z.ZodError) return res.status(400).json({ message: "Invalid request", errors: e.errors });
       console.error("Guided prayer POST error:", e);
       res.status(500).json({ message: "Failed to save guided prayer response" });
+    }
+  });
+
+  app.get('/api/admin/guided-prayer-responses', requireRole('admin'), async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string, 10);
+      if (isNaN(userId)) return res.status(400).json({ message: "userId is required" });
+      const rows = await storage.getGuidedPrayerResponsesByUserId(userId);
+      res.json(rows);
+    } catch (e) {
+      console.error("Admin guided prayer GET error:", e);
+      res.status(500).json({ message: "Failed to fetch guided prayer responses" });
     }
   });
 

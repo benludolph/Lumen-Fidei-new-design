@@ -261,15 +261,16 @@ export type InsertHealingCompletion = z.infer<typeof insertHealingCompletionSche
 export type HealingAnswer = typeof healingAnswers.$inferSelect;
 export type InsertHealingAnswer = z.infer<typeof insertHealingAnswerSchema>;
 
-// Guided prayer process responses — stores collected variable values for each session
+// Guided prayer process responses — stores collected variable values for each slide session
 export const guidedPrayerResponses = pgTable("guided_prayer_responses", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  contextKey: text("context_key").notNull(), // e.g. "gpp-day-12"
+  dayNumber: integer("day_number").notNull(),
+  slideIndex: integer("slide_index").notNull(),
   variables: jsonb("variables").notNull().$type<Record<string, string | string[]>>(),
   completedAt: timestamp("completed_at").defaultNow().notNull(),
 }, (table) => [
-  uniqueIndex("gpr_user_context_unique").on(table.userId, table.contextKey),
+  uniqueIndex("gpr_user_day_slide_unique").on(table.userId, table.dayNumber, table.slideIndex),
 ]);
 
 export const insertGuidedPrayerResponseSchema = createInsertSchema(guidedPrayerResponses).omit({ id: true, completedAt: true });

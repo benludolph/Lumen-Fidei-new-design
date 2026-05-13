@@ -156,8 +156,9 @@ export interface IStorage {
   upsertHealingAnswer(userId: number, moduleNumber: number, content: string): Promise<HealingAnswer>;
 
   // Guided Prayer Process
-  getGuidedPrayerResponse(userId: number, contextKey: string): Promise<GuidedPrayerResponse | undefined>;
-  upsertGuidedPrayerResponse(userId: number, contextKey: string, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse>;
+  getGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number): Promise<GuidedPrayerResponse | undefined>;
+  upsertGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse>;
+  getGuidedPrayerResponsesByUserId(userId: number): Promise<GuidedPrayerResponse[]>;
 
   // session store
   sessionStore: any;
@@ -997,22 +998,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Guided Prayer Process
-  async getGuidedPrayerResponse(userId: number, contextKey: string): Promise<GuidedPrayerResponse | undefined> {
+  async getGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number): Promise<GuidedPrayerResponse | undefined> {
     const [row] = await db.select().from(guidedPrayerResponses)
-      .where(and(eq(guidedPrayerResponses.userId, userId), eq(guidedPrayerResponses.contextKey, contextKey)));
+      .where(and(
+        eq(guidedPrayerResponses.userId, userId),
+        eq(guidedPrayerResponses.dayNumber, dayNumber),
+        eq(guidedPrayerResponses.slideIndex, slideIndex),
+      ));
     return row;
   }
 
-  async upsertGuidedPrayerResponse(userId: number, contextKey: string, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse> {
+  async upsertGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse> {
     const [row] = await db
       .insert(guidedPrayerResponses)
-      .values({ userId, contextKey, variables })
+      .values({ userId, dayNumber, slideIndex, variables })
       .onConflictDoUpdate({
-        target: [guidedPrayerResponses.userId, guidedPrayerResponses.contextKey],
+        target: [guidedPrayerResponses.userId, guidedPrayerResponses.dayNumber, guidedPrayerResponses.slideIndex],
         set: { variables, completedAt: new Date() },
       })
       .returning();
     return row;
+  }
+
+  async getGuidedPrayerResponsesByUserId(userId: number): Promise<GuidedPrayerResponse[]> {
+    return db.select().from(guidedPrayerResponses)
+      .where(eq(guidedPrayerResponses.userId, userId))
+      .orderBy(guidedPrayerResponses.dayNumber, guidedPrayerResponses.slideIndex);
   }
 }
 
