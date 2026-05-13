@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { HealingLayout } from "@/components/layout/HealingLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CheckCircle2, Lock, Download, Play, Heart } from "lucide-react";
+import { CheckCircle2, Lock, Download, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { HealingModule, HealingContent, HealingCompletion } from "@shared/schema";
 
@@ -105,15 +105,12 @@ export default function HealingDashboard() {
       <PageContainer variant="narrow" className="pt-[80px] pb-20 min-h-[calc(100vh-72px)]">
         <div style={{ display: "flex", flexDirection: "column", gap: "40px" }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "8px" }}>
-              <Heart className="w-5 h-5" style={{ color: "var(--brand)" }} />
-              <span className="type-body-sm" style={{ color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                Healing of Our Hearts
-              </span>
-            </div>
-            <h1 className="type-display-xl" style={{ color: "white", margin: "0 0 8px" }}>
-              Your Healing Journey
+            <h1 className="type-display-lg" style={{ color: "white", margin: "0 0 6px" }}>
+              The Path to Healing Our Broken Hearts
             </h1>
+            <p className="type-body-md" style={{ color: "var(--white-50)", margin: "0 0 8px" }}>
+              With Fr. Shawn Monahan, OMV
+            </p>
             <p className="type-body-md" style={{ color: "var(--white-50)", margin: 0 }}>
               {completedModuleNumbers.size} of {totalModules} modules complete
             </p>
