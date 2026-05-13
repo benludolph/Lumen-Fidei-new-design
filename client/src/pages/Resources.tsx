@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { HealingLayout } from "@/components/layout/HealingLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import {
   FoldVertical,
@@ -413,6 +415,7 @@ function matchesPrayer(name: string, match: string) {
 }
 
 export default function Resources() {
+  const { user } = useAuth();
   const { data: resources, isLoading } = useQuery<PracticeResource[]>({
     queryKey: ["/api/practice-resources"],
   });
@@ -421,8 +424,11 @@ export default function Resources() {
     resources?.find((r) => matchesPrayer(r.name, match)) ?? null
   );
 
+  const isHealingTrack = user?.track === 'C';
+  const Layout = isHealingTrack ? HealingLayout : DashboardLayout;
+
   return (
-    <DashboardLayout>
+    <Layout>
       <PageContainer variant="narrow" className="pt-[80px] pb-16">
         <h1 className="type-display-xl text-center text-white mb-12">
           Resources
@@ -519,6 +525,6 @@ export default function Resources() {
           </div>
         )}
       </PageContainer>
-    </DashboardLayout>
+    </Layout>
   );
 }

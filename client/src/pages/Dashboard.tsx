@@ -212,7 +212,14 @@ export default function Dashboard() {
   
   const isLoading = isTrackA ? isLoadingA : isLoadingB;
   
+  useEffect(() => {
+    if (user && user.track === 'C') {
+      setLocation('/healing');
+    }
+  }, [user, setLocation]);
+
   if (!user || (user.role !== 'participant' && user.role !== 'superuser')) return null;
+  if (user.track === 'C') return null;
   
   // Show a spinner while we load prelim status for the first time
   if (prelimLoading) {

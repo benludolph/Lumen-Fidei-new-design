@@ -23,14 +23,19 @@ import PreviewLesson from "@/pages/PreviewLesson";
 import PrayerToolkit from "@/pages/PrayerToolkit";
 import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
 import ConfessionFinderResource from "@/pages/ConfessionFinderResource";
+import HealingDashboard from "@/pages/HealingDashboard";
+import HealingLesson from "@/pages/HealingLesson";
+import HealingJournal from "@/pages/HealingJournal";
 
-// Protected Route Wrapper
+// Standard Protected Route Wrapper — role-based
 function ProtectedRoute({ 
   component: Component, 
-  allowedRoles 
+  allowedRoles,
+  excludeTrackC,
 }: { 
   component: React.ComponentType, 
-  allowedRoles?: string[] 
+  allowedRoles?: string[],
+  excludeTrackC?: boolean,
 }) {
   const { user, isLoading } = useAuth();
 
@@ -43,7 +48,40 @@ function ProtectedRoute({
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Redirect to="/dashboard" />; // Or unauthorized page
+    return <Redirect to="/dashboard" />;
+  }
+
+  // Healing Track (C) participants have no access to messages, collections, or legacy journal
+  if (excludeTrackC && user.role !== 'admin' && user.track === 'C') {
+    return <Redirect to="/healing" />;
+  }
+
+  return <Component />;
+}
+
+// Redirect /testimonies to collections, but track C users go to /healing
+function TestimoniesRedirect() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (!user) return <Redirect to="/login" />;
+  if (user.track === 'C' && user.role !== 'admin') return <Redirect to="/healing" />;
+  return <Redirect to="/collections?tab=testimonies" />;
+}
+
+// Healing Track Protected Route — only Track C participants and admins
+function HealingProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  if (user.role !== 'admin' && user.track !== 'C') {
+    return <Redirect to="/dashboard" />;
   }
 
   return <Component />;
@@ -60,6 +98,7 @@ function RootRedirect() {
   if (user.role === 'admin') return <Redirect to="/admin" />;
   if (user.role === 'mentor') return <Redirect to="/mentor" />;
   if (user.role === 'superuser') return <Redirect to="/dashboard" />;
+  if (user.track === 'C') return <Redirect to="/healing" />;
   return <Redirect to="/dashboard" />;
 }
 
@@ -87,7 +126,7 @@ function Router() {
       </Route>
 
       <Route path="/messages">
-        <ProtectedRoute component={Messages} />
+        <ProtectedRoute component={Messages} excludeTrackC />
       </Route>
 
       <Route path="/admin">
@@ -111,15 +150,15 @@ function Router() {
       </Route>
 
       <Route path="/collections">
-        <ProtectedRoute component={Collections} allowedRoles={['participant', 'superuser']} />
+        <ProtectedRoute component={Collections} allowedRoles={['participant', 'superuser']} excludeTrackC />
       </Route>
 
       <Route path="/testimonies">
-        <Redirect to="/collections?tab=testimonies" />
+        <TestimoniesRedirect />
       </Route>
 
       <Route path="/journal">
-        <ProtectedRoute component={Journal} allowedRoles={['participant', 'superuser']} />
+        <ProtectedRoute component={Journal} allowedRoles={['participant', 'superuser']} excludeTrackC />
       </Route>
 
       <Route path="/toolkit">
@@ -128,6 +167,19 @@ function Router() {
 
       <Route path="/preview/track-a/:day">
         <ProtectedRoute component={PreviewLesson} allowedRoles={['admin']} />
+      </Route>
+
+      {/* Healing Track — Track C participants and admins only */}
+      <Route path="/healing/module/:n">
+        <HealingProtectedRoute component={HealingLesson} />
+      </Route>
+
+      <Route path="/healing/journal">
+        <HealingProtectedRoute component={HealingJournal} />
+      </Route>
+
+      <Route path="/healing">
+        <HealingProtectedRoute component={HealingDashboard} />
       </Route>
 
       <Route component={NotFound} />

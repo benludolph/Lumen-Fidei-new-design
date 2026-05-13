@@ -2,6 +2,7 @@ import { db } from "./db";
 import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
+  healingModules, healingContent, healingCompletions, healingAnswers,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -19,6 +20,10 @@ import {
   type TestimonyPart, type InsertTestimonyPart,
   type PasswordResetToken,
   type TrackASnapshot,
+  type HealingModule, type InsertHealingModule,
+  type HealingContent, type InsertHealingContent,
+  type HealingCompletion,
+  type HealingAnswer,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -134,6 +139,20 @@ export interface IStorage {
   restoreTrackASnapshot(id: number): Promise<void>;
   deleteTrackASnapshot(id: number): Promise<void>;
   pruneAutoSnapshots(maxCount?: number): Promise<void>;
+
+  // Healing Track
+  getHealingModules(): Promise<HealingModule[]>;
+  getHealingContent(moduleNumber: number): Promise<HealingContent | undefined>;
+  getAllHealingContent(): Promise<HealingContent[]>;
+  upsertHealingModule(module: InsertHealingModule): Promise<HealingModule>;
+  upsertHealingContent(content: InsertHealingContent): Promise<HealingContent>;
+  createHealingModuleWithContent(moduleNumber: number, title: string, sortOrder: number): Promise<{ module: HealingModule; content: HealingContent }>;
+  deleteHealingModule(moduleNumber: number): Promise<void>;
+  reorderHealingModules(moduleNumbers: number[]): Promise<void>;
+  getHealingCompletions(userId: number): Promise<HealingCompletion[]>;
+  markHealingComplete(userId: number, moduleNumber: number): Promise<HealingCompletion>;
+  getHealingAnswers(userId: number): Promise<HealingAnswer[]>;
+  upsertHealingAnswer(userId: number, moduleNumber: number, content: string): Promise<HealingAnswer>;
 
   // session store
   sessionStore: any;
@@ -885,6 +904,91 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTrackASnapshot(id: number): Promise<void> {
     await db.delete(trackASnapshots).where(eq(trackASnapshots.id, id));
+  }
+
+  // Healing Track
+  async getHealingModules(): Promise<HealingModule[]> {
+    return await db.select().from(healingModules).orderBy(asc(healingModules.sortOrder), asc(healingModules.moduleNumber));
+  }
+
+  async getHealingContent(moduleNumber: number): Promise<HealingContent | undefined> {
+    const [row] = await db.select().from(healingContent).where(eq(healingContent.moduleNumber, moduleNumber));
+    return row;
+  }
+
+  async getAllHealingContent(): Promise<HealingContent[]> {
+    return await db.select().from(healingContent).orderBy(asc(healingContent.moduleNumber));
+  }
+
+  async upsertHealingModule(module: InsertHealingModule): Promise<HealingModule> {
+    const [existing] = await db.select().from(healingModules).where(eq(healingModules.moduleNumber, module.moduleNumber));
+    if (existing) {
+      const [updated] = await db.update(healingModules).set(module).where(eq(healingModules.moduleNumber, module.moduleNumber)).returning();
+      return updated;
+    }
+    const [newMod] = await db.insert(healingModules).values(module).returning();
+    return newMod;
+  }
+
+  async upsertHealingContent(content: InsertHealingContent): Promise<HealingContent> {
+    const payload = { ...content, slides: (content.slides ?? null) as { type: string; content: string }[] | null };
+    const [existing] = await db.select().from(healingContent).where(eq(healingContent.moduleNumber, content.moduleNumber));
+    if (existing) {
+      const [updated] = await db.update(healingContent).set(payload).where(eq(healingContent.moduleNumber, content.moduleNumber)).returning();
+      return updated;
+    }
+    const [newContent] = await db.insert(healingContent).values(payload).returning();
+    return newContent;
+  }
+
+  async createHealingModuleWithContent(moduleNumber: number, title: string, sortOrder: number): Promise<{ module: HealingModule; content: HealingContent }> {
+    return await db.transaction(async (tx) => {
+      const [mod] = await tx.insert(healingModules).values({ moduleNumber, title, sortOrder }).returning();
+      const [cont] = await tx.insert(healingContent).values({ moduleNumber, title, slides: null, subtitle: null, imageUrl: null, completionMessage: null }).returning();
+      return { module: mod, content: cont };
+    });
+  }
+
+  async deleteHealingModule(moduleNumber: number): Promise<void> {
+    await db.delete(healingContent).where(eq(healingContent.moduleNumber, moduleNumber));
+    await db.delete(healingModules).where(eq(healingModules.moduleNumber, moduleNumber));
+  }
+
+  async reorderHealingModules(moduleNumbers: number[]): Promise<void> {
+    await Promise.all(
+      moduleNumbers.map((moduleNumber, index) =>
+        db.update(healingModules).set({ sortOrder: index }).where(eq(healingModules.moduleNumber, moduleNumber))
+      )
+    );
+  }
+
+  async getHealingCompletions(userId: number): Promise<HealingCompletion[]> {
+    return await db.select().from(healingCompletions).where(eq(healingCompletions.userId, userId)).orderBy(asc(healingCompletions.moduleNumber));
+  }
+
+  async markHealingComplete(userId: number, moduleNumber: number): Promise<HealingCompletion> {
+    const [existing] = await db.select().from(healingCompletions).where(
+      and(eq(healingCompletions.userId, userId), eq(healingCompletions.moduleNumber, moduleNumber))
+    );
+    if (existing) return existing;
+    const [completion] = await db.insert(healingCompletions).values({ userId, moduleNumber }).returning();
+    return completion;
+  }
+
+  async getHealingAnswers(userId: number): Promise<HealingAnswer[]> {
+    return await db.select().from(healingAnswers).where(eq(healingAnswers.userId, userId)).orderBy(asc(healingAnswers.moduleNumber));
+  }
+
+  async upsertHealingAnswer(userId: number, moduleNumber: number, content: string): Promise<HealingAnswer> {
+    const [row] = await db
+      .insert(healingAnswers)
+      .values({ userId, moduleNumber, content })
+      .onConflictDoUpdate({
+        target: [healingAnswers.userId, healingAnswers.moduleNumber],
+        set: { content },
+      })
+      .returning();
+    return row;
   }
 }
 

@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -183,6 +183,18 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ message: "Authentication required" });
   }
   next();
+}
+
+// Middleware for Healing Track: requires track C participant OR admin
+function requireHealingAccess(req: Request, res: Response, next: NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  const user = req.user!;
+  if (user.role === 'admin' || user.track === 'C') {
+    return next();
+  }
+  return res.status(403).json({ message: "Healing Track access only" });
 }
 
 // Helper to strip sensitive fields from user objects
@@ -2510,6 +2522,192 @@ export async function registerRoutes(
     }
   });
 
+  // === Healing Track Routes — Participant ===
+
+  app.get('/api/healing/modules', requireHealingAccess, async (req, res) => {
+    const modules = await storage.getHealingModules();
+    res.json(modules);
+  });
+
+  app.get('/api/healing/content', requireHealingAccess, async (req, res) => {
+    const content = await storage.getAllHealingContent();
+    res.json(content);
+  });
+
+  app.get('/api/healing/content/:moduleNumber', requireHealingAccess, async (req, res) => {
+    const moduleNumber = Number(req.params.moduleNumber);
+    if (isNaN(moduleNumber)) return res.sendStatus(400);
+    const content = await storage.getHealingContent(moduleNumber);
+    if (!content) return res.sendStatus(404);
+    res.json(content);
+  });
+
+  app.get('/api/healing/completions', requireHealingAccess, async (req, res) => {
+    const completions = await storage.getHealingCompletions(req.user!.id);
+    res.json(completions);
+  });
+
+  app.post('/api/healing/completions', requireHealingAccess, writeLimiter, async (req, res) => {
+    const schema = z.object({ moduleNumber: z.number().int().min(1) });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const { moduleNumber } = parsed.data;
+    // Enforce sequential unlock based on sortOrder position, not raw moduleNumber
+    const allModules = await storage.getHealingModules(); // sorted by sortOrder
+    const currentIdx = allModules.findIndex(m => m.moduleNumber === moduleNumber);
+    if (currentIdx === -1) return res.status(404).json({ message: "Module not found." });
+    if (currentIdx > 0) {
+      const prevModule = allModules[currentIdx - 1];
+      const existingCompletions = await storage.getHealingCompletions(req.user!.id);
+      const completedSet = new Set(existingCompletions.map(c => c.moduleNumber));
+      if (!completedSet.has(prevModule.moduleNumber)) {
+        return res.status(400).json({ message: `You must complete the previous module first.` });
+      }
+    }
+    const completion = await storage.markHealingComplete(req.user!.id, moduleNumber);
+    res.json(completion);
+  });
+
+  app.get('/api/healing/answers', requireHealingAccess, async (req, res) => {
+    const answers = await storage.getHealingAnswers(req.user!.id);
+    res.json(answers);
+  });
+
+  app.post('/api/healing/answers', requireHealingAccess, writeLimiter, async (req, res) => {
+    const schema = z.object({
+      moduleNumber: z.number().int().min(1),
+      content: z.string().min(1).max(50000),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const sanitized = stripHtml(parsed.data.content);
+    const answer = await storage.upsertHealingAnswer(req.user!.id, parsed.data.moduleNumber, sanitized);
+    res.json(answer);
+  });
+
+  app.post('/api/healing/generate-certificate', requireHealingAccess, async (req, res) => {
+    try {
+      const completions = await storage.getHealingCompletions(req.user!.id);
+      const allModules = await storage.getHealingModules();
+      if (completions.length < allModules.length) {
+        return res.status(403).json({ message: `Complete all ${allModules.length} modules to download your certificate.` });
+      }
+
+      const user = await storage.getUser(req.user!.id);
+      const safeName = (user?.name ?? "Graduate").replace(/[^a-zA-Z0-9 ]/g, '').trim() || "Graduate";
+
+      const { PDFDocument, rgb } = await import('pdf-lib');
+      const fontkit = (await import('@pdf-lib/fontkit')).default;
+
+      const certDir = path.join(process.cwd(), 'server', 'assets', 'certificate');
+
+      // Try healing-specific certificate template first, fall back to standard
+      const healingBgSetting = await storage.getCohortSetting('healing_certificate_bg');
+      let bgBytes: Buffer;
+      if (healingBgSetting && healingBgSetting.startsWith('data:')) {
+        const base64 = healingBgSetting.split(',')[1];
+        bgBytes = Buffer.from(base64, 'base64');
+      } else {
+        bgBytes = fs.readFileSync(path.join(certDir, 'certificate-bg.png'));
+      }
+
+      const fontBytes = fs.readFileSync(path.join(certDir, 'custom-font.otf'));
+
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.registerFontkit(fontkit);
+      const bgImage = await pdfDoc.embedPng(bgBytes);
+      const { width, height } = bgImage.scale(1);
+      const page = pdfDoc.addPage([width, height]);
+      page.drawImage(bgImage, { x: 0, y: 0, width, height });
+      const font = await pdfDoc.embedFont(fontBytes);
+
+      const maxFontSize = Math.round(height * 0.052);
+      const minFontSize = Math.round(height * 0.025);
+      let fontSize = maxFontSize;
+      while (fontSize > minFontSize && font.widthOfTextAtSize(safeName, fontSize) > width * 0.60) {
+        fontSize -= 1;
+      }
+      const textWidth = font.widthOfTextAtSize(safeName, fontSize);
+      const x = (width - textWidth) / 2;
+      const y = height * 0.41;
+
+      page.drawText(safeName, { x, y, size: fontSize, font, color: rgb(1, 1, 1) });
+
+      const pdfBytes = await pdfDoc.save();
+      res.set('Content-Type', 'application/pdf');
+      res.set('Content-Disposition', `attachment; filename="healing-certificate-${safeName}.pdf"`);
+      res.send(Buffer.from(pdfBytes));
+    } catch (error) {
+      console.error("Healing certificate generation error:", error);
+      res.status(500).json({ message: "Failed to generate certificate" });
+    }
+  });
+
+  // === Healing Track Routes — Admin ===
+
+  app.delete('/api/admin/healing/modules/:moduleNumber', requireRole('admin'), async (req, res) => {
+    const moduleNumber = parseInt(req.params.moduleNumber as string);
+    if (isNaN(moduleNumber) || moduleNumber < 1) return res.status(400).json({ message: "Invalid module number" });
+    await storage.deleteHealingModule(moduleNumber);
+    res.json({ success: true });
+  });
+
+  app.post('/api/admin/healing/modules', requireRole('admin'), async (req, res) => {
+    const schema = z.object({
+      moduleNumber: z.number().int().min(1),
+      title: z.string().min(1),
+      subtitle: z.string().optional().nullable(),
+      imageUrl: z.string().optional().nullable(),
+      sortOrder: z.number().int().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const mod = await storage.upsertHealingModule({ ...parsed.data, sortOrder: parsed.data.sortOrder ?? parsed.data.moduleNumber });
+    res.json(mod);
+  });
+
+  app.post('/api/admin/healing/create-module', requireRole('admin'), async (req, res) => {
+    const schema = z.object({ moduleNumber: z.number().int().min(1), title: z.string().min(1), sortOrder: z.number().int() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const existing = await storage.getHealingModules();
+    if (existing.some(m => m.moduleNumber === parsed.data.moduleNumber)) {
+      return res.status(409).json({ message: `Module ${parsed.data.moduleNumber} already exists.` });
+    }
+    const result = await storage.createHealingModuleWithContent(parsed.data.moduleNumber, parsed.data.title, parsed.data.sortOrder);
+    res.json(result);
+  });
+
+  app.post('/api/admin/healing/content', requireRole('admin'), async (req, res) => {
+    const schema = z.object({
+      moduleNumber: z.number().int().min(1),
+      title: z.string().min(1),
+      subtitle: z.string().optional().nullable(),
+      imageUrl: z.string().optional().nullable(),
+      slides: z.array(z.object({ type: z.string(), content: z.string() })).optional().nullable(),
+      completionMessage: z.string().optional().nullable(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const content = await storage.upsertHealingContent(parsed.data);
+    res.json(content);
+  });
+
+  app.patch('/api/admin/healing/modules/reorder', requireRole('admin'), async (req, res) => {
+    const schema = z.object({ moduleNumbers: z.array(z.number().int()) });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    await storage.reorderHealingModules(parsed.data.moduleNumbers);
+    res.json({ success: true });
+  });
+
+  app.post('/api/admin/healing/certificate-template', requireRole('admin'), upload.single('image'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
+    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    await storage.setCohortSetting('healing_certificate_bg', base64);
+    res.json({ success: true, message: "Certificate template uploaded" });
+  });
+
   // Migration: convert timer slides to scripture_practice
   app.post('/api/admin/migrate-timer-to-scripture-practice', requireRole('admin'), async (req, res) => {
     try {
@@ -2673,6 +2871,54 @@ async function ensureSchemaColumns() {
         module_position INTEGER NOT NULL,
         completed_at TIMESTAMP DEFAULT NOW() NOT NULL,
         UNIQUE(user_id, module_position)
+      )
+    `);
+
+    // Create healing_modules table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS healing_modules (
+        id SERIAL PRIMARY KEY,
+        module_number INTEGER NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        subtitle TEXT,
+        image_url TEXT,
+        sort_order INTEGER NOT NULL DEFAULT 0
+      )
+    `);
+
+    // Create healing_content table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS healing_content (
+        id SERIAL PRIMARY KEY,
+        module_number INTEGER NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        subtitle TEXT,
+        image_url TEXT,
+        slides JSONB,
+        completion_message TEXT
+      )
+    `);
+
+    // Create healing_completions table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS healing_completions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        module_number INTEGER NOT NULL,
+        completed_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(user_id, module_number)
+      )
+    `);
+
+    // Create healing_answers table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS healing_answers (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        module_number INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+        UNIQUE(user_id, module_number)
       )
     `);
   } catch (e) {
@@ -3756,6 +4002,116 @@ As you move into Week 2, continue these daily practices. They are building a fou
           WHERE s->>'type' IN ('action', 'knowledge_check', 'scenario')
         )
     `);
+
+    // Seed Healing Track modules and content if empty
+    const existingHealingModules = await storage.getHealingModules();
+    if (existingHealingModules.length === 0) {
+        console.log("Seeding Healing Track modules...");
+        const healingModuleData = [
+            { moduleNumber: 1, title: "Introduction", subtitle: "Welcome to Healing of Our Hearts", sortOrder: 1 },
+            { moduleNumber: 2, title: "Module 2", subtitle: "Understanding the Wounds", sortOrder: 2 },
+            { moduleNumber: 3, title: "Module 3", subtitle: "The Father's Love", sortOrder: 3 },
+            { moduleNumber: 4, title: "Module 4", subtitle: "Healing Through Forgiveness", sortOrder: 4 },
+            { moduleNumber: 5, title: "Module 5", subtitle: "Breaking Free from Sin", sortOrder: 5 },
+            { moduleNumber: 6, title: "Module 6", subtitle: "The Role of the Holy Spirit", sortOrder: 6 },
+            { moduleNumber: 7, title: "Module 7", subtitle: "Healing Relationships", sortOrder: 7 },
+            { moduleNumber: 8, title: "Module 8", subtitle: "Healing of Memories", sortOrder: 8 },
+            { moduleNumber: 9, title: "Module 9", subtitle: "Interior Freedom", sortOrder: 9 },
+            { moduleNumber: 10, title: "Module 10", subtitle: "Praying for Healing", sortOrder: 10 },
+            { moduleNumber: 11, title: "Module 11", subtitle: "Healing and the Sacraments", sortOrder: 11 },
+            { moduleNumber: 12, title: "Module 12", subtitle: "Overcoming Anxiety and Fear", sortOrder: 12 },
+            { moduleNumber: 13, title: "Module 13", subtitle: "Identity in Christ", sortOrder: 13 },
+            { moduleNumber: 14, title: "Module 14", subtitle: "Healing and the Eucharist", sortOrder: 14 },
+            { moduleNumber: 15, title: "Module 15", subtitle: "Healing Through Mary", sortOrder: 15 },
+            { moduleNumber: 16, title: "Module 16", subtitle: "Spiritual Warfare and Healing", sortOrder: 16 },
+            { moduleNumber: 17, title: "Module 17", subtitle: "Healing Family Trees", sortOrder: 17 },
+            { moduleNumber: 18, title: "Module 18", subtitle: "Healing and Community", sortOrder: 18 },
+            { moduleNumber: 19, title: "Module 19", subtitle: "Continuing Your Journey", sortOrder: 19 },
+            { moduleNumber: 20, title: "Conclusion", subtitle: "Living in God's Healing Love", sortOrder: 20 },
+        ];
+        for (const mod of healingModuleData) {
+            await storage.upsertHealingModule(mod);
+        }
+        console.log(`Healing Track modules seeded (${healingModuleData.length} modules).`);
+    }
+
+    const existingHealingContent = await storage.getAllHealingContent();
+    if (existingHealingContent.length === 0) {
+        console.log("Seeding Healing Track content...");
+
+        const youtubeUrls: Record<number, string> = {
+            2: "https://www.youtube.com/watch?v=p6VtZHlucdU",
+            3: "https://www.youtube.com/watch?v=qzgZfy9E4PY",
+            4: "https://www.youtube.com/watch?v=_2_zToSZZMY",
+            5: "https://www.youtube.com/watch?v=rLklZU6Zio8",
+            6: "https://www.youtube.com/watch?v=j4coVDGjYiM",
+            7: "https://www.youtube.com/watch?v=6_vmDWrGIbY",
+            8: "https://www.youtube.com/watch?v=Awffm-KbOL8",
+            9: "https://www.youtube.com/watch?v=YQ0JbjsFFuE",
+            10: "https://www.youtube.com/watch?v=DNSdq_KMnck",
+            11: "https://www.youtube.com/watch?v=XqbT6SxMPLM",
+            12: "https://www.youtube.com/watch?v=txFeMUaNIiQ",
+            13: "https://www.youtube.com/watch?v=tvExDsnc1ds",
+            14: "https://www.youtube.com/watch?v=g0fcgPuTxCY",
+            15: "https://www.youtube.com/watch?v=htlu-6qvVW0",
+            16: "https://www.youtube.com/watch?v=EZrw_dQPOGs",
+            17: "https://www.youtube.com/watch?v=7iy5S12G7w0",
+            18: "https://www.youtube.com/watch?v=-lRvag_RzK0",
+        };
+
+        const getYouTubeVideoId = (url: string) => {
+            const match = url.match(/[?&]v=([^&]+)/);
+            return match ? match[1] : "";
+        };
+
+        await storage.upsertHealingContent({
+            moduleNumber: 1,
+            title: "Introduction",
+            subtitle: "Welcome to Healing of Our Hearts",
+            slides: [
+                { type: "text", content: "Welcome to the Healing of Our Hearts program, presented by Fr. Monahan. This 20-module journey is designed to lead you into the deep healing that only God can provide." },
+                { type: "text", content: "Over the course of these modules, you will explore the roots of your wounds, encounter God's unconditional love, and experience lasting transformation through prayer, Scripture, and the sacraments." },
+                { type: "text", content: "This program is self-paced. Complete each module when you are ready. Each module will unlock after you complete the previous one. Begin with open hands and an open heart." },
+                { type: "action", content: "Pray this simple prayer: \"Lord, I come to you with my wounds, my fears, and my broken places. I trust that you are the healer of my heart. Come, Holy Spirit. Amen.\"" },
+            ],
+        });
+
+        for (let moduleNumber = 2; moduleNumber <= 18; moduleNumber++) {
+            const url = youtubeUrls[moduleNumber];
+            const videoId = getYouTubeVideoId(url);
+            await storage.upsertHealingContent({
+                moduleNumber,
+                title: `Module ${moduleNumber}`,
+                subtitle: "",
+                slides: [
+                    { type: "media", content: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}`, videoId }) },
+                ],
+            });
+        }
+
+        await storage.upsertHealingContent({
+            moduleNumber: 19,
+            title: "Module 19",
+            subtitle: "Continuing Your Journey",
+            slides: [
+                { type: "text", content: "You are nearly at the end of this healing journey. Take time to reflect on how far you have come and all the ways God has worked in your heart through these modules." },
+                { type: "text", content: "The graces you have received are not meant to stay with you alone. As you have been healed, you are called to bring healing to others — in your family, your parish, and your community." },
+            ],
+        });
+
+        await storage.upsertHealingContent({
+            moduleNumber: 20,
+            title: "Conclusion",
+            subtitle: "Living in God's Healing Love",
+            slides: [
+                { type: "text", content: "Congratulations on completing the Healing of Our Hearts program. You have taken a courageous step toward wholeness and freedom in Christ." },
+                { type: "text", content: "This is not an ending but a beginning. The healing you have received is a foundation for a deeper life with God. Continue to pray, receive the sacraments, and trust in His ongoing work in your heart." },
+                { type: "action", content: "Write a letter to yourself about the healing you have experienced. Seal it and open it in one year to see how God has continued His work." },
+            ],
+        });
+
+        console.log("Healing Track content seeded (20 modules).");
+    }
 
     console.log("Seeding complete.");
 }

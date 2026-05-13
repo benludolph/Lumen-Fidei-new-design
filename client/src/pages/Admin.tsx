@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -34,10 +34,10 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, type HealingModule, type HealingContent } from "@shared/schema";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { api, type ContentBackup } from "@shared/routes";
+import { api, type ContentBackup, type SafeUser } from "@shared/routes";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -153,6 +153,7 @@ export default function Admin() {
           <TabsContent value="testimonies">
             <TestimoniesAdminView />
           </TabsContent>
+
         </Tabs>
       </div>
     </Shell>
@@ -160,7 +161,7 @@ export default function Admin() {
 }
 
 function ContentTabView() {
-  const [track, setTrack] = useState<"a" | "b">("a");
+  const [track, setTrack] = useState<"a" | "b" | "c">("a");
 
   return (
     <div className="space-y-5">
@@ -179,9 +180,16 @@ function ContentTabView() {
         >
           Track B
         </button>
+        <button
+          onClick={() => setTrack("c")}
+          data-testid="button-track-c-tab"
+          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "c" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Healing
+        </button>
       </div>
 
-      {track === "a" ? <TrackAContentManagementView /> : <ContentManagementView />}
+      {track === "a" ? <TrackAContentManagementView /> : track === "b" ? <ContentManagementView /> : <HealingAdminView />}
     </div>
   );
 }
@@ -278,14 +286,14 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
       </TableCell>
       <TableCell>
         {user.role === 'participant' ? (
-           <Select defaultValue={user.track} onValueChange={handleAssignTrack}>
-             <SelectTrigger className="w-[80px] h-8">
+           <Select defaultValue={user.track ?? ""} onValueChange={handleAssignTrack}>
+             <SelectTrigger className="w-[110px] h-8">
                <SelectValue placeholder="-" />
              </SelectTrigger>
              <SelectContent>
                <SelectItem value="A">A</SelectItem>
                <SelectItem value="B">B</SelectItem>
-               <SelectItem value="C">C</SelectItem>
+               <SelectItem value="C">C – Healing</SelectItem>
              </SelectContent>
            </Select>
         ) : (
@@ -7014,6 +7022,29 @@ function SurveyResultsView() {
 }
 
 // ========================
+// Shared slide helpers (used by Prelim and Healing editors)
+// ========================
+
+function getDefaultSlideContent(type: string): string {
+  if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
+  if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
+  if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
+  if (type === "knowledge_quiz") return JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" });
+  if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
+  if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
+  if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
+  if (type === "cross_grid") return CROSS_GRID_DEFAULT;
+  if (type === "story_choice") return STORY_CHOICE_DEFAULT;
+  if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
+  if (type === "before_after") return BEFORE_AFTER_DEFAULT;
+  if (type === "scene") return "{}";
+  if (type === "captivity_builder") return JSON.stringify({ intro: "" });
+  if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
+  if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
+  return "";
+}
+
+// ========================
 // Prelim Modules Editor
 // ========================
 
@@ -7076,25 +7107,6 @@ function PrelimContentManagementView() {
   const handleSave = () => {
     if (!selectedPosition) return;
     saveMutation.mutate({ position: selectedPosition, title: title || "Untitled", subtitle: subtitle || null, slides, imageUrl });
-  };
-
-  const getDefaultSlideContent = (type: string): string => {
-    if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
-    if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
-    if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
-    if (type === "knowledge_quiz") return JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" });
-    if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
-    if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
-    if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
-    if (type === "cross_grid") return CROSS_GRID_DEFAULT;
-    if (type === "story_choice") return STORY_CHOICE_DEFAULT;
-    if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
-    if (type === "before_after") return BEFORE_AFTER_DEFAULT;
-    if (type === "scene") return "{}";
-    if (type === "captivity_builder") return JSON.stringify({ intro: "" });
-    if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
-    if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
-    return "";
   };
 
   const addSlide = () => {
@@ -7816,6 +7828,485 @@ function TestimoniesAdminView() {
         <div className="space-y-3">
           {testimonies.map(t => <TestimonyRow key={t.id} testimony={t} onSaved={refetch} />)}
         </div>
+      )}
+    </div>
+  );
+}
+
+function HealingAdminView() {
+  const { toast } = useToast();
+  const [selectedModule, setSelectedModule] = useState<number | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [modTitle, setModTitle] = useState("");
+  const [modSubtitle, setModSubtitle] = useState("");
+  const [completionMessage, setCompletionMessage] = useState("");
+  const [modImageUrl, setModImageUrl] = useState<string | null>(null);
+  const [slides, setSlides] = useState<TrackASlide[]>([]);
+  const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
+  const [addSlideType, setAddSlideType] = useState<string>("text");
+  const [certTemplateFile, setCertTemplateFile] = useState<File | null>(null);
+  const [isUploadingCert, setIsUploadingCert] = useState(false);
+  const certInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: modules, isLoading: modulesLoading } = useQuery<HealingModule[]>({
+    queryKey: ['/api/healing/modules'],
+    queryFn: () => fetch('/api/healing/modules', { credentials: 'include' }).then(r => r.json()),
+  });
+  const { data: allContent } = useQuery<HealingContent[]>({
+    queryKey: ['/api/healing/content'],
+    queryFn: () => fetch('/api/healing/content', { credentials: 'include' }).then(r => r.json()),
+  });
+  const { data: allUsers } = useQuery<SafeUser[]>({
+    queryKey: ['/api/admin/users'],
+    queryFn: () => fetch('/api/admin/users', { credentials: 'include' }).then(r => r.json()),
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: async (moduleNumbers: number[]) => {
+      await apiRequest("PATCH", '/api/admin/healing/modules/reorder', { moduleNumbers });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
+    },
+    onError: () => {
+      toast({ title: "Failed to reorder modules", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (moduleNumber: number) => {
+      await apiRequest("DELETE", `/api/admin/healing/modules/${moduleNumber}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/content'] });
+      if (selectedModule !== null) setSelectedModule(null);
+      toast({ title: "Module deleted" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete module", variant: "destructive" });
+    },
+  });
+
+  const createModuleMutation = useMutation({
+    mutationFn: async () => {
+      const maxNum = modules && modules.length > 0 ? Math.max(...modules.map((m) => m.moduleNumber)) : 0;
+      const maxSort = modules && modules.length > 0 ? Math.max(...modules.map((m) => m.sortOrder)) : 0;
+      const newNum = maxNum + 1;
+      const newSort = maxSort + 1;
+      await apiRequest("POST", '/api/admin/healing/create-module', { moduleNumber: newNum, title: `Module ${newNum}`, sortOrder: newSort });
+      return newNum;
+    },
+    onSuccess: (newNum) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/content'] });
+      setSelectedModule(newNum);
+      setModTitle(`Module ${newNum}`);
+      setModSubtitle("");
+      setCompletionMessage("");
+      setModImageUrl(null);
+      setSlides([]);
+      setEditMode(true);
+      toast({ title: "New module created" });
+    },
+    onError: () => {
+      toast({ title: "Failed to create module", variant: "destructive" });
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: { moduleNumber: number; title: string; subtitle: string | null; imageUrl: string | null; slides: TrackASlide[]; completionMessage: string | null }) => {
+      const existingSortOrder = modules?.find((m) => m.moduleNumber === data.moduleNumber)?.sortOrder ?? data.moduleNumber;
+      await apiRequest("POST", '/api/admin/healing/modules', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, sortOrder: existingSortOrder });
+      await apiRequest("POST", '/api/admin/healing/content', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, slides: data.slides, completionMessage: data.completionMessage });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/healing/content'] });
+      toast({ title: "Module saved" });
+      setEditMode(false);
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to save module", description: err?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
+  const handleCertUpload = async () => {
+    if (!certTemplateFile) return;
+    setIsUploadingCert(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', certTemplateFile);
+      const res = await fetch('/api/admin/healing/certificate-template', { method: 'POST', credentials: 'include', body: formData });
+      if (!res.ok) throw new Error('Upload failed');
+      toast({ title: 'Certificate template uploaded' });
+      setCertTemplateFile(null);
+      if (certInputRef.current) certInputRef.current.value = '';
+    } catch {
+      toast({ title: 'Upload failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setIsUploadingCert(false);
+    }
+  };
+
+  const contentMap = new Map((allContent ?? []).map((c) => [c.moduleNumber, c]));
+  const modulesWithContent = (modules ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder).map((m) => ({ ...m, content: contentMap.get(m.moduleNumber) }));
+  const healingParticipants = allUsers?.filter((u) => u.track === 'C') ?? [];
+
+  const loadModuleIntoState = (moduleNumber: number) => {
+    const mod = modules?.find((m) => m.moduleNumber === moduleNumber);
+    const cont = contentMap.get(moduleNumber);
+    setModTitle(mod?.title ?? `Module ${moduleNumber}`);
+    setModSubtitle(mod?.subtitle ?? "");
+    setCompletionMessage(cont?.completionMessage ?? "");
+    setModImageUrl(mod?.imageUrl ?? cont?.imageUrl ?? null);
+    setSlides(cont?.slides ? [...cont.slides] : []);
+    setExpandedSlide(null);
+  };
+
+  const handleSave = () => {
+    if (selectedModule === null) return;
+    saveMutation.mutate({
+      moduleNumber: selectedModule,
+      title: modTitle || `Module ${selectedModule}`,
+      subtitle: modSubtitle || null,
+      imageUrl: modImageUrl,
+      slides,
+      completionMessage: completionMessage || null,
+    });
+  };
+
+  const handleReorder = (moduleNumber: number, dir: "up" | "down") => {
+    if (!modules) return;
+    const sorted = [...modules].sort((a, b) => a.sortOrder - b.sortOrder);
+    const idx = sorted.findIndex((m) => m.moduleNumber === moduleNumber);
+    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const newOrder = [...sorted];
+    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
+    reorderMutation.mutate(newOrder.map((m) => m.moduleNumber));
+  };
+
+  const addSlide = () => {
+    setSlides(prev => [...prev, { type: addSlideType, content: getDefaultSlideContent(addSlideType) }]);
+    setExpandedSlide(slides.length);
+  };
+
+  const removeSlide = (index: number) => {
+    setSlides(prev => prev.filter((_, i) => i !== index));
+    if (expandedSlide === index) setExpandedSlide(null);
+    else if (expandedSlide !== null && expandedSlide > index) setExpandedSlide(expandedSlide - 1);
+  };
+
+  const moveSlide = (index: number, dir: "up" | "down") => {
+    const newIdx = dir === "up" ? index - 1 : index + 1;
+    if (newIdx < 0 || newIdx >= slides.length) return;
+    setSlides(prev => {
+      const next = [...prev];
+      [next[index], next[newIdx]] = [next[newIdx], next[index]];
+      return next;
+    });
+    if (expandedSlide === index) setExpandedSlide(newIdx);
+    else if (expandedSlide === newIdx) setExpandedSlide(index);
+  };
+
+  const updateSlide = (index: number, field: "type" | "content", value: string) => {
+    setSlides(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+
+  // Module list view
+  if (selectedModule === null) {
+    return (
+      <div className="space-y-6">
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Award className="w-4 h-4" /> Certificate Template
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Upload a custom PNG certificate background for the Healing Track. Leave blank to use the default.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <input ref={certInputRef} type="file" accept="image/png" data-testid="input-healing-cert-template" onChange={(e) => setCertTemplateFile(e.target.files?.[0] ?? null)} className="text-sm" />
+              <Button size="sm" onClick={handleCertUpload} disabled={!certTemplateFile || isUploadingCert} data-testid="button-upload-healing-cert">
+                {isUploadingCert ? 'Uploading…' : 'Upload'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="w-4 h-4" /> Modules
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-2 h-8 text-xs"
+                disabled={createModuleMutation.isPending}
+                onClick={() => createModuleMutation.mutate()}
+                data-testid="button-healing-add-module"
+              >
+                <Plus className="w-3 h-3" /> Add Module
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">Click any module to edit its title, subtitle, and slide content.</p>
+          </CardHeader>
+          <CardContent className="p-0">
+            {modulesLoading ? (
+              <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-12 rounded bg-secondary animate-pulse" />)}</div>
+            ) : (
+              <div className="divide-y divide-border">
+                {modulesWithContent.map((m, idx) => (
+                  <div
+                    key={m.moduleNumber}
+                    className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                    data-testid={`row-healing-module-admin-${m.moduleNumber}`}
+                  >
+                    <div
+                      className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                      onClick={() => { setSelectedModule(m.moduleNumber); loadModuleIntoState(m.moduleNumber); setEditMode(false); }}
+                    >
+                      <span className="text-xs font-mono text-muted-foreground w-6 flex-shrink-0">{m.moduleNumber < 10 ? `0${m.moduleNumber}` : m.moduleNumber}</span>
+                      {m.imageUrl && (
+                        <img src={m.imageUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{m.title}</p>
+                        {m.subtitle && <p className="text-xs text-muted-foreground truncate">{m.subtitle}</p>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-4">
+                      <span className="text-xs text-muted-foreground mr-2">{m.content?.slides?.length ?? 0} slides</span>
+                      <Button
+                        variant="ghost" size="icon" className="h-7 w-7"
+                        disabled={idx === 0 || reorderMutation.isPending}
+                        onClick={(e) => { e.stopPropagation(); handleReorder(m.moduleNumber, "up"); }}
+                        data-testid={`button-healing-module-up-${m.moduleNumber}`}
+                      >
+                        <ChevronLeft className="w-3 h-3 -rotate-90" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-7 w-7"
+                        disabled={idx === modulesWithContent.length - 1 || reorderMutation.isPending}
+                        onClick={(e) => { e.stopPropagation(); handleReorder(m.moduleNumber, "down"); }}
+                        data-testid={`button-healing-module-down-${m.moduleNumber}`}
+                      >
+                        <ChevronLeft className="w-3 h-3 rotate-90" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                        disabled={deleteMutation.isPending}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete Module ${m.moduleNumber} "${m.title}"? This cannot be undone.`)) {
+                            deleteMutation.mutate(m.moduleNumber);
+                          }
+                        }}
+                        data-testid={`button-healing-module-delete-${m.moduleNumber}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                      <ChevronRight
+                        className="w-4 h-4 text-muted-foreground cursor-pointer"
+                        onClick={() => { setSelectedModule(m.moduleNumber); loadModuleIntoState(m.moduleNumber); setEditMode(false); }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Module detail/edit view
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => { setSelectedModule(null); setEditMode(false); }} className="gap-2" data-testid="button-healing-back">
+          <ArrowLeft className="w-4 h-4" /> Back to Modules
+        </Button>
+        <Badge variant="outline">Module {selectedModule}</Badge>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{modTitle || `Module ${selectedModule}`}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {editMode ? (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Title</label>
+                <Input value={modTitle} onChange={e => setModTitle(e.target.value)} placeholder="Module title" data-testid="input-healing-module-title" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Subtitle</label>
+                <Input value={modSubtitle} onChange={e => setModSubtitle(e.target.value)} placeholder="Brief description (optional)" data-testid="input-healing-module-subtitle" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Completion Message</label>
+                <Input value={completionMessage} onChange={e => setCompletionMessage(e.target.value)} placeholder="Message shown after marking complete (optional)" data-testid="input-healing-completion-message" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Card Background Image</label>
+                <p className="text-xs text-muted-foreground">Image displayed on the module card in the healing dashboard.</p>
+                <ModuleImageUpload currentUrl={modImageUrl} onUploaded={setModImageUrl} />
+              </div>
+            </>
+          ) : (
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium">{modTitle}</p>
+                {modSubtitle && <p className="text-sm text-muted-foreground">{modSubtitle}</p>}
+                {completionMessage && <p className="text-xs text-muted-foreground mt-1">Completion: "{completionMessage}"</p>}
+                {modImageUrl && (
+                  <div className="mt-3">
+                    <img src={modImageUrl} alt="" className="h-20 w-auto rounded object-cover border border-border" />
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">{slides.length} slide{slides.length !== 1 ? 's' : ''}</p>
+              </div>
+              <Button size="sm" onClick={() => { loadModuleIntoState(selectedModule); setEditMode(true); }} data-testid="button-healing-edit-module">
+                <Edit2 className="w-4 h-4 mr-1" /> Edit
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {editMode && (
+        <>
+          <div className="space-y-3">
+            {slides.map((slide, index) => {
+              const isExpanded = expandedSlide === index;
+              return (
+                <Card key={index} data-testid={`card-healing-slide-${index}`}>
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col items-center gap-1 pt-1">
+                        <GripVertical className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <SlideTypeBadge type={slide.type} />
+                          {!isExpanded && (
+                            <span className="text-sm text-muted-foreground truncate">
+                              {slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
+                            </span>
+                          )}
+                        </div>
+                        {isExpanded && (
+                          <div className="space-y-3 mt-3">
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
+                              <Select value={slide.type} onValueChange={(val) => {
+                                updateSlide(index, "type", val);
+                                const def = getDefaultSlideContent(val);
+                                if (def) updateSlide(index, "content", def);
+                              }}>
+                                <SelectTrigger data-testid={`select-healing-slide-type-${index}`}><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {PRELIM_SLIDE_TYPES.map(t => (
+                                    <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {slide.type === "quiz" ? (
+                              <QuizSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "media" ? (
+                              <MediaSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "timer" ? (
+                              <TimerSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "knowledge_check" ? (
+                              <KnowledgeCheckEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "knowledge_quiz" ? (
+                              <KnowledgeQuizEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "survey" ? (
+                              <SurveySlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "scenario" ? (
+                              <ScenarioSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "chat_flow" ? (
+                              <ChatFlowSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "path_selector" ? (
+                              <PathSelectorSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "before_after" ? (
+                              <BeforeAfterSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "image_carousel" ? (
+                              <ImageCarouselSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "cross_grid" ? (
+                              <CrossGridSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : (
+                              <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Content</label>
+                                <Textarea
+                                  value={slide.content}
+                                  onChange={e => updateSlide(index, "content", e.target.value)}
+                                  rows={4}
+                                  placeholder="Slide content…"
+                                  data-testid={`textarea-healing-slide-content-${index}`}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpandedSlide(isExpanded ? null : index)} data-testid={`button-toggle-healing-slide-${index}`}>
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveSlide(index, "up")} disabled={index === 0} data-testid={`button-healing-slide-up-${index}`}>
+                          <ChevronLeft className="w-3 h-3 -rotate-90" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveSlide(index, "down")} disabled={index === slides.length - 1} data-testid={`button-healing-slide-down-${index}`}>
+                          <ChevronLeft className="w-3 h-3 rotate-90" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeSlide(index)} data-testid={`button-healing-slide-delete-${index}`}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <Select value={addSlideType} onValueChange={setAddSlideType}>
+                  <SelectTrigger className="flex-1" data-testid="select-healing-add-slide-type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PRELIM_SLIDE_TYPES.map(t => (
+                      <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={addSlide} data-testid="button-healing-add-slide">
+                  <Plus className="w-4 h-4 mr-1" /> Add Slide
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center justify-end gap-3">
+            <Button variant="outline" onClick={() => { loadModuleIntoState(selectedModule); setEditMode(false); }} data-testid="button-healing-cancel-edit">
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-healing-save-module">
+              {saveMutation.isPending ? "Saving…" : "Save Module"}
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );

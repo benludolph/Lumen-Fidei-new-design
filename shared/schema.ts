@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, uniqueIndex, unique, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, jsonb, uniqueIndex, unique, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -205,6 +205,61 @@ export const moduleOverlays = pgTable("module_overlays", {
 
 export type ModuleOverlay = typeof moduleOverlays.$inferSelect;
 export type InsertModuleOverlay = typeof moduleOverlays.$inferInsert;
+
+// === HEALING TRACK TABLES ===
+
+export const healingModules = pgTable("healing_modules", {
+  id: serial("id").primaryKey(),
+  moduleNumber: integer("module_number").notNull().unique(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  imageUrl: text("image_url"),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
+export const healingContent = pgTable("healing_content", {
+  id: serial("id").primaryKey(),
+  moduleNumber: integer("module_number").notNull().unique(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  imageUrl: text("image_url"),
+  slides: jsonb("slides").$type<{ type: string; content: string }[]>(),
+  completionMessage: text("completion_message"),
+});
+
+export const healingCompletions = pgTable("healing_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  moduleNumber: integer("module_number").notNull(),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("healing_completions_user_module_unique").on(table.userId, table.moduleNumber),
+]);
+
+export const healingAnswers = pgTable("healing_answers", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  moduleNumber: integer("module_number").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("healing_answers_user_module_unique").on(table.userId, table.moduleNumber),
+]);
+
+// Insert schemas for Healing Track
+export const insertHealingModuleSchema = createInsertSchema(healingModules).omit({ id: true });
+export const insertHealingContentSchema = createInsertSchema(healingContent).omit({ id: true });
+export const insertHealingCompletionSchema = createInsertSchema(healingCompletions).omit({ id: true, completedAt: true });
+export const insertHealingAnswerSchema = createInsertSchema(healingAnswers).omit({ id: true, createdAt: true });
+
+export type HealingModule = typeof healingModules.$inferSelect;
+export type InsertHealingModule = z.infer<typeof insertHealingModuleSchema>;
+export type HealingContent = typeof healingContent.$inferSelect;
+export type InsertHealingContent = z.infer<typeof insertHealingContentSchema>;
+export type HealingCompletion = typeof healingCompletions.$inferSelect;
+export type InsertHealingCompletion = z.infer<typeof insertHealingCompletionSchema>;
+export type HealingAnswer = typeof healingAnswers.$inferSelect;
+export type InsertHealingAnswer = z.infer<typeof insertHealingAnswerSchema>;
 
 // Password reset tokens — one-time use, expire after 1 hour
 export const passwordResetTokens = pgTable("password_reset_tokens", {
