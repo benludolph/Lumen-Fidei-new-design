@@ -717,27 +717,32 @@ export async function registerRoutes(
     }
   });
 
-  app.post('/api/admin/upload-pdf', requireRole('admin'), uploadLimiter, pdfUpload.single('pdf'), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No PDF file provided" });
+  app.post('/api/admin/upload-pdf', requireRole('admin'), uploadLimiter, async (req, res) => {
+    const { filename: originalFilename, data: base64Data, mimeType } = req.body ?? {};
+    if (!base64Data || !originalFilename) {
+      return res.status(400).json({ message: "No PDF data provided" });
+    }
+    if (!String(originalFilename).toLowerCase().endsWith(".pdf")) {
+      return res.status(400).json({ message: "Only PDF files are allowed" });
+    }
+    const binarySize = Math.floor(String(base64Data).length * 3 / 4);
+    if (binarySize > 15 * 1024 * 1024) {
+      return res.status(400).json({ message: "PDF too large (max 15 MB)" });
     }
     try {
-      const ext = path.extname(req.file.originalname);
-      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
-      const filename = `${base}_${Date.now()}${ext}`;
-      const base64Data = req.file.buffer.toString("base64");
+      const base = path.basename(String(originalFilename), ".pdf").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${base}_${Date.now()}.pdf`;
 
       await db.insert(uploadedImages).values({
         filename,
         mimeType: "application/pdf",
-        data: base64Data,
+        data: String(base64Data),
       }).onConflictDoUpdate({
         target: uploadedImages.filename,
-        set: { data: base64Data, mimeType: "application/pdf" },
+        set: { data: String(base64Data), mimeType: "application/pdf" },
       });
 
-      const filePath = `/api/images/${filename}`;
-      res.json({ url: filePath });
+      res.json({ url: `/api/images/${filename}` });
     } catch (error) {
       console.error("PDF upload error:", error);
       res.status(500).json({ message: "Failed to save PDF" });

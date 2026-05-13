@@ -4458,29 +4458,42 @@ function PdfDownloadEditor({ content, onChange, index, prefix }: { content: stri
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("pdf", file);
-      const res = await fetch("/api/admin/upload-pdf", { method: "POST", body: formData });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Upload failed" }));
-        throw new Error(err.message || "Upload failed");
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const dataUrl = evt.target?.result as string;
+        const base64 = dataUrl.split(",")[1];
+        const res = await fetch("/api/admin/upload-pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: file.name, data: base64, mimeType: file.type }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: "Upload failed" }));
+          throw new Error(err.message || "Upload failed");
+        }
+        const json = await res.json();
+        let latest: { url: string; label: string } = { url: "", label: "" };
+        try { const p = JSON.parse(contentRef.current || "{}"); latest = { url: typeof p.url === "string" ? p.url : "", label: typeof p.label === "string" ? p.label : "" }; } catch { /* use defaults */ }
+        onChange(JSON.stringify({ ...latest, url: json.url }));
+        toast({ title: "PDF uploaded", description: file.name });
+      } catch (err: any) {
+        toast({ title: "Upload failed", description: err?.message || "Please try again.", variant: "destructive" });
+      } finally {
+        setUploading(false);
+        e.target.value = "";
       }
-      const json = await res.json();
-      let latest: { url: string; label: string } = { url: "", label: "" };
-      try { const p = JSON.parse(contentRef.current || "{}"); latest = { url: typeof p.url === "string" ? p.url : "", label: typeof p.label === "string" ? p.label : "" }; } catch { /* use defaults */ }
-      onChange(JSON.stringify({ ...latest, url: json.url }));
-      toast({ title: "PDF uploaded", description: file.name });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err?.message || "Please try again.", variant: "destructive" });
-    } finally {
+    };
+    reader.onerror = () => {
+      toast({ title: "Upload failed", description: "Could not read the file.", variant: "destructive" });
       setUploading(false);
       e.target.value = "";
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
