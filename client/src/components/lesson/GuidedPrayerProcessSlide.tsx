@@ -6,8 +6,6 @@ import { ChevronLeft, ChevronRight, Check, Plus, X, BookOpen } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type VarValue = string | string[];
 
 interface InstructionStep {
@@ -82,8 +80,6 @@ interface SavedResponse {
   completedAt: string;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function evaluateCondition(condition: string, vars: Record<string, VarValue>): boolean {
   const m = condition.match(/^(\w+)\.length\s*>\s*(\d+)$/);
   if (m) {
@@ -135,8 +131,6 @@ function formatListInline(items: string[]): string {
   if (items.length === 2) return `${items[0]} and ${items[1]}`;
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
-
-// ─── Prayer Text Renderer ─────────────────────────────────────────────────────
 
 type Segment =
   | { type: "text"; content: string }
@@ -231,8 +225,6 @@ function PrayerTextRenderer({ text, vars }: { text: string; vars: Record<string,
 
   return <div className="space-y-1">{lines}</div>;
 }
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 export interface GuidedPrayerProcessSlideProps {
   content: string;
@@ -385,8 +377,6 @@ export function GuidedPrayerProcessSlide({
 
   const isLastStep = !getNextStepId(currentStepId, steps, variables);
 
-  // ─── Loading ────────────────────────────────────────────────────────────────
-
   if (loadingSaved || !initialized) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -394,8 +384,6 @@ export function GuidedPrayerProcessSlide({
       </div>
     );
   }
-
-  // ─── Summary ─────────────────────────────────────────────────────────────────
 
   if (showSummary) {
     const varEntries = Object.entries(variables).filter(([, v]) =>
@@ -452,8 +440,6 @@ export function GuidedPrayerProcessSlide({
     );
   }
 
-  // ─── Empty config ─────────────────────────────────────────────────────────────
-
   if (!currentStep || steps.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -462,8 +448,6 @@ export function GuidedPrayerProcessSlide({
       </div>
     );
   }
-
-  // ─── Step ─────────────────────────────────────────────────────────────────────
 
   const stepKindLabel =
     currentStep.kind === "prayer"

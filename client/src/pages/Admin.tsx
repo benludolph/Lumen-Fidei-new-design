@@ -2370,7 +2370,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   captivity_builder: "Breaking Lies",
   confession_finder: "Confession Finder",
   pdf_download: "PDF Download",
-  guided_prayer_process: "Guided Prayer Process",
+  guided_prayer_process: "Guided Prayer",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {

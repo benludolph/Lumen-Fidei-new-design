@@ -392,7 +392,7 @@ export function LessonFlow({
     } catch { return false; }
   })();
 
-  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice", "knowledge_quiz", "confession_finder"]);
+  const INTERACTIVE_TYPES = new Set(["multi_select", "single_select", "text_input", "action", "mentor_message", "chat_flow", "path_selector", "story_choice", "knowledge_quiz", "confession_finder", "guided_prayer_process"]);
   const requiresInteraction = INTERACTIVE_TYPES.has(effectiveSlideData.type) && !slideInteracted;
   const surveyBlocked = effectiveSlideData.type === "survey" && !completedSurveySlides.has(currentSlide);
   const isChatFlow = effectiveSlideData.type === "chat_flow";
@@ -437,6 +437,11 @@ export function LessonFlow({
             ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
             : `track_a-day${dayNumber}-slide${currentSlide}`)
         : undefined}
+      guidedPrayerContextKey={effectiveSlideData.type === "guided_prayer_process"
+        ? (dayNumber < 0
+            ? `prelim-module${Math.abs(dayNumber)}-gpp-slide${currentSlide}`
+            : `track_a-day${dayNumber}-gpp-slide${currentSlide}`)
+        : undefined}
       chatFlowTotalSlides={slides.length}
       chatFlowSlideIndex={currentSlide}
       onChatFlowComplete={effectiveSlideData.type === "chat_flow" ? handleNext : undefined}
@@ -474,7 +479,7 @@ export function LessonFlow({
 
   // Slides that have their own in-card CTA button — hide the footer CONTINUE
   // while they still need interaction (avoids two stacked buttons on mobile)
-  const SELF_CTA_TYPES = new Set(["action", "text_input", "mentor_message", "knowledge_quiz"]);
+  const SELF_CTA_TYPES = new Set(["action", "text_input", "mentor_message", "knowledge_quiz", "guided_prayer_process"]);
   const hideFooter =
     (isValidKc && kcAnswered) ||
     (requiresInteraction && SELF_CTA_TYPES.has(effectiveSlideData.type));
