@@ -4448,6 +4448,9 @@ function PdfDownloadEditor({ content, onChange, index, prefix }: { content: stri
     data = { url: "", label: "" };
   }
 
+  const contentRef = useRef(content);
+  contentRef.current = content;
+
   const update = (fields: Partial<typeof data>) => {
     onChange(JSON.stringify({ ...data, ...fields }));
   };
@@ -4464,7 +4467,9 @@ function PdfDownloadEditor({ content, onChange, index, prefix }: { content: stri
       const res = await fetch("/api/admin/upload-pdf", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");
       const json = await res.json();
-      update({ url: json.url });
+      let latest: { url: string; label: string } = { url: "", label: "" };
+      try { const p = JSON.parse(contentRef.current || "{}"); latest = { url: typeof p.url === "string" ? p.url : "", label: typeof p.label === "string" ? p.label : "" }; } catch { /* use defaults */ }
+      onChange(JSON.stringify({ ...latest, url: json.url }));
     } catch {
       // silently fail — user can retry
     } finally {
