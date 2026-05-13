@@ -902,10 +902,16 @@ export async function registerRoutes(
     }
   });
 
-  app.get('/api/admin/guided-prayer-responses', requireRole('admin'), async (req, res) => {
+  app.get('/api/admin/guided-prayer-responses', requireRole('admin', 'mentor'), async (req, res) => {
     try {
       const userId = parseInt(req.query.userId as string, 10);
       if (isNaN(userId)) return res.status(400).json({ message: "userId is required" });
+      if (req.user!.role === 'mentor') {
+        const targetUser = await storage.getUser(userId);
+        if (!targetUser || targetUser.mentorId !== req.user!.id) {
+          return res.sendStatus(403);
+        }
+      }
       const rows = await storage.getGuidedPrayerResponsesByUserId(userId);
       res.json(rows);
     } catch (e) {
