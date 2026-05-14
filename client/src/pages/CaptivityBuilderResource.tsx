@@ -294,9 +294,7 @@ export default function CaptivityBuilderResource() {
           antonym: parsed.antonym ?? "",
           scriptureRef: parsed.scriptureRef ?? "",
           scriptureText: parsed.scriptureText ?? "",
-          from: parsed.from ?? "",
-          to: parsed.to ?? "",
-          now: parsed.now ?? "",
+          truth: parsed.truth ?? parsed.now ?? "",
           prayer: parsed.prayer,
           createdAt: new Date().toISOString(),
         }]);

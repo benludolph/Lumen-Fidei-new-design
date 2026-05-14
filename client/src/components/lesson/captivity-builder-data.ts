@@ -55,8 +55,6 @@ export interface SavedState {
   antonym: string;
   scriptureRef: string;
   scriptureText: string;
-  from: string;
-  to: string;
-  now: string;
+  truth: string;
   prayer: string;
 }

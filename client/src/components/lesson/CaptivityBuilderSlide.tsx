@@ -14,13 +14,13 @@ interface CaptivityBuilderSlideProps {
 function assemblePrayer(
   spiritName: string,
   thought: string,
-  now: string,
+  truth: string,
   antonym: string,
   scriptureRef: string,
   scriptureText: string,
 ): string {
   const t = thought.trim() || "___";
-  const n = now.trim() || "___";
+  const n = truth.trim() || "___";
   const a = antonym.trim() || "___";
   const sRef = scriptureRef.trim() || "___";
   const sTxt = scriptureText.trim() || "___";
@@ -54,9 +54,7 @@ export function CaptivityBuilderSlide({
   const [antonym, setAntonym] = useState("");
   const [scriptureRef, setScriptureRef] = useState("");
   const [scriptureText, setScriptureText] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [now, setNow] = useState("");
+  const [truth, setTruth] = useState("");
 
   useEffect(() => {
     if (!existingAnswer) return;
@@ -67,9 +65,7 @@ export function CaptivityBuilderSlide({
       setAntonym(parsed.antonym ?? "");
       setScriptureRef(parsed.scriptureRef ?? "");
       setScriptureText(parsed.scriptureText ?? "");
-      setFrom(parsed.from ?? "");
-      setTo(parsed.to ?? "");
-      setNow(parsed.now ?? "");
+      setTruth(parsed.truth ?? "");
       if (parsed.spiritId) {
         interactedRef.current = true;
       }
@@ -109,13 +105,13 @@ export function CaptivityBuilderSlide({
   };
 
   const spiritNameForPrayer = selectedSpirit ? selectedSpirit.name : "___";
-  const prayer = assemblePrayer(spiritNameForPrayer, thought, now, antonym, scriptureRef, scriptureText);
+  const prayer = assemblePrayer(spiritNameForPrayer, thought, truth, antonym, scriptureRef, scriptureText);
 
-  const isEmpty = !thought.trim() && !spiritId && !from.trim() && !to.trim() && !now.trim();
+  const isEmpty = !thought.trim() && !spiritId && !truth.trim();
 
   const handleSave = () => {
     const payload: SavedState = {
-      thought, spiritId, antonym, scriptureRef, scriptureText, from, to, now, prayer,
+      thought, spiritId, antonym, scriptureRef, scriptureText, truth, prayer,
     };
     if (onSavePrayer) {
       onSavePrayer(payload);
@@ -143,9 +139,7 @@ export function CaptivityBuilderSlide({
     setAntonym("");
     setScriptureRef("");
     setScriptureText("");
-    setFrom("");
-    setTo("");
-    setNow("");
+    setTruth("");
     setSaved(false);
     setIsCollapsed(false);
   };
@@ -320,13 +314,21 @@ export function CaptivityBuilderSlide({
         </div>
       </div>
 
-      {/* Field 3: Antonym + Scripture (gated on spirit selection) */}
+      {/* Field 3: The truth — Antonym + Scripture + "The Lord reminds me" (gated on spirit selection) */}
       {selectedSpirit && (
         <div className="space-y-5 rounded-lg border border-[var(--white-8)] bg-[var(--white-4)] px-4 py-4">
+          <div>
+            <span
+              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.45)" }}
+            >
+              The truth
+            </span>
+          </div>
+
           <div className="space-y-2">
             <label
               className="block"
-              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.45)" }}
+              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.35)" }}
             >
               The Lord…
             </label>
@@ -348,7 +350,7 @@ export function CaptivityBuilderSlide({
           <div className="space-y-2">
             <label
               className="block"
-              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.45)" }}
+              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.35)" }}
             >
               Choose a scripture
             </label>
@@ -381,53 +383,25 @@ export function CaptivityBuilderSlide({
               })}
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label
+              className="block"
+              style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.35)" }}
+            >
+              The Lord reminds me
+            </label>
+            <input
+              type="text"
+              value={truth}
+              onChange={e => { setTruth(e.target.value); markChanged(); }}
+              placeholder="What truth does He speak over you?"
+              data-testid="input-captivity-truth"
+              className={cn(inputBase, "w-full type-body-lg py-1")}
+            />
+          </div>
         </div>
       )}
-
-      {/* Field 4: From / To / Now (always visible) */}
-      <div className="space-y-3">
-        <label
-          className="block"
-          style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.09em", color: "rgba(255,255,255,0.45)" }}
-        >
-          Your testimony
-        </label>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <span className="type-body-md text-[var(--white-50)] shrink-0 w-20">I went from</span>
-            <input
-              type="text"
-              value={from}
-              onChange={e => { setFrom(e.target.value); markChanged(); }}
-              placeholder="where you were"
-              data-testid="input-captivity-from"
-              className={cn(inputBase, "flex-1 min-w-0 type-body-md py-1")}
-            />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <span className="type-body-md text-[var(--white-50)] shrink-0 w-20">to</span>
-            <input
-              type="text"
-              value={to}
-              onChange={e => { setTo(e.target.value); markChanged(); }}
-              placeholder="what shifted"
-              data-testid="input-captivity-to"
-              className={cn(inputBase, "flex-1 min-w-0 type-body-md py-1")}
-            />
-          </div>
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <span className="type-body-md text-[var(--white-50)] shrink-0 w-20">and now I</span>
-            <input
-              type="text"
-              value={now}
-              onChange={e => { setNow(e.target.value); markChanged(); }}
-              placeholder="what is true now"
-              data-testid="input-captivity-now"
-              className={cn(inputBase, "flex-1 min-w-0 type-body-md py-1")}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* Prayer card */}
       <div
@@ -477,8 +451,8 @@ export function CaptivityBuilderSlide({
                   {blank(thought)}
                 </span>
                 {"\u201d, the Lord reminds me "}
-                <span style={{ color: now.trim() ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.35)" }}>
-                  {blank(now)}
+                <span style={{ color: truth.trim() ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.35)" }}>
+                  {blank(truth)}
                 </span>
                 {". I declare that the Lord "}
                 <span style={{ color: antonym.trim() ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.35)" }}>
@@ -506,7 +480,7 @@ export function CaptivityBuilderSlide({
         <button
           type="button"
           onClick={handleSave}
-          disabled={isPending || saved || !selectedSpirit || isEmpty}
+          disabled={isPending || saved || !thought.trim() || !selectedSpirit || !truth.trim()}
           data-testid="button-captivity-save"
           className="bg-[var(--surface-float)] text-white hover:bg-[var(--surface-raised)] border border-[var(--white-10)] rounded-md px-4 py-2 type-body-md disabled:opacity-40 transition-colors"
         >
