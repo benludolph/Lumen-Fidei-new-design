@@ -2438,43 +2438,51 @@ const GUIDED_PRAYER_OCCULT_DEFAULT = JSON.stringify({
       body: "In this prayer, you will identify occult practices you have been involved in — even out of curiosity — and renounce them before God.\n\nYou do not need to have gone deep. Any door opened is a door that can be closed."
     },
     {
-      id: "divination",
+      id: "practices",
       kind: "multi_select",
-      heading: "Fortune-telling and divination",
-      prompt: "Check any that apply to you — things you have participated in, even briefly or out of curiosity.",
-      variable_name: "divination_practices",
-      optional: true,
-      options: [
-        "Horoscopes or astrology",
-        "Tarot cards or oracle cards",
-        "Psychic readings",
-        "Ouija boards",
-        "Crystal balls or scrying",
-        "Palmistry or hand-reading",
-        "Numerology",
-        "Dream catchers (used spiritually)",
-        "Pendulum divination",
-        "Visiting a fortune-teller"
-      ]
-    },
-    {
-      id: "occult_arts",
-      kind: "multi_select",
-      heading: "Occult arts and practices",
-      prompt: "Check any that apply.",
+      heading: "Have you been involved in any of these?",
+      prompt: "Check everything that applies — even if it was brief, out of curiosity, or a long time ago.",
       variable_name: "occult_practices",
       optional: true,
       options: [
-        "Wicca or witchcraft",
-        "Spells or spell-casting",
-        "Seances or spirit contact",
-        "New Age healing practices",
-        "Energy healing or Reiki",
-        "Chakra work",
-        "Crystals used for spiritual power",
-        "Visualization or guided imagery (occult)",
-        "Consulting mediums or channelers",
-        "Satanism or occult initiations"
+        "Occult",
+        "Ouija Board",
+        "Tarot Card Reading",
+        "New Age, Crystals",
+        "Voodoo, Hoodoo",
+        "Light as a Feather",
+        "Horoscopes, Astrology",
+        "Psychics, Fortune Telling",
+        "Palm Reading",
+        "Third-Eye",
+        "Chakra Healing",
+        "Reiki, Qi, Prana",
+        "Past Life Recovery",
+        "Lucid Dreaming",
+        "Akashic Records",
+        "Astral Travel",
+        "Channeling Angels",
+        "Seances",
+        "Mediumship, Necromancy (Talking with Dead)",
+        "Shamanism, Ayahuasca",
+        "Native Americanism",
+        "Nagualism",
+        "Spirit Animalism",
+        "Witchcraft, Wicca, Spellcraft, Sorcery",
+        "Brujeria, Curanderos",
+        "Santeria",
+        "Santa Muerte",
+        "Buddhism, Mindfulness, Zen",
+        "Yoga, Hinduism",
+        "Satanism",
+        "Freemasonry, Illuminati, Secret Societies, Greek Life",
+        "Mystery Religions, Alchemy",
+        "Sex Magik",
+        "Gnosticism",
+        "Hypnosis",
+        "Binaural Beats",
+        "Bambi Sleep",
+        "Other"
       ]
     },
     {
@@ -2488,7 +2496,7 @@ const GUIDED_PRAYER_OCCULT_DEFAULT = JSON.stringify({
       kind: "prayer",
       heading: "Prayer of Renunciation",
       instruction_above: "Read this prayer aloud with faith and sincerity.",
-      prayer_text: "Lord Jesus, I come before You and renounce every involvement in the occult.\nI renounce {{divination_practices}}.\nI renounce {{occult_practices}}.\nI close every door I have opened to the enemy through these practices, knowingly or unknowingly.\nI break every agreement and cancel every claim the enemy has made against me through them.\nI receive Your forgiveness and cleansing now. Amen."
+      prayer_text: "Lord Jesus, I come before You and renounce every involvement in the occult.\nI renounce {{occult_practices}}.\nI close every door I have opened to the enemy through these practices, knowingly or unknowingly.\nI break every agreement and cancel every claim the enemy has made against me through them.\nI receive Your forgiveness and cleansing now. Amen."
     }
   ]
 }, null, 2);

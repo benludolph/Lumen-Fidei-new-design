@@ -602,7 +602,7 @@ export function GuidedPrayerProcessSlide({
           {currentStep.kind === "multi_select" && (
             <div className="space-y-3">
               <p className="type-body text-white/70 leading-relaxed">{currentStep.prompt}</p>
-              <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
                 {currentStep.options.map(opt => {
                   const checked = checkboxItems.includes(opt);
                   return (
@@ -614,7 +614,7 @@ export function GuidedPrayerProcessSlide({
                         )
                       }
                       className={cn(
-                        "w-full text-left rounded-xl px-4 py-3 flex items-center gap-3 type-body transition-all",
+                        "w-full text-left rounded-lg px-3 py-2.5 flex items-center gap-2 text-sm leading-snug transition-all",
                         checked
                           ? "bg-white/20 text-white ring-1 ring-white/35"
                           : "bg-white/8 text-white/70 hover:bg-white/13 hover:text-white"
@@ -623,15 +623,15 @@ export function GuidedPrayerProcessSlide({
                     >
                       <div
                         className={cn(
-                          "w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-all",
+                          "w-4 h-4 rounded flex items-center justify-center shrink-0 border transition-all",
                           checked
                             ? "border-white/60 bg-white/25"
                             : "border-white/30 bg-transparent"
                         )}
                       >
-                        {checked && <Check className="w-3 h-3 text-white" />}
+                        {checked && <Check className="w-2.5 h-2.5 text-white" />}
                       </div>
-                      <span className="flex-1">{opt}</span>
+                      <span className="flex-1 min-w-0">{opt}</span>
                     </button>
                   );
                 })}

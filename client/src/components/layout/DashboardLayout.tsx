@@ -117,7 +117,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
-            <NavLink href="/collections" active={location.startsWith("/collections")}>Collection</NavLink>
+            {/* Collection hidden — not yet released */}
             {(user?.role === 'participant' || user?.role === 'superuser') && (
               <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
             )}
@@ -288,9 +288,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>
             Resources
           </DrawerLink>
-          <DrawerLink href="/collections" active={location.startsWith("/collections")} onClick={closeDrawer}>
-            Collection
-          </DrawerLink>
+          {/* Collection hidden — not yet released */}
           {(user?.role === 'participant' || user?.role === 'superuser') && (
             <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>
               Journal

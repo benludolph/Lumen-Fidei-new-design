@@ -78,7 +78,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
           <>
             <NavItem href="/dashboard" icon={BookOpen} label="My Journey" onClick={onNavClick} />
             <NavItem href="/journal" icon={NotebookPen} label="Journal" onClick={onNavClick} />
-            <NavItem href="/collections" icon={Trophy} label="Collection" onClick={onNavClick} />
+            {/* Collection hidden — not yet released */}
             <NavItem href="/testimonies" icon={Video} label="Testimonies" onClick={onNavClick} />
           </>
         )}
