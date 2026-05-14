@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Check, Plus, X, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Plus, X, BookOpen, Square, CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -58,6 +58,16 @@ interface PrayerStep {
   show_only_if?: string;
 }
 
+interface MultiSelectStep {
+  id: string;
+  kind: "multi_select";
+  heading: string;
+  prompt: string;
+  variable_name: string;
+  options: string[];
+  optional?: boolean;
+}
+
 interface ReflectionStep {
   id: string;
   kind: "reflection";
@@ -67,7 +77,7 @@ interface ReflectionStep {
   placeholder?: string;
 }
 
-type Step = InstructionStep | InputStep | ListInputStep | ChoiceStep | PrayerStep | ReflectionStep;
+type Step = InstructionStep | InputStep | ListInputStep | ChoiceStep | PrayerStep | ReflectionStep | MultiSelectStep;
 
 interface GuidedPrayerConfig {
   title?: string;
@@ -145,6 +155,23 @@ type Segment =
   | { type: "inline_var"; content: string }
   | { type: "block_var"; items: string[] };
 
+function isVarEmpty(val: VarValue | undefined): boolean {
+  if (val == null) return true;
+  if (Array.isArray(val)) return val.length === 0;
+  return typeof val === "string" && val.trim() === "";
+}
+
+function filterEmptyVarLines(text: string, vars: Record<string, VarValue>): string {
+  return text
+    .split("\n")
+    .filter(line => {
+      const refs = line.match(/{{(\w+)}}/g);
+      if (!refs) return true;
+      return !refs.some(ref => isVarEmpty(vars[ref.slice(2, -2)]));
+    })
+    .join("\n");
+}
+
 function parsePrayerSegments(text: string, vars: Record<string, VarValue>): Segment[] {
   const parts = text.split(/({{[^}]+}})/);
   const segments: Segment[] = [];
@@ -156,10 +183,7 @@ function parsePrayerSegments(text: string, vars: Record<string, VarValue>): Segm
       continue;
     }
     const val = vars[match[1]];
-    if (val == null || (Array.isArray(val) && val.length === 0) || val === "") {
-      segments.push({ type: "text", content: "..." });
-      continue;
-    }
+    if (isVarEmpty(val)) continue;
     if (Array.isArray(val) && val.length >= 4) {
       segments.push({ type: "block_var", items: val });
     } else if (Array.isArray(val)) {
@@ -173,7 +197,8 @@ function parsePrayerSegments(text: string, vars: Record<string, VarValue>): Segm
 }
 
 function PrayerTextRenderer({ text, vars }: { text: string; vars: Record<string, VarValue> }) {
-  const segs = parsePrayerSegments(text, vars);
+  const filtered = filterEmptyVarLines(text, vars);
+  const segs = parsePrayerSegments(filtered, vars);
   const hasBlock = segs.some(s => s.type === "block_var");
   const baseClass = "leading-relaxed text-white/90 whitespace-pre-wrap font-serif";
 
@@ -291,6 +316,7 @@ export function GuidedPrayerProcessSlide({
   const [listItems, setListItems] = useState<string[]>([]);
   const [listInput, setListInput] = useState("");
   const [choiceVal, setChoiceVal] = useState("");
+  const [checkboxItems, setCheckboxItems] = useState<string[]>([]);
   const [prayerConfirmed, setPrayerConfirmed] = useState(false);
 
   useEffect(() => {
@@ -320,6 +346,8 @@ export function GuidedPrayerProcessSlide({
       setListInput("");
     } else if (currentStep.kind === "choice") {
       setChoiceVal((variables[currentStep.variable_name] as string) ?? "");
+    } else if (currentStep.kind === "multi_select") {
+      setCheckboxItems((variables[currentStep.variable_name] as string[]) ?? []);
     }
   }, [currentStepId]);
 
@@ -329,12 +357,13 @@ export function GuidedPrayerProcessSlide({
       case "instruction": return true;
       case "input": return textInput.trim().length > 0;
       case "list_input": return currentStep.optional ? true : listItems.length > 0;
+      case "multi_select": return currentStep.optional ? true : checkboxItems.length > 0;
       case "choice": return choiceVal.length > 0;
       case "prayer": return prayerConfirmed;
       case "reflection": return textInput.trim().length > 0;
       default: return true;
     }
-  }, [currentStep, textInput, listItems, choiceVal, prayerConfirmed]);
+  }, [currentStep, textInput, listItems, checkboxItems, choiceVal, prayerConfirmed]);
 
   const handleContinue = () => {
     if (!canContinue() || !currentStep) return;
@@ -344,6 +373,8 @@ export function GuidedPrayerProcessSlide({
       if (textInput.trim()) newVars[currentStep.variable_name] = textInput.trim();
     } else if (currentStep.kind === "list_input") {
       newVars[currentStep.variable_name] = listItems;
+    } else if (currentStep.kind === "multi_select") {
+      newVars[currentStep.variable_name] = checkboxItems;
     } else if (currentStep.kind === "choice") {
       newVars[currentStep.variable_name] = choiceVal;
     }
@@ -464,7 +495,7 @@ export function GuidedPrayerProcessSlide({
       ? "Reflect"
       : currentStep.kind === "instruction"
       ? "Read"
-      : currentStep.kind === "choice"
+      : currentStep.kind === "choice" || currentStep.kind === "multi_select"
       ? "Choose"
       : "";
 
@@ -563,6 +594,51 @@ export function GuidedPrayerProcessSlide({
               {currentStep.optional && listItems.length === 0 && (
                 <p className="text-[12px] text-white/35 italic">
                   Optional — you may skip if this doesn't apply.
+                </p>
+              )}
+            </div>
+          )}
+
+          {currentStep.kind === "multi_select" && (
+            <div className="space-y-3">
+              <p className="type-body text-white/70 leading-relaxed">{currentStep.prompt}</p>
+              <div className="space-y-2">
+                {currentStep.options.map(opt => {
+                  const checked = checkboxItems.includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() =>
+                        setCheckboxItems(prev =>
+                          checked ? prev.filter(x => x !== opt) : [...prev, opt]
+                        )
+                      }
+                      className={cn(
+                        "w-full text-left rounded-xl px-4 py-3 flex items-center gap-3 type-body transition-all",
+                        checked
+                          ? "bg-white/20 text-white ring-1 ring-white/35"
+                          : "bg-white/8 text-white/70 hover:bg-white/13 hover:text-white"
+                      )}
+                      data-testid={`button-gpp-multiselect-${opt}`}
+                    >
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-all",
+                          checked
+                            ? "border-white/60 bg-white/25"
+                            : "border-white/30 bg-transparent"
+                        )}
+                      >
+                        {checked && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className="flex-1">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {currentStep.optional && checkboxItems.length === 0 && (
+                <p className="text-[12px] text-white/35 italic">
+                  Optional — you may skip if none of these apply.
                 </p>
               )}
             </div>

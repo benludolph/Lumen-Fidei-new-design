@@ -2425,6 +2425,75 @@ const GUIDED_PRAYER_DEFAULT = JSON.stringify({
 }, null, 2);
 
 // ============================================================
+// Guided Prayer — Closing Occult Doorways template (multi_select)
+// ============================================================
+
+const GUIDED_PRAYER_OCCULT_DEFAULT = JSON.stringify({
+  title: "Closing Occult Doorways",
+  steps: [
+    {
+      id: "intro",
+      kind: "instruction",
+      heading: "Closing Occult Doorways",
+      body: "In this prayer, you will identify occult practices you have been involved in — even out of curiosity — and renounce them before God.\n\nYou do not need to have gone deep. Any door opened is a door that can be closed."
+    },
+    {
+      id: "divination",
+      kind: "multi_select",
+      heading: "Fortune-telling and divination",
+      prompt: "Check any that apply to you — things you have participated in, even briefly or out of curiosity.",
+      variable_name: "divination_practices",
+      optional: true,
+      options: [
+        "Horoscopes or astrology",
+        "Tarot cards or oracle cards",
+        "Psychic readings",
+        "Ouija boards",
+        "Crystal balls or scrying",
+        "Palmistry or hand-reading",
+        "Numerology",
+        "Dream catchers (used spiritually)",
+        "Pendulum divination",
+        "Visiting a fortune-teller"
+      ]
+    },
+    {
+      id: "occult_arts",
+      kind: "multi_select",
+      heading: "Occult arts and practices",
+      prompt: "Check any that apply.",
+      variable_name: "occult_practices",
+      optional: true,
+      options: [
+        "Wicca or witchcraft",
+        "Spells or spell-casting",
+        "Seances or spirit contact",
+        "New Age healing practices",
+        "Energy healing or Reiki",
+        "Chakra work",
+        "Crystals used for spiritual power",
+        "Visualization or guided imagery (occult)",
+        "Consulting mediums or channelers",
+        "Satanism or occult initiations"
+      ]
+    },
+    {
+      id: "bridge",
+      kind: "instruction",
+      heading: "Before We Pray",
+      body: "Jesus came to set captives free. Every door you have named can be closed — permanently — in His name.\n\nPray the next prayer slowly and aloud."
+    },
+    {
+      id: "renunciation",
+      kind: "prayer",
+      heading: "Prayer of Renunciation",
+      instruction_above: "Read this prayer aloud with faith and sincerity.",
+      prayer_text: "Lord Jesus, I come before You and renounce every involvement in the occult.\nI renounce {{divination_practices}}.\nI renounce {{occult_practices}}.\nI close every door I have opened to the enemy through these practices, knowingly or unknowingly.\nI break every agreement and cancel every claim the enemy has made against me through them.\nI receive Your forgiveness and cleansing now. Amen."
+    }
+  ]
+}, null, 2);
+
+// ============================================================
 // Chat Flow — Origin of the Weight default template
 // ============================================================
 
@@ -7078,7 +7147,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "captivity_builder") return JSON.stringify({ intro: "" });
   if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
   if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
-  if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
+  if (type === "guided_prayer_process") return GUIDED_PRAYER_OCCULT_DEFAULT;
   return "";
 }
 
