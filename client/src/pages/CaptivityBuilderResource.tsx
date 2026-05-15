@@ -494,32 +494,7 @@ export default function CaptivityBuilderResource() {
         </div>
       </div>
 
-      {/* Video widget — open or collapsed to pill */}
-      {showVideo ? (
-        <HowToVideoWidget onClose={() => setShowVideo(false)} />
-      ) : (
-        <button
-          data-testid="button-reopen-howto-video"
-          onClick={() => setShowVideo(true)}
-          className="flex items-center gap-2 type-body-sm font-medium"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 50,
-            background: "var(--surface-raised)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: "999px",
-            padding: "8px 16px 8px 12px",
-            cursor: "pointer",
-            color: "white",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-          }}
-        >
-          <Play size={12} style={{ marginLeft: "1px" }} />
-          Watch Tutorial
-        </button>
-      )}
+      {/* Tutorial hidden — not yet released */}
     </DashboardLayout>
   );
 }
