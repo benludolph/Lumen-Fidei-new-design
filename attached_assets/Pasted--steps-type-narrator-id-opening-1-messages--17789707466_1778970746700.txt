@@ -1,0 +1,306 @@
+{
+  "steps": [
+    {
+      "type": "narrator",
+      "id": "opening_1",
+      "messages": [
+        {
+          "text": "\"But you don't know what he did to me.\"",
+          "audio": "/api/images/But_you_don_t_1778189876982.mp3"
+        },
+        {
+          "text": "\"You can't imagine the hell I've been through.\"",
+          "audio": "/api/images/Can_t_Imagine_1778189892830.mp3"
+        },
+        {
+          "text": "\"If you knew what this has done to my family.\"",
+          "audio": "/api/images/If_you_knew_1778190031985.mp3"
+        },
+        {
+          "text": "\"They deserve to suffer… like I've suffered.\"",
+          "audio": "/api/images/They_deserve_1778190023172.mp3"
+        },
+        {
+          "text": "\"That person abused and hurt me. How do you forgive that?\"",
+          "audio": "/api/images/Abused_1778190013505.mp3"
+        },
+        {
+          "text": "\"I will never forgive that person. Never!\"",
+          "audio": "/api/images/Never_forgive_1778190004373.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "reframe_1",
+      "messages": [
+        {
+          "text": "Most people are confused about forgiveness because they mistakenly equate it with overlooking what happened, or excusing the offender.",
+          "audio": "/api/images/Most_people_1778190094570.mp3"
+        },
+        {
+          "text": "But that's not true.",
+          "audio": "/api/images/w5tFkKu4N2MByRZNOjhC5_output_1778190122102.mp3"
+        },
+        {
+          "text": "Forgiveness has absolutely nothing to do with the person who caused you pain.",
+          "audio": "/api/images/0YZeXjvf6zrXiPKHSSpTf_output_1778190137922.mp3"
+        },
+        {
+          "text": "Forgiveness is about freeing you.",
+          "audio": "/api/images/jkkzT0gplJlCxs8R58jMb_output_1778190164674.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "reframe_2",
+      "messages": [
+        {
+          "text": "It means acknowledging the harm, but choosing to not let it dictate your future.",
+          "audio": "/api/images/acknowledge_1778190189006.mp3"
+        },
+        {
+          "text": "It starts with an internal decision — to release the debt owed to you, and trade bitterness for peace.",
+          "audio": "/api/images/It_starts_1778190223700.mp3"
+        },
+        {
+          "text": "That's not weakness. That's tremendous strength and courage.",
+          "audio": "/api/images/courage_1778190373594.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "agreements",
+      "messages": [
+        {
+          "text": "Before we go further, let's agree on a few things about what forgiveness is and isn't.",
+          "audio": "/api/images/Before_1778190420467.mp3"
+        },
+        {
+          "text": "You don't need to receive an apology. You don't need to tell the person you've forgiven them.",
+          "audio": "/api/images/JUZyp7-N5D2JSIcCgboJT_output_1778190550265.mp3"
+        },
+        {
+          "text": "Forgiveness is not letting others walk all over you.",
+          "audio": "/api/images/7evS2Dyw5pX6BPWucSwYU_output_1778190563198.mp3"
+        },
+        {
+          "text": "There's no expectation to reconcile or restore the relationship.",
+          "audio": "/api/images/Theres_no_expectation_to_recon_Balance_Eleven_v3_019e0468-e31a-7bdc-945a-295296c82b16_1778190600358.mp3"
+        },
+        {
+          "text": "It's a process — one you may need to repeat when the memory resurfaces with pain.",
+          "audio": "/api/images/Its_a_process_one_you_may_need_Balance_Eleven_v3_019e0468-fde2-7a28-a56f-653732a7cb13_1778190609206.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "scripture",
+      "messages": [
+        {
+          "text": "Hear the words of Jesus:",
+          "audio": "/api/images/Vq7GldNCiqr3rZtsjVa1t_output_1778190638031.mp3"
+        },
+        {
+          "text": "\"For if you forgive men when they sin against you, your heavenly Father will also forgive you. But if you do not forgive men their sins, your Father will not forgive your sins.\" — Matthew 6:14-15",
+          "audio": "/api/images/For_if_you_forgive_1778190547842.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "parable_intro",
+      "messages": [
+        {
+          "text": "Jesus told a story that makes this plain.",
+          "audio": "/api/images/rAaE1Qmm0x16KmR8LdSGY_output_1778190678402.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "parable_part_1",
+      "messages": [
+        {
+          "text": "There was a man who owed his boss a vast debt. In today's terms, something like fifty million dollars.",
+          "audio": "/api/images/W3E_BLwr9ddBKnq9aRzk0_output_1778190688204.mp3"
+        },
+        {
+          "text": "Somehow he had run up this enormous debt. Somehow he had managed to spend all the money.",
+          "audio": "/api/images/0TlN6ld28K0NUVhdFP9h0_output_1778190721438.mp3"
+        },
+        {
+          "text": "When the boss demanded his money, the man begged to be forgiven. He even promised to pay it all back.",
+          "audio": "/api/images/6AhAjMS1P6fRWG4WKDdeg_output_1778190744704.mp3"
+        },
+        {
+          "text": "But the boss forgave him the whole debt. Just wiped the slate clean.",
+          "audio": "/api/images/BB_X65OUpmoQ3UMo6FWdT_output_1778190757504.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "parable_part_2",
+      "messages": [
+        {
+          "text": "Soon after, this same man — the one who had just been forgiven fifty million — saw a fellow who owed him a tiny debt. Something like a hundred dollars.",
+          "audio": "/api/images/P_uOnK4KgiC1crly-7xW4_output_1778190807619.mp3"
+        },
+        {
+          "text": "When the fellow couldn't pay, he had him thrown into jail.",
+          "audio": "/api/images/s3ei1aMQJQLnyQx_h0Kft_output_1778190820797.mp3"
+        },
+        {
+          "text": "People heard about it. They told the boss. And the boss got angry, and had the first man thrown into jail to be tortured until he paid back every penny.",
+          "audio": "/api/images/BNmQyxo37yyQlcb-U8j5g_output_1778190919356.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "parable_part_3",
+      "messages": [
+        {
+          "text": "And here's what Jesus said: \"This is how my Heavenly Father will treat each of you unless you forgive your brother from your heart.\" — Matthew 18:35",
+          "audio": "/api/images/And_heres_what_Jesus_said_This_Balance_Eleven_v3_019e1d01-fc54-709e-bcf0-79dbf3af6c96_1778603148267.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "deliverance_truth",
+      "messages": [
+        {
+          "text": "People's deliverance is delayed because they hold onto unforgiveness.",
+          "audio": "/api/images/rpYw2raSQYmY-OSIqGl0a_output_1778190876738.mp3"
+        },
+        {
+          "text": "Jesus cannot heal what you will not release. The enemy has legal ground in your life as long as you hold the debt.",
+          "audio": "/api/images/Jesus_cannot_heal_what_you_wil_Balance_Eleven_v3_019e1d02-1b40-7369-8539-e29647af8cb3_1778603150794.mp3"
+        },
+        {
+          "text": "Forgiveness is how you take that ground back.",
+          "audio": "/api/images/Forgiveness_is_how_you_take_th_Balance_Eleven_v3_019e1d02-3133-70c7-aff6-86a35e189a11_1778603161738.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "lets_try",
+      "messages": [
+        {
+          "text": "Let's try.",
+          "audio": "/api/images/Lets_try_Balance_Eleven_v3_019e1d02-71d9-7baa-aa28-661d2be99e52_1778603173813.mp3"
+        },
+        {
+          "text": "Some people say, \"I can say the words, but I feel like a hypocrite because forgiveness is not in my heart.\" In some cases forgiveness does seem humanly impossible. All we can do is make an act of the will, speak the words — which breaks the power of the enemy — and trust that the Lord will do the rest.",
+          "audio": "/api/images/Some_people_say_I_can_say_the_Balance_Eleven_v3_019e1d09-29ee-7d38-89a6-4ab81ea18f8c_1778605137625.mp3"
+        },
+        {
+          "text": "Even if you don't \"feel\" it, just say it and trust the Lord to assist. This is a choice. You choose to say and do.",
+          "audio": "/api/images/Even_if_you_dont_feel_it_just_Balance_Eleven_v3_019e1d02-e188-7da5-939d-ab68c7114a17_1778603212125.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "preparation_prayer",
+      "messages": [
+        {
+          "text": "Pray this with me, aloud:",
+          "audio": "/api/images/Pray_this_with_me_aloud_Balance_Eleven_v3_019e1d02-ed1b-7f61-a8c9-1c3de058d7db_1778603216855.mp3"
+        },
+        {
+          "text": "\"Lord, I know I am supposed to forgive, but I don't feel like it. The hurt is real, and the anger is heavy. But I invite You into my pain. I choose to want to forgive, and I ask for Your strength to do what I cannot do on my own.\"",
+          "audio": "/api/images/Lord_I_know_I_am_supposed_to_f_Balance_Eleven_v3_019e1d03-2840-7588-9efc-e5c267e58242_1778603224075.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "identification_intro",
+      "messages": [
+        {
+          "text": "Think of a person who hurt you.",
+          "audio": "/api/images/Think_of_a_person_who_hurt_you_Balance_Eleven_v3_019e1d03-9680-7f7e-89cf-0339e4c99bdc_1778603256500.mp3"
+        },
+        {
+          "text": "Say their name or describe the person — and be very specific in what you are forgiving them for.",
+          "audio": "/api/images/Say_their_name_or_describe_the_Balance_Eleven_v3_019e1d03-b33f-7fc3-a45f-caf77571bd61_1778603264450.mp3"
+        },
+        {
+          "text": "For example: \"My mom, who belittled me as a child by calling me names like ugly and stupid, and never showing me affection by hugging me.\"",
+          "audio": "/api/images/For_example_My_mom_who_belittl_Balance_Eleven_v3_019e1d03-db20-711b-a0e5-3dc0b45c4c53_1778603267814.mp3"
+        },
+        {
+          "text": "Or: \"My ex, who cheated on me repeatedly, lied about it, and made me feel betrayed, insecure, and afraid that I was not enough.\"",
+          "audio": "/api/images/Or_My_ex_who_cheated_on_me_rep_Balance_Eleven_v3_019e1d03-f299-7bac-898e-eb471172d510_1778603275190.mp3"
+        }
+      ]
+    },
+    {
+      "type": "open_text",
+      "id": "identification_name",
+      "question": "Who is the person?",
+      "variable": "person_name",
+      "required": true,
+      "questionAudio": "/api/images/Who_is_the_person_Balance_Eleven_v3_019e1d04-6c9f-732f-9cde-764f85513fbc_1778603305848.mp3"
+    },
+    {
+      "type": "narrator",
+      "id": "pain_intro",
+      "messages": [
+        {
+          "text": "Now think about what that person did. Let yourself feel the pain.",
+          "audio": "/api/images/Now_think_about_what_that_pers_Balance_Eleven_v3_019e1d04-8700-7042-a6d1-450a3e37d15e_1778603311804.mp3"
+        },
+        {
+          "text": "Forgiveness takes a deeper hold on us as we forgive from the place of pain. To say you forgive while denying the pain does not deal with the root.",
+          "audio": "/api/images/Forgiveness_takes_a_deeper_hol_Balance_Eleven_v3_019e1d04-aece-7bfc-89c0-2418271c728f_1778603318749.mp3"
+        }
+      ]
+    },
+    {
+      "type": "open_text",
+      "id": "identification_offense",
+      "question": "What did they do to you?",
+      "variable": "offense",
+      "required": true,
+      "questionAudio": "/api/images/What_did_they_do_to_you_Balance_Eleven_v3_019e1d05-14d7-7448-9cd8-995b74670179_1778603347840.mp3"
+    },
+    {
+      "type": "narrator",
+      "id": "forgiveness_declaration",
+      "messages": [
+        {
+          "text": "Once you have gotten in touch with the pain, say this out loud:",
+          "audio": "/api/images/Once_you_have_gotten_in_touch_Balance_Eleven_v3_019e1d05-3326-7d8e-a293-7834e3d4eb70_1778603349714.mp3"
+        }
+      ],
+      "dynamic_reflection": {
+        "template": "\"In the name of Jesus, I forgive {person_name} for {offense}.\"",
+        "references": [
+          "person_name",
+          "offense"
+        ]
+      }
+    },
+    {
+      "type": "narrator",
+      "id": "final_prayer",
+      "messages": [],
+      "dynamic_reflection": {
+        "template": "\"Lord, I trust that You are a just God, and You will handle this in Your way — not mine. I ask for Your healing in my heart. Fill the spaces where anger used to live with Your peace and love. Lord, I pray that You bless {person_name}. I ask that You would work in their life. Bring them to repentance. Bring them to healing. Bring them to You. I leave all judgment in Your hands. And I ask that You would free my heart to mean these words more deeply every time I pray them.\"",
+        "references": [
+          "person_name"
+        ]
+      }
+    }
+  ],
+  "optionSets": {},
+  "summaryTemplate": "Today I chose to forgive {{person_name}} for {{offense}}. I released that debt to God."
+}
