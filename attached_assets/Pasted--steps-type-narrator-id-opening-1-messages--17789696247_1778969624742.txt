@@ -1,0 +1,212 @@
+{
+  "steps": [
+    {
+      "type": "narrator",
+      "id": "opening_1",
+      "messages": [
+        {
+          "text": "We all carry wounds. Some are fresh. Others are buried so deep we've almost forgotten them — but they still shape how we live, how we love, and how we hide.",
+          "audio": "/api/images/We_all_carry_wounds_Some_are_f_Balance_Eleven_v3_019e3265-522b-7768-9bc2-aa5795a73c7b_1778962436504.mp3"
+        },
+        {
+          "text": "A wound is what happens when someone hurts us in a way that touches the core of who we are.",
+          "audio": "/api/images/A_wound_is_what_happens_when_s_Balance_Eleven_v3_019e3265-664f-75eb-80e7-215cffdf4667_1778962439557.mp3"
+        },
+        {
+          "text": "And often, in that moment of pain, two things take root: a lie we start to believe about ourselves, and a secret vow we make to protect ourselves from ever feeling that pain again.",
+          "audio": "/api/images/And_often_in_that_moment_of_pa_Balance_Eleven_v3_019e3265-8568-73b9-b978-2c3724ebc798_1778962443615.mp3"
+        },
+        {
+          "text": "Today, we're going to ask the Holy Spirit to bring one of those wounds to the surface — not to make you suffer again, but so Jesus can come and heal it.",
+          "audio": "/api/images/Today_were_going_to_ask_the_Ho_Balance_Eleven_v3_019e3265-a61b-7e62-8240-c86473ee5caf_1778962446335.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "holy_spirit_invitation",
+      "messages": [
+        {
+          "text": "Take a breath. Quiet your heart for a moment.",
+          "audio": "/api/images/Take_a_breath_Quiet_your_heart_Balance_Eleven_v3_019e3265-cd1e-74ce-89b7-cd65ce9dcb3d_1778962449514.mp3"
+        },
+        {
+          "text": "Pray this with me, aloud:",
+          "audio": "/api/images/Pray_this_with_me_aloud_Balance_Eleven_v3_019e3265-ed64-7663-8cb7-b0dbb63d681d_1778962452459.mp3"
+        },
+        {
+          "text": "\"Holy Spirit, I invite You into this moment. Bring to my mind the wound You want to heal today. I am not afraid, because You are with me. Show me what You want me to see.\"",
+          "audio": "/api/images/Holy_Spirit_I_invite_You_into_Balance_Eleven_v3_019e3266-143b-7baf-ac28-0b75e82f2019_1778962454460.mp3"
+        }
+      ]
+    },
+    {
+      "type": "narrator",
+      "id": "event_intro",
+      "messages": [
+        {
+          "text": "An event may rise up — maybe from childhood, maybe from last week. Something someone said. Something someone did, or didn't do. A moment when something inside you broke a little.",
+          "audio": "/api/images/An_event_may_rise_up_maybe_fro_Balance_Eleven_v3_019e3266-4833-7b82-bde4-0f339a5955a5_1778962456893.mp3"
+        },
+        {
+          "text": "Don't rush past it. Let yourself remember.",
+          "audio": "/api/images/Dont_rush_past_it_Let_yourself_Balance_Eleven_v3_019e3266-5c15-78b3-97bd-4a90ffeec0c3_1778962459371.mp3"
+        },
+        {
+          "text": "When you're ready, describe what happened.",
+          "audio": "/api/images/When_youre_ready_describe_what_Balance_Eleven_v3_019e3266-7de5-76e6-8b21-1c51bd32b29b_1778962462542.mp3"
+        }
+      ]
+    },
+    {
+      "type": "open_text",
+      "id": "event_description",
+      "question": "What happened?",
+      "variable": "wound_event",
+      "required": true,
+      "questionAudio": "/api/images/What_happened_Balance_Eleven_v3_019e3266-9c8c-75b4-bb44-510a1cb30888_1778962465505.mp3"
+    },
+    {
+      "type": "narrator",
+      "id": "feelings_intro",
+      "messages": [
+        {
+          "text": "Now stay with that memory for a moment.",
+          "audio": "/api/images/Now_stay_with_that_memory_for_Balance_Eleven_v3_019e3266-d1fd-782e-a047-8a7771bd688d_1778962467893.mp3"
+        },
+        {
+          "text": "When the wound happened — and maybe even now, as you remember it — what did you feel deep inside?",
+          "audio": "/api/images/When_the_wound_happened_and_ma_Balance_Eleven_v3_019e3266-fbb7-78d2-a2a0-5da8879219ea_1778962470692.mp3"
+        }
+      ]
+    },
+    {
+      "type": "single_select",
+      "id": "feelings_select",
+      "question": "Which of these did you feel most strongly?",
+      "variable": "wound_feeling",
+      "required": true,
+      "options": [
+        {
+          "id": "abandonment",
+          "text": "Abandonment"
+        },
+        {
+          "id": "shame",
+          "text": "Shame"
+        },
+        {
+          "id": "fear",
+          "text": "Fear"
+        },
+        {
+          "id": "powerlessness",
+          "text": "Powerlessness"
+        },
+        {
+          "id": "rejection",
+          "text": "Rejection"
+        },
+        {
+          "id": "hopelessness",
+          "text": "Hopelessness"
+        },
+        {
+          "id": "confusion",
+          "text": "Confusion"
+        }
+      ],
+      "questionAudio": ""
+    },
+    {
+      "type": "narrator",
+      "id": "belief_intro",
+      "messages": [
+        {
+          "text": "In the middle of that pain, something else often happens. A lie sneaks in.",
+          "audio": "/api/images/In_the_middle_of_that_pain_som_Balance_Eleven_v3_019e326d-6861-7cb9-a8ca-e5a49d9cc83f_1778962507255.mp3"
+        },
+        {
+          "text": "A wound speaks to us. It whispers something about who we are — and because we are hurting, we believe it.",
+          "audio": "/api/images/A_wound_speaks_to_us_It_whispe_Balance_Eleven_v3_019e326d-83dd-7639-b19a-0fadddaec09b_1778962509299.mp3"
+        },
+        {
+          "text": "For example: \"I am entirely on my own.\" \"I have no value.\" \"No one cares about me.\" \"I am too much.\" \"I am not enough.\"",
+          "audio": "/api/images/For_example_I_am_entirely_on_m_Balance_Eleven_v3_019e326d-98dc-76b8-af24-38b74322ecef_1778962520936.mp3"
+        },
+        {
+          "text": "These lies feel like facts. But they are not from God.",
+          "audio": "/api/images/These_lies_feel_like_facts_But_Balance_Eleven_v3_019e326d-d66f-7c51-9c04-b0c234c934c4_1778962541367.mp3"
+        }
+      ]
+    },
+    {
+      "type": "open_text",
+      "id": "belief_question",
+      "question": "What did you start to believe about yourself in that wound?",
+      "variable": "lie_believed",
+      "required": true,
+      "questionAudio": "/api/images/What_did_you_start_to_believe_Balance_Eleven_v3_019e326e-0e06-784e-880d-9849b1bbfec3_1778962543594.mp3"
+    },
+    {
+      "type": "narrator",
+      "id": "vow_intro",
+      "messages": [
+        {
+          "text": "When a wound runs deep, we don't just believe a lie — we also make a promise. A silent vow. A rule we set for ourselves so we never have to feel that pain again.",
+          "audio": "/api/images/When_a_wound_runs_deep_we_dont_Balance_Eleven_v3_019e326e-3b0a-70b2-9ffd-143e0fabe08c_1778962588179.mp3"
+        },
+        {
+          "text": "For example: \"I will never rely on anyone else.\" \"I will keep everyone at arm's length.\" \"I will stay in total control.\" \"I will never let anyone see the real me.\"",
+          "audio": "/api/images/For_example_I_will_never_rely_Balance_Eleven_v3_019e326e-61fa-7c3a-9277-1a00130583e1_1778962591377.mp3"
+        },
+        {
+          "text": "These vows feel like protection. But over time, they become prisons. They block love from coming in, and they block God from doing what only He can do.",
+          "audio": "/api/images/These_vows_feel_like_protectio_Balance_Eleven_v3_019e326e-7932-7245-af3b-155b60965c5d_1778962593661.mp3"
+        }
+      ]
+    },
+    {
+      "type": "open_text",
+      "id": "vow_question",
+      "question": "What secret promise or inner vow did you make to protect yourself?",
+      "variable": "inner_vow",
+      "required": true,
+      "questionAudio": "/api/images/What_secret_promise_or_inner_v_Balance_Eleven_v3_019e326e-90ee-7267-b90d-5f8269544b83_1778962596292.mp3"
+    },
+    {
+      "type": "narrator",
+      "id": "renunciation",
+      "messages": [
+        {
+          "text": "Now we bring all of this to Jesus.",
+          "audio": "/api/images/Now_we_bring_all_of_this_to_Je_Balance_Eleven_v3_019e326e-a654-7ff4-8e92-c10bcc5c2db3_1778962600166.mp3"
+        },
+        {
+          "text": "Say this out loud — even if you don't feel it. Words spoken in faith have power.",
+          "audio": "/api/images/Say_this_out_loud_even_if_you_Balance_Eleven_v3_019e326e-cc92-73e7-92d5-cf60ca599297_1778962610080.mp3"
+        }
+      ],
+      "dynamic_reflection": {
+        "template": "\"In the name of Jesus, I renounce the lie that {lie_believed}. I break the inner vow I made — that {inner_vow} — and I lay it down at the foot of the Cross. I do not need to protect myself anymore. Jesus, You are my protector.\"",
+        "references": [
+          "lie_believed",
+          "inner_vow"
+        ]
+      }
+    },
+    {
+      "type": "narrator",
+      "id": "final_prayer",
+      "messages": [],
+      "dynamic_reflection": {
+        "template": "\"Lord Jesus, I bring You this wound — {wound_event}. I bring You the pain that came with it. You see it all. You were there, even when I felt entirely alone. Heal this place in me. Speak Your truth louder than the lie. Fill me with the peace that only You can give. And where I have sinned in response to this wound — in bitterness, in pride, in shutting You and others out — forgive me. Free me, Lord. Make me whole. In Your holy name I pray. Amen.\"",
+        "references": [
+          "wound_event"
+        ]
+      }
+    }
+  ],
+  "optionSets": {},
+  "summaryTemplate": "Today I brought my wound to Jesus — {{wound_event}}. I renounced the lie that {{lie_believed}}, broke the inner vow that {{inner_vow}}, and asked Him to heal me."
+}
