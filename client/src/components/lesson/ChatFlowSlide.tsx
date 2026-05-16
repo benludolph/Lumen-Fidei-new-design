@@ -458,17 +458,21 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   const skipRevealRef = useRef(false);
   const hasUserMessageRef = useRef(false);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
-  const audioUnlockedRef = useRef(false);
+  // iOS Safari locks audio per-element: a new Audio() created inside setTimeout
+  // is blocked even after you played a different element during a gesture.
+  // Fix: create ONE persistent audio element during the user gesture and reuse
+  // it for every clip by swapping its src — iOS keeps that element "activated"
+  // for the whole page session.
+  const iosAudioElRef = useRef<HTMLAudioElement | null>(null);
 
-  // iOS Safari requires audio to be triggered within a synchronous user-gesture
-  // call stack. We call this on every user interaction to "unlock" the audio
-  // context before the async reveal chain begins.
   const unlockAudio = useCallback(() => {
-    if (audioUnlockedRef.current) return;
-    const silence = new Audio(
-      "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="
-    );
-    silence.play().then(() => { audioUnlockedRef.current = true; }).catch(() => {});
+    if (iosAudioElRef.current) return; // already created
+    const el = new Audio();
+    // Play a minimal silent WAV synchronously within the gesture call stack.
+    // This "activates" the element; we reuse it for all future clips.
+    el.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+    el.play().catch(() => {});
+    iosAudioElRef.current = el;
   }, []);
   // Keep answers in a ref so reveal closures see the latest value
   const answersRef = useRef(answers);
@@ -586,8 +590,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           ]);
           const audioUrl = step.messageAudios[msgIdx];
           if (audioUrl) {
-            if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
-            const clip = new Audio(audioUrl);
+            if (activeAudioRef.current) { activeAudioRef.current.pause(); }
+            // Reuse the iOS-activated element if available; fall back to new Audio()
+            const clip = iosAudioElRef.current ?? new Audio();
+            clip.src = audioUrl;
             activeAudioRef.current = clip;
             const onEnd = () => {
               if (revealCancelRef.current) return;
@@ -595,8 +601,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               schedule(() => reveal(msgIdx + 1, messages), rand(200, 400));
             };
             clip.addEventListener("ended", onEnd, { once: true });
-            // If play() is blocked (e.g. iOS autoplay policy), fall back to timed advance
-            // so the flow doesn't get permanently stuck waiting for an "ended" that never fires.
+            // If play() is still blocked, fall back to timed advance so flow never freezes
             clip.play().catch(() => {
               clip.removeEventListener("ended", onEnd);
               activeAudioRef.current = null;
@@ -617,8 +622,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           ]);
           const audioUrl = step.messageAudios[msgIdx];
           if (audioUrl) {
-            if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
-            const clip = new Audio(audioUrl);
+            if (activeAudioRef.current) { activeAudioRef.current.pause(); }
+            // Reuse the iOS-activated element if available
+            const clip = iosAudioElRef.current ?? new Audio();
+            clip.src = audioUrl;
             activeAudioRef.current = clip;
             const onEnd = () => {
               if (revealCancelRef.current) return;
@@ -626,7 +633,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
               schedule(() => reveal(msgIdx + 1, messages), rand(200, 400));
             };
             clip.addEventListener("ended", onEnd, { once: true });
-            // Same fallback: if iOS blocks play(), advance on timer instead of freezing
+            // Fallback: timed advance if play() is blocked
             clip.play().catch(() => {
               clip.removeEventListener("ended", onEnd);
               activeAudioRef.current = null;
