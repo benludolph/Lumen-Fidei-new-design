@@ -458,6 +458,18 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
   const skipRevealRef = useRef(false);
   const hasUserMessageRef = useRef(false);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
+
+  // iOS Safari requires audio to be triggered within a synchronous user-gesture
+  // call stack. We call this on every user interaction to "unlock" the audio
+  // context before the async reveal chain begins.
+  const unlockAudio = useCallback(() => {
+    if (audioUnlockedRef.current) return;
+    const silence = new Audio(
+      "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="
+    );
+    silence.play().then(() => { audioUnlockedRef.current = true; }).catch(() => {});
+  }, []);
   // Keep answers in a ref so reveal closures see the latest value
   const answersRef = useRef(answers);
   useEffect(() => { answersRef.current = answers; }, [answers]);
@@ -574,18 +586,22 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           ]);
           const audioUrl = step.messageAudios[msgIdx];
           if (audioUrl) {
-            // Stop any previous clip
             if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
             const clip = new Audio(audioUrl);
             activeAudioRef.current = clip;
-            clip.play().catch(() => {});
             const onEnd = () => {
               if (revealCancelRef.current) return;
               activeAudioRef.current = null;
-              // Small breath after audio ends, then next
               schedule(() => reveal(msgIdx + 1, messages), rand(200, 400));
             };
             clip.addEventListener("ended", onEnd, { once: true });
+            // If play() is blocked (e.g. iOS autoplay policy), fall back to timed advance
+            // so the flow doesn't get permanently stuck waiting for an "ended" that never fires.
+            clip.play().catch(() => {
+              clip.removeEventListener("ended", onEnd);
+              activeAudioRef.current = null;
+              schedule(() => reveal(msgIdx + 1, messages), rand(350, 550));
+            });
           } else {
             schedule(() => reveal(msgIdx + 1, messages), rand(350, 550));
           }
@@ -604,13 +620,18 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
             if (activeAudioRef.current) { activeAudioRef.current.pause(); activeAudioRef.current = null; }
             const clip = new Audio(audioUrl);
             activeAudioRef.current = clip;
-            clip.play().catch(() => {});
             const onEnd = () => {
               if (revealCancelRef.current) return;
               activeAudioRef.current = null;
               schedule(() => reveal(msgIdx + 1, messages), rand(200, 400));
             };
             clip.addEventListener("ended", onEnd, { once: true });
+            // Same fallback: if iOS blocks play(), advance on timer instead of freezing
+            clip.play().catch(() => {
+              clip.removeEventListener("ended", onEnd);
+              activeAudioRef.current = null;
+              schedule(() => reveal(msgIdx + 1, messages), rand(450, 700));
+            });
           } else {
             schedule(() => reveal(msgIdx + 1, messages), rand(450, 700));
           }
@@ -662,6 +683,10 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
 
   // ── Advance to next step ──
   const advanceToNext = useCallback((value: string, displayText: string) => {
+    // Unlock iOS audio synchronously inside this user-gesture call stack
+    // so subsequent programmatic plays in setTimeout callbacks are permitted.
+    unlockAudio();
+
     const step = currentStep;
     if (!step) return;
 
@@ -760,10 +785,11 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     } else {
       revealTimer.current = setTimeout(doAdvance, preResponseDelay);
     }
-  }, [currentStep, queue, renderedMessages, answers, flatSteps, isRich, saveAnswer]);
+  }, [currentStep, queue, renderedMessages, answers, flatSteps, isRich, saveAnswer, unlockAudio]);
 
   // ── Message-only continue ──
   const handleMessageOnlyContinue = useCallback(() => {
+    unlockAudio();
     const step = currentStep;
     if (!step) return;
     if (step.isFinal || queue.slice(1).length === 0) {
@@ -774,7 +800,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
     const snapshot: FlowSnapshot = { queue: [...queue], renderedMessages, answers };
     setHistoryStack(prev => [...prev, snapshot]);
     setQueue(queue.slice(1));
-  }, [currentStep, queue, renderedMessages, answers, saveAnswer]);
+  }, [currentStep, queue, renderedMessages, answers, saveAnswer, unlockAudio]);
 
   // ── Rewind via snapshot ──
   const handleRewind = useCallback((targetStepId: string) => {
