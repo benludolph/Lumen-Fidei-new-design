@@ -232,29 +232,20 @@ function MusicCard({ url, title }: { url: string; title?: string }) {
             </div>
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.68rem",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.09em",
-              color: "rgba(255,255,255,0.42)",
-              marginBottom: "5px",
-            }}>
-              Optional Listening
-            </div>
-            <div style={{
-              fontFamily: "'IvyOra Display', serif",
-              fontSize: "1.1rem",
-              fontWeight: 400,
-              color: "rgba(255,255,255,0.92)",
-              lineHeight: 1.3,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}>
-              {title || "Listen to this song"}
-            </div>
+            {title && (
+              <div style={{
+                fontFamily: "'IvyOra Display', serif",
+                fontSize: "1.1rem",
+                fontWeight: 400,
+                color: "rgba(255,255,255,0.92)",
+                lineHeight: 1.3,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}>
+                {title}
+              </div>
+            )}
             <div style={{
               fontFamily: "'Afacad', sans-serif",
               fontSize: "0.78rem",
@@ -311,26 +302,15 @@ function MusicCard({ url, title }: { url: string; title?: string }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <Music style={{ width: 20, height: 20, color: "rgba(255,255,255,0.45)", flexShrink: 0 }} />
-          <div>
-            <div style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.68rem",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.09em",
-              color: "rgba(255,255,255,0.42)",
-              marginBottom: "3px",
-            }}>
-              Optional Listening
-            </div>
+          {title && (
             <div style={{
               fontFamily: "'IvyOra Display', serif",
               fontSize: "1.05rem",
               color: "rgba(255,255,255,0.9)",
             }}>
-              {title || "Listen to this song"}
+              {title}
             </div>
-          </div>
+          )}
         </div>
         <audio
           controls
