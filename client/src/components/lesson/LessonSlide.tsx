@@ -70,8 +70,7 @@ export type SlideType =
   | "captivity_builder"
   | "confession_finder"
   | "pdf_download"
-  | "guided_prayer_process"
-  | "mp3";
+  | "guided_prayer_process";
 
 
 export interface QuizData {

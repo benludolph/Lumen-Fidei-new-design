@@ -2338,7 +2338,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "mp3", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2371,7 +2371,6 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   confession_finder: "Confession Finder",
   pdf_download: "PDF Download",
   guided_prayer_process: "Guided Prayer",
-  mp3: "Audio Player",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2400,7 +2399,6 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   confession_finder: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   pdf_download: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   guided_prayer_process: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-  mp3: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
 };
 
 // ============================================================
@@ -5840,7 +5838,6 @@ function TrackAContentManagementView() {
     if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
     if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
-    if (type === "mp3") return JSON.stringify({ url: "", title: "" });
     return "";
   };
 
@@ -7159,7 +7156,6 @@ function getDefaultSlideContent(type: string): string {
   if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
   if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
   if (type === "guided_prayer_process") return GUIDED_PRAYER_OCCULT_DEFAULT;
-  if (type === "mp3") return JSON.stringify({ url: "", title: "" });
   return "";
 }
 
