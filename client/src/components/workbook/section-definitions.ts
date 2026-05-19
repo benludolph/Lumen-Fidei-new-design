@@ -1,12 +1,19 @@
 export type SectionType = "list_builder" | "strongman_checklist";
 
+export interface SectionFieldOption {
+  label: string;
+  value: string;
+}
+
 export interface SectionField {
   key: string;
   label: string;
   placeholder?: string;
   required?: boolean;
-  /** Controls whether a single-line input or multi-line textarea is shown. Defaults to "textarea". */
-  type?: "text" | "textarea";
+  /** Controls the rendered input control. Defaults to "textarea". */
+  type?: "text" | "textarea" | "enum";
+  /** Options list — required when type is "enum". */
+  enumOptions?: SectionFieldOption[];
 }
 
 export interface SectionDefinition {

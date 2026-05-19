@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "wouter";
+import { ChevronLeft } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { getSectionById } from "./section-definitions";
@@ -275,6 +277,31 @@ export default function SectionView({ sectionId }: SectionViewProps) {
       <div style={{ maxWidth: "720px", width: "100%" }}>
         {/* Section header */}
         <div style={{ marginBottom: "32px" }}>
+          {/* Back link for deep-link-first entry */}
+          <Link href="/resources/tools/freedom-workbook">
+            <span
+              data-testid="link-back-to-workbook"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                color: "rgba(255,255,255,0.3)",
+                cursor: "pointer",
+                marginBottom: "16px",
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)")}
+            >
+              <ChevronLeft style={{ width: "12px", height: "12px" }} />
+              Freedom Workbook
+            </span>
+          </Link>
           <p
             style={{
               fontFamily: "'Afacad', sans-serif",

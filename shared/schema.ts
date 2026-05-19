@@ -284,7 +284,7 @@ export const workbookEntries = pgTable("workbook_entries", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   sectionId: integer("section_id").notNull(), // 1–18
-  entryData: jsonb("entry_data").notNull().$type<Record<string, string>>(), // flexible field bag per section
+  entryData: jsonb("entry_data").notNull().$type<Record<string, unknown>>(), // flexible field bag per section
   position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [

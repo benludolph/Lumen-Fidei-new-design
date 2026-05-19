@@ -5,6 +5,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import type { SectionDefinition } from "./section-definitions";
+import type { SectionField } from "./section-definitions";
 import type { WorkbookEntry } from "@shared/schema";
 
 interface ListBuilderProps {
@@ -70,7 +71,7 @@ function EntryCard({
         }}
       >
         {section.fields.map((field) => {
-          const isTextarea = (field.type ?? "textarea") === "textarea";
+          const fieldType = field.type ?? "textarea";
           const inputStyle: CSSProperties = {
             width: "100%",
             background: "rgba(255,255,255,0.04)",
@@ -97,7 +98,7 @@ function EntryCard({
               >
                 {field.label}
               </label>
-              {isTextarea ? (
+              {fieldType === "textarea" ? (
                 <textarea
                   value={form[field.key] ?? ""}
                   onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
@@ -108,6 +109,18 @@ function EntryCard({
                   onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
                   onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
                 />
+              ) : fieldType === "enum" ? (
+                <select
+                  value={form[field.key] ?? ""}
+                  onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                  data-testid={`input-entry-${entry.id}-${field.key}`}
+                  style={{ ...inputStyle, appearance: "none" as const }}
+                >
+                  <option value="" disabled style={{ background: "#1a1a1a" }}>{field.placeholder ?? `Select ${field.label}`}</option>
+                  {(field.enumOptions ?? []).map((opt) => (
+                    <option key={opt.value} value={opt.value} style={{ background: "#1a1a1a" }}>{opt.label}</option>
+                  ))}
+                </select>
               ) : (
                 <input
                   type="text"
@@ -353,7 +366,7 @@ function AddEntryForm({
       }}
     >
       {section.fields.map((field) => {
-        const isTextarea = (field.type ?? "textarea") === "textarea";
+        const fieldType = field.type ?? "textarea";
         const inputStyle: CSSProperties = {
           width: "100%",
           background: "rgba(255,255,255,0.04)",
@@ -383,7 +396,7 @@ function AddEntryForm({
                 <span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
               )}
             </label>
-            {isTextarea ? (
+            {fieldType === "textarea" ? (
               <textarea
                 value={form[field.key] ?? ""}
                 onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
@@ -394,6 +407,18 @@ function AddEntryForm({
                 onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
               />
+            ) : fieldType === "enum" ? (
+              <select
+                value={form[field.key] ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                data-testid={`input-add-${field.key}`}
+                style={{ ...inputStyle, appearance: "none" as const }}
+              >
+                <option value="" disabled style={{ background: "#1a1a1a" }}>{field.placeholder ?? `Select ${field.label}`}</option>
+                {(field.enumOptions ?? []).map((opt) => (
+                  <option key={opt.value} value={opt.value} style={{ background: "#1a1a1a" }}>{opt.label}</option>
+                ))}
+              </select>
             ) : (
               <input
                 type="text"
