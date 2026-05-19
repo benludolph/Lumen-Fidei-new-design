@@ -3087,14 +3087,6 @@ async function seed() {
     await ensureSchemaColumns();
     await migrateFilesystemImages();
 
-    // Clear old pre-loaded module images from the database.
-    // Earlier versions of the app shipped with cartoony placeholder images; we
-    // never want those to appear. Admins can still upload their own images via
-    // the admin panel — this only runs at startup and zeroes out any stale value.
-    await db.update(prelimModules).set({ imageUrl: null });
-    await db.update(trackAContent).set({ imageUrl: null });
-    await db.update(healingContent).set({ imageUrl: null });
-
     // NOTE: do NOT delete prelim modules — admin can create up to 3 (or more)
 
     // Seed users if needed
