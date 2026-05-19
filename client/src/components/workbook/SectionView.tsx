@@ -1,37 +1,9 @@
 import { Link } from "wouter";
 import { ChevronLeft } from "lucide-react";
 import ListBuilder from "./ListBuilder";
+import LiesAndTruthsEditor from "./LiesAndTruthsEditor";
+import PatternsChecklist from "./PatternsChecklist";
 import { getSectionById } from "./section-definitions";
-import type { SectionDefinition } from "./section-definitions";
-
-function PlaceholderView({ section }: { section: SectionDefinition }) {
-  const isLiesAndTruths = section.type === "lies_and_truths";
-  return (
-    <div
-      style={{
-        borderRadius: "8px",
-        border: "0.5px solid rgba(255,255,255,0.06)",
-        background: "rgba(255,255,255,0.02)",
-        padding: "24px",
-      }}
-    >
-      <p
-        style={{
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "0.9rem",
-          color: "rgba(255,255,255,0.35)",
-          margin: 0,
-          fontStyle: "italic",
-          lineHeight: 1.6,
-        }}
-      >
-        {isLiesAndTruths
-          ? "The full Lies & Truths editor is coming soon. This section will let you name the lies you carry and claim a Scripture truth against each one."
-          : "The Dominant Spiritual Patterns checklist is coming soon. This section will let you identify ruling spirits and patterns that have influenced your life."}
-      </p>
-    </div>
-  );
-}
 
 interface SectionViewProps {
   sectionId: number;
@@ -136,9 +108,11 @@ export default function SectionView({ sectionId }: SectionViewProps) {
           </p>
         </div>
 
-        {/* Content */}
-        {section.type === "lies_and_truths" || section.type === "patterns_checklist" ? (
-          <PlaceholderView section={section} />
+        {/* Content — dispatch by section type */}
+        {section.type === "lies_and_truths" ? (
+          <LiesAndTruthsEditor />
+        ) : section.type === "patterns_checklist" ? (
+          <PatternsChecklist />
         ) : (
           <ListBuilder section={section} />
         )}

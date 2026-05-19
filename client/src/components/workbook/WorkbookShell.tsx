@@ -6,7 +6,46 @@ import { Link } from "wouter";
 import { SECTIONS } from "./section-definitions";
 import PrayerRender from "./PrayerRender";
 import SessionWrapper from "./SessionWrapper";
-import type { WorkbookSummary, WorkbookStreakStatus } from "@shared/schema";
+import type { WorkbookSummary, WorkbookStreakStatus, WorkbookEntry } from "@shared/schema";
+
+function Section6Badge({ liesCount, truthsCount }: { liesCount: number; truthsCount: number }) {
+  if (liesCount === 0) {
+    return (
+      <span
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.7rem",
+          fontWeight: 600,
+          color: "rgba(255,255,255,0.2)",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+        }}
+      >
+        Empty
+      </span>
+    );
+  }
+  return (
+    <span
+      style={{
+        fontFamily: "'Afacad', sans-serif",
+        fontSize: "0.7rem",
+        fontWeight: 600,
+        color: "rgba(255,255,255,0.4)",
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+      }}
+    >
+      {liesCount} {liesCount === 1 ? "lie" : "lies"}
+      {truthsCount > 0 && (
+        <span style={{ color: "rgba(255,200,100,0.6)" }}>
+          {", "}
+          {truthsCount} {truthsCount === 1 ? "truth" : "truths"}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function StatusBadge({ count, attested }: { count: number; attested: boolean }) {
   if (attested) {
@@ -97,6 +136,15 @@ export default function WorkbookShell() {
   const { data: streak3 } = useQuery<WorkbookStreakStatus>({
     queryKey: ["/api/workbook/streak/prayer_3"],
   });
+
+  const { data: section6Entries = [] } = useQuery<WorkbookEntry[]>({
+    queryKey: ["/api/workbook/6"],
+  });
+  const section6LiesCount = section6Entries.length;
+  const section6TruthsCount = section6Entries.filter((e) => {
+    const d = e.entryData as Record<string, string>;
+    return typeof d?.truth_statement === "string" && d.truth_statement.trim().length > 0;
+  }).length;
 
   const totalSections = SECTIONS.length;
   const completedSections = SECTIONS.filter((s) => {
@@ -265,7 +313,11 @@ export default function WorkbookShell() {
                     </div>
 
                     {/* Status */}
-                    <StatusBadge count={count} attested={attested} />
+                    {section.id === 6 ? (
+                      <Section6Badge liesCount={section6LiesCount} truthsCount={section6TruthsCount} />
+                    ) : (
+                      <StatusBadge count={count} attested={attested} />
+                    )}
 
                     <ChevronRight style={{ width: "14px", height: "14px", color: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
                   </div>
