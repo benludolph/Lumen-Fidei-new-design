@@ -3,7 +3,7 @@ import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
-  workbookEntries, workbookAttestations, workbookStreaks,
+  workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -30,6 +30,7 @@ import {
   type WorkbookAttestation,
   type WorkbookSummary,
   type WorkbookStreak, type PrayerId, type WorkbookStreakStatus,
+  type UserProfile,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -176,6 +177,16 @@ export interface IStorage {
   // Workbook Streaks
   getWorkbookStreakStatus(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus>;
   completeWorkbookStreak(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus>;
+
+  // User Profile
+  getUserProfile(userId: number): Promise<UserProfile | null>;
+  upsertUserProfile(userId: number, data: {
+    familyMembers: string[];
+    spouseName: string;
+    childrenNames: string[];
+    chronicIssues: string[];
+    chronicIdentityLabels: string[];
+  }): Promise<UserProfile>;
 
   // session store
   sessionStore: any;
@@ -1165,6 +1176,30 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return this.buildStreakStatus(row, prayerId);
+  }
+
+  // User Profile
+  async getUserProfile(userId: number): Promise<UserProfile | null> {
+    const [profile] = await db.select().from(userProfiles).where(eq(userProfiles.userId, userId));
+    return profile ?? null;
+  }
+
+  async upsertUserProfile(userId: number, data: {
+    familyMembers: string[];
+    spouseName: string;
+    childrenNames: string[];
+    chronicIssues: string[];
+    chronicIdentityLabels: string[];
+  }): Promise<UserProfile> {
+    const [result] = await db
+      .insert(userProfiles)
+      .values({ userId, ...data, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: userProfiles.userId,
+        set: { ...data, updatedAt: new Date() },
+      })
+      .returning();
+    return result;
   }
 }
 

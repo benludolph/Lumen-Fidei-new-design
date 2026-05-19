@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   Video,
-  NotebookPen
+  NotebookPen,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -98,6 +99,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
             </div>
             <NavItem href="/messages" icon={MessageSquare} label="Messages" badge={unreadCount} onClick={onNavClick} />
             <NavItem href="/resources" icon={Library} label="Resources" onClick={onNavClick} />
+            <NavItem href="/profile" icon={UserCircle} label="My Profile" onClick={onNavClick} />
           </>
         )}
       </div>

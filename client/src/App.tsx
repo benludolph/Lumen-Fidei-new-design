@@ -28,6 +28,7 @@ import DailyRenewalResource from "@/pages/DailyRenewalResource";
 import HealingDashboard from "@/pages/HealingDashboard";
 import HealingLesson from "@/pages/HealingLesson";
 import HealingJournal from "@/pages/HealingJournal";
+import ProfilePage from "@/pages/ProfilePage";
 
 // Standard Protected Route Wrapper — role-based
 function ProtectedRoute({ 
@@ -153,6 +154,10 @@ function Router() {
 
       <Route path="/resources/tools/daily-renewal">
         <ProtectedRoute component={DailyRenewalResource} />
+      </Route>
+
+      <Route path="/profile">
+        <ProtectedRoute component={ProfilePage} />
       </Route>
 
       <Route path="/resources/:id">

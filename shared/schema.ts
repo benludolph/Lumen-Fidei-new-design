@@ -339,6 +339,24 @@ export type WorkbookStreakStatus = {
   streakActive: boolean;
 };
 
+// === USER PROFILE TABLE ===
+
+// Per-user identity/family data that feeds the Daily Prayer
+export const userProfiles = pgTable("user_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
+  familyMembers: text("family_members").array().notNull(),
+  spouseName: text("spouse_name").notNull().default(""),
+  childrenNames: text("children_names").array().notNull(),
+  chronicIssues: text("chronic_issues").array().notNull(),
+  chronicIdentityLabels: text("chronic_identity_labels").array().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({ id: true, updatedAt: true });
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
+
 // Password reset tokens — one-time use, expire after 1 hour
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),

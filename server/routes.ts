@@ -2946,6 +2946,32 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // === User Profile ===
+
+  // GET /api/user-profile — returns current user's profile or null
+  app.get("/api/user-profile", requireAuth, async (req, res) => {
+    const profile = await storage.getUserProfile(req.user!.id);
+    if (!profile) return res.status(404).json(null);
+    res.json(profile);
+  });
+
+  // PUT /api/user-profile — upserts the current user's profile
+  app.put("/api/user-profile", requireAuth, writeLimiter, async (req, res) => {
+    const schema = z.object({
+      familyMembers: z.array(z.string().max(200)).max(100),
+      spouseName: z.string().max(300),
+      childrenNames: z.array(z.string().max(200)).max(50),
+      chronicIssues: z.array(z.string().max(500)).max(100),
+      chronicIdentityLabels: z.array(z.string().max(300)).max(100),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0].message });
+    }
+    const profile = await storage.upsertUserProfile(req.user!.id, parsed.data);
+    res.json(profile);
+  });
+
   // Seed Data
   await seed();
 
