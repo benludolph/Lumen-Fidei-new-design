@@ -36,7 +36,10 @@ function filterEntries(
   if (!filter) return entries;
   switch (filter) {
     case "where_is_family_harm":
-      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.is_family_harm === true);
+      return entries.filter((e) => {
+        const v = (e.entryData as Record<string, unknown>)?.is_family_harm;
+        return v === true || v === "true";
+      });
     case "where_kind_curse":
       return entries.filter((e) => (e.entryData as Record<string, unknown>)?.kind === "Curse against family");
     case "where_kind_blood_contract":
@@ -48,7 +51,10 @@ function filterEntries(
     case "where_truth_nonempty":
       return entries.filter((e) => Boolean(((e.entryData as Record<string, unknown>)?.truth_statement as string)?.trim()));
     case "where_for_healing":
-      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.for_healing === true);
+      return entries.filter((e) => {
+        const v = (e.entryData as Record<string, unknown>)?.for_healing;
+        return v === true || v === "true";
+      });
     case "whose_father":
       return entries.filter((e) => (e.entryData as Record<string, unknown>)?.whose === "Father");
     case "whose_mother":
