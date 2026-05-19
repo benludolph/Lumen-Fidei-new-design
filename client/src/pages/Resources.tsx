@@ -182,7 +182,7 @@ function FreedomWorkbookCard() {
               Freedom Workbook
             </p>
             <p className="type-body-xs" style={{ color: "#8a8f98" }}>
-              18-section spiritual inventory
+              23-section spiritual inventory
             </p>
           </div>
           <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
