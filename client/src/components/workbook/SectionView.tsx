@@ -65,7 +65,7 @@ export default function SectionView({ sectionId }: SectionViewProps) {
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)")}
             >
               <ChevronLeft style={{ width: "12px", height: "12px" }} />
-              Freedom Workbook
+              The Deliverance Workbook
             </span>
           </Link>
           <p
@@ -80,7 +80,7 @@ export default function SectionView({ sectionId }: SectionViewProps) {
               marginBottom: "8px",
             }}
           >
-            Section {sectionId} · Freedom Workbook
+            Section {sectionId} · The Deliverance Workbook
           </p>
           <h1
             className="font-serif"

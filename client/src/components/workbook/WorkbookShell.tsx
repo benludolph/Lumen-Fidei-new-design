@@ -201,7 +201,7 @@ export default function WorkbookShell() {
               marginBottom: "12px",
             }}
           >
-            Freedom Workbook
+            The Deliverance Workbook
           </h1>
           <p className="type-body-lg" style={{ color: "var(--white-60)", margin: 0 }}>
             A 23-section spiritual inventory to prepare your heart for freedom prayer.

@@ -458,7 +458,7 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
             }
           >
             <ChevronLeft style={{ width: "12px", height: "12px" }} />
-            Freedom Workbook
+            The Deliverance Workbook
           </button>
 
           <div

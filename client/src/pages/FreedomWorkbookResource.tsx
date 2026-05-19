@@ -43,7 +43,7 @@ function Breadcrumb({ sectionName }: { sectionName?: string }) {
                 className="type-body-lg"
                 style={{ color: "var(--white-60)", cursor: "pointer", whiteSpace: "nowrap" }}
               >
-                Freedom Workbook
+                The Deliverance Workbook
               </span>
             </Link>
             <div style={{ width: "12px", height: "12px", opacity: 0.5, flexShrink: 0 }}>
@@ -63,7 +63,7 @@ function Breadcrumb({ sectionName }: { sectionName?: string }) {
             className="type-body-lg"
             style={{ color: "var(--white-60)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "300px" }}
           >
-            Freedom Workbook
+            The Deliverance Workbook
           </span>
         )}
       </PageContainer>

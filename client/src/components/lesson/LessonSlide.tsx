@@ -2772,7 +2772,7 @@ function WorkbookLinkSlide({
   }
 
   const section = sectionId != null ? getSectionById(sectionId) : undefined;
-  const displayName = section?.name ?? label ?? "Freedom Workbook";
+  const displayName = section?.name ?? label ?? "The Deliverance Workbook";
   const href = sectionId != null
     ? `/resources/tools/freedom-workbook/${sectionId}`
     : "/resources/tools/freedom-workbook";
@@ -2815,7 +2815,7 @@ function WorkbookLinkSlide({
             marginBottom: "4px",
           }}
         >
-          Freedom Workbook
+          The Deliverance Workbook
         </p>
         <p
           style={{
