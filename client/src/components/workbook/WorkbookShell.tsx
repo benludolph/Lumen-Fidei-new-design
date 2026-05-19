@@ -80,7 +80,7 @@ function StreakPip({ count, max }: { count: number; max: number }) {
   );
 }
 
-type ShellView = "list" | "prayer_1" | "prayer_2" | "session";
+type ShellView = "list" | "prayer_1" | "prayer_2" | "prayer_3" | "session";
 
 export default function WorkbookShell() {
   const [view, setView] = useState<ShellView>("list");
@@ -92,6 +92,10 @@ export default function WorkbookShell() {
 
   const { data: streak2 } = useQuery<WorkbookStreakStatus>({
     queryKey: ["/api/workbook/streak/prayer_2"],
+  });
+
+  const { data: streak3 } = useQuery<WorkbookStreakStatus>({
+    queryKey: ["/api/workbook/streak/prayer_3"],
   });
 
   const totalSections = SECTIONS.length;
@@ -108,12 +112,18 @@ export default function WorkbookShell() {
     return <PrayerRender prayerId="prayer_2" onDone={() => setView("list")} />;
   }
 
+  if (view === "prayer_3") {
+    return <PrayerRender prayerId="prayer_3" onDone={() => setView("list")} />;
+  }
+
   if (view === "session") {
     return <SessionWrapper onDismiss={() => setView("list")} />;
   }
 
   const streak2Count = streak2?.count ?? 0;
   const streak2CanComplete = streak2?.canCompleteToday !== false;
+  const streak3Count = streak3?.count ?? 0;
+  const streak3CanComplete = streak3?.canCompleteToday !== false;
 
   return (
     <div
@@ -146,7 +156,7 @@ export default function WorkbookShell() {
             Freedom Workbook
           </h1>
           <p className="type-body-lg" style={{ color: "var(--white-60)", margin: 0 }}>
-            A 18-section spiritual inventory to prepare your heart for freedom prayer.
+            A 23-section spiritual inventory to prepare your heart for freedom prayer.
           </p>
         </div>
 
@@ -268,7 +278,7 @@ export default function WorkbookShell() {
         {/* Prayer & Session CTAs */}
         <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "8px" }}>
 
-          {/* Prayer #1 — one-time freedom prayer */}
+          {/* Personal Deliverance Prayer — one-time */}
           <div
             style={{
               padding: "20px 24px",
@@ -283,10 +293,10 @@ export default function WorkbookShell() {
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="type-body-md" style={{ color: "rgba(255,255,255,0.7)", margin: 0, marginBottom: "2px" }}>
-                Freedom Prayer #1
+                Personal Deliverance Prayer
               </p>
               <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.3)", margin: 0 }}>
-                One-time renunciation prayer using your inventory
+                Pray once, with intention, after working through the Workbook
               </p>
             </div>
             <button
@@ -313,12 +323,12 @@ export default function WorkbookShell() {
             >
               <BookOpen style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.5)" }} />
               <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Begin Prayer #1
+                Begin
               </span>
             </button>
           </div>
 
-          {/* Prayer #2 — 3-day streak */}
+          {/* Generational Renunciation Prayer — 3-day */}
           <div
             style={{
               padding: "20px 24px",
@@ -334,7 +344,7 @@ export default function WorkbookShell() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
                 <p className="type-body-md" style={{ color: "rgba(255,255,255,0.6)", margin: 0 }}>
-                  Freedom Prayer #2
+                  Generational Renunciation Prayer
                 </p>
                 {streak2Count > 0 && (
                   <StreakPip count={Math.min(streak2Count, 3)} max={3} />
@@ -343,7 +353,7 @@ export default function WorkbookShell() {
               <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
                 {streak2Count > 0
                   ? `Day ${streak2Count} of 3 — ${streak2CanComplete ? "ready to pray today" : "already completed today"}`
-                  : "3-day binding prayer — strongman spirits & renunciations"}
+                  : "3-day binding prayer for generational and ancestral sins"}
               </p>
             </div>
             <button
@@ -377,7 +387,73 @@ export default function WorkbookShell() {
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
               }}>
-                {streak2Count === 0 ? "Begin Prayer #2" : "Continue Prayer #2"}
+                {streak2Count === 0 ? "Begin" : "Continue"}
+              </span>
+            </button>
+          </div>
+
+          {/* Daily Prayer — ongoing with streak */}
+          <div
+            style={{
+              padding: "20px 24px",
+              borderRadius: "10px",
+              background: "rgba(255,255,255,0.015)",
+              border: "0.5px solid rgba(255,255,255,0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                <p className="type-body-md" style={{ color: "rgba(255,255,255,0.6)", margin: 0 }}>
+                  Daily Prayer
+                </p>
+                {streak3Count > 0 && (
+                  <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.7rem", fontWeight: 600, color: "#F07830", letterSpacing: "0.04em" }}>
+                    {streak3Count} day{streak3Count === 1 ? "" : "s"}
+                  </span>
+                )}
+              </div>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
+                {streak3Count > 0
+                  ? `${streak3CanComplete ? "Ready to pray today" : "Already completed today"}`
+                  : "Ongoing daily prayer — your living armor"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setView("prayer_3")}
+              data-testid="button-begin-prayer-3"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                background: streak3Count > 0 ? "rgba(240,120,48,0.08)" : "rgba(255,255,255,0.04)",
+                border: `0.5px solid ${streak3Count > 0 ? "rgba(240,120,48,0.18)" : "rgba(255,255,255,0.08)"}`,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = streak3Count > 0 ? "rgba(240,120,48,0.08)" : "rgba(255,255,255,0.04)";
+              }}
+            >
+              <Flame style={{ width: "12px", height: "12px", color: streak3Count > 0 ? "#F07830" : "rgba(255,255,255,0.3)" }} />
+              <span style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: streak3Count > 0 ? "rgba(240,120,48,0.8)" : "rgba(255,255,255,0.4)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}>
+                {streak3Count === 0 ? "Begin" : "Pray today"}
               </span>
             </button>
           </div>

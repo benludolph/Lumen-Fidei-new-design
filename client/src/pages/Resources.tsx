@@ -15,7 +15,6 @@ import {
   Shield,
   ArrowRight,
   ExternalLink,
-  Wrench,
   BookOpen,
   Flame,
 } from "lucide-react";
@@ -23,8 +22,6 @@ import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
 import type { LucideIcon } from "lucide-react";
 
-import intrusiveImg from "@assets/intrusive_v2_default.webp";
-import intrusiveHoverImg from "@assets/intrusive_v2_hover.webp";
 import confessionImg from "@assets/confession_1778179196096.png";
 import confessionHoverImg from "@assets/confession__hover_1778179196097.png";
 
@@ -119,45 +116,6 @@ const RESOURCE_SUBTEXTS: { match: string; subtext: string }[] = [
 function getResourceSubtext(name: string): string {
   const lower = name.toLowerCase();
   return RESOURCE_SUBTEXTS.find((m) => lower.includes(m.match))?.subtext ?? "";
-}
-
-function BreakingLiesCard() {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Link href="/resources/tools/captivity-builder">
-      <div
-        data-testid="card-tool-captivity-builder"
-        className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
-        style={{ backgroundColor: "#0F1011", border: "0.5px solid var(--white-5)", borderRadius: "6px" }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${intrusiveImg})`, backgroundSize: "cover", backgroundPosition: "center right", pointerEvents: "none", zIndex: 0 }} />
-        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${intrusiveHoverImg})`, backgroundSize: "cover", backgroundPosition: "center right", opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease-out", pointerEvents: "none", zIndex: 1 }} />
-        <div className="flex items-start relative z-[3]">
-          <div
-            className="w-6 h-6 rounded flex items-center justify-center shrink-0"
-            style={{ background: "var(--white-5)", boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)" }}
-          >
-            <Wrench style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
-          </div>
-        </div>
-        <div className="flex items-end justify-between w-full relative z-[3]">
-          <div className="flex-1 min-w-0">
-            <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: "#f7f8f8", letterSpacing: "-0.1402px" }}>
-              Breaking Lies
-            </p>
-            <p className="type-body-xs" style={{ color: "#8a8f98" }}>
-              Build a personalized rebuke prayer
-            </p>
-          </div>
-          <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
-            <ArrowRight style={{ width: "14px", height: "14px" }} />
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 function DailyRenewalCard() {
@@ -558,7 +516,6 @@ export default function Resources() {
             <div>
               <SectionDivider label="TOOLS" />
               <div className="resource-grid-equal gap-2 w-full">
-                <BreakingLiesCard />
                 <ConfessionFinderCard />
                 <FreedomWorkbookCard />
                 <DailyRenewalCard />

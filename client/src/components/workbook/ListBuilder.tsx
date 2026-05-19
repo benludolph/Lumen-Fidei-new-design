@@ -86,19 +86,36 @@ function EntryCard({
           };
           return (
             <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label
-                style={{
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "0.68rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "rgba(255,255,255,0.4)",
-                }}
-              >
-                {field.label}
-              </label>
-              {fieldType === "textarea" ? (
+              {fieldType !== "boolean" && (
+                <label
+                  style={{
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "0.68rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "rgba(255,255,255,0.4)",
+                  }}
+                >
+                  {field.label}
+                </label>
+              )}
+              {fieldType === "boolean" ? (
+                <label
+                  style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+                  data-testid={`input-entry-${entry.id}-${field.key}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form[field.key] === "true"}
+                    onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.checked ? "true" : "false" }))}
+                    style={{ width: "14px", height: "14px", accentColor: "rgba(255,255,255,0.7)", cursor: "pointer" }}
+                  />
+                  <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.6)" }}>
+                    {field.label}
+                  </span>
+                </label>
+              ) : fieldType === "textarea" ? (
                 <textarea
                   value={form[field.key] ?? ""}
                   onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
@@ -203,7 +220,9 @@ function EntryCard({
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
         {section.fields.map((field) => {
           const val = data[field.key];
-          if (!val) return null;
+          const isBool = field.type === "boolean";
+          if (isBool && val !== "true") return null;
+          if (!isBool && !val) return null;
           return (
             <div key={field.key}>
               {section.fields.length > 1 && (
@@ -222,17 +241,19 @@ function EntryCard({
                   {field.label}
                 </span>
               )}
-              <p
-                style={{
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "0.95rem",
-                  color: "rgba(255,255,255,0.8)",
-                  margin: 0,
-                  lineHeight: 1.45,
-                }}
-              >
-                {val}
-              </p>
+              {!isBool && (
+                <p
+                  style={{
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "0.95rem",
+                    color: "rgba(255,255,255,0.8)",
+                    margin: 0,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {val as string}
+                </p>
+              )}
             </div>
           );
         })}
@@ -381,22 +402,39 @@ function AddEntryForm({
         };
         return (
           <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.68rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "rgba(255,255,255,0.4)",
-              }}
-            >
-              {field.label}
-              {field.required && (
-                <span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
-              )}
-            </label>
-            {fieldType === "textarea" ? (
+            {fieldType !== "boolean" && (
+              <label
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "0.68rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "rgba(255,255,255,0.4)",
+                }}
+              >
+                {field.label}
+                {field.required && (
+                  <span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
+                )}
+              </label>
+            )}
+            {fieldType === "boolean" ? (
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}
+                data-testid={`input-add-${field.key}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={form[field.key] === "true"}
+                  onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.checked ? "true" : "false" }))}
+                  style={{ width: "14px", height: "14px", accentColor: "rgba(255,255,255,0.7)", cursor: "pointer" }}
+                />
+                <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.6)" }}>
+                  {field.label}
+                </span>
+              </label>
+            ) : fieldType === "textarea" ? (
               <textarea
                 value={form[field.key] ?? ""}
                 onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}

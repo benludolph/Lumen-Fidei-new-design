@@ -283,7 +283,7 @@ export type InsertGuidedPrayerResponse = z.infer<typeof insertGuidedPrayerRespon
 export const workbookEntries = pgTable("workbook_entries", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  sectionId: integer("section_id").notNull(), // 1–18
+  sectionId: integer("section_id").notNull(), // 1–23
   entryData: jsonb("entry_data").notNull().$type<Record<string, unknown>>(), // flexible field bag per section
   position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
