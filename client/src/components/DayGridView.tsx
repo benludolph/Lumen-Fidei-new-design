@@ -15,14 +15,6 @@ import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
 import certBgNormal from "@assets/Certification_normal_1774299706134.webp";
 import certBgHover from "@assets/Certification_hover_1774299706134.webp";
 import introVideoThumb from "@assets/IntroVideo_1774228694683.webp";
-import trackAImg1 from "@assets/image_1771985019617.png";
-import trackAImg2 from "@assets/image_1771985039759.png";
-import trackAImg3 from "@assets/image_1771985088299.png";
-import trackAImg4 from "@assets/image_1771985210712.png";
-import trackAImg5 from "@assets/image_1771985228368.png";
-import trackAImg6 from "@assets/image_1771985236426.png";
-
-const FALLBACK_IMAGES = [trackAImg1, trackAImg2, trackAImg3, trackAImg4, trackAImg5, trackAImg6];
 
 interface PrayerCompletionRecord {
   dayNumber: number;
@@ -76,8 +68,7 @@ function getDayTitle(day: number, isTrackA: boolean, trackASummaries?: TrackACon
 
 function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
   const content = getTrackAAtPosition(dayNumber, trackASummaries);
-  if (content?.imageUrl) return content.imageUrl;
-  return FALLBACK_IMAGES[(dayNumber - 1) % FALLBACK_IMAGES.length];
+  return content?.imageUrl ?? undefined;
 }
 
 function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
