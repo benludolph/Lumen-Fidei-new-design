@@ -52,16 +52,17 @@ export default function StrongmanChecklist() {
   }, [isLoading, entries]);
 
   const saveMutation = useMutation({
-    mutationFn: (data: ChecklistData) =>
-      apiRequest("POST", `/api/workbook/${SECTION_ID}`, {
+    mutationFn: async (data: ChecklistData) => {
+      const res = await apiRequest("POST", `/api/workbook/${SECTION_ID}`, {
         id: entryIdRef.current,
         entryData: data,
         position: 0,
-      }),
-    onSuccess: (result: unknown) => {
-      const r = result as { id?: number };
-      if (r?.id && !entryIdRef.current) {
-        entryIdRef.current = r.id;
+      });
+      return res.json() as Promise<{ id: number }>;
+    },
+    onSuccess: (result) => {
+      if (result?.id && !entryIdRef.current) {
+        entryIdRef.current = result.id;
       }
       queryClient.invalidateQueries({ queryKey: [`/api/workbook/${SECTION_ID}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });

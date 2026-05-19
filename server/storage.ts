@@ -1046,15 +1046,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, unknown>, position = 0, id?: number): Promise<WorkbookEntry> {
+    const data = entryData as Record<string, string>;
     if (id) {
       const [row] = await db.update(workbookEntries)
-        .set({ entryData, position })
+        .set({ entryData: data, position })
         .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId)))
         .returning();
       return row;
     }
     const [row] = await db.insert(workbookEntries)
-      .values({ userId, sectionId, entryData, position })
+      .values({ userId, sectionId, entryData: data, position })
       .returning();
     return row;
   }

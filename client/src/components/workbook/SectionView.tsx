@@ -22,28 +22,38 @@ function Section17View() {
   });
 
   const pendingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Track entry IDs locally so rapid saves use the correct id before query refreshes
+  const localEntryIdsByRef = useRef<Record<string, number>>({});
 
   const saveMutation = useMutation({
-    mutationFn: ({ juniorId, influence, existingId }: { juniorId: string; influence: string; existingId?: number }) =>
-      apiRequest("POST", "/api/workbook/17", {
+    mutationFn: async ({ juniorId, influence, existingId }: { juniorId: string; influence: string; existingId?: number }) => {
+      const res = await apiRequest("POST", "/api/workbook/17", {
         id: existingId,
         entryData: { junior_spirit_ref: juniorId, influence },
         position: 0,
-      }),
-    onSuccess: () => {
+      });
+      return res.json() as Promise<{ id: number }>;
+    },
+    onSuccess: (result, variables) => {
+      if (result?.id) {
+        localEntryIdsByRef.current[variables.juniorId] = result.id;
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/17"] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
     },
   });
 
+  // Use the most-recently-created Section 16 entry (entries sorted by createdAt asc, so last = newest)
   const checkedIds: string[] = (() => {
     if (!sec16Entries.length) return [];
-    const d = sec16Entries[0].entryData as Partial<ChecklistData>;
+    const latest = sec16Entries[sec16Entries.length - 1];
+    const d = latest.entryData as Partial<ChecklistData>;
     return Array.isArray(d.checked) ? d.checked : [];
   })();
 
   const entriesByRef = sec17Entries.reduce<Record<string, WorkbookEntry>>((acc, e) => {
     const d = e.entryData as { junior_spirit_ref?: string };
+    // If multiple entries share a ref (shouldn't happen after fix), prefer the latest
     if (d.junior_spirit_ref) acc[d.junior_spirit_ref] = e;
     return acc;
   }, {});
@@ -55,11 +65,16 @@ function Section17View() {
     if (!loading17 && !initializedRef.current) {
       initializedRef.current = true;
       const vals: Record<string, string> = {};
+      const ids: Record<string, number> = {};
       sec17Entries.forEach((e) => {
         const d = e.entryData as { junior_spirit_ref?: string; influence?: string };
-        if (d.junior_spirit_ref) vals[d.junior_spirit_ref] = d.influence ?? "";
+        if (d.junior_spirit_ref) {
+          vals[d.junior_spirit_ref] = d.influence ?? "";
+          ids[d.junior_spirit_ref] = e.id;
+        }
       });
       setLocalValues(vals);
+      localEntryIdsByRef.current = ids;
     }
   }, [loading17, sec17Entries]);
 
@@ -67,8 +82,9 @@ function Section17View() {
     setLocalValues((prev) => ({ ...prev, [juniorId]: value }));
     if (pendingTimers.current[juniorId]) clearTimeout(pendingTimers.current[juniorId]);
     pendingTimers.current[juniorId] = setTimeout(() => {
-      const existing = entriesByRef[juniorId];
-      saveMutation.mutate({ juniorId, influence: value, existingId: existing?.id });
+      // Prefer locally-tracked id (updated immediately on save) over stale query state
+      const existingId = localEntryIdsByRef.current[juniorId] ?? entriesByRef[juniorId]?.id;
+      saveMutation.mutate({ juniorId, influence: value, existingId });
     }, 700);
   }
 
