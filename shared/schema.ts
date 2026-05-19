@@ -277,6 +277,41 @@ export const insertGuidedPrayerResponseSchema = createInsertSchema(guidedPrayerR
 export type GuidedPrayerResponse = typeof guidedPrayerResponses.$inferSelect;
 export type InsertGuidedPrayerResponse = z.infer<typeof insertGuidedPrayerResponseSchema>;
 
+// === FREEDOM WORKBOOK TABLES ===
+
+// Per-user, per-section list entries for the Freedom Workbook
+export const workbookEntries = pgTable("workbook_entries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").notNull(), // 1–18
+  entryData: jsonb("entry_data").notNull().$type<Record<string, string>>(), // flexible field bag per section
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("wb_entries_user_section_idx").on(table.userId, table.sectionId),
+]);
+
+// Per-user, per-section "I have nothing to add" attestation
+export const workbookAttestations = pgTable("workbook_attestations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sectionId: integer("section_id").notNull(),
+  attestedAt: timestamp("attested_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("wb_attestations_user_section_unique").on(table.userId, table.sectionId),
+]);
+
+export const insertWorkbookEntrySchema = createInsertSchema(workbookEntries).omit({ id: true, createdAt: true });
+export const insertWorkbookAttestationSchema = createInsertSchema(workbookAttestations).omit({ id: true, attestedAt: true });
+
+export type WorkbookEntry = typeof workbookEntries.$inferSelect;
+export type InsertWorkbookEntry = z.infer<typeof insertWorkbookEntrySchema>;
+export type WorkbookAttestation = typeof workbookAttestations.$inferSelect;
+export type InsertWorkbookAttestation = z.infer<typeof insertWorkbookAttestationSchema>;
+
+// Aggregated per-section summary returned by GET /api/workbook/summary
+export type WorkbookSummary = Record<number, { count: number; attested: boolean }>;
+
 // Password reset tokens — one-time use, expire after 1 hour
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),

@@ -23,6 +23,7 @@ import PreviewLesson from "@/pages/PreviewLesson";
 import PrayerToolkit from "@/pages/PrayerToolkit";
 import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
 import ConfessionFinderResource from "@/pages/ConfessionFinderResource";
+import FreedomWorkbookResource from "@/pages/FreedomWorkbookResource";
 import HealingDashboard from "@/pages/HealingDashboard";
 import HealingLesson from "@/pages/HealingLesson";
 import HealingJournal from "@/pages/HealingJournal";
@@ -139,6 +140,14 @@ function Router() {
 
       <Route path="/resources/tools/confession-finder">
         <ProtectedRoute component={ConfessionFinderResource} />
+      </Route>
+
+      <Route path="/resources/tools/freedom-workbook/:sectionId">
+        <ProtectedRoute component={FreedomWorkbookResource} />
+      </Route>
+
+      <Route path="/resources/tools/freedom-workbook">
+        <ProtectedRoute component={FreedomWorkbookResource} />
       </Route>
 
       <Route path="/resources/:id">

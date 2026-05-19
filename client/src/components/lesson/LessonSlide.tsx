@@ -70,7 +70,8 @@ export type SlideType =
   | "captivity_builder"
   | "confession_finder"
   | "pdf_download"
-  | "guided_prayer_process";
+  | "guided_prayer_process"
+  | "workbook_link";
 
 
 export interface QuizData {
@@ -1464,6 +1465,66 @@ export function LessonSlide({
           />
         ) : type === "pdf_download" ? (
           <PdfDownloadSlide content={content} onInteracted={onInteracted} />
+        ) : type === "workbook_link" ? (
+          (() => {
+            let sectionId: number | undefined;
+            let label = "Open Workbook";
+            try {
+              const parsed = JSON.parse(content);
+              sectionId = parsed.sectionId;
+              if (parsed.label) label = parsed.label;
+            } catch {}
+            const href = sectionId
+              ? `/resources/tools/freedom-workbook/${sectionId}`
+              : "/resources/tools/freedom-workbook";
+            return (
+              <div
+                style={{
+                  borderRadius: "10px",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.03)",
+                  padding: "20px 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", margin: 0, marginBottom: "4px" }}>
+                    Freedom Workbook
+                  </p>
+                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "1rem", color: "rgba(255,255,255,0.8)", margin: 0 }}>
+                    {label}
+                  </p>
+                </div>
+                <a
+                  href={href}
+                  data-testid="button-open-workbook"
+                  onClick={() => { if (onInteracted) onInteracted(); }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    background: "rgba(255,255,255,0.08)",
+                    border: "0.5px solid rgba(255,255,255,0.15)",
+                    textDecoration: "none",
+                    fontFamily: "'Afacad', sans-serif",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "white",
+                    letterSpacing: "0.04em",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  Open Workbook
+                </a>
+              </div>
+            );
+          })()
         ) : (
           <TextSlide content={content} />
         )}

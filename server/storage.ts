@@ -3,6 +3,7 @@ import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
+  workbookEntries, workbookAttestations,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -25,6 +26,9 @@ import {
   type HealingCompletion,
   type HealingAnswer,
   type GuidedPrayerResponse,
+  type WorkbookEntry, type InsertWorkbookEntry,
+  type WorkbookAttestation,
+  type WorkbookSummary,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -159,6 +163,14 @@ export interface IStorage {
   getGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number): Promise<GuidedPrayerResponse | undefined>;
   upsertGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse>;
   getGuidedPrayerResponsesByUserId(userId: number): Promise<GuidedPrayerResponse[]>;
+
+  // Freedom Workbook
+  getWorkbookEntries(userId: number, sectionId: number): Promise<WorkbookEntry[]>;
+  upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, string>, position?: number, id?: number): Promise<WorkbookEntry>;
+  deleteWorkbookEntry(id: number, userId: number): Promise<void>;
+  getWorkbookSummary(userId: number): Promise<WorkbookSummary>;
+  setWorkbookAttestation(userId: number, sectionId: number): Promise<void>;
+  clearWorkbookAttestation(userId: number, sectionId: number): Promise<void>;
 
   // session store
   sessionStore: any;
@@ -1024,6 +1036,65 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(guidedPrayerResponses)
       .where(eq(guidedPrayerResponses.userId, userId))
       .orderBy(guidedPrayerResponses.dayNumber, guidedPrayerResponses.slideIndex);
+  }
+
+  // Freedom Workbook
+  async getWorkbookEntries(userId: number, sectionId: number): Promise<WorkbookEntry[]> {
+    return db.select().from(workbookEntries)
+      .where(and(eq(workbookEntries.userId, userId), eq(workbookEntries.sectionId, sectionId)))
+      .orderBy(asc(workbookEntries.position), asc(workbookEntries.createdAt));
+  }
+
+  async upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, string>, position = 0, id?: number): Promise<WorkbookEntry> {
+    if (id) {
+      const [row] = await db.update(workbookEntries)
+        .set({ entryData, position })
+        .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId)))
+        .returning();
+      return row;
+    }
+    const [row] = await db.insert(workbookEntries)
+      .values({ userId, sectionId, entryData, position })
+      .returning();
+    return row;
+  }
+
+  async deleteWorkbookEntry(id: number, userId: number): Promise<void> {
+    await db.delete(workbookEntries)
+      .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId)));
+  }
+
+  async getWorkbookSummary(userId: number): Promise<WorkbookSummary> {
+    const counts = await db
+      .select({ sectionId: workbookEntries.sectionId, count: count() })
+      .from(workbookEntries)
+      .where(eq(workbookEntries.userId, userId))
+      .groupBy(workbookEntries.sectionId);
+
+    const attestations = await db.select()
+      .from(workbookAttestations)
+      .where(eq(workbookAttestations.userId, userId));
+
+    const summary: WorkbookSummary = {};
+    for (const row of counts) {
+      summary[row.sectionId] = { count: Number(row.count), attested: false };
+    }
+    for (const att of attestations) {
+      if (!summary[att.sectionId]) summary[att.sectionId] = { count: 0, attested: false };
+      summary[att.sectionId].attested = true;
+    }
+    return summary;
+  }
+
+  async setWorkbookAttestation(userId: number, sectionId: number): Promise<void> {
+    await db.insert(workbookAttestations)
+      .values({ userId, sectionId })
+      .onConflictDoNothing();
+  }
+
+  async clearWorkbookAttestation(userId: number, sectionId: number): Promise<void> {
+    await db.delete(workbookAttestations)
+      .where(and(eq(workbookAttestations.userId, userId), eq(workbookAttestations.sectionId, sectionId)));
   }
 }
 

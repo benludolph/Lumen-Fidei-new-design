@@ -2841,6 +2841,64 @@ export async function registerRoutes(
     }
   });
 
+  // === Freedom Workbook ===
+
+  // GET /api/workbook/summary — aggregated section counts + attestations
+  app.get("/api/workbook/summary", requireAuth, async (req, res) => {
+    const summary = await storage.getWorkbookSummary(req.user!.id);
+    res.json(summary);
+  });
+
+  // GET /api/workbook/:sectionId — entries for one section
+  app.get("/api/workbook/:sectionId", requireAuth, async (req, res) => {
+    const sectionId = Number(req.params.sectionId);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > 18) return res.sendStatus(400);
+    const entries = await storage.getWorkbookEntries(req.user!.id, sectionId);
+    res.json(entries);
+  });
+
+  // POST /api/workbook/:sectionId — create or update an entry
+  app.post("/api/workbook/:sectionId", requireAuth, writeLimiter, async (req, res) => {
+    const sectionId = Number(req.params.sectionId);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > 18) return res.sendStatus(400);
+
+    const schema = z.object({
+      id: z.number().optional(),
+      entryData: z.record(z.string(), z.string()),
+      position: z.number().optional(),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+
+    const { id, entryData, position } = parsed.data;
+    const entry = await storage.upsertWorkbookEntry(req.user!.id, sectionId, entryData, position ?? 0, id);
+    res.json(entry);
+  });
+
+  // DELETE /api/workbook/entry/:id — delete an entry (verifies ownership)
+  app.delete("/api/workbook/entry/:id", requireAuth, async (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.sendStatus(400);
+    await storage.deleteWorkbookEntry(id, req.user!.id);
+    res.sendStatus(204);
+  });
+
+  // POST /api/workbook/attest/:sectionId — set attestation
+  app.post("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
+    const sectionId = Number(req.params.sectionId);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > 18) return res.sendStatus(400);
+    await storage.setWorkbookAttestation(req.user!.id, sectionId);
+    res.sendStatus(204);
+  });
+
+  // DELETE /api/workbook/attest/:sectionId — clear attestation
+  app.delete("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
+    const sectionId = Number(req.params.sectionId);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > 18) return res.sendStatus(400);
+    await storage.clearWorkbookAttestation(req.user!.id, sectionId);
+    res.sendStatus(204);
+  });
+
   // Seed Data
   await seed();
 
@@ -2987,7 +3045,6 @@ async function seed() {
     // never want those to appear. Admins can still upload their own images via
     // the admin panel — this only runs at startup and zeroes out any stale value.
     await db.update(prelimModules).set({ imageUrl: null });
-    await db.update(dailyContent).set({ imageUrl: null });
     await db.update(trackAContent).set({ imageUrl: null });
     await db.update(healingContent).set({ imageUrl: null });
 
