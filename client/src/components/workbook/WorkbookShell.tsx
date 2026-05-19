@@ -36,11 +36,11 @@ function Section6Badge({ liesCount, truthsCount }: { liesCount: number; truthsCo
         letterSpacing: "0.06em",
       }}
     >
-      {liesCount} {liesCount === 1 ? "lie" : "lies"}
+      {liesCount} {liesCount === 1 ? "lie named" : "lies named"}
       {truthsCount > 0 && (
         <span style={{ color: "rgba(255,200,100,0.6)" }}>
           {", "}
-          {truthsCount} {truthsCount === 1 ? "truth" : "truths"}
+          {truthsCount} {truthsCount === 1 ? "truth claimed" : "truths claimed"}
         </span>
       )}
     </span>

@@ -28,8 +28,14 @@ export default function PatternsChecklist() {
   const [data, setData] = useState<Section14Data>({ checked: [], other_freetext: "" });
   const isHydrated = useRef(false);
   const isDirty = useRef(false);
+  const localEntryIdRef = useRef<number | undefined>(undefined);
+  const isSavingRef = useRef(false);
+  const pendingDataRef = useRef<Section14Data | null>(null);
 
   useEffect(() => {
+    if (existingEntry?.id !== undefined && localEntryIdRef.current === undefined) {
+      localEntryIdRef.current = existingEntry.id;
+    }
     if (existingEntry !== undefined && !isHydrated.current) {
       isHydrated.current = true;
       if (!isDirty.current) {
@@ -39,15 +45,32 @@ export default function PatternsChecklist() {
   }, [existingEntry]);
 
   const saveMutation = useMutation({
-    mutationFn: (nextData: Section14Data) =>
-      apiRequest("POST", "/api/workbook/14", {
-        id: existingEntry?.id,
+    mutationFn: async (nextData: Section14Data) => {
+      const id = localEntryIdRef.current;
+      const res = await apiRequest("POST", "/api/workbook/14", {
+        ...(id !== undefined ? { id } : {}),
         entryData: nextData as unknown as Record<string, string>,
-        position: existingEntry?.position ?? 0,
-      }),
-    onSuccess: () => {
+        position: 0,
+      });
+      return res.json() as Promise<WorkbookEntry>;
+    },
+    onMutate: () => {
+      isSavingRef.current = true;
+    },
+    onSuccess: (responseEntry) => {
+      if (responseEntry?.id !== undefined && localEntryIdRef.current === undefined) {
+        localEntryIdRef.current = responseEntry.id;
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/14"] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
+    },
+    onSettled: () => {
+      isSavingRef.current = false;
+      if (pendingDataRef.current) {
+        const queued = pendingDataRef.current;
+        pendingDataRef.current = null;
+        saveMutation.mutate(queued);
+      }
     },
   });
 
@@ -56,6 +79,10 @@ export default function PatternsChecklist() {
   function scheduleSave(next: Section14Data) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
+      if (isSavingRef.current) {
+        pendingDataRef.current = next;
+        return;
+      }
       saveMutation.mutate(next);
     }, 500);
   }
