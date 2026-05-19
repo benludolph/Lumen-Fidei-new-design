@@ -1,4 +1,4 @@
-import rawLibrary from "./catholic_truth_library.json";
+import libraryData from "./catholic_truth_library.json";
 
 export type LyingSpirit =
   | "destruction"
@@ -21,12 +21,6 @@ export type TruthLibraryEntry = {
   first_person_truth: string;
 };
 
-type RawEntry = {
-  scripture_reference: string;
-  scripture_text: string;
-  first_person_truth: string;
-};
-
 export const LYING_SPIRITS: { value: LyingSpirit; label: string; summary: string }[] = [
   { value: "destruction", label: "Destruction", summary: "You are broken, limited, your mind is not enough." },
   { value: "hopelessness", label: "Hopelessness", summary: "Nothing will change. It will not get better." },
@@ -42,24 +36,31 @@ export const LYING_SPIRITS: { value: LyingSpirit; label: string; summary: string
   { value: "confusion", label: "Confusion", summary: "Nothing makes sense. You cannot trust your mind." },
 ];
 
-const library = rawLibrary as Record<string, RawEntry[]>;
+const ALL_SPIRIT_VALUES: LyingSpirit[] = LYING_SPIRITS.map((s) => s.value);
+
+const library: TruthLibraryEntry[] = libraryData as TruthLibraryEntry[];
 
 export function getSuggestedScriptures(spirit: LyingSpirit): TruthLibraryEntry[] {
-  const entries = library[spirit] ?? [];
-  return entries.map((e) => ({ ...e, spirit }));
+  return library.filter((e) => e.spirit === spirit);
 }
 
 export function getTruthLibraryEntry(
   spirit: LyingSpirit,
   reference: string
 ): TruthLibraryEntry | null {
-  const entries = library[spirit] ?? [];
-  const found = entries.find((e) => e.scripture_reference === reference);
-  return found ? { ...found, spirit } : null;
+  return library.find((e) => e.spirit === spirit && e.scripture_reference === reference) ?? null;
 }
 
 export function getAllEntries(): TruthLibraryEntry[] {
-  return (Object.keys(library) as LyingSpirit[]).flatMap((spirit) =>
-    (library[spirit] ?? []).map((e) => ({ ...e, spirit }))
-  );
+  return library;
+}
+
+export function getRepresentedSpirits(): LyingSpirit[] {
+  const inLibrary = new Set(library.map((e) => e.spirit));
+  return ALL_SPIRIT_VALUES.filter((s) => inLibrary.has(s));
+}
+
+export function getMissingSpirits(): LyingSpirit[] {
+  const inLibrary = new Set(library.map((e) => e.spirit));
+  return ALL_SPIRIT_VALUES.filter((s) => !inLibrary.has(s));
 }
