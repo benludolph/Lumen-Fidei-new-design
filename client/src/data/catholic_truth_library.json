@@ -1,5 +1,59 @@
 [
   {
+    "spirit": "destruction",
+    "scripture_reference": "John 10:10",
+    "scripture_text": "The thief comes only to steal and kill and destroy. I came that they may have life and have it abundantly.",
+    "first_person_truth": "Jesus came so that I may have abundant life. The one who steals and destroys is not my Lord—Christ is, and He gives life."
+  },
+  {
+    "spirit": "hopelessness",
+    "scripture_reference": "Jeremiah 29:11",
+    "scripture_text": "For I know the plans I have for you, declares the Lord, plans for welfare and not for evil, to give you a future and a hope.",
+    "first_person_truth": "The Lord knows the plans He has for me—plans for my welfare and not for harm, plans to give me a future and a hope."
+  },
+  {
+    "spirit": "weakness",
+    "scripture_reference": "Philippians 4:13",
+    "scripture_text": "I can do all things through him who strengthens me.",
+    "first_person_truth": "I can do all things through Christ who strengthens me. My limitations do not define me—His strength perfects me."
+  },
+  {
+    "spirit": "condemnation",
+    "scripture_reference": "Romans 8:1",
+    "scripture_text": "There is therefore now no condemnation for those who are in Christ Jesus.",
+    "first_person_truth": "There is no condemnation for me, because I am in Christ Jesus."
+  },
+  {
+    "spirit": "fear",
+    "scripture_reference": "2 Timothy 1:7",
+    "scripture_text": "For God gave us a spirit not of fear but of power and love and self-control.",
+    "first_person_truth": "The Lord has not given me a spirit of fear, but of power, love, and self-control."
+  },
+  {
+    "spirit": "rejection",
+    "scripture_reference": "Isaiah 43:1",
+    "scripture_text": "Fear not, for I have redeemed you; I have called you by name, you are mine.",
+    "first_person_truth": "The Lord has redeemed me. He has called me by name. I am His."
+  },
+  {
+    "spirit": "shame",
+    "scripture_reference": "Romans 8:1",
+    "scripture_text": "There is therefore now no condemnation for those who are in Christ Jesus.",
+    "first_person_truth": "I am not my sins. There is no condemnation for me, because I am in Christ Jesus."
+  },
+  {
+    "spirit": "unworthiness",
+    "scripture_reference": "1 John 3:1",
+    "scripture_text": "See what kind of love the Father has given to us, that we should be called children of God; and so we are.",
+    "first_person_truth": "The Father has lavished His love on me so that I am called a child of God—and so I am."
+  },
+  {
+    "spirit": "isolation",
+    "scripture_reference": "Hebrews 13:5",
+    "scripture_text": "I will never leave you nor forsake you.",
+    "first_person_truth": "The Lord Himself has promised me: I will never be left alone. He will never forsake me."
+  },
+  {
     "spirit": "anxiety",
     "scripture_reference": "Philippians 4:6-7",
     "scripture_text": "Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus.",
@@ -12,27 +66,15 @@
     "first_person_truth": "I cast my anxieties on the Lord, because He cares for me."
   },
   {
-    "spirit": "rejection",
-    "scripture_reference": "Isaiah 43:1",
-    "scripture_text": "Fear not, for I have redeemed you; I have called you by name, you are mine.",
-    "first_person_truth": "The Lord has redeemed me. He has called me by name. I am His."
+    "spirit": "self_hatred",
+    "scripture_reference": "Psalm 139:13-14",
+    "scripture_text": "For you formed my inward parts; you knitted me together in my mother's womb. I praise you, for I am fearfully and wonderfully made.",
+    "first_person_truth": "The Lord formed me and knitted me together. I am fearfully and wonderfully made by the hand of God."
   },
   {
-    "spirit": "shame",
-    "scripture_reference": "Romans 8:1",
-    "scripture_text": "There is therefore now no condemnation for those who are in Christ Jesus.",
-    "first_person_truth": "There is no condemnation for me, because I am in Christ Jesus."
-  },
-  {
-    "spirit": "fear",
-    "scripture_reference": "2 Timothy 1:7",
-    "scripture_text": "For God gave us a spirit not of fear but of power and love and self-control.",
-    "first_person_truth": "The Lord has not given me a spirit of fear, but of power, love, and self-control."
-  },
-  {
-    "spirit": "condemnation",
-    "scripture_reference": "Romans 5:8",
-    "scripture_text": "But God shows his love for us in that while we were still sinners, Christ died for us.",
-    "first_person_truth": "While I was still a sinner, Christ died for me. The Father's love for me is proven on the Cross."
+    "spirit": "confusion",
+    "scripture_reference": "Proverbs 3:5-6",
+    "scripture_text": "Trust in the Lord with all your heart, and do not lean on your own understanding. In all your ways acknowledge him, and he will make straight your paths.",
+    "first_person_truth": "I trust in the Lord with all my heart. I do not lean on my own understanding. In all my ways I acknowledge Him, and He will make my paths straight."
   }
 ]
