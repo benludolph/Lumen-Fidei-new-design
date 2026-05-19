@@ -66,13 +66,9 @@ function getDayTitle(day: number, isTrackA: boolean, trackASummaries?: TrackACon
   return `Day ${day}`;
 }
 
-function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[], modules?: TrackAModule[]): string | undefined {
+function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
   const content = getTrackAAtPosition(dayNumber, trackASummaries);
-  if (content?.imageUrl) return content.imageUrl;
-  // Fall back to the week module's uploaded image
-  const weekNumber = Math.ceil(dayNumber / 6);
-  const mod = modules?.find(m => m.weekNumber === weekNumber);
-  return mod?.imageUrl ?? undefined;
+  return content?.imageUrl ?? undefined;
 }
 
 function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
@@ -780,7 +776,7 @@ export function DayGridView({
                           isTrackB={!isTrackA}
                           morningCompleted={isPeriodCompleted(day, "morning")}
                           eveningCompleted={isPeriodCompleted(day, "evening")}
-                          backgroundImage={isTrackA ? getTrackAImage(day, trackASummaries, trackAModules) : undefined}
+                          backgroundImage={isTrackA ? getTrackAImage(day, trackASummaries) : undefined}
                           cohortStartDate={cohortStartDate}
                           onClick={() => handleCardClick(day)}
                         />
