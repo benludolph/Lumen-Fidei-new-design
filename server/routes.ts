@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User, type PrayerId } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -2921,25 +2921,28 @@ export async function registerRoutes(
 
   // === Workbook Streaks ===
 
-  const VALID_PRAYER_IDS = ["prayer_1", "prayer_2", "prayer_3"] as const;
+  const VALID_PRAYER_IDS: ReadonlyArray<PrayerId> = ["prayer_1", "prayer_2", "prayer_3"];
+  function isPrayerId(value: string): value is PrayerId {
+    return (VALID_PRAYER_IDS as ReadonlyArray<string>).includes(value);
+  }
 
   // GET /api/workbook/streak/:prayerId — returns streak status
   app.get("/api/workbook/streak/:prayerId", requireAuth, async (req, res) => {
-    const prayerId = req.params.prayerId as string;
-    if (!VALID_PRAYER_IDS.includes(prayerId as any)) return res.sendStatus(400);
-    const status = await storage.getWorkbookStreakStatus(req.user!.id, prayerId as any);
+    const raw = req.params.prayerId;
+    if (!isPrayerId(raw)) return res.sendStatus(400);
+    const status = await storage.getWorkbookStreakStatus(req.user!.id, raw);
     res.json(status);
   });
 
   // POST /api/workbook/streak/:prayerId/complete — mark a prayer completed today
   app.post("/api/workbook/streak/:prayerId/complete", requireAuth, writeLimiter, async (req, res) => {
-    const prayerId = req.params.prayerId as string;
-    if (!VALID_PRAYER_IDS.includes(prayerId as any)) return res.sendStatus(400);
-    const status = await storage.getWorkbookStreakStatus(req.user!.id, prayerId as any);
+    const raw = req.params.prayerId;
+    if (!isPrayerId(raw)) return res.sendStatus(400);
+    const status = await storage.getWorkbookStreakStatus(req.user!.id, raw);
     if (!status.canCompleteToday) {
-      return res.status(409).json({ message: "Already completed recently. Please wait before marking again." });
+      return res.status(409).json({ message: "Already completed today. Come back tomorrow." });
     }
-    const updated = await storage.completeWorkbookStreak(req.user!.id, prayerId as any);
+    const updated = await storage.completeWorkbookStreak(req.user!.id, raw);
     res.json(updated);
   });
 

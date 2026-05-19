@@ -1104,23 +1104,26 @@ export class DatabaseStorage implements IStorage {
 
   // Workbook Streaks
   private buildStreakStatus(row: WorkbookStreak | undefined, prayerId: PrayerId): WorkbookStreakStatus {
-    const now = Date.now();
-    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const now = new Date();
+    const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
     if (!row || !row.lastCompletedAt) {
       return { prayerId, count: 0, lastCompletedAt: null, canCompleteToday: true, streakActive: false };
     }
 
-    const lastMs = row.lastCompletedAt.getTime();
-    const elapsed = now - lastMs;
-    const streakActive = elapsed <= FORTY_EIGHT_HOURS;
-    // Can complete again once more than 1 hour has passed (prevents double-tap) but within 48 hours
-    const canCompleteToday = elapsed > 60 * 60 * 1000; // must wait at least 1h between completions
+    const last = row.lastCompletedAt;
+    const elapsedMs = now.getTime() - last.getTime();
+    const streakActive = elapsedMs <= FORTY_EIGHT_HOURS_MS;
+
+    // Once-per-calendar-day enforcement: compare UTC date strings
+    const lastDateStr = last.toISOString().slice(0, 10);      // "YYYY-MM-DD"
+    const todayDateStr = now.toISOString().slice(0, 10);
+    const canCompleteToday = lastDateStr !== todayDateStr;
 
     return {
       prayerId,
       count: streakActive ? row.count : 0,
-      lastCompletedAt: row.lastCompletedAt.toISOString(),
+      lastCompletedAt: last.toISOString(),
       canCompleteToday,
       streakActive,
     };
@@ -1133,25 +1136,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async completeWorkbookStreak(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus> {
-    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
     const now = new Date();
 
     const [existing] = await db.select().from(workbookStreaks)
       .where(and(eq(workbookStreaks.userId, userId), eq(workbookStreaks.prayerId, prayerId)));
 
     let newCount: number;
-    if (!existing) {
-      newCount = 1;
-    } else if (!existing.lastCompletedAt) {
+    if (!existing || !existing.lastCompletedAt) {
       newCount = 1;
     } else {
-      const elapsed = now.getTime() - existing.lastCompletedAt.getTime();
-      if (elapsed <= FORTY_EIGHT_HOURS) {
-        // Streak active — increment
+      const elapsedMs = now.getTime() - existing.lastCompletedAt.getTime();
+      if (elapsedMs <= FORTY_EIGHT_HOURS_MS) {
+        // Still within grace window — streak continues
         newCount = existing.count + 1;
       } else {
         // Streak broken — restart at 1
-        // Adapted from source manual (3× daily); confirmed as once-daily by ministry decision
         newCount = 1;
       }
     }
