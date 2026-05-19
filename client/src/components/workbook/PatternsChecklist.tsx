@@ -24,13 +24,17 @@ export default function PatternsChecklist() {
   });
 
   const existingEntry = entries[0] as WorkbookEntry | undefined;
-  const [data, setData] = useState<Section14Data>(() => parseData(existingEntry));
-  const isMounted = useRef(false);
+
+  const [data, setData] = useState<Section14Data>({ checked: [], other_freetext: "" });
+  const isHydrated = useRef(false);
+  const isDirty = useRef(false);
 
   useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-      setData(parseData(existingEntry));
+    if (existingEntry !== undefined && !isHydrated.current) {
+      isHydrated.current = true;
+      if (!isDirty.current) {
+        setData(parseData(existingEntry));
+      }
     }
   }, [existingEntry]);
 
@@ -49,7 +53,15 @@ export default function PatternsChecklist() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  function scheduleSave(next: Section14Data) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      saveMutation.mutate(next);
+    }, 500);
+  }
+
   function handleToggle(pattern: string, checked: boolean) {
+    isDirty.current = true;
     const next: Section14Data = {
       ...data,
       checked: checked
@@ -61,19 +73,14 @@ export default function PatternsChecklist() {
   }
 
   function handleOtherChange(val: string) {
+    isDirty.current = true;
     const next: Section14Data = { ...data, other_freetext: val };
     setData(next);
     scheduleSave(next);
   }
 
-  function scheduleSave(next: Section14Data) {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      saveMutation.mutate(next);
-    }, 500);
-  }
-
-  const checkedCount = data.checked.length + (data.other_freetext.trim() ? 1 : 0);
+  const namedCheckedCount = data.checked.length;
+  const checkedCount = namedCheckedCount + (data.other_freetext.trim() ? 1 : 0);
 
   if (isLoading) {
     return (
@@ -105,7 +112,7 @@ export default function PatternsChecklist() {
         </p>
       )}
 
-      {/* Checklist grid */}
+      {/* Checklist — all 31 entries driven from DOMINANT_PATTERNS */}
       <div
         style={{
           borderRadius: "8px",
@@ -117,6 +124,71 @@ export default function PatternsChecklist() {
         }}
       >
         {DOMINANT_PATTERNS.map((pattern) => {
+          const isOther = pattern === "Other";
+
+          if (isOther) {
+            return (
+              <div key={pattern} style={{ padding: "10px 16px" }}>
+                <label
+                  style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "text" }}
+                >
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "4px",
+                      border: `1.5px solid ${data.other_freetext.trim() ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.18)"}`,
+                      background: data.other_freetext.trim() ? "rgba(255,255,255,0.12)" : "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      marginTop: "2px",
+                      transition: "all 0.12s",
+                    }}
+                  >
+                    {data.other_freetext.trim() && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M1.5 5L3.8 7.5L8.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <span
+                      style={{
+                        fontFamily: "'Afacad', sans-serif",
+                        fontSize: "0.98rem",
+                        color: data.other_freetext.trim() ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.5)",
+                      }}
+                    >
+                      Other
+                    </span>
+                    <input
+                      type="text"
+                      value={data.other_freetext}
+                      onChange={(e) => handleOtherChange(e.target.value)}
+                      placeholder="Describe any other pattern…"
+                      data-testid="input-pattern-other"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "0.5px solid rgba(255,255,255,0.12)",
+                        borderRadius: "6px",
+                        padding: "6px 10px",
+                        fontFamily: "'Afacad', sans-serif",
+                        fontSize: "0.9rem",
+                        color: "white",
+                        outline: "none",
+                        width: "100%",
+                      }}
+                      onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
+                      onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                    />
+                  </div>
+                </label>
+              </div>
+            );
+          }
+
           const isChecked = data.checked.includes(pattern);
           return (
             <label
@@ -148,14 +220,7 @@ export default function PatternsChecklist() {
                 }}
               >
                 {isChecked && (
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 10 10"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M1.5 5L3.8 7.5L8.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 )}
@@ -182,71 +247,6 @@ export default function PatternsChecklist() {
             </label>
           );
         })}
-
-        {/* Other — free-text */}
-        <div style={{ padding: "10px 16px" }}>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "12px",
-              cursor: "text",
-            }}
-          >
-            <div
-              style={{
-                width: "18px",
-                height: "18px",
-                borderRadius: "4px",
-                border: `1.5px solid ${data.other_freetext.trim() ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.18)"}`,
-                background: data.other_freetext.trim() ? "rgba(255,255,255,0.12)" : "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                marginTop: "2px",
-                transition: "all 0.12s",
-              }}
-            >
-              {data.other_freetext.trim() && (
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M1.5 5L3.8 7.5L8.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "4px" }}>
-              <span
-                style={{
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "0.98rem",
-                  color: data.other_freetext.trim() ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.5)",
-                }}
-              >
-                Other
-              </span>
-              <input
-                type="text"
-                value={data.other_freetext}
-                onChange={(e) => handleOtherChange(e.target.value)}
-                placeholder="Describe any other pattern…"
-                data-testid="input-pattern-other"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "0.5px solid rgba(255,255,255,0.12)",
-                  borderRadius: "6px",
-                  padding: "6px 10px",
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "0.9rem",
-                  color: "white",
-                  outline: "none",
-                  width: "100%",
-                }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
-              />
-            </div>
-          </label>
-        </div>
       </div>
 
       {/* Auto-save indicator */}

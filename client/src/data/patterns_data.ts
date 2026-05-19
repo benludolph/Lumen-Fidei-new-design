@@ -29,4 +29,5 @@ export const DOMINANT_PATTERNS: string[] = [
   "Accusation",
   "Mental torment",
   "Spiritual blindness",
+  "Other",
 ];
