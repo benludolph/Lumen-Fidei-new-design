@@ -2919,6 +2919,30 @@ export async function registerRoutes(
     res.sendStatus(204);
   });
 
+  // === Workbook Streaks ===
+
+  const VALID_PRAYER_IDS = ["prayer_1", "prayer_2", "prayer_3"] as const;
+
+  // GET /api/workbook/streak/:prayerId — returns streak status
+  app.get("/api/workbook/streak/:prayerId", requireAuth, async (req, res) => {
+    const prayerId = req.params.prayerId as string;
+    if (!VALID_PRAYER_IDS.includes(prayerId as any)) return res.sendStatus(400);
+    const status = await storage.getWorkbookStreakStatus(req.user!.id, prayerId as any);
+    res.json(status);
+  });
+
+  // POST /api/workbook/streak/:prayerId/complete — mark a prayer completed today
+  app.post("/api/workbook/streak/:prayerId/complete", requireAuth, writeLimiter, async (req, res) => {
+    const prayerId = req.params.prayerId as string;
+    if (!VALID_PRAYER_IDS.includes(prayerId as any)) return res.sendStatus(400);
+    const status = await storage.getWorkbookStreakStatus(req.user!.id, prayerId as any);
+    if (!status.canCompleteToday) {
+      return res.status(409).json({ message: "Already completed recently. Please wait before marking again." });
+    }
+    const updated = await storage.completeWorkbookStreak(req.user!.id, prayerId as any);
+    res.json(updated);
+  });
+
   // Seed Data
   await seed();
 

@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { ChevronRight, Check, BookOpen, Flame } from "lucide-react";
 import { Link } from "wouter";
-import { ChevronRight, Check, BookOpen, Lock } from "lucide-react";
 import { SECTIONS } from "./section-definitions";
-import type { WorkbookSummary } from "@shared/schema";
+import PrayerRender from "./PrayerRender";
+import SessionWrapper from "./SessionWrapper";
+import type { WorkbookSummary, WorkbookStreakStatus } from "@shared/schema";
 
 function StatusBadge({ count, attested }: { count: number; attested: boolean }) {
   if (attested) {
@@ -57,9 +61,37 @@ function StatusBadge({ count, attested }: { count: number; attested: boolean }) 
   );
 }
 
+function StreakPip({ count, max }: { count: number; max: number }) {
+  return (
+    <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+      {Array.from({ length: max }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            background: i < count ? "#F07830" : "rgba(255,255,255,0.1)",
+            transition: "background 0.2s",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+type ShellView = "list" | "prayer_1" | "prayer_2" | "session";
+
 export default function WorkbookShell() {
+  const [view, setView] = useState<ShellView>("list");
+  const [, navigate] = useLocation();
+
   const { data: summary = {}, isLoading } = useQuery<WorkbookSummary>({
     queryKey: ["/api/workbook/summary"],
+  });
+
+  const { data: streak2 } = useQuery<WorkbookStreakStatus>({
+    queryKey: ["/api/workbook/streak/prayer_2"],
   });
 
   const totalSections = SECTIONS.length;
@@ -67,6 +99,21 @@ export default function WorkbookShell() {
     const sec = summary[s.id];
     return sec && (sec.attested || sec.count > 0);
   }).length;
+
+  if (view === "prayer_1") {
+    return <PrayerRender prayerId="prayer_1" onDone={() => setView("list")} />;
+  }
+
+  if (view === "prayer_2") {
+    return <PrayerRender prayerId="prayer_2" onDone={() => setView("list")} />;
+  }
+
+  if (view === "session") {
+    return <SessionWrapper onDismiss={() => setView("list")} />;
+  }
+
+  const streak2Count = streak2?.count ?? 0;
+  const streak2CanComplete = streak2?.canCompleteToday !== false;
 
   return (
     <div
@@ -218,13 +265,65 @@ export default function WorkbookShell() {
           </div>
         )}
 
-        {/* Prayer & Session CTAs — both disabled until Phase 3 */}
+        {/* Prayer & Session CTAs */}
         <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "8px" }}>
+
+          {/* Prayer #1 — one-time freedom prayer */}
           <div
             style={{
               padding: "20px 24px",
               borderRadius: "10px",
               background: "rgba(255,255,255,0.02)",
+              border: "0.5px solid rgba(255,255,255,0.07)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="type-body-md" style={{ color: "rgba(255,255,255,0.7)", margin: 0, marginBottom: "2px" }}>
+                Freedom Prayer #1
+              </p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.3)", margin: 0 }}>
+                One-time renunciation prayer using your inventory
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setView("prayer_1")}
+              data-testid="button-begin-prayer-1"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                background: "rgba(255,255,255,0.06)",
+                border: "0.5px solid rgba(255,255,255,0.12)",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.09)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
+              }}
+            >
+              <BookOpen style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.5)" }} />
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Begin Prayer #1
+              </span>
+            </button>
+          </div>
+
+          {/* Prayer #2 — 3-day streak */}
+          <div
+            style={{
+              padding: "20px 24px",
+              borderRadius: "10px",
+              background: "rgba(255,255,255,0.015)",
               border: "0.5px solid rgba(255,255,255,0.06)",
               display: "flex",
               alignItems: "center",
@@ -233,39 +332,62 @@ export default function WorkbookShell() {
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="type-body-md" style={{ color: "rgba(255,255,255,0.5)", margin: 0, marginBottom: "2px" }}>
-                Freedom Prayer
-              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                <p className="type-body-md" style={{ color: "rgba(255,255,255,0.6)", margin: 0 }}>
+                  Freedom Prayer #2
+                </p>
+                {streak2Count > 0 && (
+                  <StreakPip count={Math.min(streak2Count, 3)} max={3} />
+                )}
+              </div>
               <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
-                Complete the sections above to begin your prayers.
+                {streak2Count > 0
+                  ? `Day ${streak2Count} of 3 — ${streak2CanComplete ? "ready to pray today" : "already completed today"}`
+                  : "3-day binding prayer — strongman spirits & renunciations"}
               </p>
             </div>
-            <div
-              data-testid="button-begin-prayer-1"
+            <button
+              type="button"
+              onClick={() => setView("prayer_2")}
+              data-testid="button-begin-prayer-2"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
                 padding: "8px 16px",
                 borderRadius: "6px",
-                background: "rgba(255,255,255,0.04)",
-                border: "0.5px solid rgba(255,255,255,0.08)",
-                cursor: "not-allowed",
-                opacity: 0.5,
+                background: streak2Count >= 3 ? "rgba(240,120,48,0.1)" : "rgba(255,255,255,0.04)",
+                border: `0.5px solid ${streak2Count >= 3 ? "rgba(240,120,48,0.2)" : "rgba(255,255,255,0.08)"}`,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = streak2Count >= 3 ? "rgba(240,120,48,0.1)" : "rgba(255,255,255,0.04)";
               }}
             >
-              <Lock style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.4)" }} />
-              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Begin Prayer #1
+              <Flame style={{ width: "12px", height: "12px", color: streak2Count > 0 ? "#F07830" : "rgba(255,255,255,0.3)" }} />
+              <span style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: streak2Count > 0 ? "rgba(240,120,48,0.8)" : "rgba(255,255,255,0.4)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}>
+                {streak2Count === 0 ? "Begin Prayer #2" : "Continue Prayer #2"}
               </span>
-            </div>
+            </button>
           </div>
 
+          {/* Guided Session */}
           <div
             style={{
               padding: "16px 24px",
               borderRadius: "10px",
-              background: "rgba(255,255,255,0.015)",
+              background: "rgba(255,255,255,0.01)",
               border: "0.5px solid rgba(255,255,255,0.05)",
               display: "flex",
               alignItems: "center",
@@ -274,11 +396,13 @@ export default function WorkbookShell() {
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.3)", margin: 0 }}>
-                Guided Session
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                Guided Session — work through unfilled sections with opening & closing prayers
               </p>
             </div>
-            <div
+            <button
+              type="button"
+              onClick={() => setView("session")}
               data-testid="button-begin-session"
               style={{
                 display: "flex",
@@ -287,16 +411,21 @@ export default function WorkbookShell() {
                 padding: "7px 14px",
                 borderRadius: "6px",
                 background: "rgba(255,255,255,0.03)",
-                border: "0.5px solid rgba(255,255,255,0.06)",
-                cursor: "not-allowed",
-                opacity: 0.45,
+                border: "0.5px solid rgba(255,255,255,0.07)",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
               }}
             >
-              <Lock style={{ width: "11px", height: "11px", color: "rgba(255,255,255,0.3)" }} />
-              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 Begin a session
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>

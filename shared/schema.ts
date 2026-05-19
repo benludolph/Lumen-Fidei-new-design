@@ -312,6 +312,33 @@ export type InsertWorkbookAttestation = z.infer<typeof insertWorkbookAttestation
 // Aggregated per-section summary returned by GET /api/workbook/summary
 export type WorkbookSummary = Record<number, { count: number; attested: boolean }>;
 
+// === FREEDOM WORKBOOK STREAKS ===
+
+// Tracks how many consecutive days a user has completed a given prayer (prayer_1, prayer_2, prayer_3)
+export const workbookStreaks = pgTable("workbook_streaks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  prayerId: text("prayer_id", { enum: ["prayer_1", "prayer_2", "prayer_3"] }).notNull(),
+  count: integer("count").notNull().default(0),
+  lastCompletedAt: timestamp("last_completed_at"),
+}, (table) => [
+  uniqueIndex("wb_streaks_user_prayer_unique").on(table.userId, table.prayerId),
+]);
+
+export type WorkbookStreak = typeof workbookStreaks.$inferSelect;
+
+export type PrayerId = "prayer_1" | "prayer_2" | "prayer_3";
+
+export type WorkbookStreakStatus = {
+  prayerId: PrayerId;
+  count: number;
+  lastCompletedAt: string | null;
+  /** True if the user has not yet completed this prayer today (within the 48-hour window) */
+  canCompleteToday: boolean;
+  /** True if the streak is active (last completed within 48 hours) */
+  streakActive: boolean;
+};
+
 // Password reset tokens — one-time use, expire after 1 hour
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: serial("id").primaryKey(),

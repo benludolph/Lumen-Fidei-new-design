@@ -1,0 +1,311 @@
+Rules for the agent
+
+Do not paraphrase or "improve" the prayer text. Render verbatim.
+Slot markers in the prayer text use the form [slot_name]. Each slot maps to a Workbook field defined in the schema below. The agent's job is rendering template + data, not authoring text.
+Where a slot's source list is empty, the surrounding sentence should be omitted gracefully — not rendered as "I repent especially of ." Pattern from build prompt's empty-state handling applies.
+User-injected spans use the distinct visual treatment from the build prompt (info-color background, info-color text).
+
+
+Part 1 — Workbook schema (revised)
+Twelve sections, derived directly from the prayer slot markers. Section names use natural language; field names use snake_case to match prayer slots.
+#SectionSchema typeFieldsMaps to prayer slots1Personal sinslist_buildersin (textarea)[personal_sins]2People to forgivelist_builderperson (text), what (textarea, optional)[people_to_forgive], [people_to_forgive_for_family_harm]3Family & childhood woundslist_builderwhose (enum: Father, Mother, Family/Childhood), what (textarea), lie_believed (textarea, optional)[father_wounds], [mother_wounds], [family_or_childhood_wounds], [childhood_lies]4Sexual sinlist_buildersin (textarea), person_or_partner (text, optional)[sexual_sins], [sexual_partners_or_people_connected]5Occult & false spiritual powerlist_builderpractice (text)[occult_practices]6Word curses & lies believedlist_builderkind (enum: Spoken over me, Spoken by me about myself), words (textarea), spoken_by (text, optional — only when kind = Spoken over me)[word_curses], [self_curses]7Vows & inner promiseslist_buildervow (textarea)[unholy_vows_or_inner_vows]8Idolatrylist_builderidol (textarea)[idols]9Pride, rebellion & controllist_builderpattern (textarea)[pride_patterns]10Abuse, trauma & wounded responseslist_builderevent (textarea), sinful_response (textarea, optional)[traumatic_events], [sinful_responses_to_trauma]11Addictions & compulsionslist_builderaddiction (textarea)[addictions_or_compulsions]12False religion & spiritual mixturelist_builderpractice (textarea)[false_worship_or_other_religious_practices], also feeds [false_religions] and [false_spiritual_practices] in the Generational prayer13Harm done to otherslist_builderharm (textarea)[harm_done_to_others]14Dominant spiritual patternschecklist + free-textSee below[dominant_spiritual_patterns], [spirits_to_renounce]15Generational sins & family patternslist_builderpattern_or_sin (textarea)[family_patterns_or_generational_sins], [generational_evils], [family_patterns]16Family members & ancestors of concernlist_buildername_or_description (text), groups_or_sins_involved (textarea, optional)[ancestor_or_family_member_names], [groups_or_sins_involved]17Lodges, secret societies & oath-bound groupslist_buildergroup (text), titles_or_roles (textarea, optional), oaths_or_rituals (textarea, optional)[lodges_or_secret_societies], [known_titles_degrees_or_roles], [known_oaths_or_rituals]18Agreement sinslist_builderagreement (textarea)[agreement_sins]19Named spirits, false deities & unholy allegianceslist_buildername (text)[named_spirits_or_deities], [named_family_spirits]20Objects of concernlist_builderobject (textarea)[objects_to_renounce]21Curses, spells & bondages directed at familylist_builderkind (textarea)[curses_or_bondages], [blood_contracts_or_ritual_bonds]22Infirmitieslist_builderinfirmity (text), for_healing (boolean)[infirmities], [healing_requests]23Future generation concernslist_builderconcern (textarea)[future_generation_concerns]24Anything else / Holy Spirit promptedlist_builderitem (textarea)[additional_unlisted_concerns]
+Note on count. The schema is 24 sections, larger than the previous 18 because the new prayers introduce categories Carmichael's didn't (idols as a separate list, harm done to others, named spirits as a discrete list, objects, future generation concerns) and split some of his combined fields (e.g., trauma is now event and sinful_response as two fields rather than a single combined entry; word curses are split by kind). Recommend not trying to compress this back to 18 — the prayer slots are the contract, and each section corresponds to text the user will actually see rendered.
+Sections that did not survive from the old schema:
+
+Judgments — folded into Section 2 (forgiveness) per the Catholic prayer's framing where judgment is one form of unforgiveness.
+Covenants and vows — replaced by Section 7 (Vows & inner promises), which is a different concept. Catholic prayer treats vow-breaking under Confession; the slot in the new prayer is for unholy vows still in force, not vows broken.
+Other sins — folded into Section 24 (Anything else) and Section 1 (Personal sins).
+Influencers — dropped. The new prayers don't have an "influencers" slot. The theology has shifted away from "unholy soul tie with first introducer" toward straightforward repentance and renunciation. If you want to retain something like this, raise it before the agent removes it from the data model.
+
+Section 14 — Dominant spiritual patterns (checklist)
+Replaces Carmichael's "Strongman / Junior spirits" taxonomy, which was copyrighted material from Above and Beyond Christian Counseling. The new structure uses a flat list of named spirits / patterns, drawn from your two prayers' enumeration in the closing sections.
+Categories (each is a checkbox; flat list, no nesting):
+
+Death
+Infirmity
+Divination
+Rebellion
+Lying
+Rage
+Manipulation
+Domination
+Control
+Fear
+Rejection
+Lust
+Shame
+Addiction
+Violence
+Hatred
+Confusion
+Despair
+Unbelief
+Poverty
+Suicide
+Abuse
+Occult bondage
+False worship
+Pride
+Self-hatred
+Bitterness
+Accusation
+Mental torment
+Spiritual blindness
+Other (free-text input)
+
+Stored as a flat array of checked names plus free-text values. Section 14 feeds both [dominant_spiritual_patterns] (in the Personal Deliverance Prayer, section 15) and [spirits_to_renounce] (same section, sub-list). For the latter, the agent should join the checked names with "and" and prefix each with "every spirit of" as the prayer text already provides the leading "every spirit of" only for the first item — re-check the prayer text and confirm the rendering pattern before building.
+
+Part 2 — Personal Deliverance Prayer
+Title in app: Personal Deliverance Prayer
+Cadence: Pray once, with intention; may be repeated as needed under spiritual direction.
+Source: Original Catholic prayer drafted for this app, in the tradition of baptismal renunciations, the Unbound model, and Catholic deliverance prayer. Not derived from any single existing copyrighted work.
+Page 1 — Opening prayer
+Lord Jesus Christ, Son of the living God, I come before You in humility, faith, and repentance. I believe that You are my Savior, my Redeemer, my Lord, and my Deliverer. I believe that You died for my sins, that You rose from the dead, and that Your Precious Blood is stronger than every sin, wound, curse, demon, false agreement, unholy bond, and evil influence that has touched my life.
+In Your holy name, and through the power of Your Precious Blood, I renounce Satan, all his works, and all his empty promises. I reject every evil that I have accepted through sin, ignorance, fear, rebellion, weakness, curiosity, woundedness, or deliberate choice. I reject every evil that has entered my life through my own sins, through sins committed against me, through the sins of my family line, through occult practices, through unholy relationships, through false vows, through unforgiveness, through trauma, through deception, or through any other opening known or unknown to me.
+Lord Jesus, I ask You to cover me with Your Precious Blood. Wash over my mind, my body, my soul, my memory, my imagination, my heart, my home, my family, my relationships, and everything entrusted to me. Let every place of darkness be brought under Your authority. Let every place of bondage be brought under Your Cross. Let every place of fear, shame, confusion, hatred, lust, pride, rebellion, despair, or torment be touched by Your mercy.
+Blessed Virgin Mary, Mother of God, spread your mantle over me and pray for me. Saint Michael the Archangel, defend me in battle. Holy angels of God, surround me, guard me, and drive far from me every evil spirit. All holy saints of God, pray for me.
+Lord Jesus, as I name these sins, wounds, bonds, and agreements, give me true repentance, true renunciation, and true freedom. Amen.
+Page 2 — Personal sins
+Lord Jesus Christ, I repent of all my personal sins, especially {{INJECT: Section 1, format=items_comma using sin}}. I confess that these sins were wrong, and I do not excuse them, hide them, defend them, or cling to them. I place them under Your Precious Blood and ask You to forgive me, cleanse me, and give me the grace to make a good Confession wherever Confession is needed.
+In the holy name of Jesus, I renounce these sins. I reject every pleasure, habit, false comfort, false identity, and false promise attached to them. I break every agreement I have made with these sins, whether knowingly or unknowingly, and I reject every spirit that has gained influence in my life through them.
+In the holy name of Jesus Christ, and through the power of His Precious Blood, I ask Almighty God to bind every evil spirit connected to these sins, to break its power over me, to cast it away from me, and to remove every claim, attachment, influence, or foothold it has had in my life. Lord Jesus, close every door I opened through these sins, and fill every place that has been emptied with Your Holy Spirit.
+Page 3 — Unforgiveness, resentment, and judgment
+Lord Jesus Christ, I repent of all unforgiveness, bitterness, resentment, anger, hatred, revenge, accusation, and sinful judgment. I acknowledge before You the people I have refused to forgive, especially {{INJECT: Section 2, format=names_comma using person}}.
+What happened to me mattered. The wounds were real. The injustice was real. But I do not want unforgiveness to rule my heart, and I do not want bitterness to give the evil one any place in me. Therefore, in obedience to You, and with the help of Your grace, I choose to forgive those who hurt me. I release them into Your hands. I release my demand for revenge. I release the debt they owe me, and I ask You to judge rightly, heal deeply, and restore what can be restored.
+In the holy name of Jesus, I renounce unforgiveness, bitterness, resentment, hatred, revenge, accusation, and every sinful judgment I have made against others. I break every unholy bond, attachment, agreement, and spiritual claim formed through unforgiveness. I reject every spirit that has used these wounds to keep me bound.
+In the holy name of Jesus Christ, and through the power of His Precious Blood, I ask Almighty God to bind every spirit of unforgiveness, bitterness, hatred, revenge, anger, resentment, accusation, judgment, and hardness of heart, to break its power over me, to cast it away from me, and to restore in me the mercy, peace, and freedom of Christ.
+Page 4 — Father, mother, family, and childhood wounds
+Lord Jesus Christ, I bring before You the wounds connected to my father, my mother, my grandparents, my family, my home, and my childhood. I especially bring before You {{INJECT: Section 3 (Father), format=items_comma using what}}, {{INJECT: Section 3 (Mother), format=items_comma using what}}, and {{INJECT: Section 3 (Family/Childhood), format=items_comma using what}}.
+I forgive those who failed to love me as they should have loved me. I forgive those who wounded me, rejected me, neglected me, abandoned me, frightened me, controlled me, used me, shamed me, or placed burdens on me that I was not meant to carry. I release sinful judgment against them, and I place them into Your hands.
+In the holy name of Jesus, I renounce every lie I believed because of these wounds, especially {{INJECT: Section 3, format=items_comma using lie_believed, skip empties, across all whose values}}. I reject the lie that I am unwanted, unloved, unsafe, abandoned, worthless, dirty, rejected, forgotten, or beyond healing. I reject every false identity that entered through these wounds.
+In the holy name of Jesus Christ, and through the power of His Precious Blood, I break every unholy bond, attachment, agreement, wound, and spiritual claim connected to these family and childhood wounds. I ask Almighty God to bind every spirit of rejection, abandonment, fear, shame, control, confusion, hatred, despair, self-hatred, and orphanhood connected to these wounds, to cast them away from me, and to restore in me the truth that I am a beloved child of the Father.
+Page 5 — Sexual sin and unholy attachments
+Lord Jesus Christ, I repent of every sexual sin I have committed in thought, word, desire, imagination, memory, or action. I repent especially of {{INJECT: Section 4, format=items_comma using sin}}. I bring before You every person connected to these sins, especially {{INJECT: Section 4, format=names_comma using person_or_partner, skip empties}}.
+I repent of lust, impurity, pornography, fornication, adultery, fantasy, seduction, masturbation, use of others, consent to being used, sexual manipulation, sexualized attention, and every misuse of my body or the body of another person. I repent of treating what is sacred as common, of seeking comfort apart from love, and of using sexuality in a way that separated me from You.
+In the holy name of Jesus, I renounce every unholy soul tie, bond, attachment, agreement, claim, pact, vow, oath, covenant, memory, fantasy, and spiritual influence formed through these sins. I renounce every unholy attachment to the people I have named, to their past partners, to those who encouraged these sins, and to every spirit connected to these sins.
+If any unholy ritual, pact, oath, vow, curse, blood covenant, or occult bond was formed through these sins, knowingly or unknowingly, I renounce it and break it now in the holy name of Jesus Christ.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit of lust, impurity, perversion, shame, fantasy, seduction, addiction, domination, abuse, confusion, and unchaste attachment, to break its power over me, to cast it away from me, and to cleanse my body, mind, memory, imagination, and heart. Lord Jesus, restore in me chastity, purity, reverence, peace, and the freedom of a child of God.
+Page 6 — Occult, divination, magic, and false spiritual power
+Lord Jesus Christ, I repent of every way I have sought power, knowledge, healing, comfort, protection, control, or guidance apart from You. I repent of and renounce {{INJECT: Section 5, format=items_comma using practice}}.
+I renounce Satan and every occult practice. I renounce divination, witchcraft, sorcery, magic, tarot, astrology, psychic readings, mediumship, spiritism, séances, Ouija boards, spells, charms, curses, energy healing opposed to Christ, New Age practices, false prophecy, false light, false worship, and every attempt to gain hidden knowledge or spiritual power apart from God.
+In the holy name of Jesus, I break every pact, vow, oath, ritual, curse, spell, seal, assignment, attachment, agreement, and spiritual claim connected to these practices. I reject every spirit that entered, influenced me, deceived me, tormented me, or claimed access to me through these sins.
+In the holy name of Jesus Christ, and through the power of His Precious Blood, I ask Almighty God to bind every spirit connected to occult involvement, divination, witchcraft, sorcery, deception, fear, false healing, false prophecy, false light, control, and spiritual confusion, to break its power over me, to cast it away from me, and to close every door I opened through these practices. Lord Jesus, fill every place touched by darkness with the light of the Holy Spirit.
+Page 7 — Word curses, evil words, and false names
+Lord Jesus Christ, I reject every evil word, curse, insult, judgment, label, false identity, and lie spoken over me by others or spoken by me against myself. I especially renounce {{INJECT: Section 6 (Spoken over me), format=items_comma using words}} and {{INJECT: Section 6 (Spoken by me about myself), format=items_comma using words}}.
+I reject the words that said I was worthless, unwanted, broken, dirty, stupid, cursed, hopeless, rejected, impossible to love, beyond healing, or destined for evil. I reject every false name that came through cruelty, abuse, rejection, humiliation, fear, shame, or despair. These words do not define me. These lies do not own me. These curses do not have authority over me.
+In the holy name of Jesus, I break agreement with every word curse, false judgment, evil label, and lie spoken over me. I renounce every spirit that used these words to wound me, bind me, accuse me, shame me, confuse me, or keep me from receiving the truth of God.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit of rejection, shame, condemnation, self-hatred, despair, fear, confusion, worthlessness, and accusation connected to these words, to break its power over me, and to cast it away from me. Lord Jesus, speak Your truth over me, and let Your word be stronger than every lie.
+Page 8 — Vows, oaths, pledges, and interior promises
+Lord Jesus Christ, I repent of every sinful vow, oath, pledge, promise, or interior agreement I have made apart from You. I renounce especially {{INJECT: Section 7, format=items_comma using vow}}.
+I renounce every vow made from fear, hatred, pride, lust, despair, grief, revenge, control, self-protection, or unbelief. I renounce vows such as "I will never forgive," "I will never trust," "I will never need anyone," "I will always be alone," "I will get revenge," "I belong to darkness," "I cannot be free," "I am beyond help," and every similar vow spoken aloud or held silently in my heart.
+In the holy name of Jesus, I break every unholy vow, oath, pledge, promise, agreement, curse, attachment, and spiritual claim connected to these words. I reject every spirit that used these vows to bind my will, harden my heart, distort my identity, or shape my future apart from God.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit connected to these vows, to break its power over me, to cast it away from me, and to restore my will to the freedom and obedience of Christ.
+Page 9 — Idolatry and false sources of safety
+Lord Jesus Christ, I repent of every form of idolatry in my life. I repent of making idols of {{INJECT: Section 8, format=items_comma using idol}}.
+I repent of looking for ultimate safety, identity, comfort, control, pleasure, healing, power, approval, escape, or worth in anything other than You. I renounce every false god, every false altar, every false refuge, every false covering, every false comfort, and every false source of peace.
+In the holy name of Jesus, I break every unholy attachment, agreement, claim, and spiritual influence connected to idolatry. I reject every spirit that has used these idols to draw me away from God, weaken my faith, enslave my desires, or keep me from surrender.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit connected to idolatry, greed, control, lust, addiction, fear, pride, false worship, and false comfort, to break its power over me, and to cast it away from me. Jesus Christ, You alone are Lord, and I choose to worship You alone.
+Page 10 — Pride, rebellion, and control
+Lord Jesus Christ, I repent of pride, rebellion, disobedience, stubbornness, self-reliance, and control. I repent especially of {{INJECT: Section 9, format=items_comma using pattern}}.
+I repent of exalting myself, defending my sin, refusing correction, hiding from the truth, blaming others, despising authority, resisting Your will, and trying to rule my life apart from You. I repent of wanting my own way more than Your will.
+In the holy name of Jesus, I renounce pride. I renounce rebellion. I renounce control. I renounce self-will. I renounce every refusal to obey God.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit of pride, rebellion, control, stubbornness, arrogance, disobedience, self-exaltation, and hardness of heart, to break its power over me, to cast it away from me, and to give me a humble, obedient, and teachable heart.
+Page 11 — Generational sins and family patterns
+Lord Jesus Christ, I bring before You the sins, wounds, disorders, and evil patterns that have affected my family line. I repent of my own participation in these sins and patterns, especially {{INJECT: Section 15, format=items_comma using pattern_or_sin}}.
+I do not claim personal guilt for sins I did not commit, but I reject every evil inheritance, every sinful pattern, every curse, every bondage, every wound, and every demonic influence that has passed through my family line and affected my life. I renounce family patterns of addiction, violence, abuse, occult involvement, idolatry, adultery, abandonment, hatred, despair, suicide, greed, deception, unbelief, mental torment, sexual sin, poverty of spirit, and every pattern contrary to the kingdom of God.
+In the holy name of Jesus, and through the power of His Precious Blood, I break every curse, attachment, agreement, assignment, and spiritual claim connected to the sins of my ancestors and my family line. I ask Almighty God to bind every evil spirit connected to these generational sins and patterns, to break its power over me and my family, and to cast it away from us according to His holy will.
+Lord Jesus, place Your Cross between me and every evil inheritance. Let Your mercy be stronger than every sin of the past. Bless my family, living and dead, according to Your mercy, and bring repentance, healing, deliverance, and salvation wherever they are needed.
+Page 12 — Abuse, trauma, and wounded responses
+Lord Jesus Christ, I bring before You the places where I was abused, harmed, violated, neglected, abandoned, humiliated, manipulated, controlled, or wounded. I bring You especially {{INJECT: Section 10, format=items_comma using event}}.
+I do not call evil good. I do not excuse what happened. I do not take blame for what was not my fault. I place every wound, every memory, every fear, every humiliation, and every violation under Your Cross.
+But I also repent of every sinful response that came from these wounds, especially {{INJECT: Section 10, format=items_comma using sinful_response, skip empties}}. I repent of hatred, revenge, despair, self-hatred, destructive choices, isolation, bitterness, unbelief, impurity, rage, mistrust, and every way I allowed pain to lead me away from You.
+In the holy name of Jesus, I renounce every lie, vow, attachment, agreement, and spiritual claim connected to these wounds. I reject every spirit that entered through trauma, fear, rejection, shame, despair, confusion, hatred, rage, self-hatred, or torment.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every evil spirit connected to these wounds, to break its power over me, to cast it away from me, and to remove its influence from my mind, body, soul, memory, imagination, and heart. Lord Jesus, enter these memories with Your light, heal what has been wounded, and restore peace where there has been torment.
+Page 13 — Addictions and compulsions
+Lord Jesus Christ, I repent of every addiction, compulsion, dependency, and destructive habit in my life, especially {{INJECT: Section 11, format=items_comma using addiction}}.
+I repent of turning to created things for comfort, escape, control, relief, numbness, pleasure, or identity apart from You. I renounce every false comfort, every false escape, every agreement with slavery, every agreement with secrecy, every agreement with despair, and every agreement with shame.
+In the holy name of Jesus, I break every unholy bond, attachment, agreement, and spiritual claim connected to these addictions and compulsions. I reject every spirit that used these habits to enslave my body, weaken my will, cloud my mind, isolate me from others, or separate me from God.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit of addiction, compulsion, slavery, secrecy, shame, despair, self-destruction, and false comfort, to break its power over me, to cast it away from me, and to strengthen me in repentance, accountability, healing, perseverance, and freedom.
+Page 14 — False religion, spiritual mixture, and false worship
+Lord Jesus Christ, I repent of every participation in worship, rituals, prayers, initiations, symbols, practices, or spiritual systems opposed to You. I renounce especially {{INJECT: Section 12, format=items_comma using practice}}.
+I reject every false god, false spirit, false worship, false blessing, false initiation, false covering, false protection, and false spiritual authority. I reject every mixture of the Catholic faith with practices that do not belong to Christ.
+In the holy name of Jesus, I break every pact, vow, oath, ritual, attachment, agreement, curse, and spiritual claim connected to false worship and false religion. I reject every spirit that entered, influenced me, deceived me, or claimed access to me through these practices.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit connected to false worship, idolatry, religious confusion, deception, fear, and spiritual bondage, to break its power over me, and to cast it away from me. I choose the Father, the Son, and the Holy Spirit. I choose Jesus Christ and the faith of His Church.
+Page 15 — Harm I have done to others
+Lord Jesus Christ, I repent of the ways I have harmed other people. I repent especially of {{INJECT: Section 13, format=items_comma using harm}}.
+I repent of selfishness, cruelty, manipulation, neglect, dishonesty, impurity, betrayal, anger, gossip, rejection, abuse, contempt, and every failure to love. I repent of the wounds I caused knowingly or unknowingly. I ask You to forgive me and to show me where I need to confess, apologize, repair, restore, or make restitution.
+In the holy name of Jesus, I renounce every sin and every evil influence connected to the harm I have caused. I reject every spirit that encouraged me to wound, use, deceive, control, reject, or despise others.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every spirit connected to these sins, to break its power over me, to cast it away from me, and to give me humility, courage, and charity.
+Page 16 — Dominant spiritual patterns
+Lord Jesus Christ, I now renounce the dominant spiritual patterns that have afflicted me, tempted me, tormented me, deceived me, accused me, oppressed me, or influenced my life. I renounce especially {{INJECT: Section 14, format=patterns_comma using checked names from the flat checklist}}.
+In the holy name of Jesus, I renounce every spirit of {{INJECT: Section 14, format=spirits_with_every_prefix — render as "every spirit of X, every spirit of Y, and every spirit of Z"}}. I reject each one. I break agreement with each one. I break every claim, attachment, assignment, influence, and foothold connected to each one.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind each and every evil spirit connected to these patterns, to render them powerless against me, to silence their accusations, to break their influence, to cast them away from me, and to prevent them from returning.
+I belong to Jesus Christ. I am marked by baptism. I am covered by the Precious Blood of Jesus. I am not the property of the evil one.
+Page 17 — Final prayer of binding, deliverance, and protection
+Lord Jesus Christ, in Your holy name and through the power of Your Precious Blood, I ask Almighty God to bind every evil spirit that has come against me, afflicted me, tempted me, tormented me, deceived me, accused me, oppressed me, influenced me, or attached itself to me through any sin, wound, curse, trauma, occult practice, false religion, family pattern, unholy relationship, sexual sin, false vow, word curse, unforgiveness, idolatry, addiction, or agreement with evil.
+I ask You, Lord Jesus, to break every curse, pact, spell, hex, vex, seal, assignment, trigger, trance, vow, demonic blessing, evil prayer, ritual bond, false covering, unholy attachment, and every other demonic bondage sent against me, formed by me, accepted by me, inherited by me, or placed upon me in any way.
+In the holy name of Jesus Christ, I renounce them all. I reject them all. I break their power over me through the Precious Blood of Jesus. I ask Almighty God to render every evil spirit powerless, to silence every accusation, to close every door, to remove every claim, to cast every evil spirit away from me, and to make them incapable of tempting, tormenting, afflicting, deceiving, or harming me.
+Lord Jesus, wash me in Your Precious Blood. Wash my mind, my body, my soul, my heart, my memory, my imagination, my emotions, my desires, my dreams, my home, my family, my relationships, my work, and all that belongs to me. Let this place and every place under my care be made holy by Your presence and protected by Your power.
+Blessed Virgin Mary, Mother of God and Queen of Angels, cover me with your mantle and pray for me. Saint Michael the Archangel, defend me in battle. Holy angels and archangels, surround me, guard me, and drive far from me every evil spirit. All holy saints of God, intercede for me before the throne of God.
+Come, Holy Spirit. Fill every place that has been emptied. Fill me with faith, hope, charity, purity, humility, obedience, courage, wisdom, peace, and love. Restore in me the grace of my baptism. Strengthen me for Confession, prayer, the sacraments, forgiveness, conversion, and a life fully surrendered to Jesus Christ.
+Lord Jesus Christ, I place myself under Your authority, under Your mercy, under Your Cross, and under the protection of Your Precious Blood. Keep me faithful to You, deliver me from evil, and lead me into the freedom of the children of God.
+Amen.
+
+Part 3 — Generational Renunciation Prayer
+Title in app: Generational Renunciation Prayer
+Cadence: Pray once a day for three days after completing the Personal Deliverance Prayer.
+Source: Original Catholic prayer drafted for this app, in the Catholic deliverance tradition.
+Page 1 — Opening
+Father in heaven, I come before You in the Most Holy Name of Jesus Christ, Your Son. I confess that Jesus Christ is my Lord, my Savior, and my Deliverer. My loyalty belongs to You alone, Father, Son, and Holy Spirit.
+I renounce Satan, all his works, and all his empty promises. I renounce every false god, false worship, false blessing, false protection, false allegiance, and false source of power that has touched me, my family, or my generational bloodline.
+I ask in the Most Holy Name of Jesus that every evil spirit affecting me, my family, my home, my descendants, or my generational line be bound and cast out by the power of His Most Precious Blood.
+If any evil has entered this family line through sin, curses, malefices, occult practices, false worship, secret societies, oaths, rituals, ceremonies, objects, blood covenants, or agreements with evil, I ask You, Lord Jesus, to break it, cast it out, and cleanse us by Your Precious Blood.
+I repent of my own sins. I forgive my ancestors and all others whose sins may have affected this family line. I ask You to have mercy on them, forgive them, bless them, and free this family from every evil consequence of sin.
+Page 2 — False religions, false worship, and false spiritual systems
+Father, in the Name of Jesus Christ, I renounce all blessings, curses, rituals, prayers, initiations, ceremonies, protections, spiritual benefits, and spiritual claims connected to false worship, false religion, and every spiritual system opposed to Jesus Christ, especially {{INJECT: Section 12, format=items_comma using practice field, filtered to religion-type entries}}.
+I renounce every false spiritual practice, especially {{INJECT: Section 12, format=items_comma using practice field, filtered to practice-type entries}}.
+I reject every false deity, spirit, guide, ancestral spirit, familiar spirit, unholy power, or false spiritual authority connected to these practices, especially {{INJECT: Section 19, format=names_comma using name}}.
+I no longer want their benefits, and I will not be bound by their curses. I reject every false covering, every false protection, every false blessing, and every false claim over me, my family, or my descendants.
+Jesus Christ alone is Lord. I belong to Him.
+
+PRODUCT DECISION NEEDED: The slot above splits Section 12 entries into "religion-type" vs "practice-type" but Section 12's schema doesn't have a type discriminator. Options: (a) add a kind enum to Section 12 (Religion / Practice / Both), (b) render both slots from the same flat list (a little redundant but functionally correct), (c) drop one of the two slots and have the section read more generally. Recommend (b) for v1 and revisit.
+
+Page 3 — Lodges, secret societies, oaths, and ritual groups
+Father, in the Name of Jesus Christ, I renounce every lodge, secret society, occult order, hidden brotherhood or sisterhood, oath-bound group, ritual organization, or society opposed to the worship of the true God, especially {{INJECT: Section 17, format=items_comma using group}}.
+I renounce every title, rank, office, degree, initiation, sign, symbol, password, secret word, handshake, garment, apron, jewel, ring, oath, penalty, curse, ceremony, obligation, hidden teaching, false brotherhood, false covering, and false protection connected to these groups.
+I renounce especially {{INJECT: Section 17, format=items_comma using titles_or_roles, skip empties}} and {{INJECT: Section 17, format=items_comma using oaths_or_rituals, skip empties}}.
+In the Name of Jesus Christ, I break every oath, vow, pact, curse, ritual bond, and spiritual claim connected to them. I reject every spirit of secrecy, pride, fear, control, deception, false power, false light, and false worship that has worked through them.
+I revoke every consent given by me or by my ancestors to be deceived, bound, marked, covered, protected, initiated, empowered, or claimed by any spirit opposed to Jesus Christ.
+Page 4 — Agreement sins and ancestral participation
+Father, I repent of every sin by which I have agreed with evil, and I ask Your mercy for the sins by which my ancestors may have agreed with evil.
+I bring before You especially {{INJECT: Section 18, format=items_comma using agreement}}, including the participation of {{INJECT: Section 16, format=names_comma using name_or_description}} in {{INJECT: Section 16, format=items_comma using groups_or_sins_involved, skip empties}}.
+I ask forgiveness for every oath, allegiance, worship, covenant, ritual, ceremony, pact, vow, participation, or agreement contrary to You. You alone are God, and You alone deserve my allegiance.
+In the Most Holy Name of Jesus, I renounce every unholy oath, vow, pledge, covenant, initiation, ritual bond, curse, pact, seal, agreement, and spiritual claim connected to these things.
+I separate myself, my family, and my descendants from every false allegiance and every unholy spirit connected to them.
+Page 5 — Named spirits, false deities, and unholy allegiances
+In the Most Holy Name of Jesus, I completely reject and renounce every oath, allegiance, worship, covenant, ritual, prayer, offering, pact, and participation made by me or by my ancestors with any false deity, unholy spirit, familiar spirit, ancestral spirit, lodge spirit, occult spirit, spirit of false religion, or spirit of false worship.
+I renounce especially {{INJECT: Section 19, format=names_comma using name}}.
+I reject you. I renounce you. I break every agreement with you. I reject every worship, oath, pact, covenant, ritual, offering, prayer, initiation, protection, blessing, and curse connected to you.
+On the authority of Jesus Christ, and not my own, I command every spirit named here, and every spirit hidden behind these names, to release me and my family. Go where Jesus Christ commands you to go.
+I will not serve you. I will not belong to you. I will not receive your benefits, and I will not be bound by your curses.
+Jesus Christ alone is Lord.
+Page 6 — Objects, symbols, books, jewelry, and ritual items
+Father, I bring before You every object, symbol, book, image, charm, amulet, talisman, ring, garment, tool, document, statue, card, candle, oil, stone, crystal, ritual item, occult item, lodge item, false religious item, inherited object, or household object connected to evil, false worship, occult practice, oaths, curses, rituals, spells, divination, witchcraft, or unholy covenants.
+I specifically renounce and reject {{INJECT: Section 20, format=items_comma using object}}.
+In the Name of Jesus Christ, I renounce every oath, vow, pact, curse, ritual, attachment, spiritual claim, and evil influence connected to these objects.
+I reject every spirit attached to them, working through them, or claiming access because of them.
+By the Precious Blood of Jesus, I ask Almighty God to sever every evil connection between these objects and me, my family, my home, and my descendants.
+I ask You, Lord Jesus, to make these objects powerless, to sever every evil spirit from them, and to show me what must be removed, destroyed, discarded, or brought to a priest for guidance.
+In the Name of Jesus Christ, I command every evil spirit connected to these objects to leave me, my family, my home, and everything entrusted to me, and to go where the Lord Jesus Christ commands.
+Page 7 — Generational bloodline, curses, and family evils
+Lord Jesus Christ, I ask in Your Most Holy Name to remove any evil spirits that may be affecting me, my family, or my generational bloodline.
+If any curse, malefice, spell, pact, oath, vow, ritual, occult practice, false worship, or agreement with evil has been introduced by a member of this family, by me, by my ancestors, or from outside the family, I ask You to cast it out and cleanse us with Your Most Precious Blood.
+I willingly forgive my ancestors and any others who are at fault, and I ask You to absolve them of this sin and bless them.
+I repent of any evil that I have done to introduce evil into our generational line, and I ask Your forgiveness.
+I particularly ask You to cleanse our generational bloodline of {{INJECT: Section 15, format=items_comma using pattern_or_sin}}, including all curses, illnesses, sicknesses, addictions, financial curses, divorce, abuse, violence, abandonment, occult involvement, false worship, sexual sin, hatred, despair, suicide, mental torment, fear, rejection, poverty, unbelief, and every other evil handed down through the generational line.
+I also ask You to cleanse our family line of {{INJECT: Section 15, format=items_comma using pattern_or_sin — same source as above, reading "family patterns" colloquially}}.
+
+NOTE: The original prayer text had two slots here ([generational_evils] and [family_patterns]) that appear to be the same data rendered twice. Recommend rendering once and removing the redundant second slot from the final prayer, or splitting Section 15 into two sub-fields (generational sins vs. family patterns). For v1, render once.
+
+May Your Precious Blood wash over us and cleanse us all. May these evils end now through Your infinite mercy and through the power of Your Holy Cross.
+Page 8 — Curses, spells, hexes, vexes, triggers, trances, and bondages
+Father, in the Name of Jesus and by the power of His Precious Blood, I ask You to bind and break every curse, pact, spell, seal, hex, vex, trigger, trance, vow, demonic blessing, evil prayer, ritual bond, malefice, enchantment, occult assignment, ancestral curse, spoken curse, written curse, blood curse, death curse, sickness curse, poverty curse, family curse, marriage curse, infertility curse, mental torment, spiritual blindness, and every other demonic bondage sent against me, my family, my descendants, my home, my work, my possessions, or any object connected to us.
+I renounce especially {{INJECT: Section 21, format=items_comma using kind}}.
+I ask You to bind them all, break them all, cast them out, and make them powerless through the Precious Blood of Jesus.
+If any curse, spell, malefice, enchantment, or evil work remains in place against me or my family, I ask You, Lord Jesus, to break it now by the power of Your Holy Cross.
+Page 9 — Forgiveness of those who cursed or harmed the family
+If any evil entered my family line through curses, spells, malefices, rituals, enchantments, hatred, jealousy, abuse, betrayal, or evil acts done by others, I ask for the grace to forgive them.
+I choose forgiveness as an act of obedience, not emotion.
+I forgive {{INJECT: Section 2, format=names_comma using person — filtered to entries flagged as family-harm-related, OR render full Section 2 list, depending on product decision}} for the effects of their sins against me and my family. I forgive them for any damage they caused, knowingly or unknowingly.
+I release judgment against them, and I place them into Your hands, Lord Jesus.
+I ask You to break every curse, spell, malefice, enchantment, or evil work that remains in place against us.
+
+PRODUCT DECISION NEEDED: This slot reuses Section 2 (People to forgive) but specifically for people connected to family harm. Two options: (a) add a boolean field is_family_harm to Section 2 entries so this slot filters appropriately, or (b) render all of Section 2 again, which is theologically fine but redundant. Recommend (a) — small data model addition for clearer prayer rendering.
+
+Page 10 — Blocking evil from passing to future generations
+Father, I ask You in the Name of Jesus to block every unholy spirit, curse, malefice, family wound, addiction, sickness, false vow, occult bond, blood covenant, oath, evil pattern, and demonic influence from passing to my children, my descendants, and future generations.
+I especially ask You to block {{INJECT: Section 23, format=items_comma using concern}}.
+Let these evils end here. Let the Precious Blood of Jesus stand between my family and every evil inheritance. Let the Cross of Christ block every spirit that seeks to pass from one generation to another.
+Lord Jesus, bless my family line. Heal what has been wounded. Cleanse what has been defiled. Restore what has been damaged. Deliver what has been bound.
+Page 11 — Named spirits and dominant family spirits
+In the Name of Jesus Christ and by His Precious Blood, I bind and renounce every unholy spirit affecting me or my family, separately and individually.
+I renounce especially {{INJECT: Section 19, format=names_comma using name}} and every spirit connected to {{INJECT: Section 14, format=patterns_comma using checked names from the flat checklist}}.
+I renounce every spirit of Death, Infirmity, Divination, Rebellion, Lying, Rage, Manipulation, Domination, Control, Fear, Rejection, Lust, Shame, Addiction, Violence, Hatred, Confusion, Despair, Unbelief, Poverty, Suicide, Abuse, Occult Bondage, False Worship, and every other spirit opposed to Jesus Christ.
+I break every claim, agreement, attachment, assignment, foothold, and influence connected to these spirits.
+In the Name of Jesus Christ, I command every spirit I have renounced to leave me and my family now. Leave every place where you have afflicted, tempted, tormented, deceived, accused, oppressed, influenced, or harmed us.
+Go where the Lord Jesus Christ commands you to go, and do not return.
+Page 12 — Blood contracts, blood covenants, and ritual bonds
+In the Name of Jesus Christ and by His Precious Blood, I renounce and break every unholy blood contract, blood covenant, blood oath, blood ritual, pact, vow, pledge, exchange, offering, sacrifice, or bond made between me, my ancestors, or any other person, spirit, group, organization, false deity, or occult power, whether known or unknown, remembered or forgotten, intentional or unintentional.
+I renounce especially {{INJECT: Section 21, format=items_comma using kind — same source as Page 8; consider whether Section 21 should be split into "curses against family" and "blood contracts" as two subfields}}.
+
+PRODUCT DECISION NEEDED: Page 8 and Page 12 both pull from Section 21 but the source prayer text uses different terminology. Either (a) split Section 21 into two sections, or (b) leave as one section and accept the redundancy. Recommend (a) — make it Section 21a "Curses against family" and Section 21b "Blood contracts and ritual bonds" with one field each.
+
+I reject every spirit that claimed access through blood, ritual, oath, sacrifice, sexual sin, violence, abuse, self-harm, occult practice, or false worship.
+By the Precious Blood of Jesus, I ask Almighty God to break every unholy blood bond and every evil claim connected to these things.
+Let the Blood of Jesus speak louder than every other blood, every other oath, every other ritual, and every other claim.
+Page 13 — Infirmity, sickness, and physical affliction
+Father, in the Holy Name of Jesus Christ, I bring before You every infirmity, sickness, weakness, affliction, pain, disorder, torment, and bodily burden that has affected me or my family.
+I bring before You especially {{INJECT: Section 22, format=items_comma using infirmity}}.
+If any infirmity is connected to sin, trauma, occult involvement, curses, family patterns, evil spirits, unholy objects, false vows, or unholy agreements, I ask You to break that connection now by the Precious Blood of Jesus.
+I speak now to every spirit of infirmity affecting me or my family. In the Name of Jesus Christ, I command you to leave and take with you every root, sickness, oppression, torment, and affliction connected to you.
+{{INJECT: Section 22, format=infirmities_each — one statement per line, formatted as "[infirmity name], go in the Name of Jesus Christ."}}
+Father, I now ask in Jesus' Name that You release Your healing power into my body and into the bodies of my family members. Fully restore everything the thief has stolen, killed, or destroyed.
+Please heal {{INJECT: Section 22, format=items_comma using infirmity field, filtered to entries where for_healing = true}}, according to Your holy will.
+Page 14 — Other unlisted or unknown sins, agreements, and spirits
+Father, I also bring before You every sin, oath, vow, curse, agreement, spirit, object, ritual, bond, attachment, and evil influence that I have not named because I do not know it, remember it, or understand it.
+I bring before You especially {{INJECT: Section 24, format=items_comma using item}}.
+I ask the Holy Spirit to bring to light anything else that must be confessed, renounced, removed, destroyed, healed, or brought to prayer.
+In the Name of Jesus Christ, I renounce every hidden, forgotten, unlisted, unknown, disguised, or inherited agreement with evil, and I place it all under the Precious Blood of Jesus.
+I ask You, Lord Jesus, to break every evil thing that remains hidden and to bring into the light whatever still needs to be healed, confessed, renounced, or removed.
+Page 15 — Final command to spirits
+In the Name of Jesus Christ, and by the power of His Precious Blood, I speak to every unholy spirit in or around me or my family, named or unnamed, known or unknown, hidden or exposed.
+I break every remaining claim you have made. I break every legal right, attachment, agreement, foothold, assignment, and influence you have claimed through sin, curses, oaths, vows, rituals, objects, false worship, blood covenants, occult practices, sickness, trauma, generational sin, or any other evil.
+I command you now in the Name of Jesus Christ to leave me, my family, my home, my body, my mind, my soul, my memory, my imagination, my possessions, my work, and everything entrusted to me.
+Go where Jesus Christ commands you to go. Do not return. Do not retaliate. Do not transfer. Do not hide. Do not call upon any other spirit to replace you.
+Leave now in the Holy Name of Jesus Christ.
+Page 16 — Protection over family, property, pursuits, and occupations
+In the Name of Jesus Christ, I ask protection over my family, my home, my property, my body, my mind, my relationships, my work, my vocation, my ministry, my finances, my health, my prayer, my sleep, and all that belongs to me.
+I ask that every attack of the enemy against us, our belongings, our pursuits, and our occupations be made ineffective by the Precious Blood of Jesus.
+I declare my family, my home, my property, my work, my vocation, and everything entrusted to me to be under the lordship and protection of Jesus Christ.
+Blessed Virgin Mary, spread your mantle over us.
+Saint Michael the Archangel, defend us in battle.
+Holy angels of God, surround us and keep far from us every evil spirit.
+Page 17 — Cleansing, healing, filling, and closing
+Father, I ask You now in the Name of Jesus to release Your healing power into me and my family. Restore everything the thief has stolen, killed, or destroyed.
+Cleanse us with the Precious Blood of Jesus. Cleanse my spirit, my soul, my mind, my heart, my memory, my imagination, my emotions, my body, my family line, my home, and every part of my life that has been affected by these sins, curses, spirits, and bondages.
+Holy Spirit, fill every empty place. Fill every cleansed place. Fill every wounded place. Fill every place that has been touched by evil with faith, hope, charity, purity, humility, peace, obedience, courage, and holy wisdom.
+Restore the grace of baptism in me. Strengthen me in Confession, the Eucharist, prayer, forgiveness, repentance, and daily conversion.
+Lord Jesus Christ, reign in my heart. Reign in my home. Reign in my family. Reign in my memories. Reign in my body. Reign in my future.
+Father, thank You for Your mercy, Your forgiveness, Your protection, and Your love.
+I pray all of this in the Holy Name of Jesus, through the power of God the Father, and of the Son, and of the Holy Spirit.
+Amen.
+
+Part 4 — Daily Renewal Prayer
+MISSING_SOURCE
+Daily Renewal (the third prayer, prayed daily for a season after the Generational Renunciation Prayer) has not yet been written.
+The earlier source manual described it as "a final cleanup prayer prayed twice a day for thirty days" that reinforces the earlier work. In Catholic practice, this concept has good analogues — short prayers of protection, daily renewal of baptismal promises, or a brief Act of Renunciation — but the actual text needs to be drafted, in the same Catholic register as the two prayers above, before this part of the app can ship.
+Recommendation: Defer Daily Renewal entirely from this build. Ship the Personal Deliverance Prayer and the Generational Renunciation Prayer. Write Daily Renewal as a separate project, with the same author who wrote these two prayers. When it's ready, add it as a new Toolkit entry.
+Do not let the agent draft Daily Renewal. The two prayers above are well-written, theologically careful Catholic prayers. Whoever wrote them should write the third.
+
+Part 5 — Session prayers (for SessionWrapper)
+Optional bookend prayers for SessionWrapper sessions inside the Workbook.
+Opening prayer (before working on lists)
+
+Holy Spirit, come and guide me as I begin this work. Bring to my mind what I need to see today — no more, no less. Quiet every voice that is not Yours. Cover me with the Precious Blood of Jesus. Saint Michael the Archangel, defend me. Blessed Mother, pray for me. Amen.
+
+Closing prayer (after completing a section)
+
+Lord Jesus, I have brought what I can see to You. If there is anything I have missed, bring it to my mind gently, in Your time. Cover what I have named with Your Precious Blood. Thank You for Your mercy. Amen.
+
+
+Part 6 — Summary checklist
+ItemStatusAction neededPersonal Deliverance Prayer (17 pages)CompleteNoneGenerational Renunciation Prayer (17 pages)CompleteNoneDaily Renewal PrayerMissingDefer build; commission separate writingSession opening/closing prayersDrafted (short)Review for tone — these are mine, not from your source, so confirm before shipping24-section Workbook schemaReverse-engineered from prayer slotsReview schema; confirm or adjustSection 12 split (religion vs. practice)Open questionDecide on kind enum or single-slot renderingSection 21 split (curses vs. blood contracts)Open questionDecide on split or single sectionSection 2 is_family_harm flagOpen questionDecide if Section 2 entries should carry a flag for filteringSection 15 redundant slot on Page 7Open questionRender once or split into two sub-fieldsIP attorney reviewRecommended before launchAn hour of legal review is cheap insurance
+
+Notes for the agent
+
+All prayer text in Parts 2 and 3 is original Catholic prayer content, drafted for this app. Render verbatim — no edits, paraphrasing, or "smoothing."
+Slot markers {{INJECT: ...}} are the only places to interpolate data. Everywhere else, render text as-is.
+When a slot's source list is empty, omit the surrounding sentence gracefully.
+Apply the distinct visual treatment to user-injected spans (info-color background, info-color text).
+The session prayers in Part 5 are short drafts written for this file, not from a published source. The user may want to revise them — confirm before shipping.
+Daily Renewal does not exist. Do not author it.

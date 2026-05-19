@@ -3,7 +3,7 @@ import {
   users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
-  workbookEntries, workbookAttestations,
+  workbookEntries, workbookAttestations, workbookStreaks,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -29,6 +29,7 @@ import {
   type WorkbookEntry, type InsertWorkbookEntry,
   type WorkbookAttestation,
   type WorkbookSummary,
+  type WorkbookStreak, type PrayerId, type WorkbookStreakStatus,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -171,6 +172,10 @@ export interface IStorage {
   getWorkbookSummary(userId: number): Promise<WorkbookSummary>;
   setWorkbookAttestation(userId: number, sectionId: number): Promise<void>;
   clearWorkbookAttestation(userId: number, sectionId: number): Promise<void>;
+
+  // Workbook Streaks
+  getWorkbookStreakStatus(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus>;
+  completeWorkbookStreak(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus>;
 
   // session store
   sessionStore: any;
@@ -1095,6 +1100,71 @@ export class DatabaseStorage implements IStorage {
   async clearWorkbookAttestation(userId: number, sectionId: number): Promise<void> {
     await db.delete(workbookAttestations)
       .where(and(eq(workbookAttestations.userId, userId), eq(workbookAttestations.sectionId, sectionId)));
+  }
+
+  // Workbook Streaks
+  private buildStreakStatus(row: WorkbookStreak | undefined, prayerId: PrayerId): WorkbookStreakStatus {
+    const now = Date.now();
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+
+    if (!row || !row.lastCompletedAt) {
+      return { prayerId, count: 0, lastCompletedAt: null, canCompleteToday: true, streakActive: false };
+    }
+
+    const lastMs = row.lastCompletedAt.getTime();
+    const elapsed = now - lastMs;
+    const streakActive = elapsed <= FORTY_EIGHT_HOURS;
+    // Can complete again once more than 1 hour has passed (prevents double-tap) but within 48 hours
+    const canCompleteToday = elapsed > 60 * 60 * 1000; // must wait at least 1h between completions
+
+    return {
+      prayerId,
+      count: streakActive ? row.count : 0,
+      lastCompletedAt: row.lastCompletedAt.toISOString(),
+      canCompleteToday,
+      streakActive,
+    };
+  }
+
+  async getWorkbookStreakStatus(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus> {
+    const [row] = await db.select().from(workbookStreaks)
+      .where(and(eq(workbookStreaks.userId, userId), eq(workbookStreaks.prayerId, prayerId)));
+    return this.buildStreakStatus(row, prayerId);
+  }
+
+  async completeWorkbookStreak(userId: number, prayerId: PrayerId): Promise<WorkbookStreakStatus> {
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const now = new Date();
+
+    const [existing] = await db.select().from(workbookStreaks)
+      .where(and(eq(workbookStreaks.userId, userId), eq(workbookStreaks.prayerId, prayerId)));
+
+    let newCount: number;
+    if (!existing) {
+      newCount = 1;
+    } else if (!existing.lastCompletedAt) {
+      newCount = 1;
+    } else {
+      const elapsed = now.getTime() - existing.lastCompletedAt.getTime();
+      if (elapsed <= FORTY_EIGHT_HOURS) {
+        // Streak active — increment
+        newCount = existing.count + 1;
+      } else {
+        // Streak broken — restart at 1
+        // Adapted from source manual (3× daily); confirmed as once-daily by ministry decision
+        newCount = 1;
+      }
+    }
+
+    const [row] = await db.insert(workbookStreaks)
+      .values({ userId, prayerId, count: newCount, lastCompletedAt: now })
+      .onConflictDoUpdate({
+        target: [workbookStreaks.userId, workbookStreaks.prayerId],
+        set: { count: newCount, lastCompletedAt: now },
+      })
+      .returning();
+
+    return this.buildStreakStatus(row, prayerId);
   }
 }
 
