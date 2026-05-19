@@ -2850,7 +2850,7 @@ function WorkbookLinkSlide({
           flexShrink: 0,
         }}
       >
-        Open
+        Open Workbook
       </a>
     </div>
   );

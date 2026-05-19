@@ -36,6 +36,20 @@
       "when": 1744415400000,
       "tag": "0004_track_a_modules_sort_order",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1747176660000,
+      "tag": "0005_guided_prayer_responses",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779211200000,
+      "tag": "0006_workbook_tables",
+      "breakpoints": true
     }
   ]
 }
