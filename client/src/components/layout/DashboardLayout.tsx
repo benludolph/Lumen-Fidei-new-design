@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { PageContainer } from "./PageContainer";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Menu, X, LogOut, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Menu, X, LogOut, KeyRound, Eye, EyeOff, User } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -174,6 +174,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       <p className="type-body-xs" style={{ color: "var(--white-40)", margin: "2px 0 0" }}>{user.email}</p>
                     </div>
                   )}
+                  <Link href="/profile">
+                    <button
+                      data-testid="button-profile-page"
+                      onClick={() => setProfileOpen(false)}
+                      className="type-body-md"
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "none", border: "none", color: "var(--white-70)", cursor: "pointer", transition: "color 0.15s, background 0.15s", textAlign: "left" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--white-5)"; (e.currentTarget as HTMLButtonElement).style.color = "white"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; (e.currentTarget as HTMLButtonElement).style.color = "var(--white-70)"; }}
+                    >
+                      <User size={14} />
+                      Profile
+                    </button>
+                  </Link>
                   <button
                     data-testid="button-change-password"
                     onClick={() => { setProfileOpen(false); setChangePasswordOpen(true); }}
@@ -301,6 +314,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div style={{ borderTop: "0.5px solid var(--white-8)", padding: "16px 20px" }}>
             <p className="type-body-md font-medium" style={{ color: "white", margin: "0 0 2px" }}>{user.name}</p>
             <p className="type-body-xs" style={{ color: "var(--white-40)", margin: "0 0 12px" }}>{user.email}</p>
+            <Link href="/profile">
+              <button
+                data-testid="button-profile-page-mobile"
+                onClick={closeDrawer}
+                className="type-body-md"
+                style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", color: "var(--white-50)", cursor: "pointer", padding: "0 0 10px" }}
+              >
+                <User size={14} />
+                Profile
+              </button>
+            </Link>
             <button
               data-testid="button-change-password-mobile"
               onClick={() => { closeDrawer(); setChangePasswordOpen(true); }}
