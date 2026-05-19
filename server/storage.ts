@@ -166,7 +166,7 @@ export interface IStorage {
 
   // Freedom Workbook
   getWorkbookEntries(userId: number, sectionId: number): Promise<WorkbookEntry[]>;
-  upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, string>, position?: number, id?: number): Promise<WorkbookEntry>;
+  upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, unknown>, position?: number, id?: number): Promise<WorkbookEntry>;
   deleteWorkbookEntry(id: number, userId: number): Promise<void>;
   getWorkbookSummary(userId: number): Promise<WorkbookSummary>;
   setWorkbookAttestation(userId: number, sectionId: number): Promise<void>;
@@ -1045,7 +1045,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(workbookEntries.position), asc(workbookEntries.createdAt));
   }
 
-  async upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, string>, position = 0, id?: number): Promise<WorkbookEntry> {
+  async upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, unknown>, position = 0, id?: number): Promise<WorkbookEntry> {
     if (id) {
       const [row] = await db.update(workbookEntries)
         .set({ entryData, position })

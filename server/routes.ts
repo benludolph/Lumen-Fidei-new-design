@@ -2864,14 +2864,14 @@ export async function registerRoutes(
 
     const schema = z.object({
       id: z.number().optional(),
-      entryData: z.record(z.string(), z.string()),
+      entryData: z.record(z.string(), z.unknown()),
       position: z.number().optional(),
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
 
     const { id, entryData, position } = parsed.data;
-    const entry = await storage.upsertWorkbookEntry(req.user!.id, sectionId, entryData, position ?? 0, id);
+    const entry = await storage.upsertWorkbookEntry(req.user!.id, sectionId, entryData as Record<string, unknown>, position ?? 0, id);
     res.json(entry);
   });
 

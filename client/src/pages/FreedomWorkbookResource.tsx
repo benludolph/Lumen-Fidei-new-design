@@ -3,6 +3,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Link, useParams } from "wouter";
 import { ChevronRight } from "lucide-react";
 import WorkbookShell from "@/components/workbook/WorkbookShell";
+import SectionView from "@/components/workbook/SectionView";
 import { getSectionById } from "@/components/workbook/section-definitions";
 
 function Breadcrumb({ sectionName }: { sectionName?: string }) {
@@ -87,7 +88,11 @@ export default function FreedomWorkbookResource() {
           minHeight: "685px",
         }}
       >
-        <WorkbookShell />
+        {sectionId ? (
+          <SectionView sectionId={sectionId} />
+        ) : (
+          <WorkbookShell />
+        )}
       </div>
     </DashboardLayout>
   );
