@@ -5,6 +5,8 @@ export interface SectionField {
   label: string;
   placeholder?: string;
   required?: boolean;
+  /** Controls whether a single-line input or multi-line textarea is shown. Defaults to "textarea". */
+  type?: "text" | "textarea";
 }
 
 export interface SectionDefinition {
@@ -47,8 +49,8 @@ export const SECTIONS: SectionDefinition[] = [
     type: "list_builder",
     description: "Harms you've caused to others through words, actions, or neglect.",
     fields: [
-      { key: "text", label: "Sin", placeholder: "Describe briefly", required: true },
-      { key: "person", label: "Person (optional)", placeholder: "Name or relationship" },
+      { key: "text", label: "Sin", placeholder: "Describe briefly", required: true, type: "textarea" },
+      { key: "person", label: "Person (optional)", placeholder: "Name or relationship", type: "text" },
     ],
     prayerHint: "Prayer #1",
   },
@@ -82,8 +84,8 @@ export const SECTIONS: SectionDefinition[] = [
     type: "list_builder",
     description: "Unhealthy emotional, sexual, or spiritual bonds with others.",
     fields: [
-      { key: "person", label: "Person", placeholder: "Name or relationship", required: true },
-      { key: "nature", label: "Nature of tie (optional)", placeholder: "e.g. sexual, controlling" },
+      { key: "person", label: "Person", placeholder: "Name or relationship", required: true, type: "text" },
+      { key: "nature", label: "Nature of tie (optional)", placeholder: "e.g. sexual, controlling", type: "text" },
     ],
     prayerHint: "Prayer #2",
   },
@@ -93,8 +95,8 @@ export const SECTIONS: SectionDefinition[] = [
     type: "list_builder",
     description: "Those who have wounded or wronged you.",
     fields: [
-      { key: "person", label: "Person", placeholder: "Name or relationship", required: true },
-      { key: "offense", label: "Offense (optional)", placeholder: "Brief description" },
+      { key: "person", label: "Person", placeholder: "Name or relationship", required: true, type: "text" },
+      { key: "offense", label: "Offense (optional)", placeholder: "Brief description", type: "textarea" },
     ],
     prayerHint: "Prayer #2",
   },
@@ -136,8 +138,8 @@ export const SECTIONS: SectionDefinition[] = [
     type: "list_builder",
     description: "Harmful words declared over you by others that have taken hold.",
     fields: [
-      { key: "text", label: "Words", placeholder: "e.g. You'll never amount to anything", required: true },
-      { key: "source", label: "Source (optional)", placeholder: "Who said it" },
+      { key: "text", label: "Words", placeholder: "e.g. You'll never amount to anything", required: true, type: "textarea" },
+      { key: "source", label: "Source (optional)", placeholder: "Who said it", type: "text" },
     ],
     prayerHint: "Prayer #2",
   },
@@ -147,8 +149,8 @@ export const SECTIONS: SectionDefinition[] = [
     type: "list_builder",
     description: "Curses or hurtful declarations you have made over others.",
     fields: [
-      { key: "text", label: "Words spoken", placeholder: "What you said", required: true },
-      { key: "person", label: "Person (optional)", placeholder: "Who you said it to" },
+      { key: "text", label: "Words spoken", placeholder: "What you said", required: true, type: "textarea" },
+      { key: "person", label: "Person (optional)", placeholder: "Who you said it to", type: "text" },
     ],
     prayerHint: "Prayer #2",
   },

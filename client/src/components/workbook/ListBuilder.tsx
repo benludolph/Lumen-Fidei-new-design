@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
@@ -68,43 +69,60 @@ function EntryCard({
           gap: "12px",
         }}
       >
-        {section.fields.map((field) => (
-          <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.68rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "rgba(255,255,255,0.4)",
-              }}
-            >
-              {field.label}
-            </label>
-            <textarea
-              value={form[field.key] ?? ""}
-              onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
-              placeholder={field.placeholder}
-              data-testid={`input-entry-${entry.id}-${field.key}`}
-              rows={field.key === "text" ? 2 : 1}
-              style={{
-                width: "100%",
-                background: "rgba(255,255,255,0.04)",
-                border: "0.5px solid rgba(255,255,255,0.12)",
-                borderRadius: "6px",
-                padding: "8px 10px",
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.95rem",
-                color: "white",
-                outline: "none",
-                resize: "none",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
-            />
-          </div>
-        ))}
+        {section.fields.map((field) => {
+          const isTextarea = (field.type ?? "textarea") === "textarea";
+          const inputStyle: CSSProperties = {
+            width: "100%",
+            background: "rgba(255,255,255,0.04)",
+            border: "0.5px solid rgba(255,255,255,0.12)",
+            borderRadius: "6px",
+            padding: "8px 10px",
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.95rem",
+            color: "white",
+            outline: "none",
+            resize: "none",
+          };
+          return (
+            <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "0.68rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "rgba(255,255,255,0.4)",
+                }}
+              >
+                {field.label}
+              </label>
+              {isTextarea ? (
+                <textarea
+                  value={form[field.key] ?? ""}
+                  onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                  placeholder={field.placeholder}
+                  data-testid={`input-entry-${entry.id}-${field.key}`}
+                  rows={2}
+                  style={inputStyle}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={form[field.key] ?? ""}
+                  onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                  placeholder={field.placeholder}
+                  data-testid={`input-entry-${entry.id}-${field.key}`}
+                  style={inputStyle}
+                  onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
+                  onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+                />
+              )}
+            </div>
+          );
+        })}
         <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
           <button
             type="button"
@@ -334,46 +352,63 @@ function AddEntryForm({
         gap: "12px",
       }}
     >
-      {section.fields.map((field) => (
-        <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.68rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "rgba(255,255,255,0.4)",
-            }}
-          >
-            {field.label}
-            {field.required && (
-              <span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
+      {section.fields.map((field) => {
+        const isTextarea = (field.type ?? "textarea") === "textarea";
+        const inputStyle: CSSProperties = {
+          width: "100%",
+          background: "rgba(255,255,255,0.04)",
+          border: "0.5px solid rgba(255,255,255,0.12)",
+          borderRadius: "6px",
+          padding: "8px 10px",
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.95rem",
+          color: "white",
+          outline: "none",
+          resize: "none",
+        };
+        return (
+          <div key={field.key} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <label
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "rgba(255,255,255,0.4)",
+              }}
+            >
+              {field.label}
+              {field.required && (
+                <span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
+              )}
+            </label>
+            {isTextarea ? (
+              <textarea
+                value={form[field.key] ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                placeholder={field.placeholder}
+                data-testid={`input-add-${field.key}`}
+                rows={2}
+                style={inputStyle}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
+            ) : (
+              <input
+                type="text"
+                value={form[field.key] ?? ""}
+                onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
+                placeholder={field.placeholder}
+                data-testid={`input-add-${field.key}`}
+                style={inputStyle}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
+                onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
+              />
             )}
-          </label>
-          <textarea
-            value={form[field.key] ?? ""}
-            onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
-            placeholder={field.placeholder}
-            data-testid={`input-add-${field.key}`}
-            rows={field.key === "text" || field.key === "words" ? 2 : 1}
-            style={{
-              width: "100%",
-              background: "rgba(255,255,255,0.04)",
-              border: "0.5px solid rgba(255,255,255,0.12)",
-              borderRadius: "6px",
-              padding: "8px 10px",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.95rem",
-              color: "white",
-              outline: "none",
-              resize: "none",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)")}
-          />
-        </div>
-      ))}
+          </div>
+        );
+      })}
       <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
         <button
           type="button"
