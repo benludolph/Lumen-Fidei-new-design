@@ -1,0 +1,145 @@
+Freedom Workbook — Build Prompt
+A prompt for building the Freedom Workbook as a Toolkit resource in the Lumen Fidei app. Paste the section below the divider into Replit Agent (or Cursor, Claude Code, v0, etc.).
+A few notes before you paste:
+
+The Workbook is a resource, not a course. Don't let the agent rebuild it as a series of dated lessons. The point of this architecture is that it sits in the Toolkit alongside the Captivity Builder, always available, no schedule. Sessions are optional scaffolding inside it.
+Run the discovery phase first. Same as last time — the prompt opens by asking the agent to read your existing slide system and Toolkit registry before writing anything. If the agent tries to skip ahead to coding, stop it.
+Build in phases. This is bigger than the Captivity Builder. The prompt suggests a four-phase build (shell → one section end-to-end → remaining sections → prayer renders). Don't let the agent attempt the whole thing in one shot.
+The section schemas are the contract. Each of the 18 lists has a precise data shape. The schemas are what make the prayer auto-render work — if a section drifts from its schema, the prayer that pulls from it breaks. The agent should treat the schema table as authoritative.
+Two pieces of theological content need pastoral review before launch. The Strongman/Junior spirits taxonomy (List 16) is copied from Above and Beyond Christian Counseling and should be reviewed for fit with your ministry's framing. And the Prayer #2 cadence below ("once a day") is the user's adaptation of the source manual's "three times a day for three days." Make sure the call is deliberate.
+The prompt structure is reusable. Future tools (Forgiveness Builder, Examen, Renunciation Builder) will follow this scaffold — Toolkit registration, discovery phase, schema table, phased build.
+
+
+Build prompt — paste below this line
+Goal
+Add a new tool to the Lumen Fidei Toolkit called the Freedom Workbook. It is a persistent, user-scoped store of 18 structured lists, plus three auto-rendered prayers that pull from those lists.
+The Workbook is a resource, not a course. There is no daily schedule, no required order, no completion lock. The user opens it whenever they want, adds to whichever section is on their mind, and saves. When they're ready, they tap "Begin Prayer #1" and read aloud a prayer whose blanks are already filled in from their entries.
+Before you write any code — discovery phase
+Read these files and report back what you find. Do not write code yet.
+
+The Toolkit registry — where captivity_builder and any other tools are registered, surfaced in the nav, and dispatched.
+The Captivity Builder component itself — match its conventions for state, persistence, surfacing (slide-embedded vs. standalone), and styling.
+The user data store — how captivity_builder saves its library (database table, localStorage, both). The Workbook will use the same pattern.
+The slide type registry and renderer — specifically text, text_input, single_select, multi_select, and chat_flow. The Workbook will introduce one new slide type (workbook_link) that follows their conventions.
+The main app navigation — confirm the Toolkit entry is already wired from the Captivity Builder build, and that adding a second tool just means registering it.
+
+After reading, report back:
+
+The stack and framework, naming conventions, and persistence pattern (these should match what was already established for the Captivity Builder — confirm).
+How the Captivity Builder library data is structured in storage. The Workbook will use a parallel structure: one top-level key per user, with 18 sub-keys (one per list).
+Whether there are any existing helpers for rendering a "template with user data injected inline" (probably not, but worth checking — if there is one, the prayer render should use it).
+Anything in the existing code that conflicts with the spec below.
+
+Wait for my confirmation before writing code. If anything below contradicts existing patterns, the existing pattern wins — flag it and ask.
+What the tool is, top to bottom
+Surface 1 — Toolkit standalone (primary)
+A new entry in the Toolkit nav: "Freedom Workbook." Tapping it opens the Workbook shell — an index of all 18 sections with completion state (empty / N entries / done by attestation). Tapping any section opens the section editor (list builder or, for List 16, the checklist). Tapping "Begin Prayer #1" at the bottom of the index opens the rendered prayer.
+Surface 2 — Slide-embedded link (secondary)
+A new slide type called workbook_link. Renders inside a Lumen Fidei course day as a card that says something like "Open your Workbook and work on section 5 — Occult" with a button that deep-links into that section of the Workbook. The slide is marked complete when the user returns from the Workbook (any time spent counts — there is no per-slide completion threshold). This is how the existing 30-day Lumen Fidei course nudges users toward specific sections at appropriate moments without taking ownership of the data.
+Surface 3 — Optional session wrapper
+Inside the Workbook shell, a "Begin a session" button. When tapped, the app picks 1–2 sections the user hasn't filled (or invites them to choose) and runs a short flow: opening prayer → section editor(s) → closing prayer. This gives users who want pacing protection a bookended container without forcing it on everyone.
+Component architecture
+Build these in this order:
+
+<WorkbookShell> — the index page. Lists all 18 sections with their status. Has a "Begin Prayer #1" CTA. Has a "Begin a session" CTA.
+<SectionView> — renders one section. Dispatches to either <ListBuilder> (for 16 of the 18 sections) or <StrongmanChecklist> (for List 16) based on the section's schema type.
+<ListBuilder> — a configurable structured-list primitive. Takes a schema prop describing what each entry needs. Renders existing entries, an "Add entry" form, and per-entry edit/delete. Writes to the Workbook section it's bound to. This is the workhorse — 16 of the 18 sections use it.
+<StrongmanChecklist> — the unique component for List 16. Renders the 11 Strongman categories with their Junior spirits as nested checkboxes. Stores a flat array of checked junior spirit IDs.
+<PrayerRender> — a paginated reader for a prayer. Takes a prayerId (prayer_1 | prayer_2 | prayer_3) and renders the corresponding template, paginated by section. Each page is one screen of prayer text with the user's Workbook entries injected inline. User-injected spans get a distinct visual treatment (e.g., subtle highlight background, info-color text) so the user can see at a glance what came from their Workbook.
+<SessionWrapper> — wraps one or more <SectionView> instances between an opening prayer and a closing prayer. Used by Surface 3.
+<DailyRenewal> — Prayer #3 as a standalone Toolkit tool with a streak counter. Same <PrayerRender> component, different prayerId, and a "Mark complete for today" button that increments the streak. (Register this as a second Toolkit entry, separate from the Workbook.)
+workbook_link slide type — the simple slide type for Surface 2.
+
+The 18 sections — schemas
+This table is the authoritative source for what each section stores. The agent should not invent additional fields or change field names. Field names are used as keys both in the data store and in the prayer templates.
+#SectionSchema typeFields1Parentslist_builderparent (enum: Father, Mother, Grandparent), grandparent_label (text, only when parent=Grandparent), age_range (enum: <5, 5–7, 8–13, 13+), what (textarea)2Unforgivenesslist_builderperson (text), what (textarea)3Sexual sinlist_builderperson (text — name or description), encouraged_by (text, optional)4Generational sinslist_buildersin (text), ancestor (text, optional)5Occultlist_builderactivity (text), first_introducer (text), others (text, optional — comma-separated additional people)6Word curseslist_buildercurse (textarea — the words spoken), spoken_by (text)7Covenants & vowslist_buildervow_broken (text), encouraged_by (text, optional)8Idolatrylist_builderform (text), encouraged_by (text, optional)9Pridelist_builderarea (text)10Abuse / traumalist_builderevent (text), sinful_response (text), person (text, optional)11Addictionslist_builderaddiction (text), first_introducer (text), suppliers (textarea, optional), partners (textarea, optional)12Other religionslist_builderwhose (enum: Self, Ancestor), ancestor_name (text, when whose=Ancestor), religion (text), spirit_name (text, optional)13Judgmentslist_builderperson (text)14Other sinslist_buildersin (textarea)15Agreement sinslist_buildertype (enum: Secret oath group, Occult, Other), whose (enum: Self, Ancestor), ancestor_name (text, when whose=Ancestor), group_or_sin (text)16Strongman checklistchecklistSee below17Influencerslist_builder, cross-referencedjunior_spirit_ref (FK to List 16 entry), influencer (text). Only allow adding entries for junior spirits checked in List 16.18Infirmitylist_builderinfirmity (text), source (enum: Personal, Family pattern)
+List 16 — Strongman checklist data
+11 Strongman categories with Junior spirits underneath. Stored as a flat array of checked IDs of the form strongman.junior (e.g., fear.panic_attacks).
+HAUGHTY: pride_vanity, perfection, accusation_scorn, judgmental_condemning, self_judgmental_self_condemning, competition, mockery, stubbornness, selfishness, gossip, boastful, self_righteousness_embarrassment_humiliation, sarcasm, critical
+
+DEAF_AND_DUMB: mental_illness_insanity, double_mindedness, seizures_epilepsy, mind_binding, stupor
+
+SLUMBER: isolation_anti_social, sleepiness_laziness, forgetfulness, stupidity, daydreaming_trances, apathy_indifference, confusion
+
+HEAVINESS: misery_dread, rejection_self_rejection, despair_hopelessness, grief, fatigue_weariness, guilt_shame, self_pity, loneliness, depression_manic_depression, suicide_death
+
+FEAR: insecurity_inadequacy_inferiority, timidity, worry_anxiety, fear_of_death, cowardice_cowering, hiding_escaping, fear_of_authority_speaking, fear_of_being_abused, terror_torment, nightmares, panic_attacks, phobias, nervousness_hyperactivity, unrest, abandonment, fear_of_future_failure, little_girl_boy_personality_spirits
+
+JEALOUSY: impatience_frustration, bitterness_negativity_blaming, strife_division_conflict, envy_covetousness, control_manipulation, revenge_retaliation, suspicion, anger_rage, hatred_self_hatred, cruelty, murder_violence, murmuring_complaining, profanity
+
+LYING: exaggeration_drama, hypocrisy, religious_legalism_tradition, word_twisting, theft
+
+ANTI_CHRIST: doubt_and_unbelief, rebellion, humanism_intellectualism, self_help, self_exaltation
+
+WHOREDOM: worldliness, idolatry, fornication, adultery
+
+PERVERSION: lust, homosexuality_lesbianism, gender_dysphoria, prostitution_masturbation, sodomy, bestiality, molestation_incest, exhibitionism, pornography, seducing_spirit, fantasy_spirits, incubus_succubus, sensual_thoughts
+
+POVERTY_BONDAGE: hindering_distraction_greed_hoarding, gluttony, slavery_emotional_weakness, addiction, other
+The agent should put this taxonomy in a single data file (strongman_data.ts or similar) — not hardcoded inside the component — because pastoral review may revise it. Display labels for each junior spirit should also live in this file.
+For phobias, addiction, and other — render a free-text field next to the checkbox so the user can specify ("Phobia: ___").
+List 17 cross-reference
+When the user opens List 17, the available entries are only the junior spirits they checked in List 16. The list builder for 17 should iterate over checked items from 16 and show "For [junior spirit display name]: who first influenced this?" as a text field per item. Entries are stored against junior_spirit_ref (the strongman.junior ID) so they remain linked even if the user re-checks or un-checks items in 16.
+Prayer templates
+There are three prayers. Each is a template with named slots that pull from specific Workbook sections.
+Templates should live in a single file (prayer_templates.ts or similar) as a typed structure — a paginated list of sections, each with either static text or a function that takes the Workbook state and returns rendered nodes.
+Prayer #1 (one-time)
+Paginated, one screen per numbered section. User taps "Next" to advance, reads each section aloud.
+PageSectionPulls from1Universal opening ("Lord Jesus, I repent of my sins…")—21. Childhood parent relationshipList 1, grouped by parent field32. UnforgivenessList 243. Sexual sinList 354. Generational sinsList 465. OccultList 576. Word cursesList 687. Covenants and vowsList 798. IdolatryList 8109. PrideList 91110. Abuse and traumaList 101211. AddictionsList 111312. Other religionsList 121413. JudgmentsList 131514. Other sinsList 1416(skipped — handled in Prayer #2)—1716. Additional sins & 17. InfluencersList 16 + List 1718Strongman bindingList 16 (grouped by strongman category)19Dwelling cleansing—20Spirit commands—21Infirmity commandsList 1822Closing—
+The exact wording for each page comes from the source manual (which the agent should ingest as a content data file — do not paraphrase it). The agent's job is to render template + data, not to author prayer text.
+Prayer #2 (once a day for 3 days — NOTE: user has adapted this from the source manual's "3× a day for 3 days." Confirm this is intentional before shipping.)
+Paginated similarly, pulling from:
+
+List 12 (Other religions) — for renouncing
+List 15 (Agreement sins)
+List 18 (Infirmity) — for the second pass of infirmity commands
+List 16 (Strongman) — for the second binding
+
+A streak counter shows progress (1 of 3, 2 of 3, 3 of 3). User taps "Mark complete for today" at the end, which advances the counter. Counter resets if the user misses more than 24 hours.
+Prayer #3 (Daily Renewal — standalone tool)
+A separate Toolkit entry called "Daily Renewal." Same <PrayerRender> component. Single-page or short pagination. Pulls minimally from the Workbook (mostly universal text). Streak counter shows N of 30 days. Resets on missed day, or — alternative — tolerates one missed day per week (decide with the team).
+Lumen Fidei integration — the workbook_link slide type
+A simple new slide type. Slide config has:
+ts{
+  type: 'workbook_link',
+  section_id: 5, // which Workbook list this slide points to
+  prompt: 'Open the Occult section of your Workbook. Add what you remember. Take your time.',
+  cta_label: 'Open Workbook'
+}
+The slide renders the prompt text and the CTA. CTA navigates to the corresponding section of the Workbook. The slide is marked complete the moment the user navigates back to the course (regardless of whether they added entries — adding entries is between them and God, not the app's business). On revisit, the slide shows how many entries are currently in that section as a soft indicator.
+Data model
+tstype WorkbookState = {
+  userId: string;
+  sections: {
+    parents: ParentsEntry[];
+    unforgiveness: UnforgivenessEntry[];
+    // ... one per section ...
+    strongman_checks: string[]; // ["fear.panic_attacks", "heaviness.grief", ...]
+    influencers: { junior_spirit_ref: string; influencer: string }[];
+  };
+  attestations: {
+    prayer_1_complete: boolean;
+    prayer_1_completed_at: ISODate | null;
+    prayer_2_days_completed: number; // 0-3
+    prayer_2_last_completed: ISODate | null;
+    prayer_3_streak: number;
+    prayer_3_last_completed: ISODate | null;
+  };
+  updated_at: ISODate;
+}
+Save on every entry add/edit/delete (debounced ~500ms). No "Save" button — entries persist immediately, the same way the Captivity Builder library does.
+What's out of scope for this build
+
+Editing entries from the prayer view. Eventually we'll let the user tap a highlighted span inside the prayer to jump back to the Workbook entry and edit it. Not in this build.
+Sharing/export. Some users may want to share their Workbook with a confessor or pastor. Not in this build.
+Multi-device sync conflicts. Last-write-wins is fine.
+Theological customization per denomination. Templates are fixed for this build.
+Reminders/notifications for Prayer #2 and Prayer #3 streaks. Add later.
+
+Suggested build order
+Don't try to build this all at once. Four phases:
+Phase 1 — Shell + one section end-to-end. Build <WorkbookShell>, <SectionView>, and <ListBuilder>. Wire up just List 2 (Unforgiveness) — the simplest schema. Get persistence working. Get the styling right. Confirm with me before moving on.
+Phase 2 — All remaining list_builder sections. Add the schemas for the 15 other list-based sections (1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18). These should fall out of the <ListBuilder> primitive once the schema-driven rendering works.
+Phase 3 — Strongman checklist (16) and Influencers (17). Build <StrongmanChecklist>, then the cross-referenced 17.
+Phase 4 — Prayer renders. Build <PrayerRender>. Wire up Prayer #1 first (most complex, exercises every section). Then Prayer #2. Then build Daily Renewal as a separate Toolkit entry using the same component.
+After each phase, show me what you built and wait for review before continuing.
