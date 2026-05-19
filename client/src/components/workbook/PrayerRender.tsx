@@ -3,59 +3,132 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ChevronLeft, ChevronRight, Check, Flame } from "lucide-react";
 import { PRAYER_TEMPLATES } from "./prayer-templates";
+import type {
+  PrayerNode,
+  TextNode,
+  InjectNode,
+  InPrayerTextareaNode,
+  ConditionalBlockNode,
+  InjectFilter,
+  InjectFormat,
+} from "./prayer-templates";
 import { SECTIONS } from "./section-definitions";
-import type { WorkbookEntry } from "@shared/schema";
-import type { WorkbookStreakStatus, PrayerId } from "@shared/schema";
+import type { WorkbookEntry, WorkbookStreakStatus, PrayerId, UserProfile } from "@shared/schema";
 
 interface PrayerRenderProps {
   prayerId: PrayerId;
   onDone: () => void;
 }
 
-// Builds a per-section map of all entries text for injection
-function buildSectionTextMap(
-  allEntries: Record<number, WorkbookEntry[]>
-): Record<number, string> {
-  const map: Record<number, string> = {};
-  for (const [secIdStr, entries] of Object.entries(allEntries)) {
-    const secId = Number(secIdStr);
-    const section = SECTIONS.find((s) => s.id === secId);
-    if (!section || !entries.length) {
-      map[secId] = "";
-      continue;
-    }
-    // Render each entry as readable text
-    const lines = entries.map((e) => {
-      const data = e.entryData as Record<string, string>;
-      return section.fields
-        .map((f) => (data[f.key] ? data[f.key] : null))
-        .filter(Boolean)
-        .join(" — ");
-    });
-    map[secId] = lines.join("\n");
-  }
-  return map;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function joinComma(items: string[]): string {
+  if (!items.length) return "";
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
 
-// Injects [SECTION_N] placeholders with styled entry text
-function injectSectionData(
-  text: string,
-  sectionMap: Record<number, string>
-): string {
-  return text.replace(/\[SECTION_(\d+)\]/g, (_match, num) => {
-    const id = Number(num);
-    return sectionMap[id] || `(Section ${id} — no entries yet)`;
-  });
+function filterEntries(
+  entries: WorkbookEntry[],
+  filter: InjectFilter | undefined,
+): WorkbookEntry[] {
+  if (!filter) return entries;
+  switch (filter) {
+    case "where_is_family_harm":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.is_family_harm === true);
+    case "where_kind_curse":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.kind === "Curse against family");
+    case "where_kind_blood_contract":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.kind === "Blood contract/ritual bond");
+    case "where_spoken_by_nonempty":
+      return entries.filter((e) => Boolean(((e.entryData as Record<string, unknown>)?.spoken_by as string)?.trim()));
+    case "where_spoken_by_empty":
+      return entries.filter((e) => !Boolean(((e.entryData as Record<string, unknown>)?.spoken_by as string)?.trim()));
+    case "where_truth_nonempty":
+      return entries.filter((e) => Boolean(((e.entryData as Record<string, unknown>)?.truth_statement as string)?.trim()));
+    case "where_for_healing":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.for_healing === true);
+    case "whose_father":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.whose === "Father");
+    case "whose_mother":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.whose === "Mother");
+    case "whose_family":
+      return entries.filter((e) => (e.entryData as Record<string, unknown>)?.whose === "Family/Childhood");
+    case "skip_empties":
+      return entries; // handled at field extraction level
+    default:
+      return entries;
+  }
 }
+
+function evaluateInjectToString(
+  node: InjectNode,
+  allEntries: Record<number, WorkbookEntry[]>,
+  profile: UserProfile | null | undefined,
+): string {
+  // ── User Profile ──
+  if (node.profileField) {
+    if (!profile) return "";
+    const value = (profile as Record<string, unknown>)[node.profileField];
+    if (node.format === "text") {
+      return typeof value === "string" ? value : "";
+    }
+    if (Array.isArray(value)) {
+      const items = (value as string[]).filter(Boolean);
+      return joinComma(items);
+    }
+    return "";
+  }
+
+  const sectionId = node.sectionId!;
+  let entries = filterEntries(allEntries[sectionId] ?? [], node.filter);
+
+  // ── Section 14 checklist ──
+  if (node.format === "patterns_comma" || node.format === "spirits_with_every_prefix") {
+    const data = entries[0]?.entryData as Record<string, unknown> | undefined;
+    const checked: string[] = Array.isArray(data?.checked)
+      ? (data.checked as string[]).filter(Boolean)
+      : [];
+    if (!checked.length) return "";
+    if (node.format === "patterns_comma") return joinComma(checked);
+    return joinComma(checked.map((n) => `every spirit of ${n}`));
+  }
+
+  // ── Standard list_builder fields ──
+  const field = node.field!;
+  let values = entries
+    .map((e) => String((e.entryData as Record<string, unknown>)?.[field] ?? ""))
+    .filter((v) => Boolean(v.trim()));
+
+  if (node.filter === "skip_empties") {
+    values = values.filter(Boolean);
+  }
+
+  return joinComma(values);
+}
+
+function isProfileFieldNonEmpty(
+  profile: UserProfile | null | undefined,
+  profileField: string,
+): boolean {
+  if (!profile) return false;
+  const value = (profile as Record<string, unknown>)[profileField];
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return false;
+}
+
+// ─── Streak badge ─────────────────────────────────────────────────────────────
 
 function StreakBadge({ count, prayerId }: { count: number; prayerId: PrayerId }) {
-  const label =
-    prayerId === "prayer_2"
-      ? `Day ${count} of 3`
-      : prayerId === "prayer_3"
-      ? `Day ${count}`
-      : null;
-  if (!label || count === 0) return null;
+  let label: string | null = null;
+  if (prayerId === "prayer_2") {
+    label = `Day ${count} of 3`;
+  } else if (prayerId === "prayer_3" && count > 0) {
+    label = count === 1 ? "1 day with the Lord" : `${count} days with the Lord`;
+  }
+  if (!label) return null;
   return (
     <div
       style={{
@@ -85,99 +158,221 @@ function StreakBadge({ count, prayerId }: { count: number; prayerId: PrayerId })
   );
 }
 
-// Renders a block of prayer text, highlighting [SECTION_*] injected content
-function PrayerTextBlock({
-  text,
-  sectionMap,
-  hasSections,
-}: {
-  text: string;
-  sectionMap: Record<number, string>;
-  hasSections: boolean;
-}) {
-  if (!hasSections) {
-    return (
-      <div
-        style={{
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "1.05rem",
-          lineHeight: 1.7,
-          color: "rgba(255,255,255,0.75)",
-          whiteSpace: "pre-wrap",
-        }}
-      >
-        {text}
-      </div>
-    );
-  }
+// ─── Highlighted inject span ──────────────────────────────────────────────────
 
-  // Split text on [SECTION_N] placeholders and render each part
-  const parts = text.split(/(\[SECTION_\d+\])/g);
-  return (
-    <div
-      style={{
-        fontFamily: "'Afacad', sans-serif",
-        fontSize: "1.05rem",
-        lineHeight: 1.7,
-        color: "rgba(255,255,255,0.75)",
-        whiteSpace: "pre-wrap",
-      }}
-    >
-      {parts.map((part, i) => {
-        const match = part.match(/^\[SECTION_(\d+)\]$/);
-        if (!match) return <span key={i}>{part}</span>;
-        const id = Number(match[1]);
-        const content = sectionMap[id] || "";
-        if (!content) {
+const HIGHLIGHT_STYLE: React.CSSProperties = {
+  display: "inline",
+  color: "#e8c88a",
+  padding: "2px 5px",
+  borderRadius: "4px",
+  background: "rgba(232,200,138,0.08)",
+  border: "0.5px solid rgba(232,200,138,0.18)",
+};
+
+const EMPTY_INJECT_STYLE: React.CSSProperties = {
+  display: "inline",
+  fontStyle: "italic",
+  color: "rgba(255,255,255,0.22)",
+  padding: "2px 6px",
+  borderRadius: "4px",
+  background: "rgba(255,255,255,0.03)",
+  border: "0.5px dashed rgba(255,255,255,0.1)",
+};
+
+// ─── Page node renderer ───────────────────────────────────────────────────────
+
+function renderNodes(
+  nodes: PrayerNode[],
+  allEntries: Record<number, WorkbookEntry[]>,
+  profile: UserProfile | null | undefined,
+  textareaValues: Record<string, string>,
+  setTextareaValue: (key: string, val: string) => void,
+  pageIndex: number,
+  keyPrefix = "",
+): React.ReactNode {
+  return nodes.map((node, ni) => {
+    const key = `${keyPrefix}${pageIndex}-${ni}`;
+
+    if (node.type === "text") {
+      return <span key={key}>{(node as TextNode).content}</span>;
+    }
+
+    if (node.type === "in_prayer_textarea") {
+      const ta = node as InPrayerTextareaNode;
+      const val = textareaValues[key] ?? "";
+      return (
+        <span key={key} style={{ display: "block", margin: "10px 0" }}>
+          <textarea
+            value={val}
+            onChange={(e) => setTextareaValue(key, e.target.value)}
+            placeholder={ta.placeholder}
+            rows={3}
+            data-testid={`textarea-prayer-${key}`}
+            style={{
+              width: "100%",
+              background: val ? "rgba(232,200,138,0.06)" : "rgba(255,255,255,0.03)",
+              border: val
+                ? "0.5px solid rgba(232,200,138,0.3)"
+                : "0.5px solid rgba(255,255,255,0.1)",
+              borderRadius: "6px",
+              padding: "10px 14px",
+              color: val ? "#e8c88a" : "rgba(255,255,255,0.28)",
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.95rem",
+              lineHeight: 1.55,
+              resize: "vertical",
+              outline: "none",
+              transition: "border-color 0.15s, color 0.15s",
+            }}
+          />
+        </span>
+      );
+    }
+
+    if (node.type === "conditional_block") {
+      const cb = node as ConditionalBlockNode;
+      if (!isProfileFieldNonEmpty(profile, cb.profileField)) return null;
+      return (
+        <span key={key}>
+          {renderNodes(
+            cb.nodes,
+            allEntries,
+            profile,
+            textareaValues,
+            setTextareaValue,
+            pageIndex,
+            `${key}-`,
+          )}
+        </span>
+      );
+    }
+
+    if (node.type === "inject") {
+      const inj = node as InjectNode;
+
+      // ── Block format: infirmities_each ──
+      if (inj.format === "infirmities_each") {
+        const entries = filterEntries(allEntries[inj.sectionId!] ?? [], inj.filter);
+        const items = entries
+          .map((e) => String((e.entryData as Record<string, unknown>)?.[inj.field!] ?? ""))
+          .filter(Boolean);
+        if (!items.length) return null;
+        return (
+          <span key={key} style={{ display: "block", margin: "8px 0" }}>
+            {items.map((item, ii) => (
+              <span
+                key={ii}
+                style={{ display: "block", ...HIGHLIGHT_STYLE, marginBottom: "4px" }}
+              >
+                {item}, go in the Name of Jesus Christ.
+              </span>
+            ))}
+          </span>
+        );
+      }
+
+      // ── Block format: lies_with_truths ──
+      if (inj.format === "lies_with_truths") {
+        const entries = filterEntries(allEntries[6] ?? [], "where_truth_nonempty");
+        if (!entries.length) {
           return (
             <span
-              key={i}
+              key={key}
               style={{
-                display: "inline-block",
-                fontStyle: "italic",
-                color: "rgba(255,255,255,0.25)",
-                padding: "2px 6px",
-                borderRadius: "4px",
+                display: "block",
+                margin: "8px 0",
+                padding: "14px 18px",
                 background: "rgba(255,255,255,0.03)",
-                border: "0.5px dashed rgba(255,255,255,0.1)",
+                border: "0.5px solid rgba(255,255,255,0.08)",
+                borderRadius: "8px",
+                fontStyle: "italic",
+                color: "rgba(255,255,255,0.45)",
+                lineHeight: 1.65,
               }}
             >
-              (Section {id} — no entries yet)
+              {inj.emptyStateText}
             </span>
           );
         }
         return (
-          <span
-            key={i}
-            style={{
-              display: "inline-block",
-              color: "#e8c88a",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              background: "rgba(232,200,138,0.08)",
-              border: "0.5px solid rgba(232,200,138,0.18)",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {content}
+          <span key={key} style={{ display: "block", margin: "8px 0" }}>
+            {entries.map((e, ii) => {
+              const d = e.entryData as Record<string, string>;
+              return (
+                <span
+                  key={ii}
+                  style={{
+                    display: "block",
+                    marginBottom: "12px",
+                    padding: "12px 16px",
+                    background: "rgba(232,200,138,0.05)",
+                    border: "0.5px solid rgba(232,200,138,0.18)",
+                    borderRadius: "8px",
+                    color: "rgba(255,255,255,0.78)",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {"I reject the lie that "}
+                  <strong style={{ color: "#e8c88a" }}>{d.lie}</strong>
+                  {". The Lord reminds me: "}
+                  <strong style={{ color: "#e8c88a" }}>{d.truth_statement}</strong>
+                  {d.scripture_reference
+                    ? `. As Scripture says, ${d.scripture_reference}: "${d.scripture_text ?? ""}"`
+                    : "."}
+                </span>
+              );
+            })}
           </span>
         );
-      })}
-    </div>
-  );
+      }
+
+      // ── Inline format ──
+      const value = evaluateInjectToString(inj, allEntries, profile);
+      if (!value) {
+        return (
+          <span key={key} style={EMPTY_INJECT_STYLE}>
+            (not yet filled)
+          </span>
+        );
+      }
+      return (
+        <span key={key} style={HIGHLIGHT_STYLE}>
+          {value}
+        </span>
+      );
+    }
+
+    return null;
+  });
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
   const template = PRAYER_TEMPLATES[prayerId];
   const [pageIndex, setPageIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [textareaValues, setTextareaValuesState] = useState<Record<string, string>>({});
 
-  // Fetch all workbook entries across all sections
+  function setTextareaValue(key: string, val: string) {
+    setTextareaValuesState((prev) => ({ ...prev, [key]: val }));
+  }
+
+  // Fetch all workbook entries
   const sectionQueries = SECTIONS.map((s) =>
-    useQuery<WorkbookEntry[]>({
-      queryKey: [`/api/workbook/${s.id}`],
-    })
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useQuery<WorkbookEntry[]>({ queryKey: [`/api/workbook/${s.id}`] }),
   );
+
+  // Fetch user profile (needed by Daily Prayer pages 3, 8, 12)
+  const { data: profile } = useQuery<UserProfile | null>({
+    queryKey: ["/api/user-profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/user-profile", { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
 
   const { data: streakStatus } = useQuery<WorkbookStreakStatus>({
     queryKey: [`/api/workbook/streak/${prayerId}`],
@@ -197,7 +392,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
   SECTIONS.forEach((s, i) => {
     allEntries[s.id] = sectionQueries[i].data ?? [];
   });
-  const sectionMap = buildSectionTextMap(allEntries);
 
   if (!template) {
     return (
@@ -210,15 +404,8 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
   const currentPage = template.pages[pageIndex];
   const isFirst = pageIndex === 0;
   const isLast = pageIndex === template.pages.length - 1;
-  const hasSections = currentPage.type === "template";
-  const resolvedText =
-    currentPage.type === "template"
-      ? injectSectionData(currentPage.text, sectionMap)
-      : currentPage.text;
-
   const canComplete =
     isLast && streakStatus?.canCompleteToday !== false && !completed;
-
   const streakCount = streakStatus?.count ?? 0;
 
   return (
@@ -268,7 +455,9 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
             Freedom Workbook
           </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}
+          >
             <p
               style={{
                 fontFamily: "'Afacad', sans-serif",
@@ -289,13 +478,13 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
             className="font-serif"
             style={{
               fontWeight: 500,
-              fontSize: "clamp(26px, 4vw + 8px, 44px)",
-              lineHeight: 1.1,
+              fontSize: "clamp(22px, 3.5vw + 6px, 38px)",
+              lineHeight: 1.15,
               color: "white",
               margin: 0,
             }}
           >
-            {template.subtitle.replace("{day}", String(streakCount + 1))}
+            {currentPage.title}
           </h1>
         </div>
 
@@ -319,8 +508,8 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
                   i === pageIndex
                     ? "rgba(255,255,255,0.5)"
                     : i < pageIndex
-                    ? "rgba(255,255,255,0.2)"
-                    : "rgba(255,255,255,0.08)",
+                      ? "rgba(255,255,255,0.2)"
+                      : "rgba(255,255,255,0.08)",
                 transition: "all 0.2s ease",
               }}
             />
@@ -362,16 +551,36 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
               />
             </div>
           ) : (
-            <PrayerTextBlock
-              text={resolvedText}
-              sectionMap={sectionMap}
-              hasSections={hasSections}
-            />
+            <div
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "1.05rem",
+                lineHeight: 1.78,
+                color: "rgba(255,255,255,0.75)",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {renderNodes(
+                currentPage.nodes,
+                allEntries,
+                profile,
+                textareaValues,
+                setTextareaValue,
+                pageIndex,
+              )}
+            </div>
           )}
         </div>
 
         {/* Navigation */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "space-between" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            justifyContent: "space-between",
+          }}
+        >
           <button
             type="button"
             onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
@@ -399,7 +608,7 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
           <div style={{ display: "flex", gap: "8px" }}>
             {isLast ? (
               <>
-                {/* Mark complete (for prayer_2 and prayer_3 which have streaks) */}
+                {/* Mark complete (prayer_2 and prayer_3 have streaks) */}
                 {(prayerId === "prayer_2" || prayerId === "prayer_3") && !completed && (
                   <button
                     type="button"
@@ -415,7 +624,9 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
                       background: canComplete
                         ? "rgba(240,120,48,0.14)"
                         : "rgba(255,255,255,0.03)",
-                      border: `0.5px solid ${canComplete ? "rgba(240,120,48,0.35)" : "rgba(255,255,255,0.06)"}`,
+                      border: `0.5px solid ${
+                        canComplete ? "rgba(240,120,48,0.35)" : "rgba(255,255,255,0.06)"
+                      }`,
                       fontFamily: "'Afacad', sans-serif",
                       fontSize: "0.82rem",
                       fontWeight: 600,
@@ -428,8 +639,8 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
                     {completeMutation.isPending
                       ? "Saving…"
                       : streakStatus?.canCompleteToday === false
-                      ? "Already marked today"
-                      : "Mark complete for today"}
+                        ? "Already marked today"
+                        : "Mark complete for today"}
                   </button>
                 )}
                 {/* Done button */}
@@ -459,7 +670,9 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
             ) : (
               <button
                 type="button"
-                onClick={() => setPageIndex((p) => Math.min(template.pages.length - 1, p + 1))}
+                onClick={() =>
+                  setPageIndex((p) => Math.min(template.pages.length - 1, p + 1))
+                }
                 data-testid="button-prayer-next"
                 style={{
                   display: "flex",
@@ -481,29 +694,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Pending text notice */}
-        <div
-          style={{
-            marginTop: "20px",
-            padding: "10px 14px",
-            borderRadius: "6px",
-            background: "rgba(240,120,48,0.06)",
-            border: "0.5px solid rgba(240,120,48,0.15)",
-          }}
-        >
-          <p
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.78rem",
-              color: "rgba(240,120,48,0.6)",
-              margin: 0,
-              fontStyle: "italic",
-            }}
-          >
-            Prayer text pending — the ministry will supply the verbatim wording from the source manual shortly.
-          </p>
         </div>
       </div>
     </div>

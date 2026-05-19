@@ -55,7 +55,7 @@ function Breadcrumb() {
           className="type-body-lg"
           style={{ color: "var(--white-60)", whiteSpace: "nowrap" }}
         >
-          Daily Renewal
+          Daily Prayer
         </span>
       </PageContainer>
     </div>
