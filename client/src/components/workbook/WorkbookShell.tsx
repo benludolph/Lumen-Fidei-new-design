@@ -218,46 +218,85 @@ export default function WorkbookShell() {
           </div>
         )}
 
-        {/* Begin Prayer CTA — disabled until Phase 3 */}
-        <div
-          style={{
-            marginTop: "32px",
-            padding: "20px 24px",
-            borderRadius: "10px",
-            background: "rgba(255,255,255,0.02)",
-            border: "0.5px solid rgba(255,255,255,0.06)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "16px",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p className="type-body-md" style={{ color: "rgba(255,255,255,0.5)", margin: 0, marginBottom: "2px" }}>
-              Freedom Prayer
-            </p>
-            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
-              Complete the sections above to begin your prayers.
-            </p>
-          </div>
+        {/* Prayer & Session CTAs — both disabled until Phase 3 */}
+        <div style={{ marginTop: "32px", display: "flex", flexDirection: "column", gap: "8px" }}>
           <div
-            data-testid="button-begin-prayer-1"
             style={{
+              padding: "20px 24px",
+              borderRadius: "10px",
+              background: "rgba(255,255,255,0.02)",
+              border: "0.5px solid rgba(255,255,255,0.06)",
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              borderRadius: "6px",
-              background: "rgba(255,255,255,0.04)",
-              border: "0.5px solid rgba(255,255,255,0.08)",
-              cursor: "not-allowed",
-              opacity: 0.5,
+              justifyContent: "space-between",
+              gap: "16px",
             }}
           >
-            <Lock style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.4)" }} />
-            <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Begin Prayer #1
-            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="type-body-md" style={{ color: "rgba(255,255,255,0.5)", margin: 0, marginBottom: "2px" }}>
+                Freedom Prayer
+              </p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
+                Complete the sections above to begin your prayers.
+              </p>
+            </div>
+            <div
+              data-testid="button-begin-prayer-1"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                background: "rgba(255,255,255,0.04)",
+                border: "0.5px solid rgba(255,255,255,0.08)",
+                cursor: "not-allowed",
+                opacity: 0.5,
+              }}
+            >
+              <Lock style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.4)" }} />
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Begin Prayer #1
+              </span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: "16px 24px",
+              borderRadius: "10px",
+              background: "rgba(255,255,255,0.015)",
+              border: "0.5px solid rgba(255,255,255,0.05)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.3)", margin: 0 }}>
+                Guided Session
+              </p>
+            </div>
+            <div
+              data-testid="button-begin-session"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "7px 14px",
+                borderRadius: "6px",
+                background: "rgba(255,255,255,0.03)",
+                border: "0.5px solid rgba(255,255,255,0.06)",
+                cursor: "not-allowed",
+                opacity: 0.45,
+              }}
+            >
+              <Lock style={{ width: "11px", height: "11px", color: "rgba(255,255,255,0.3)" }} />
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Begin a session
+              </span>
+            </div>
           </div>
         </div>
       </div>

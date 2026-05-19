@@ -19,6 +19,7 @@ import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
 import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
+import { getSectionById } from "@/components/workbook/section-definitions";
 
 import folderImg from "@assets/Folder_1778623094806.png";
 
@@ -1466,65 +1467,11 @@ export function LessonSlide({
         ) : type === "pdf_download" ? (
           <PdfDownloadSlide content={content} onInteracted={onInteracted} />
         ) : type === "workbook_link" ? (
-          (() => {
-            let sectionId: number | undefined;
-            let label = "Open Workbook";
-            try {
-              const parsed = JSON.parse(content);
-              sectionId = parsed.sectionId;
-              if (parsed.label) label = parsed.label;
-            } catch {}
-            const href = sectionId
-              ? `/resources/tools/freedom-workbook/${sectionId}`
-              : "/resources/tools/freedom-workbook";
-            return (
-              <div
-                style={{
-                  borderRadius: "10px",
-                  border: "0.5px solid rgba(255,255,255,0.1)",
-                  background: "rgba(255,255,255,0.03)",
-                  padding: "20px 24px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: "16px",
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", margin: 0, marginBottom: "4px" }}>
-                    Freedom Workbook
-                  </p>
-                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "1rem", color: "rgba(255,255,255,0.8)", margin: 0 }}>
-                    {label}
-                  </p>
-                </div>
-                <a
-                  href={href}
-                  data-testid="button-open-workbook"
-                  onClick={() => { if (onInteracted) onInteracted(); }}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "8px 16px",
-                    borderRadius: "6px",
-                    background: "rgba(255,255,255,0.08)",
-                    border: "0.5px solid rgba(255,255,255,0.15)",
-                    textDecoration: "none",
-                    fontFamily: "'Afacad', sans-serif",
-                    fontSize: "0.8rem",
-                    fontWeight: 600,
-                    color: "white",
-                    letterSpacing: "0.04em",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                  }}
-                >
-                  Open Workbook
-                </a>
-              </div>
-            );
-          })()
+          <WorkbookLinkSlide
+            content={content}
+            dayNumber={dayNumber}
+            onInteracted={onInteracted}
+          />
         ) : (
           <TextSlide content={content} />
         )}
@@ -2801,6 +2748,110 @@ function QuizResultSlide({
           You answered {answered} of {total} questions.
         </p>
       )}
+    </div>
+  );
+}
+
+function WorkbookLinkSlide({
+  content,
+  dayNumber,
+  onInteracted,
+}: {
+  content: string;
+  dayNumber: number;
+  onInteracted?: () => void;
+}) {
+  let sectionId: number | undefined;
+  let label: string | undefined;
+  try {
+    const parsed = JSON.parse(content || "{}");
+    if (typeof parsed.sectionId === "number") sectionId = parsed.sectionId;
+    if (typeof parsed.label === "string" && parsed.label.trim()) label = parsed.label.trim();
+  } catch {
+    /* use defaults */
+  }
+
+  const section = sectionId != null ? getSectionById(sectionId) : undefined;
+  const displayName = section?.name ?? label ?? "Freedom Workbook";
+  const href = sectionId != null
+    ? `/resources/tools/freedom-workbook/${sectionId}`
+    : "/resources/tools/freedom-workbook";
+  const storageKey = `workbook_link_visited_day${dayNumber}_sec${sectionId ?? "root"}`;
+
+  useEffect(() => {
+    if (localStorage.getItem(storageKey) === "true") {
+      localStorage.removeItem(storageKey);
+      onInteracted?.();
+    }
+  }, []);
+
+  const handleClick = () => {
+    localStorage.setItem(storageKey, "true");
+  };
+
+  return (
+    <div
+      style={{
+        borderRadius: "10px",
+        border: "0.5px solid rgba(255,255,255,0.1)",
+        background: "rgba(255,255,255,0.03)",
+        padding: "20px 24px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "16px",
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "rgba(255,255,255,0.35)",
+            margin: 0,
+            marginBottom: "4px",
+          }}
+        >
+          Freedom Workbook
+        </p>
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "1rem",
+            color: "rgba(255,255,255,0.85)",
+            margin: 0,
+          }}
+        >
+          {displayName}
+        </p>
+      </div>
+      <a
+        href={href}
+        data-testid="button-open-workbook"
+        onClick={handleClick}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "8px 16px",
+          borderRadius: "6px",
+          background: "rgba(255,255,255,0.08)",
+          border: "0.5px solid rgba(255,255,255,0.15)",
+          textDecoration: "none",
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.8rem",
+          fontWeight: 600,
+          color: "white",
+          letterSpacing: "0.04em",
+          whiteSpace: "nowrap",
+          flexShrink: 0,
+        }}
+      >
+        Open
+      </a>
     </div>
   );
 }
