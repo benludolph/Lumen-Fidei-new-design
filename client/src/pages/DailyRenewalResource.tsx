@@ -185,7 +185,6 @@ export default function DailyRenewalResource() {
     queryKey: ["/api/user-profile"],
     queryFn: async () => {
       const res = await fetch("/api/user-profile", { credentials: "include" });
-      if (res.status === 404) return null;
       if (!res.ok) throw new Error("Failed to load profile");
       return res.json();
     },

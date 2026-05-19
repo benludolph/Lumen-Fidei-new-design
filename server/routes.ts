@@ -2948,10 +2948,21 @@ export async function registerRoutes(
 
   // === User Profile ===
 
-  // GET /api/user-profile — returns current user's profile or null
+  // GET /api/user-profile — returns current user's profile, or empty defaults if not yet created
   app.get("/api/user-profile", requireAuth, async (req, res) => {
     const profile = await storage.getUserProfile(req.user!.id);
-    if (!profile) return res.status(404).json(null);
+    if (!profile) {
+      return res.json({
+        id: null,
+        userId: req.user!.id,
+        familyMembers: [],
+        spouseName: "",
+        childrenNames: [],
+        chronicIssues: [],
+        chronicIdentityLabels: [],
+        updatedAt: null,
+      });
+    }
     res.json(profile);
   });
 
