@@ -104,11 +104,48 @@ export default function SectionView({ sectionId, inSheet }: SectionViewProps) {
               fontSize: "1rem",
               color: "rgba(255,255,255,0.5)",
               margin: 0,
-              lineHeight: 1.5,
+              lineHeight: 1.6,
             }}
           >
             {section.description}
           </p>
+          {section.actionItem && (
+            <div
+              style={{
+                marginTop: "20px",
+                padding: "16px 20px",
+                borderLeft: "3px solid rgba(255,255,255,0.18)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                borderRadius: "0 8px 8px 0",
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  color: "rgba(255,255,255,0.35)",
+                  margin: 0,
+                  marginBottom: "6px",
+                }}
+              >
+                Action Item
+              </p>
+              <p
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "0.95rem",
+                  color: "rgba(255,255,255,0.55)",
+                  margin: 0,
+                  lineHeight: 1.6,
+                }}
+              >
+                {section.actionItem}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Content — dispatch by section type */}
