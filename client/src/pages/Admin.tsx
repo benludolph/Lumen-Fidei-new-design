@@ -2338,7 +2338,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2371,6 +2371,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   confession_finder: "Confession Finder",
   pdf_download: "PDF Download",
   guided_prayer_process: "Guided Prayer",
+  workbook_link: "Workbook Link",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2399,6 +2400,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   confession_finder: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200",
   pdf_download: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   guided_prayer_process: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  workbook_link: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
 };
 
 // ============================================================
@@ -5838,6 +5840,7 @@ function TrackAContentManagementView() {
     if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
     if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
+    if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
     return "";
   };
 
@@ -6336,7 +6339,9 @@ function TrackAContentManagementView() {
                           <SlideTypeBadge type={slide.type} />
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate" data-testid={`text-slide-preview-${index}`}>
-                              {slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
+                              {slide.type === "workbook_link"
+                                ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
                         </div>
@@ -6535,6 +6540,49 @@ function TrackAContentManagementView() {
                                   data-testid={`textarea-slide-gpp-${index}`}
                                 />
                                 <p className="text-[11px] text-muted-foreground/60">Edit the JSON to configure steps (instruction, input, list_input, choice, prayer, reflection). Variable names in prayer_text use {`{{variable_name}}`} syntax.</p>
+                              </div>
+                            ) : slide.type === "workbook_link" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
+                                  <input
+                                    type="number"
+                                    value={(() => { try { const p = JSON.parse(slide.content); return p.sectionId ?? ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
+                                      }
+                                    }}
+                                    placeholder="Leave blank to link to the workbook root"
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-workbook-section-id-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                                  <input
+                                    type="text"
+                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.label = e.target.value;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ sectionId: null, label: e.target.value }));
+                                      }
+                                    }}
+                                    placeholder="Override the default display name..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-workbook-label-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
+                                </div>
                               </div>
                             ) : (
                               <div className="space-y-1">
@@ -7156,6 +7204,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
   if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
   if (type === "guided_prayer_process") return GUIDED_PRAYER_OCCULT_DEFAULT;
+  if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
   return "";
 }
 
@@ -7379,7 +7428,9 @@ function PrelimContentManagementView() {
                           <SlideTypeBadge type={slide.type} />
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate">
-                              {slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
+                              {slide.type === "workbook_link"
+                                ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
                         </div>
@@ -7547,6 +7598,49 @@ function PrelimContentManagementView() {
                                   data-testid={`textarea-prelim-gpp-${index}`}
                                 />
                                 <p className="text-[11px] text-muted-foreground/60">Edit the JSON to configure steps (instruction, input, list_input, choice, prayer, reflection). Variable names in prayer_text use {`{{variable_name}}`} syntax.</p>
+                              </div>
+                            ) : slide.type === "workbook_link" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
+                                  <input
+                                    type="number"
+                                    value={(() => { try { const p = JSON.parse(slide.content); return p.sectionId ?? ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
+                                      }
+                                    }}
+                                    placeholder="Leave blank to link to the workbook root"
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-prelim-workbook-section-id-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                                  <input
+                                    type="text"
+                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.label = e.target.value;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ sectionId: null, label: e.target.value }));
+                                      }
+                                    }}
+                                    placeholder="Override the default display name..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-prelim-workbook-label-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
+                                </div>
                               </div>
                             ) : (
                               <div className="space-y-1">
@@ -8325,7 +8419,9 @@ function HealingAdminView() {
                           <SlideTypeBadge type={slide.type} />
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate">
-                              {slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
+                              {slide.type === "workbook_link"
+                                ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
                         </div>
@@ -8370,6 +8466,49 @@ function HealingAdminView() {
                               <ImageCarouselSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
                             ) : slide.type === "cross_grid" ? (
                               <CrossGridSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
+                            ) : slide.type === "workbook_link" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
+                                  <input
+                                    type="number"
+                                    value={(() => { try { const p = JSON.parse(slide.content); return p.sectionId ?? ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
+                                      }
+                                    }}
+                                    placeholder="Leave blank to link to the workbook root"
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-healing-workbook-section-id-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                                  <input
+                                    type="text"
+                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try {
+                                        const p = JSON.parse(slide.content);
+                                        p.label = e.target.value;
+                                        updateSlide(index, "content", JSON.stringify(p));
+                                      } catch {
+                                        updateSlide(index, "content", JSON.stringify({ sectionId: null, label: e.target.value }));
+                                      }
+                                    }}
+                                    placeholder="Override the default display name..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-healing-workbook-label-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
+                                </div>
+                              </div>
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
