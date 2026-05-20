@@ -33,7 +33,7 @@ function Breadcrumb({ name }: { name: string }) {
     <div
       style={{
         position: "sticky",
-        top: "72px",
+        top: 0,
         zIndex: 40,
         height: "60px",
         display: "flex",
