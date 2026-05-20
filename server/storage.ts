@@ -97,7 +97,7 @@ export interface IStorage {
   getTrackAContentByPosition(position: number): Promise<TrackAContent | undefined>;
   getAllTrackAContent(): Promise<TrackAContent[]>;
   reorderTrackAContent(dayNumbers: number[]): Promise<void>;
-  renumberTrackAContent(): Promise<{ oldDay: number; newDay: number }[]>;
+  renumberTrackAContent(): Promise<{ dayChanges: { oldDay: number; newDay: number }[]; weekChanges: number }>;
   upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent>;
 
   // Cohort Settings
@@ -595,38 +595,77 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async renumberTrackAContent(): Promise<{ oldDay: number; newDay: number }[]> {
-    // Get all days (excluding day 0) ordered by week then current day number
-    const all = await db.select().from(trackAContent)
-      .where(sql`${trackAContent.dayNumber} > 0`)
-      .orderBy(asc(trackAContent.weekNumber), asc(trackAContent.dayNumber));
+  async renumberTrackAContent(): Promise<{ dayChanges: { oldDay: number; newDay: number }[]; weekChanges: number }> {
+    // Get modules in their current drag order (sortOrder) to determine new week sequence
+    const modules = await db.select().from(trackAModules)
+      .orderBy(asc(trackAModules.sortOrder), asc(trackAModules.weekNumber));
 
-    // Build old → new mapping (sequential 1, 2, 3...)
-    const mapping = all.map((row, i) => ({ oldDay: row.dayNumber, newDay: i + 1 }))
-      .filter(m => m.oldDay !== m.newDay);
+    // Build ordered list of content rows following the drag-sorted module order
+    type ContentWithNewWeek = TrackAContent & { newWeek: number };
+    const allContent: ContentWithNewWeek[] = [];
+    for (let i = 0; i < modules.length; i++) {
+      const mod = modules[i];
+      const weekContent = await db.select().from(trackAContent)
+        .where(and(eq(trackAContent.weekNumber, mod.weekNumber), sql`${trackAContent.dayNumber} > 0`))
+        .orderBy(asc(trackAContent.dayNumber));
+      weekContent.forEach(row => allContent.push({ ...row, newWeek: i + 1 }));
+    }
 
-    if (mapping.length === 0) return [];
+    // Build full mapping: new sequential day and new week for every content row
+    const fullMapping = allContent.map((row, i) => ({
+      oldDay: row.dayNumber,
+      newDay: i + 1,
+      oldWeek: row.weekNumber,
+      newWeek: row.newWeek,
+    }));
+
+    const dayChanges = fullMapping.filter(m => m.oldDay !== m.newDay);
+    const needsUpdate = fullMapping.filter(m => m.oldDay !== m.newDay || m.oldWeek !== m.newWeek);
+
+    // Determine which modules need their weekNumber reassigned
+    const moduleWeekChanges = modules.filter((mod, i) => mod.weekNumber !== i + 1);
+
+    if (needsUpdate.length === 0 && moduleWeekChanges.length === 0) {
+      return { dayChanges: [], weekChanges: 0 };
+    }
 
     await db.transaction(async (tx) => {
-      // Step 1: move to temp values to avoid unique constraint violations
-      for (const { oldDay } of mapping) {
+      // Step 1: move day_number to temp values (avoids unique constraint conflicts)
+      for (const { oldDay } of dayChanges) {
         const tempDay = oldDay + 10000;
         await tx.execute(sql`UPDATE track_a_content SET day_number = ${tempDay} WHERE day_number = ${oldDay}`);
         await tx.execute(sql`UPDATE user_answers SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
         await tx.execute(sql`UPDATE prayer_completions SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
         await tx.execute(sql`UPDATE survey_responses SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track = 'A'`);
       }
-      // Step 2: write final values
-      for (const { oldDay, newDay } of mapping) {
-        const tempDay = oldDay + 10000;
-        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
-        await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${tempDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
-        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${tempDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
-        await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${tempDay} AND track = 'A'`);
+
+      // Step 2: write final day_number and week_number on every row that needs it
+      for (const { oldDay, newDay, newWeek } of needsUpdate) {
+        const hasDayChange = oldDay !== newDay;
+        const lookupDay = hasDayChange ? oldDay + 10000 : oldDay;
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay}, week_number = ${newWeek} WHERE day_number = ${lookupDay}`);
+        if (hasDayChange) {
+          await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
+          await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
+          await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND track = 'A'`);
+        }
+      }
+
+      // Step 3a: move module week_numbers to temp values (avoids unique constraint conflicts)
+      for (const mod of moduleWeekChanges) {
+        await tx.execute(sql`UPDATE track_a_modules SET week_number = ${mod.id + 1000} WHERE id = ${mod.id}`);
+      }
+      // Step 3b: write final week_numbers for all reordered modules
+      for (let i = 0; i < modules.length; i++) {
+        const mod = modules[i];
+        const newWeek = i + 1;
+        if (mod.weekNumber !== newWeek) {
+          await tx.execute(sql`UPDATE track_a_modules SET week_number = ${newWeek} WHERE id = ${mod.id}`);
+        }
       }
     });
 
-    return mapping;
+    return { dayChanges, weekChanges: moduleWeekChanges.length };
   }
 
   async upsertTrackAContent(content: InsertTrackAContent): Promise<TrackAContent> {

@@ -5730,9 +5730,14 @@ function TrackAContentManagementView() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/track-a-content'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/track-a-modules'] });
       setRenumberConfirmOpen(false);
-      const count = data.changes?.length ?? 0;
-      toast({ title: "Days renumbered", description: count > 0 ? `${count} day${count === 1 ? "" : "s"} updated to sequential numbering.` : "All day numbers were already in order." });
+      const dayCount = data.changes?.length ?? 0;
+      const weekCount = data.weekChanges ?? 0;
+      const parts: string[] = [];
+      if (dayCount > 0) parts.push(`${dayCount} day${dayCount === 1 ? "" : "s"} renumbered`);
+      if (weekCount > 0) parts.push(`${weekCount} week${weekCount === 1 ? "" : "s"} renumbered`);
+      toast({ title: "Renumbering complete", description: parts.length > 0 ? parts.join(", ") + "." : "All numbers were already in order." });
     },
     onError: () => toast({ title: "Failed to renumber days", variant: "destructive" }),
   });

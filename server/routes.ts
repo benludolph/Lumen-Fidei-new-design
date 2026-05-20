@@ -626,8 +626,8 @@ export async function registerRoutes(
 
   app.post('/api/admin/track-a/renumber', requireRole('admin'), async (req, res) => {
     try {
-      const changes = await storage.renumberTrackAContent();
-      res.json({ ok: true, changes });
+      const { dayChanges, weekChanges } = await storage.renumberTrackAContent();
+      res.json({ ok: true, changes: dayChanges, weekChanges });
     } catch (error) {
       throw error;
     }
