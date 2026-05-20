@@ -22,8 +22,9 @@ import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
 import { getSectionById } from "@/components/workbook/section-definitions";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import type { WorkbookSummary } from "@shared/schema";
+import type { WorkbookSummary, WorkbookStreakStatus, PrayerId } from "@shared/schema";
 import WorkbookSectionSheet from "@/components/workbook/WorkbookSectionSheet";
+import PrayerSheet from "@/components/workbook/PrayerSheet";
 
 import folderImg from "@assets/Folder_1778623094806.png";
 
@@ -76,7 +77,8 @@ export type SlideType =
   | "confession_finder"
   | "pdf_download"
   | "guided_prayer_process"
-  | "workbook_link";
+  | "workbook_link"
+  | "prayer_link";
 
 
 export interface QuizData {
@@ -1476,6 +1478,8 @@ export function LessonSlide({
             dayNumber={dayNumber}
             onInteracted={onInteracted}
           />
+        ) : type === "prayer_link" ? (
+          <PrayerLinkSlide content={content} onInteracted={onInteracted} />
         ) : (
           <TextSlide content={content} />
         )}
@@ -2918,6 +2922,173 @@ function WorkbookLinkSlide({
       <AnimatePresence>
         {sheetOpen && sectionId != null && (
           <WorkbookSectionSheet sectionId={sectionId} onClose={handleClose} />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function PrayerLinkSlide({
+  content,
+  onInteracted,
+}: {
+  content: string;
+  onInteracted?: () => void;
+}) {
+  let prayerId: PrayerId = "prayer_1";
+  let label: string | undefined;
+  try {
+    const parsed = JSON.parse(content || "{}");
+    if (parsed.prayerId === "prayer_1" || parsed.prayerId === "prayer_2" || parsed.prayerId === "prayer_3") {
+      prayerId = parsed.prayerId;
+    }
+    if (typeof parsed.label === "string" && parsed.label.trim()) label = parsed.label.trim();
+  } catch {
+    /* use defaults */
+  }
+
+  const PRAYER_NAMES: Record<PrayerId, string> = {
+    prayer_1: "Personal Deliverance Prayer",
+    prayer_2: "Generational Renunciation Prayer",
+    prayer_3: "Daily Prayer",
+  };
+  const PRAYER_SUBTITLES: Record<PrayerId, string> = {
+    prayer_1: "Pray once, with intention, after working through the Workbook",
+    prayer_2: "3-day binding prayer for generational and ancestral sins",
+    prayer_3: "Ongoing daily prayer — your living armor",
+  };
+
+  const displayName = label || PRAYER_NAMES[prayerId];
+  const subtitle = PRAYER_SUBTITLES[prayerId];
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const { data: streak } = useQuery<WorkbookStreakStatus>({
+    queryKey: [`/api/workbook/streak/${prayerId}`],
+  });
+
+  const streakCount = streak?.count ?? 0;
+  const isStarted = streakCount > 0;
+  const isComplete = prayerId === "prayer_1" ? isStarted : prayerId === "prayer_2" ? streakCount >= 3 : false;
+
+  const handleDone = () => {
+    setSheetOpen(false);
+    onInteracted?.();
+  };
+
+  const buttonLabel = isComplete ? "Pray Again" : isStarted && prayerId !== "prayer_1" ? "Continue" : "Begin Prayer";
+  const borderColor = isComplete ? "rgba(100,210,130,0.2)" : isStarted ? "rgba(240,120,48,0.2)" : "rgba(255,255,255,0.1)";
+  const bgColor = isComplete ? "rgba(100,210,130,0.04)" : isStarted ? "rgba(240,120,48,0.04)" : "rgba(255,255,255,0.03)";
+  const btnBg = isComplete ? "rgba(100,210,130,0.1)" : isStarted ? "rgba(240,120,48,0.1)" : "rgba(255,255,255,0.08)";
+  const btnBorder = isComplete ? "rgba(100,210,130,0.25)" : isStarted ? "rgba(240,120,48,0.25)" : "rgba(255,255,255,0.15)";
+  const btnColor = isComplete ? "rgba(100,210,130,0.9)" : isStarted ? "rgba(240,120,48,0.9)" : "white";
+
+  return (
+    <>
+      <div
+        style={{
+          borderRadius: "10px",
+          border: `0.5px solid ${borderColor}`,
+          background: bgColor,
+          padding: "20px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "16px",
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "rgba(255,255,255,0.35)",
+                margin: 0,
+              }}
+            >
+              The Deliverance Workbook
+            </p>
+            {isComplete && (
+              <CheckCircle2 style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }} />
+            )}
+          </div>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "1rem",
+              color: "rgba(255,255,255,0.85)",
+              margin: 0,
+              marginBottom: "4px",
+            }}
+          >
+            {displayName}
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.78rem",
+              color: "rgba(255,255,255,0.35)",
+              margin: 0,
+              marginBottom: isStarted && prayerId === "prayer_2" ? "8px" : 0,
+            }}
+          >
+            {subtitle}
+          </p>
+          {prayerId === "prayer_2" && isStarted && (
+            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "50%",
+                    background: i < streakCount ? "#F07830" : "rgba(255,255,255,0.1)",
+                  }}
+                />
+              ))}
+              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.65rem", color: "rgba(240,120,48,0.7)", marginLeft: "4px" }}>
+                Day {streakCount} of 3
+              </span>
+            </div>
+          )}
+          {prayerId === "prayer_3" && streakCount > 0 && (
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", color: "rgba(240,120,48,0.7)", margin: 0 }}>
+              {streakCount} day{streakCount === 1 ? "" : "s"} streak
+            </p>
+          )}
+        </div>
+        <button
+          data-testid="button-open-prayer"
+          onClick={() => setSheetOpen(true)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            background: btnBg,
+            border: `0.5px solid ${btnBorder}`,
+            cursor: "pointer",
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.8rem",
+            fontWeight: 600,
+            color: btnColor,
+            letterSpacing: "0.04em",
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+          }}
+        >
+          {buttonLabel}
+        </button>
+      </div>
+      <AnimatePresence>
+        {sheetOpen && (
+          <PrayerSheet prayerId={prayerId} onClose={() => setSheetOpen(false)} onDone={handleDone} />
         )}
       </AnimatePresence>
     </>

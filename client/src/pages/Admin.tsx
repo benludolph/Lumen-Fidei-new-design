@@ -2338,7 +2338,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "prayer_link"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2372,6 +2372,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   pdf_download: "PDF Download",
   guided_prayer_process: "Guided Prayer",
   workbook_link: "Workbook Link",
+  prayer_link: "Prayer Link",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2401,6 +2402,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   pdf_download: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   guided_prayer_process: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   workbook_link: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  prayer_link: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
 };
 
 // ============================================================
@@ -5846,6 +5848,7 @@ function TrackAContentManagementView() {
     if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
     if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
+    if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
     return "";
   };
 
@@ -6346,6 +6349,8 @@ function TrackAContentManagementView() {
                             <span className="text-sm text-muted-foreground truncate" data-testid={`text-slide-preview-${index}`}>
                               {slide.type === "workbook_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.type === "prayer_link"
+                                ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
                                 : slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
@@ -6587,6 +6592,41 @@ function TrackAContentManagementView() {
                                     data-testid={`input-workbook-label-${index}`}
                                   />
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
+                                </div>
+                              </div>
+                            ) : slide.type === "prayer_link" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Prayer</label>
+                                  <Select
+                                    value={(() => { try { return JSON.parse(slide.content).prayerId || "prayer_1"; } catch { return "prayer_1"; } })()}
+                                    onValueChange={(val) => {
+                                      try { const p = JSON.parse(slide.content); p.prayerId = val; updateSlide(index, "content", JSON.stringify(p)); }
+                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: val, label: "" })); }
+                                    }}
+                                  >
+                                    <SelectTrigger data-testid={`select-prayer-id-${index}`}><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="prayer_1">Personal Deliverance Prayer</SelectItem>
+                                      <SelectItem value="prayer_2">Generational Renunciation Prayer</SelectItem>
+                                      <SelectItem value="prayer_3">Daily Prayer</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                                  <input
+                                    type="text"
+                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try { const p = JSON.parse(slide.content); p.label = e.target.value; updateSlide(index, "content", JSON.stringify(p)); }
+                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: "prayer_1", label: e.target.value })); }
+                                    }}
+                                    placeholder="Override the default prayer name..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-prayer-label-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
                                 </div>
                               </div>
                             ) : (
@@ -7210,6 +7250,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
   if (type === "guided_prayer_process") return GUIDED_PRAYER_OCCULT_DEFAULT;
   if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
+  if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
   return "";
 }
 
@@ -7435,6 +7476,8 @@ function PrelimContentManagementView() {
                             <span className="text-sm text-muted-foreground truncate">
                               {slide.type === "workbook_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.type === "prayer_link"
+                                ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
                                 : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
@@ -7645,6 +7688,41 @@ function PrelimContentManagementView() {
                                     data-testid={`input-prelim-workbook-label-${index}`}
                                   />
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
+                                </div>
+                              </div>
+                            ) : slide.type === "prayer_link" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Prayer</label>
+                                  <Select
+                                    value={(() => { try { return JSON.parse(slide.content).prayerId || "prayer_1"; } catch { return "prayer_1"; } })()}
+                                    onValueChange={(val) => {
+                                      try { const p = JSON.parse(slide.content); p.prayerId = val; updateSlide(index, "content", JSON.stringify(p)); }
+                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: val, label: "" })); }
+                                    }}
+                                  >
+                                    <SelectTrigger data-testid={`select-prelim-prayer-id-${index}`}><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="prayer_1">Personal Deliverance Prayer</SelectItem>
+                                      <SelectItem value="prayer_2">Generational Renunciation Prayer</SelectItem>
+                                      <SelectItem value="prayer_3">Daily Prayer</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                                  <input
+                                    type="text"
+                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try { const p = JSON.parse(slide.content); p.label = e.target.value; updateSlide(index, "content", JSON.stringify(p)); }
+                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: "prayer_1", label: e.target.value })); }
+                                    }}
+                                    placeholder="Override the default prayer name..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-prelim-prayer-label-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
                                 </div>
                               </div>
                             ) : (
@@ -8426,6 +8504,8 @@ function HealingAdminView() {
                             <span className="text-sm text-muted-foreground truncate">
                               {slide.type === "workbook_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.type === "prayer_link"
+                                ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
                                 : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
@@ -8512,6 +8592,41 @@ function HealingAdminView() {
                                     data-testid={`input-healing-workbook-label-${index}`}
                                   />
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
+                                </div>
+                              </div>
+                            ) : slide.type === "prayer_link" ? (
+                              <div className="space-y-3">
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Prayer</label>
+                                  <Select
+                                    value={(() => { try { return JSON.parse(slide.content).prayerId || "prayer_1"; } catch { return "prayer_1"; } })()}
+                                    onValueChange={(val) => {
+                                      try { const p = JSON.parse(slide.content); p.prayerId = val; updateSlide(index, "content", JSON.stringify(p)); }
+                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: val, label: "" })); }
+                                    }}
+                                  >
+                                    <SelectTrigger data-testid={`select-healing-prayer-id-${index}`}><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="prayer_1">Personal Deliverance Prayer</SelectItem>
+                                      <SelectItem value="prayer_2">Generational Renunciation Prayer</SelectItem>
+                                      <SelectItem value="prayer_3">Daily Prayer</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                                  <input
+                                    type="text"
+                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
+                                    onChange={(e) => {
+                                      try { const p = JSON.parse(slide.content); p.label = e.target.value; updateSlide(index, "content", JSON.stringify(p)); }
+                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: "prayer_1", label: e.target.value })); }
+                                    }}
+                                    placeholder="Override the default prayer name..."
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    data-testid={`input-healing-prayer-label-${index}`}
+                                  />
+                                  <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
                                 </div>
                               </div>
                             ) : (
