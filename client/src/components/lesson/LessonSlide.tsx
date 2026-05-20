@@ -361,6 +361,24 @@ function MediaContent({ text, mediaType, title }: { text: string; mediaType?: st
     return <VimeoEmbed videoId={vimeoId} originalUrl={trimmed} />;
   }
 
+  const isVideoUrl = /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(trimmed);
+  if (isVideoUrl) {
+    return (
+      <div style={{ width: "100%", borderRadius: "10px", overflow: "hidden", background: "#000" }}>
+        <video
+          src={trimmed}
+          autoPlay
+          loop
+          muted
+          playsInline
+          controls
+          data-testid="media-video"
+          style={{ width: "100%", display: "block", maxHeight: "55vh", objectFit: "contain" }}
+        />
+      </div>
+    );
+  }
+
   if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
     return (
       <div style={{ width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }}>
