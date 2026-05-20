@@ -1590,21 +1590,16 @@ function isHtmlContent(content: string): boolean {
 
 function TextSlide({ content }: { content: string }) {
   const html = useMemo(() => {
-    if (isHtmlContent(content)) {
-      return DOMPurify.sanitize(content, {
-        ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span'],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
-      });
-    }
+    if (isHtmlContent(content)) return content;
     const lines = content.split("\n").filter(Boolean);
     return lines.map(line => `<p>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`).join("");
   }, [content]);
 
   return (
-    <div
+    <HtmlContent
+      content={html}
       className="slide-text-content space-y-5"
       data-testid="slide-text"
-      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
