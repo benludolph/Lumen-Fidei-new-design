@@ -634,7 +634,8 @@ export function LessonFlow({
           <div
             ref={scrollContentRef}
             onScroll={handleContentScroll}
-            className="relative flex-1 min-h-0 overflow-y-auto custom-scrollbar"
+            className="relative flex-1 min-h-0 overflow-y-auto"
+            style={{ scrollbarGutter: "stable" }}
           >
             {lessonSlideEl}
           </div>
