@@ -7,9 +7,10 @@ import { getSectionById } from "./section-definitions";
 
 interface SectionViewProps {
   sectionId: number;
+  inSheet?: boolean;
 }
 
-export default function SectionView({ sectionId }: SectionViewProps) {
+export default function SectionView({ sectionId, inSheet }: SectionViewProps) {
   const section = getSectionById(sectionId);
 
   if (!section) {
@@ -34,7 +35,7 @@ export default function SectionView({ sectionId }: SectionViewProps) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        paddingTop: "40px",
+        paddingTop: inSheet ? "24px" : "40px",
         paddingBottom: "100px",
         paddingLeft: "20px",
         paddingRight: "20px",
@@ -44,30 +45,32 @@ export default function SectionView({ sectionId }: SectionViewProps) {
       <div style={{ maxWidth: "720px", width: "100%" }}>
         {/* Section header */}
         <div style={{ marginBottom: "32px" }}>
-          <Link href="/resources/tools/freedom-workbook">
-            <span
-              data-testid="link-back-to-workbook"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.07em",
-                color: "rgba(255,255,255,0.3)",
-                cursor: "pointer",
-                marginBottom: "16px",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)")}
-            >
-              <ChevronLeft style={{ width: "12px", height: "12px" }} />
-              The Deliverance Workbook
-            </span>
-          </Link>
+          {!inSheet && (
+            <Link href="/resources/tools/freedom-workbook">
+              <span
+                data-testid="link-back-to-workbook"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.07em",
+                  color: "rgba(255,255,255,0.3)",
+                  cursor: "pointer",
+                  marginBottom: "16px",
+                  textDecoration: "none",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)")}
+              >
+                <ChevronLeft style={{ width: "12px", height: "12px" }} />
+                The Deliverance Workbook
+              </span>
+            </Link>
+          )}
           <p
             style={{
               fontFamily: "'Afacad', sans-serif",
