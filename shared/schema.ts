@@ -15,7 +15,7 @@ export const users = pgTable("users", {
   mentorId: integer("mentor_id"), // Self-referencing FK
   startDate: timestamp("start_date"),
   profilePhotoUrl: text("profile_photo_url"), // Optional profile photo URL
-  contentVariantSnapshotId: integer("content_variant_snapshot_id"), // FK to track_a_snapshots; if set, user sees Track A + prelim content from that snapshot instead of live tables
+  contentVariantSnapshotId: integer("content_variant_snapshot_id").references((): any => trackASnapshots.id, { onDelete: "set null" }), // FK to track_a_snapshots; if set, user sees Track A + prelim content from that snapshot instead of live tables
 });
 
 export const dailyContent = pgTable("daily_content", {
