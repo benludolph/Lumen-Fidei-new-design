@@ -145,7 +145,9 @@ export interface IStorage {
   createTrackASnapshot(name: string): Promise<TrackASnapshot>;
   restoreTrackASnapshot(id: number): Promise<void>;
   deleteTrackASnapshot(id: number): Promise<void>;
-  pruneAutoSnapshots(maxCount?: number): Promise<void>;
+  listPublishedTrackAVariants(): Promise<TrackASnapshot[]>;
+  setTrackASnapshotPublication(id: number, isPublished: boolean, variantLabel: string | null): Promise<TrackASnapshot>;
+  getTrackASnapshot(id: number): Promise<TrackASnapshot | undefined>;
 
   // Healing Track
   getHealingModules(): Promise<HealingModule[]>;
@@ -976,7 +978,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrackASnapshot(id: number): Promise<void> {
+    // Unassign any users pointing to this snapshot so the FK doesn't dangle
+    await db.update(users).set({ contentVariantSnapshotId: null }).where(eq(users.contentVariantSnapshotId, id));
     await db.delete(trackASnapshots).where(eq(trackASnapshots.id, id));
+  }
+
+  async getTrackASnapshot(id: number): Promise<TrackASnapshot | undefined> {
+    const [snap] = await db.select().from(trackASnapshots).where(eq(trackASnapshots.id, id));
+    return snap;
+  }
+
+  async listPublishedTrackAVariants(): Promise<TrackASnapshot[]> {
+    return await db
+      .select()
+      .from(trackASnapshots)
+      .where(eq(trackASnapshots.isPublishedVariant, true))
+      .orderBy(asc(trackASnapshots.variantLabel));
+  }
+
+  async setTrackASnapshotPublication(id: number, isPublished: boolean, variantLabel: string | null): Promise<TrackASnapshot> {
+    const existingSnap = await this.getTrackASnapshot(id);
+    if (!existingSnap) {
+      throw new Error("SNAPSHOT_NOT_FOUND");
+    }
+    const cleanLabel = isPublished ? (variantLabel?.trim() || null) : null;
+    if (isPublished && !cleanLabel) {
+      throw new Error("A variant label is required to publish a snapshot.");
+    }
+    if (isPublished && cleanLabel) {
+      // Enforce label uniqueness across published variants
+      const existing = await db
+        .select({ id: trackASnapshots.id })
+        .from(trackASnapshots)
+        .where(and(eq(trackASnapshots.isPublishedVariant, true), eq(trackASnapshots.variantLabel, cleanLabel)));
+      if (existing.some(r => r.id !== id)) {
+        throw new Error(`A published variant with label "${cleanLabel}" already exists.`);
+      }
+    }
+    const [updated] = await db
+      .update(trackASnapshots)
+      .set({ isPublishedVariant: isPublished, variantLabel: cleanLabel })
+      .where(eq(trackASnapshots.id, id))
+      .returning();
+    if (!isPublished) {
+      // Unassign users from this snapshot when it's unpublished
+      await db.update(users).set({ contentVariantSnapshotId: null }).where(eq(users.contentVariantSnapshotId, id));
+    }
+    return updated;
   }
 
   // Healing Track

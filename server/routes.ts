@@ -518,10 +518,25 @@ export async function registerRoutes(
 
   // === Track A Content ===
 
+  // Returns the published-variant Track A data for the given user, or null if
+  // the user has no variant assigned (caller should fall back to live tables).
+  async function getUserVariantData(userId: number): Promise<{ track_a_content: any[]; prelim_modules: any[] } | null> {
+    const user = await storage.getUser(userId);
+    if (!user?.contentVariantSnapshotId) return null;
+    const snap = await storage.getTrackASnapshot(user.contentVariantSnapshotId);
+    if (!snap || !snap.isPublishedVariant) return null;
+    const data = snap.data as { track_a_content?: any[]; prelim_modules?: any[] } | null;
+    return {
+      track_a_content: Array.isArray(data?.track_a_content) ? data!.track_a_content : [],
+      prelim_modules: Array.isArray(data?.prelim_modules) ? data!.prelim_modules : [],
+    };
+  }
+
   app.get('/api/track-a-content', requireAuth, async (req, res) => {
-    const content = await storage.getAllTrackAContent();
+    const variant = await getUserVariantData(req.user!.id);
+    const content = variant ? variant.track_a_content : await storage.getAllTrackAContent();
     if (req.user!.role !== 'admin') {
-      const summaries = content.map(c => ({
+      const summaries = content.map((c: any) => ({
         id: c.id,
         dayNumber: c.dayNumber,
         weekNumber: c.weekNumber,
@@ -556,9 +571,23 @@ export async function registerRoutes(
       }
     }
 
-    const content = day === 0
-      ? await storage.getTrackAContent(0)
-      : await storage.getTrackAContentByPosition(day);
+    const variant = await getUserVariantData(req.user!.id);
+    let content: any | undefined;
+    if (variant) {
+      if (day === 0) {
+        content = variant.track_a_content.find((c: any) => c.dayNumber === 0);
+      } else {
+        // Mirror getTrackAContentByPosition: sort positive-day rows by week then day, then pick the Nth.
+        const ordered = variant.track_a_content
+          .filter((c: any) => typeof c.dayNumber === 'number' && c.dayNumber > 0)
+          .sort((a: any, b: any) => a.weekNumber - b.weekNumber || a.dayNumber - b.dayNumber);
+        content = ordered[day - 1];
+      }
+    } else {
+      content = day === 0
+        ? await storage.getTrackAContent(0)
+        : await storage.getTrackAContentByPosition(day);
+    }
     if (!content) return res.sendStatus(404);
     res.json(content);
   });
@@ -1923,6 +1952,35 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // Toggle a snapshot's published-variant status and label.
+  // Body: { isPublished: boolean, variantLabel?: string | null }
+  app.patch('/api/admin/track-a/snapshots/:id/publication', requireRole('admin'), async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
+    const isPublished = !!req.body?.isPublished;
+    const variantLabel = typeof req.body?.variantLabel === 'string' ? req.body.variantLabel : null;
+    try {
+      const updated = await storage.setTrackASnapshotPublication(id, isPublished, variantLabel);
+      res.json(updated);
+    } catch (err: any) {
+      if (err?.message === 'SNAPSHOT_NOT_FOUND') {
+        return res.status(404).json({ message: 'Snapshot not found' });
+      }
+      res.status(400).json({ message: err?.message || 'Failed to update snapshot publication' });
+    }
+  });
+
+  // List published Track A variants — used to populate the admin user-row variant dropdown.
+  app.get('/api/admin/track-a/variants', requireRole('admin'), async (req, res) => {
+    const variants = await storage.listPublishedTrackAVariants();
+    res.json(variants.map(v => ({
+      id: v.id,
+      name: v.name,
+      variantLabel: v.variantLabel,
+      createdAt: v.createdAt,
+    })));
+  });
+
   app.get('/api/admin/backup', requireRole('admin'), async (req, res) => {
     try {
       const [
@@ -2080,14 +2138,17 @@ export async function registerRoutes(
 
   // GET /api/prelim-modules — returns all 3 modules with user completion status
   app.get('/api/prelim-modules', requireAuth, async (req, res) => {
-    const modules = await storage.getPrelimModules();
     const userId = req.user!.id;
+    const variant = await getUserVariantData(userId);
+    const modules = variant
+      ? [...variant.prelim_modules].sort((a: any, b: any) => a.position - b.position)
+      : await storage.getPrelimModules();
     let completedPositions: number[] = [];
     if (req.user!.role === 'participant' || req.user!.role === 'superuser') {
       const completions = await storage.getUserPrelimCompletions(userId);
       completedPositions = completions.map(c => c.modulePosition);
     }
-    const result = modules.map(m => ({
+    const result = modules.map((m: any) => ({
       ...m,
       completed: completedPositions.includes(m.position),
     }));
@@ -2103,11 +2164,12 @@ export async function registerRoutes(
     if (isNaN(position) || position < 1) {
       return res.status(400).json({ message: "Invalid module position." });
     }
-    const allModules = await storage.getPrelimModules();
+    const userId = req.user!.id;
+    const variant = await getUserVariantData(userId);
+    const allModules = variant ? variant.prelim_modules : await storage.getPrelimModules();
     if (position > allModules.length) {
       return res.status(400).json({ message: "Invalid module position." });
     }
-    const userId = req.user!.id;
     // Enforce sequential unlock: must have completed position-1 first
     if (position > 1) {
       const completions = await storage.getUserPrelimCompletions(userId);

@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   mentorId: integer("mentor_id"), // Self-referencing FK
   startDate: timestamp("start_date"),
   profilePhotoUrl: text("profile_photo_url"), // Optional profile photo URL
+  contentVariantSnapshotId: integer("content_variant_snapshot_id"), // FK to track_a_snapshots; if set, user sees Track A + prelim content from that snapshot instead of live tables
 });
 
 export const dailyContent = pgTable("daily_content", {
@@ -378,6 +379,8 @@ export const trackASnapshots = pgTable("track_a_snapshots", {
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   data: json("data").notNull(), // { track_a_content: [...], prelim_modules: [...] }
+  isPublishedVariant: boolean("is_published_variant").default(false).notNull(),
+  variantLabel: text("variant_label"), // e.g. "A1", "A2" — shown in admin user dropdown
 });
 
 // Prayer completion tracking - records when users complete morning/evening prayers

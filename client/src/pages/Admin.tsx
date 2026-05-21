@@ -111,6 +111,7 @@ export default function Admin() {
                       <TableHead>Name</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Track</TableHead>
+                      <TableHead>Variant</TableHead>
                       <TableHead>Mentor</TableHead>
                       <TableHead>Start Date</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -269,6 +270,15 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
     updateUser({ id: user.id, track: track as "A" | "B" | "C" });
   };
 
+  const handleAssignVariant = (val: string) => {
+    updateUser({ id: user.id, contentVariantSnapshotId: val === "live" ? null : Number(val) } as any);
+  };
+
+  const variantsQuery = useQuery<{ id: number; name: string; variantLabel: string | null }[]>({
+    queryKey: ['/api/admin/track-a/variants'],
+    queryFn: () => fetch('/api/admin/track-a/variants', { credentials: 'include' }).then(r => r.json()),
+  });
+
   const handleResetPassword = () => {
     if (newPassword.length >= 6) {
       resetPasswordMutation.mutate(newPassword);
@@ -296,6 +306,28 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
                <SelectItem value="C">C – Healing</SelectItem>
              </SelectContent>
            </Select>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {(user.role === 'participant' || user.role === 'superuser') ? (
+          <Select
+            value={user.contentVariantSnapshotId ? String(user.contentVariantSnapshotId) : "live"}
+            onValueChange={handleAssignVariant}
+          >
+            <SelectTrigger className="w-[130px] h-8" data-testid={`select-variant-${user.id}`}>
+              <SelectValue placeholder="Live" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="live">Live</SelectItem>
+              {(variantsQuery.data ?? []).map(v => (
+                <SelectItem key={v.id} value={String(v.id)} data-testid={`option-variant-${v.id}`}>
+                  {v.variantLabel || v.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
           <span className="text-muted-foreground">-</span>
         )}
@@ -5449,6 +5481,84 @@ function SortableModuleCard({
   );
 }
 
+function SnapshotRow({ snap, onRestore, onDelete, onPublishToggle, publishPending }: {
+  snap: { id: number; name: string; createdAt: string; isPublishedVariant: boolean; variantLabel: string | null };
+  onRestore: () => void;
+  onDelete: () => void;
+  onPublishToggle: (isPublished: boolean, variantLabel: string | null) => void;
+  publishPending: boolean;
+}) {
+  const [label, setLabel] = useState(snap.variantLabel ?? "");
+  useEffect(() => { setLabel(snap.variantLabel ?? ""); }, [snap.variantLabel]);
+  return (
+    <div className="rounded px-2 py-1.5 hover:bg-muted/50">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate">
+            {snap.name}
+            {snap.isPublishedVariant && snap.variantLabel && (
+              <span className="ml-2 inline-block px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-semibold uppercase tracking-wider">
+                Variant {snap.variantLabel}
+              </span>
+            )}
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            {format(new Date(snap.createdAt), "MMM d, yyyy 'at' h:mm a")}
+          </p>
+        </div>
+        <Input
+          className="h-6 w-20 text-xs"
+          placeholder="Label"
+          value={label}
+          onChange={e => setLabel(e.target.value)}
+          data-testid={`input-variant-label-${snap.id}`}
+        />
+        {snap.isPublishedVariant ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs px-2 shrink-0"
+            onClick={() => onPublishToggle(false, null)}
+            disabled={publishPending}
+            data-testid={`button-unpublish-snapshot-${snap.id}`}
+          >
+            Unpublish
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 text-xs px-2 shrink-0"
+            onClick={() => onPublishToggle(true, label.trim() || null)}
+            disabled={publishPending || !label.trim()}
+            data-testid={`button-publish-snapshot-${snap.id}`}
+          >
+            Publish
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-xs px-2 shrink-0"
+          onClick={onRestore}
+          data-testid={`button-restore-snapshot-${snap.id}`}
+        >
+          Restore
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+          onClick={onDelete}
+          data-testid={`button-delete-snapshot-${snap.id}`}
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function TrackAContentManagementView() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -5491,9 +5601,23 @@ function TrackAContentManagementView() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const snapshotsQuery = useQuery<{ id: number; name: string; createdAt: string }[]>({
+  const snapshotsQuery = useQuery<{ id: number; name: string; createdAt: string; isPublishedVariant: boolean; variantLabel: string | null }[]>({
     queryKey: ['/api/admin/track-a/snapshots'],
     queryFn: () => fetch('/api/admin/track-a/snapshots', { credentials: 'include' }).then(r => r.json()),
+  });
+
+  const publishSnapshotMutation = useMutation({
+    mutationFn: async ({ id, isPublished, variantLabel }: { id: number; isPublished: boolean; variantLabel: string | null }) => {
+      const res = await apiRequest("PATCH", `/api/admin/track-a/snapshots/${id}/publication`, { isPublished, variantLabel });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/track-a/snapshots'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/track-a/variants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({ title: "Variant updated" });
+    },
+    onError: (err: Error) => toast({ title: "Failed to update variant", description: err?.message || "Please try again.", variant: "destructive" }),
   });
 
   const createSnapshotMutation = useMutation({
@@ -6043,32 +6167,14 @@ function TrackAContentManagementView() {
                 <p className="text-xs text-muted-foreground italic">No snapshots yet. Save one before making edits.</p>
               )}
               {snapshotsQuery.data?.map(snap => (
-                <div key={snap.id} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-muted/50">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{snap.name}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {format(new Date(snap.createdAt), "MMM d, yyyy 'at' h:mm a")}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-6 text-xs px-2 shrink-0"
-                    onClick={() => { setRestoreConfirmId(snap.id); setRestoreConfirmName(snap.name); }}
-                    data-testid={`button-restore-snapshot-${snap.id}`}
-                  >
-                    Restore
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteSnapshotMutation.mutate(snap.id)}
-                    data-testid={`button-delete-snapshot-${snap.id}`}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
+                <SnapshotRow
+                  key={snap.id}
+                  snap={snap}
+                  onRestore={() => { setRestoreConfirmId(snap.id); setRestoreConfirmName(snap.name); }}
+                  onDelete={() => deleteSnapshotMutation.mutate(snap.id)}
+                  onPublishToggle={(isPublished, variantLabel) => publishSnapshotMutation.mutate({ id: snap.id, isPublished, variantLabel })}
+                  publishPending={publishSnapshotMutation.isPending}
+                />
               ))}
             </div>
           )}
