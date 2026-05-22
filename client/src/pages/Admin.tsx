@@ -5481,8 +5481,267 @@ function SortableModuleCard({
   );
 }
 
-function SnapshotRow({ snap, onRestore, onDelete, onPublishToggle, publishPending }: {
-  snap: { id: number; name: string; createdAt: string; isPublishedVariant: boolean; variantLabel: string | null };
+// ── Snapshot merge helpers ────────────────────────────────────────────────────
+
+type SnapInfo = { id: number; name: string; createdAt: string; isPublishedVariant: boolean; variantLabel: string | null };
+
+type ModulePreview = {
+  weekNumber: number;
+  title: string;
+  subtitle: string;
+  days: { dayNumber: number; centralTheme: string; subtitle: string | null; slides: { type: string; content: string }[] | null }[];
+};
+
+function previewSlideText(content: string): string {
+  try {
+    const p = JSON.parse(content);
+    if (p && typeof p === 'object') {
+      const val = Object.values(p).find(v => typeof v === 'string' && (v as string).length > 0) as string | undefined;
+      if (val) return val.replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 130);
+    }
+  } catch {}
+  return content.replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim().slice(0, 130);
+}
+
+function MergeSlideRow({ slide, idx }: { slide: { type: string; content: string }; idx: number }) {
+  const preview = previewSlideText(slide.content);
+  return (
+    <div className="flex items-start gap-2 py-1">
+      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono shrink-0 mt-0.5 leading-tight">{slide.type}</span>
+      <span className="text-xs text-muted-foreground leading-relaxed">{preview || <em>No preview</em>}</span>
+    </div>
+  );
+}
+
+function MergeDayRow({ day, expanded, onToggle }: {
+  day: ModulePreview['days'][number];
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const slideCount = day.slides?.length ?? 0;
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-muted/40 transition-colors"
+        data-testid={`button-expand-day-${day.dayNumber}`}
+      >
+        <span className="text-[11px] text-muted-foreground w-10 shrink-0">Day {day.dayNumber}</span>
+        <span className="text-xs font-medium flex-1 min-w-0 truncate">{day.centralTheme}</span>
+        {slideCount > 0 && (
+          <span className="text-[10px] text-muted-foreground shrink-0">{slideCount} slide{slideCount !== 1 ? 's' : ''}</span>
+        )}
+        {expanded ? <ChevronUp className="w-3 h-3 text-muted-foreground shrink-0" /> : <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />}
+      </button>
+      {expanded && slideCount > 0 && (
+        <div className="px-4 pb-3 border-t border-border/50 space-y-0.5 bg-muted/20">
+          {day.slides!.map((s, i) => <MergeSlideRow key={i} slide={s} idx={i} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MergeModuleCard({ mod, selected, expanded, expandedDays, onToggleSelect, onToggleExpand, onToggleDay }: {
+  mod: ModulePreview;
+  selected: boolean;
+  expanded: boolean;
+  expandedDays: Set<number>;
+  onToggleSelect: () => void;
+  onToggleExpand: () => void;
+  onToggleDay: (n: number) => void;
+}) {
+  return (
+    <div className={`rounded-lg border transition-colors ${selected ? 'border-primary bg-primary/5' : 'border-border bg-background'}`}>
+      <div className="flex items-center gap-3 px-3 py-2.5">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          className="w-4 h-4 rounded shrink-0 cursor-pointer accent-primary"
+          data-testid={`checkbox-week-${mod.weekNumber}`}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium leading-tight">Week {mod.weekNumber}: {mod.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{mod.subtitle} · {mod.days.length} day{mod.days.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button
+          onClick={onToggleExpand}
+          className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1 -m-1"
+          title={expanded ? 'Hide days' : 'Preview days'}
+          data-testid={`button-expand-week-${mod.weekNumber}`}
+        >
+          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </button>
+      </div>
+      {expanded && (
+        <div className="border-t divide-y divide-border/50">
+          {mod.days.map(day => (
+            <MergeDayRow
+              key={day.dayNumber}
+              day={day}
+              expanded={expandedDays.has(day.dayNumber)}
+              onToggle={() => onToggleDay(day.dayNumber)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SnapshotMergeModal({ targetSnap, allSnapshots }: { targetSnap: SnapInfo; allSnapshots: SnapInfo[] }) {
+  const [open, setOpen] = useState(false);
+  const [sourceId, setSourceId] = useState("");
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
+  const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+  const { toast } = useToast();
+
+  const modulesQuery = useQuery<ModulePreview[]>({
+    queryKey: ['/api/admin/track-a/snapshots', Number(sourceId), 'modules'],
+    queryFn: () => fetch(`/api/admin/track-a/snapshots/${sourceId}/modules`, { credentials: 'include' }).then(r => r.json()),
+    enabled: open && !!sourceId,
+  });
+
+  const mergeMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/admin/track-a/snapshots/${targetSnap.id}/merge`, {
+        sourceSnapshotId: Number(sourceId),
+        weekNumbers: Array.from(selectedWeeks),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Merge failed');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/track-a/snapshots'] });
+      toast({ title: "Modules imported", description: `${selectedWeeks.size} module${selectedWeeks.size !== 1 ? 's' : ''} copied into "${targetSnap.name}".` });
+      handleClose();
+    },
+    onError: (err: Error) => toast({ title: "Import failed", description: err.message, variant: "destructive" }),
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    setSourceId("");
+    setSelectedWeeks(new Set());
+    setExpandedWeeks(new Set());
+    setExpandedDays(new Set());
+  };
+
+  const toggleWeek = (wn: number) => setSelectedWeeks(prev => {
+    const next = new Set(prev);
+    next.has(wn) ? next.delete(wn) : next.add(wn);
+    return next;
+  });
+  const toggleExpandWeek = (wn: number) => setExpandedWeeks(prev => {
+    const next = new Set(prev);
+    next.has(wn) ? next.delete(wn) : next.add(wn);
+    return next;
+  });
+  const toggleExpandDay = (dn: number) => setExpandedDays(prev => {
+    const next = new Set(prev);
+    next.has(dn) ? next.delete(dn) : next.add(dn);
+    return next;
+  });
+
+  const modules = modulesQuery.data ?? [];
+  const otherSnaps = allSnapshots.filter(s => s.id !== targetSnap.id);
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); else setOpen(true); }}>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-6 text-xs px-2 shrink-0"
+          data-testid={`button-merge-snapshot-${targetSnap.id}`}
+        >
+          <ArrowLeftRight className="w-3 h-3 mr-1" />
+          Merge
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl flex flex-col" style={{ maxHeight: '82vh' }}>
+        <DialogHeader>
+          <DialogTitle>Import modules into "{targetSnap.name}"</DialogTitle>
+          <p className="text-sm text-muted-foreground pt-1">
+            Pick a source snapshot, choose which week-modules to copy in, then apply. Only the selected weeks are overwritten — everything else stays.
+          </p>
+        </DialogHeader>
+
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+          <div className="space-y-1.5">
+            <p className="text-sm font-medium">Copy from</p>
+            <Select value={sourceId} onValueChange={v => { setSourceId(v); setSelectedWeeks(new Set()); setExpandedWeeks(new Set()); }}>
+              <SelectTrigger data-testid="select-merge-source">
+                <SelectValue placeholder="Choose a snapshot…" />
+              </SelectTrigger>
+              <SelectContent>
+                {otherSnaps.map(s => (
+                  <SelectItem key={s.id} value={String(s.id)} data-testid={`option-merge-source-${s.id}`}>
+                    {s.variantLabel ? `[${s.variantLabel}] ` : ''}{s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {sourceId && (
+            <div className="space-y-2">
+              {modulesQuery.isLoading && (
+                <p className="text-sm text-muted-foreground py-2">Loading modules…</p>
+              )}
+              {!modulesQuery.isLoading && modules.length === 0 && (
+                <p className="text-sm text-muted-foreground italic">No modules found in this snapshot.</p>
+              )}
+              {modules.map(mod => (
+                <MergeModuleCard
+                  key={mod.weekNumber}
+                  mod={mod}
+                  selected={selectedWeeks.has(mod.weekNumber)}
+                  expanded={expandedWeeks.has(mod.weekNumber)}
+                  expandedDays={expandedDays}
+                  onToggleSelect={() => toggleWeek(mod.weekNumber)}
+                  onToggleExpand={() => toggleExpandWeek(mod.weekNumber)}
+                  onToggleDay={toggleExpandDay}
+                />
+              ))}
+              {modules.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {selectedWeeks.size} of {modules.length} module{modules.length !== 1 ? 's' : ''} selected
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4 border-t shrink-0">
+          <Button variant="outline" onClick={handleClose}>Cancel</Button>
+          <Button
+            onClick={() => mergeMutation.mutate()}
+            disabled={selectedWeeks.size === 0 || mergeMutation.isPending}
+            data-testid={`button-apply-merge-${targetSnap.id}`}
+          >
+            {mergeMutation.isPending
+              ? 'Importing…'
+              : selectedWeeks.size > 0
+                ? `Import ${selectedWeeks.size} Module${selectedWeeks.size !== 1 ? 's' : ''}`
+                : 'Select modules above'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── SnapshotRow ───────────────────────────────────────────────────────────────
+
+function SnapshotRow({ snap, allSnapshots, onRestore, onDelete, onPublishToggle, publishPending }: {
+  snap: SnapInfo;
+  allSnapshots: SnapInfo[];
   onRestore: () => void;
   onDelete: () => void;
   onPublishToggle: (isPublished: boolean, variantLabel: string | null) => void;
@@ -5492,7 +5751,7 @@ function SnapshotRow({ snap, onRestore, onDelete, onPublishToggle, publishPendin
   useEffect(() => { setLabel(snap.variantLabel ?? ""); }, [snap.variantLabel]);
   return (
     <div className="rounded px-2 py-1.5 hover:bg-muted/50">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate">
             {snap.name}
@@ -5536,6 +5795,7 @@ function SnapshotRow({ snap, onRestore, onDelete, onPublishToggle, publishPendin
             Publish
           </Button>
         )}
+        <SnapshotMergeModal targetSnap={snap} allSnapshots={allSnapshots} />
         <Button
           size="sm"
           variant="outline"
@@ -6170,6 +6430,7 @@ function TrackAContentManagementView() {
                 <SnapshotRow
                   key={snap.id}
                   snap={snap}
+                  allSnapshots={snapshotsQuery.data ?? []}
                   onRestore={() => { setRestoreConfirmId(snap.id); setRestoreConfirmName(snap.name); }}
                   onDelete={() => deleteSnapshotMutation.mutate(snap.id)}
                   onPublishToggle={(isPublished, variantLabel) => publishSnapshotMutation.mutate({ id: snap.id, isPublished, variantLabel })}

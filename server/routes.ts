@@ -1981,6 +1981,88 @@ export async function registerRoutes(
     })));
   });
 
+  // GET /api/admin/track-a/snapshots/:id/modules — week-module structure from a snapshot, for merge preview UI
+  app.get('/api/admin/track-a/snapshots/:id/modules', requireRole('admin'), async (req, res) => {
+    const id = parseInt(req.params.id as string, 10);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
+    const snap = await storage.getTrackASnapshot(id);
+    if (!snap) return res.status(404).json({ message: 'Snapshot not found' });
+
+    const { track_a_content } = snap.data as { track_a_content: any[] };
+    const liveModules = await storage.getTrackAModules();
+    const moduleMap = new Map(liveModules.map(m => [m.weekNumber, m]));
+
+    const weekMap = new Map<number, any[]>();
+    for (const day of (track_a_content ?? [])) {
+      const wn: number = day.weekNumber;
+      if (!weekMap.has(wn)) weekMap.set(wn, []);
+      weekMap.get(wn)!.push(day);
+    }
+
+    const result = Array.from(weekMap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([weekNumber, days]) => {
+        const mod = moduleMap.get(weekNumber);
+        return {
+          weekNumber,
+          title: mod?.title ?? `Week ${weekNumber}`,
+          subtitle: mod?.subtitle ?? '',
+          days: days
+            .sort((a: any, b: any) => a.dayNumber - b.dayNumber)
+            .map((d: any) => ({
+              dayNumber: d.dayNumber,
+              centralTheme: d.centralTheme,
+              subtitle: d.subtitle ?? null,
+              slides: d.slides ?? null,
+            })),
+        };
+      });
+
+    res.json(result);
+  });
+
+  // POST /api/admin/track-a/snapshots/:targetId/merge — copy selected week modules from source into target snapshot
+  app.post('/api/admin/track-a/snapshots/:targetId/merge', requireRole('admin'), async (req, res) => {
+    const targetId = parseInt(req.params.targetId as string, 10);
+    if (isNaN(targetId)) return res.status(400).json({ message: 'Invalid snapshot id' });
+
+    const schema = z.object({
+      sourceSnapshotId: z.number().int().positive(),
+      weekNumbers: z.array(z.number().int()).min(1),
+    });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+
+    const { sourceSnapshotId, weekNumbers } = parsed.data;
+    if (sourceSnapshotId === targetId) return res.status(400).json({ message: 'Source and target must be different snapshots' });
+
+    const [target, source] = await Promise.all([
+      storage.getTrackASnapshot(targetId),
+      storage.getTrackASnapshot(sourceSnapshotId),
+    ]);
+    if (!target) return res.status(404).json({ message: 'Target snapshot not found' });
+    if (!source) return res.status(404).json({ message: 'Source snapshot not found' });
+
+    const weekSet = new Set(weekNumbers);
+    const targetData = target.data as { track_a_content: any[]; prelim_modules: any[] };
+    const sourceData = source.data as { track_a_content: any[]; prelim_modules: any[] };
+
+    const kept = (targetData.track_a_content ?? []).filter((d: any) => !weekSet.has(d.weekNumber));
+    const imported = (sourceData.track_a_content ?? []).filter((d: any) => weekSet.has(d.weekNumber));
+    const merged = [...kept, ...imported].sort((a: any, b: any) =>
+      a.weekNumber !== b.weekNumber ? a.weekNumber - b.weekNumber : a.dayNumber - b.dayNumber
+    );
+
+    const updatedData = { ...targetData, track_a_content: merged };
+    const [updated] = await db
+      .update(trackASnapshots)
+      .set({ data: updatedData })
+      .where(eq(trackASnapshots.id, targetId))
+      .returning();
+
+    res.json(updated);
+  });
+
   app.get('/api/admin/backup', requireRole('admin'), async (req, res) => {
     try {
       const [
