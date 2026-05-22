@@ -168,7 +168,7 @@ export default function WorkbookShell() {
             The Deliverance Workbook
           </h1>
           <p className="type-body-lg" style={{ color: "var(--white-60)", margin: 0 }}>
-            A 23-section spiritual inventory to prepare your heart for freedom prayer.
+            A spiritual inventory to prepare for a long-form renunciation prayer.
           </p>
         </div>
 
