@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User, type PrayerId } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User, type PrayerId } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
