@@ -113,7 +113,7 @@ export default function WorkbookSectionSheet({ sectionId, onClose }: WorkbookSec
         </div>
 
         <div style={{ flex: 1, overflowY: "auto" }}>
-          <SectionView sectionId={sectionId} inSheet />
+          <SectionView sectionId={sectionId} inSheet onClose={onClose} />
         </div>
       </motion.div>
     </div>

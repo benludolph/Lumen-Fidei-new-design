@@ -8,9 +8,10 @@ import { getSectionById } from "./section-definitions";
 interface SectionViewProps {
   sectionId: number;
   inSheet?: boolean;
+  onClose?: () => void;
 }
 
-export default function SectionView({ sectionId, inSheet }: SectionViewProps) {
+export default function SectionView({ sectionId, inSheet, onClose }: SectionViewProps) {
   const section = getSectionById(sectionId);
 
   if (!section) {
@@ -154,7 +155,7 @@ export default function SectionView({ sectionId, inSheet }: SectionViewProps) {
         ) : section.type === "patterns_checklist" ? (
           <PatternsChecklist />
         ) : (
-          <ListBuilder section={section} />
+          <ListBuilder section={section} onClose={onClose} />
         )}
       </div>
     </div>

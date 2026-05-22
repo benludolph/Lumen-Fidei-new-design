@@ -515,7 +515,7 @@ function AddEntryForm({
   );
 }
 
-export default function ListBuilder({ section }: ListBuilderProps) {
+export default function ListBuilder({ section, onClose }: ListBuilderProps & { onClose?: () => void }) {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const { data: entries = [], isLoading } = useQuery<WorkbookEntry[]>({
@@ -530,8 +530,9 @@ export default function ListBuilder({ section }: ListBuilderProps) {
   const attestMutation = useMutation({
     mutationFn: (on: boolean) =>
       apiRequest(on ? "POST" : "DELETE", `/api/workbook/attest/${section.id}`),
-    onSuccess: () => {
+    onSuccess: (_data, on) => {
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
+      if (on) onClose?.();
     },
   });
 
