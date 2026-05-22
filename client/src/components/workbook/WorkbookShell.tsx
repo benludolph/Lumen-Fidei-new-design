@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { ChevronRight, Check, BookOpen, Flame } from "lucide-react";
+import { ChevronRight, Check, BookOpen } from "lucide-react";
 import { Link } from "wouter";
 import { SECTIONS } from "./section-definitions";
 import PrayerRender from "./PrayerRender";
 import SessionWrapper from "./SessionWrapper";
-import type { WorkbookSummary, WorkbookStreakStatus, WorkbookEntry } from "@shared/schema";
+import type { WorkbookSummary, WorkbookEntry } from "@shared/schema";
 
 function Section6Badge({ liesCount, truthsCount }: { liesCount: number; truthsCount: number }) {
   if (liesCount === 0) {
@@ -100,25 +100,6 @@ function StatusBadge({ count, attested }: { count: number; attested: boolean }) 
   );
 }
 
-function StreakPip({ count, max }: { count: number; max: number }) {
-  return (
-    <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-      {Array.from({ length: max }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: i < count ? "#F07830" : "rgba(255,255,255,0.1)",
-            transition: "background 0.2s",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 type ShellView = "list" | "prayer_1" | "prayer_2" | "session";
 
 export default function WorkbookShell() {
@@ -127,10 +108,6 @@ export default function WorkbookShell() {
 
   const { data: summary = {}, isLoading } = useQuery<WorkbookSummary>({
     queryKey: ["/api/workbook/summary"],
-  });
-
-  const { data: streak2 } = useQuery<WorkbookStreakStatus>({
-    queryKey: ["/api/workbook/streak/prayer_2"],
   });
 
   const { data: section6Entries = [] } = useQuery<WorkbookEntry[]>({
@@ -159,9 +136,6 @@ export default function WorkbookShell() {
   if (view === "session") {
     return <SessionWrapper onDismiss={() => setView("list")} />;
   }
-
-  const streak2Count = streak2?.count ?? 0;
-  const streak2CanComplete = streak2?.canCompleteToday !== false;
 
   return (
     <div
@@ -370,7 +344,7 @@ export default function WorkbookShell() {
             </button>
           </div>
 
-          {/* Generational Renunciation Prayer — 3-day */}
+          {/* Generational Renunciation Prayer */}
           <div
             style={{
               padding: "20px 24px",
@@ -384,18 +358,11 @@ export default function WorkbookShell() {
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                <p className="type-body-md" style={{ color: "rgba(255,255,255,0.6)", margin: 0 }}>
-                  Generational Renunciation Prayer
-                </p>
-                {streak2Count > 0 && (
-                  <StreakPip count={Math.min(streak2Count, 3)} max={3} />
-                )}
-              </div>
+              <p className="type-body-md" style={{ color: "rgba(255,255,255,0.6)", margin: 0, marginBottom: "2px" }}>
+                Generational Renunciation Prayer
+              </p>
               <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
-                {streak2Count > 0
-                  ? `Day ${streak2Count} of 3 — ${streak2CanComplete ? "ready to pray today" : "already completed today"}`
-                  : "3-day binding prayer for generational and ancestral sins"}
+                Binding prayer for generational and ancestral sins
               </p>
             </div>
             <button
@@ -408,28 +375,28 @@ export default function WorkbookShell() {
                 gap: "6px",
                 padding: "8px 16px",
                 borderRadius: "6px",
-                background: streak2Count >= 3 ? "rgba(240,120,48,0.1)" : "rgba(255,255,255,0.04)",
-                border: `0.5px solid ${streak2Count >= 3 ? "rgba(240,120,48,0.2)" : "rgba(255,255,255,0.08)"}`,
+                background: "rgba(255,255,255,0.06)",
+                border: "0.5px solid rgba(255,255,255,0.12)",
                 cursor: "pointer",
                 flexShrink: 0,
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.09)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = streak2Count >= 3 ? "rgba(240,120,48,0.1)" : "rgba(255,255,255,0.04)";
+                (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
               }}
             >
-              <Flame style={{ width: "12px", height: "12px", color: streak2Count > 0 ? "#F07830" : "rgba(255,255,255,0.3)" }} />
+              <BookOpen style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.5)" }} />
               <span style={{
                 fontFamily: "'Afacad', sans-serif",
                 fontSize: "0.78rem",
                 fontWeight: 600,
-                color: streak2Count > 0 ? "rgba(240,120,48,0.8)" : "rgba(255,255,255,0.4)",
+                color: "rgba(255,255,255,0.6)",
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
               }}>
-                {streak2Count === 0 ? "Begin" : "Continue"}
+                Begin
               </span>
             </button>
           </div>

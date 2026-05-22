@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { ChevronLeft, ChevronRight, Check, Flame } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { PRAYER_TEMPLATES } from "./prayer-templates";
 import type {
   PrayerNode,
@@ -13,7 +12,7 @@ import type {
   InjectFormat,
 } from "./prayer-templates";
 import { SECTIONS } from "./section-definitions";
-import type { WorkbookEntry, WorkbookStreakStatus, PrayerId, UserProfile } from "@shared/schema";
+import type { WorkbookEntry, PrayerId, UserProfile } from "@shared/schema";
 
 interface PrayerRenderProps {
   prayerId: PrayerId;
@@ -123,45 +122,6 @@ function isProfileFieldNonEmpty(
   if (typeof value === "string") return value.trim().length > 0;
   if (Array.isArray(value)) return value.length > 0;
   return false;
-}
-
-// ─── Streak badge ─────────────────────────────────────────────────────────────
-
-function StreakBadge({ count, prayerId }: { count: number; prayerId: PrayerId }) {
-  let label: string | null = null;
-  if (prayerId === "prayer_2") {
-    label = `Day ${count} of 3`;
-  } else if (prayerId === "prayer_3" && count > 0) {
-    label = count === 1 ? "1 day with the Lord" : `${count} days with the Lord`;
-  }
-  if (!label) return null;
-  return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "5px",
-        padding: "3px 10px",
-        borderRadius: "999px",
-        background: "rgba(240,120,48,0.12)",
-        border: "0.5px solid rgba(240,120,48,0.25)",
-      }}
-    >
-      <Flame style={{ width: "11px", height: "11px", color: "#F07830" }} />
-      <span
-        style={{
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "0.72rem",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.07em",
-          color: "#F07830",
-        }}
-      >
-        {label}
-      </span>
-    </div>
-  );
 }
 
 // ─── Highlighted inject span ──────────────────────────────────────────────────
@@ -357,7 +317,6 @@ function renderNodes(
 export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
   const template = PRAYER_TEMPLATES[prayerId];
   const [pageIndex, setPageIndex] = useState(0);
-  const [completed, setCompleted] = useState(false);
   const [textareaValues, setTextareaValuesState] = useState<Record<string, string>>({});
 
   function setTextareaValue(key: string, val: string) {
@@ -380,18 +339,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
     },
   });
 
-  const { data: streakStatus } = useQuery<WorkbookStreakStatus>({
-    queryKey: [`/api/workbook/streak/${prayerId}`],
-  });
-
-  const completeMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/workbook/streak/${prayerId}/complete`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/workbook/streak/${prayerId}`] });
-      setCompleted(true);
-    },
-  });
-
   const isLoading = sectionQueries.some((q) => q.isLoading);
 
   const allEntries: Record<number, WorkbookEntry[]> = {};
@@ -410,9 +357,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
   const currentPage = template.pages[pageIndex];
   const isFirst = pageIndex === 0;
   const isLast = pageIndex === template.pages.length - 1;
-  const canComplete =
-    isLast && streakStatus?.canCompleteToday !== false && !completed;
-  const streakCount = streakStatus?.count ?? 0;
 
   return (
     <div
@@ -477,7 +421,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
             >
               {template.title}
             </p>
-            <StreakBadge count={streakCount} prayerId={prayerId} />
           </div>
 
           <h1
@@ -614,41 +557,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
           <div style={{ display: "flex", gap: "8px" }}>
             {isLast ? (
               <>
-                {/* Mark complete (prayer_2 and prayer_3 have streaks) */}
-                {(prayerId === "prayer_2" || prayerId === "prayer_3") && !completed && (
-                  <button
-                    type="button"
-                    onClick={() => completeMutation.mutate()}
-                    disabled={!canComplete || completeMutation.isPending}
-                    data-testid="button-prayer-mark-complete"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "9px 18px",
-                      borderRadius: "7px",
-                      background: canComplete
-                        ? "rgba(240,120,48,0.14)"
-                        : "rgba(255,255,255,0.03)",
-                      border: `0.5px solid ${
-                        canComplete ? "rgba(240,120,48,0.35)" : "rgba(255,255,255,0.06)"
-                      }`,
-                      fontFamily: "'Afacad', sans-serif",
-                      fontSize: "0.82rem",
-                      fontWeight: 600,
-                      color: canComplete ? "#F07830" : "rgba(255,255,255,0.25)",
-                      cursor: canComplete ? "pointer" : "default",
-                      opacity: completeMutation.isPending ? 0.6 : 1,
-                    }}
-                  >
-                    <Flame style={{ width: "13px", height: "13px" }} />
-                    {completeMutation.isPending
-                      ? "Saving…"
-                      : streakStatus?.canCompleteToday === false
-                        ? "Already marked today"
-                        : "Mark complete for today"}
-                  </button>
-                )}
                 {/* Done button */}
                 <button
                   type="button"
@@ -669,7 +577,6 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
                     cursor: "pointer",
                   }}
                 >
-                  {completed ? <Check style={{ width: "13px", height: "13px" }} /> : null}
                   Done
                 </button>
               </>
