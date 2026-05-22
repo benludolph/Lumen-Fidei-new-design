@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, Send, RotateCw, ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { X, Send, RotateCw, ArrowRight, FastForward } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
 import candleBg from "@assets/OilPaintingBG_1774227836014.webp";
@@ -396,6 +397,10 @@ function OptionButton({ label, selected, onClick }: { label: string; selected: b
 // ============================================================
 
 export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, mentorPhotoUrl, mentorName, onComplete, onExit }: ChatFlowSlideProps) {
+
+  // ── Current user (for admin/superuser skip button) ──
+  const { data: currentUser } = useQuery<{ role: string }>({ queryKey: ["/api/user"] });
+  const canSkip = currentUser?.role === "admin" || currentUser?.role === "superuser";
 
   // ── Parse & normalize flow definition ──
   const { flatSteps, optionSets, summaryTemplate, isRich } = useMemo(
@@ -999,7 +1004,32 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
           </div>
         </div>
 
-        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+        <div className="flex items-center gap-2 justify-center" style={{ height: "42px" }}>
+          {canSkip && !flowComplete && (
+            <button
+              onClick={onComplete}
+              className="flex items-center gap-1.5 rounded-[20px] transition-colors hover:bg-[rgba(52,52,52,0.6)]"
+              style={{
+                height: "40px",
+                padding: "0 12px",
+                background: "rgba(42,42,42,0.5)",
+                backdropFilter: "blur(18px)",
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.72rem",
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.5)",
+                border: "none",
+                cursor: "pointer",
+              }}
+              data-testid="button-chat-skip"
+              title="Skip chat flow (admin only)"
+            >
+              <FastForward className="w-3 h-3" />
+              Skip
+            </button>
+          )}
           <button
             onClick={onExit}
             className="flex items-center justify-center rounded-[20px] transition-colors hover:bg-[rgba(52,52,52,0.6)]"
