@@ -3065,7 +3065,7 @@ export async function registerRoutes(
 
   // === Workbook Streaks ===
 
-  const VALID_PRAYER_IDS: ReadonlyArray<PrayerId> = ["prayer_1", "prayer_2", "prayer_3"];
+  const VALID_PRAYER_IDS: ReadonlyArray<PrayerId> = ["prayer_1", "prayer_2"];
   function isPrayerId(value: string): value is PrayerId {
     return (VALID_PRAYER_IDS as ReadonlyArray<string>).includes(value);
   }

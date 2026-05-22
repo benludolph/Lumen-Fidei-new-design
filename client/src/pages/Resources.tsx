@@ -16,7 +16,6 @@ import {
   ArrowRight,
   ExternalLink,
   BookOpen,
-  Flame,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
@@ -116,44 +115,6 @@ const RESOURCE_SUBTEXTS: { match: string; subtext: string }[] = [
 function getResourceSubtext(name: string): string {
   const lower = name.toLowerCase();
   return RESOURCE_SUBTEXTS.find((m) => lower.includes(m.match))?.subtext ?? "";
-}
-
-function DailyRenewalCard() {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Link href="/resources/tools/daily-renewal">
-      <div
-        data-testid="card-tool-daily-renewal"
-        className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
-        style={{ backgroundColor: "#0F1011", border: "0.5px solid var(--white-5)", borderRadius: "6px" }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(240,120,48,0.08) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0, opacity: hovered ? 1.5 : 1, transition: "opacity 0.2s ease-out" }} />
-        <div className="flex items-start relative z-[3]">
-          <div
-            className="w-6 h-6 rounded flex items-center justify-center shrink-0"
-            style={{ background: "var(--white-5)", boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)" }}
-          >
-            <Flame style={{ width: "13px", height: "13px", color: "#F07830", strokeWidth: 1.8 }} />
-          </div>
-        </div>
-        <div className="flex items-end justify-between w-full relative z-[3]">
-          <div className="flex-1 min-w-0">
-            <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: "#f7f8f8", letterSpacing: "-0.1402px" }}>
-              Daily Prayer
-            </p>
-            <p className="type-body-xs" style={{ color: "#8a8f98" }}>
-              Ongoing daily prayer
-            </p>
-          </div>
-          <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
-            <ArrowRight style={{ width: "14px", height: "14px" }} />
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 function FreedomWorkbookCard() {
@@ -518,7 +479,6 @@ export default function Resources() {
               <div className="resource-grid-equal gap-2 w-full">
                 <ConfessionFinderCard />
                 <FreedomWorkbookCard />
-                <DailyRenewalCard />
               </div>
             </div>
 
