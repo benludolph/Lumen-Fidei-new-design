@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ChevronRight, Check, BookOpen } from "lucide-react";
 import { Link } from "wouter";
-import { SECTIONS } from "./section-definitions";
+import { SECTIONS, SECTION_CATEGORIES, getSectionsByCategory } from "./section-definitions";
 import PrayerRender from "./PrayerRender";
 import SessionWrapper from "./SessionWrapper";
 import type { WorkbookSummary, WorkbookEntry } from "@shared/schema";
@@ -197,7 +197,7 @@ export default function WorkbookShell() {
           </div>
         )}
 
-        {/* Section list */}
+        {/* Section list grouped by category */}
         {isLoading ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
             <div
@@ -206,86 +206,138 @@ export default function WorkbookShell() {
             />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-            {SECTIONS.map((section, index) => {
-              const sec = summary[section.id];
-              const count = sec?.count ?? 0;
-              const attested = sec?.attested ?? false;
-              const hasContent = attested || count > 0;
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {SECTION_CATEGORIES.map((category) => {
+              const categorySections = getSectionsByCategory(category.id);
+              const catCompleted = categorySections.filter((s) => {
+                const sec = summary[s.id];
+                return sec && (sec.attested || sec.count > 0);
+              }).length;
+              const catTotal = categorySections.length;
+              const allDone = catCompleted === catTotal;
 
               return (
-                <Link key={section.id} href={`/resources/tools/freedom-workbook/${section.id}`}>
+                <div key={category.id}>
+                  {/* Category header */}
                   <div
-                    data-testid={`section-row-${section.id}`}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "12px",
-                      padding: "14px 16px",
-                      borderRadius: "8px",
-                      cursor: "pointer",
-                      background: "rgba(255,255,255,0.0)",
-                      border: "0.5px solid transparent",
-                      transition: "background 0.15s, border-color 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.0)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+                      justifyContent: "space-between",
+                      paddingBottom: "8px",
+                      marginBottom: "2px",
+                      borderBottom: "0.5px solid rgba(255,255,255,0.06)",
                     }}
                   >
-                    {/* Number */}
-                    <div
+                    <span
                       style={{
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "50%",
-                        background: hasContent ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
-                        border: `0.5px solid ${hasContent ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
+                        fontFamily: "'Afacad', sans-serif",
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                        color: allDone ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.45)",
                       }}
                     >
-                      {attested ? (
-                        <Check style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.5)" }} />
-                      ) : (
-                        <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.65rem", fontWeight: 700, color: hasContent ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)" }}>
-                          {index + 1}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Name */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        className="type-body-md"
-                        style={{
-                          color: hasContent ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.6)",
-                          margin: 0,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {section.name}
-                      </p>
-                    </div>
-
-                    {/* Status */}
-                    {section.id === 6 ? (
-                      <Section6Badge liesCount={section6LiesCount} truthsCount={section6TruthsCount} />
-                    ) : (
-                      <StatusBadge count={count} attested={attested} />
-                    )}
-
-                    <ChevronRight style={{ width: "14px", height: "14px", color: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
+                      {category.name}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: "'Afacad', sans-serif",
+                        fontSize: "0.68rem",
+                        color: allDone ? "rgba(100,210,130,0.5)" : "rgba(255,255,255,0.25)",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {allDone ? "✓ complete" : `${catCompleted} / ${catTotal}`}
+                    </span>
                   </div>
-                </Link>
+
+                  {/* Sections in this category */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    {categorySections.map((section) => {
+                      const sec = summary[section.id];
+                      const count = sec?.count ?? 0;
+                      const attested = sec?.attested ?? false;
+                      const hasContent = attested || count > 0;
+
+                      return (
+                        <Link key={section.id} href={`/resources/tools/freedom-workbook/${section.id}`}>
+                          <div
+                            data-testid={`section-row-${section.id}`}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                              padding: "14px 16px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              background: "rgba(255,255,255,0.0)",
+                              border: "0.5px solid transparent",
+                              transition: "background 0.15s, border-color 0.15s",
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
+                              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)";
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.0)";
+                              (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+                            }}
+                          >
+                            {/* Check / number bubble */}
+                            <div
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                background: hasContent ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+                                border: `0.5px solid ${hasContent ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"}`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                              }}
+                            >
+                              {attested ? (
+                                <Check style={{ width: "12px", height: "12px", color: "rgba(255,255,255,0.5)" }} />
+                              ) : (
+                                <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.65rem", fontWeight: 700, color: hasContent ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)" }}>
+                                  {section.id}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Name */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p
+                                className="type-body-md"
+                                style={{
+                                  color: hasContent ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.6)",
+                                  margin: 0,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {section.name}
+                              </p>
+                            </div>
+
+                            {/* Status */}
+                            {section.id === 6 ? (
+                              <Section6Badge liesCount={section6LiesCount} truthsCount={section6TruthsCount} />
+                            ) : (
+                              <StatusBadge count={count} attested={attested} />
+                            )}
+
+                            <ChevronRight style={{ width: "14px", height: "14px", color: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>

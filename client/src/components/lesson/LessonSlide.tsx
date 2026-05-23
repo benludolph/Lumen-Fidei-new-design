@@ -19,7 +19,7 @@ import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
 import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
-import { getSectionById, SECTIONS } from "@/components/workbook/section-definitions";
+import { getSectionById, SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-definitions";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { WorkbookSummary, WorkbookStreakStatus, PrayerId } from "@shared/schema";
@@ -2937,16 +2937,21 @@ function WorkbookSessionSlide({
   const [openSectionId, setOpenSectionId] = useState<number | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
-  // Auto-populate: all sections that are not yet attested or have no entries
-  const sections = SECTIONS.map(def => {
+  // Auto-populate: group all sections by category, filter to only incomplete ones
+  const allSections = SECTIONS.map(def => {
     const sec = (summary as WorkbookSummary)[def.id];
     const isComplete = sec ? (sec.attested || sec.count > 0) : false;
-    return { id: def.id, name: def.name, isComplete };
+    return { id: def.id, name: def.name, categoryId: def.categoryId, isComplete };
   });
 
-  const openSections = sections.filter(s => !s.isComplete);
-  const doneCount = sections.filter(s => s.isComplete).length;
-  const totalCount = sections.length;
+  const openSections = allSections.filter(s => !s.isComplete);
+  const doneCount = allSections.length - openSections.length;
+  const totalCount = allSections.length;
+
+  // Categories that have at least one incomplete section
+  const activeCategories = SECTION_CATEGORIES.filter(cat =>
+    openSections.some(s => s.categoryId === cat.id)
+  );
 
   const handleSectionClose = async (id: number) => {
     setOpenSectionId(null);
@@ -2963,66 +2968,80 @@ function WorkbookSessionSlide({
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div>
           <h2 style={{ fontFamily: "'Freight Display Pro', Georgia, serif", fontSize: "1.35rem", fontWeight: 500, color: "white", margin: 0, marginBottom: "4px" }}>{heading}</h2>
-          {totalCount > 0 && (
-            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.88rem", color: "rgba(255,255,255,0.5)", margin: 0 }}>
-              {dismissed || openSections.length === 0
-                ? doneCount === totalCount
-                  ? `All ${totalCount} sections complete`
-                  : `${doneCount} of ${totalCount} sections complete`
-                : `${openSections.length} section${openSections.length === 1 ? "" : "s"} still open — ${subheading}`}
-            </p>
-          )}
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.88rem", color: "rgba(255,255,255,0.5)", margin: 0 }}>
+            {dismissed || openSections.length === 0
+              ? doneCount === totalCount
+                ? `All ${totalCount} sections complete`
+                : `${doneCount} of ${totalCount} sections complete`
+              : `${openSections.length} section${openSections.length === 1 ? "" : "s"} still open — ${subheading}`}
+          </p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {sections.map(sec => (
-            <div
-              key={sec.id}
-              style={{
-                borderRadius: "10px",
-                border: `0.5px solid ${sec.isComplete ? "rgba(100,210,130,0.2)" : "rgba(255,255,255,0.1)"}`,
-                background: sec.isComplete ? "rgba(100,210,130,0.04)" : "rgba(255,255,255,0.03)",
-                padding: "14px 18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "12px",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", margin: 0, marginBottom: "2px" }}>
-                  The Deliverance Workbook
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.95rem", color: "rgba(255,255,255,0.85)", margin: 0 }}>{sec.name}</p>
-                  {sec.isComplete && <CheckCircle2 style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }} />}
+        {openSections.length === 0 ? (
+          <div style={{ padding: "20px", borderRadius: "10px", border: "0.5px solid rgba(100,210,130,0.2)", background: "rgba(100,210,130,0.04)", textAlign: "center" }}>
+            <CheckCircle2 style={{ width: "20px", height: "20px", color: "rgba(100,210,130,0.7)", margin: "0 auto 8px" }} />
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", margin: 0 }}>
+              All sections complete
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {activeCategories.map(cat => {
+              const catSections = openSections.filter(s => s.categoryId === cat.id);
+              return (
+                <div key={cat.id}>
+                  {/* Category label */}
+                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", margin: 0, marginBottom: "6px", paddingLeft: "2px" }}>
+                    {cat.name}
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {catSections.map(sec => (
+                      <div
+                        key={sec.id}
+                        style={{
+                          borderRadius: "10px",
+                          border: "0.5px solid rgba(255,255,255,0.1)",
+                          background: "rgba(255,255,255,0.03)",
+                          padding: "14px 18px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "12px",
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.95rem", color: "rgba(255,255,255,0.85)", margin: 0 }}>{sec.name}</p>
+                        </div>
+                        <button
+                          data-testid={`button-open-section-${sec.id}`}
+                          onClick={() => setOpenSectionId(sec.id)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            padding: "7px 14px",
+                            borderRadius: "6px",
+                            background: "rgba(255,255,255,0.08)",
+                            border: "0.5px solid rgba(255,255,255,0.15)",
+                            cursor: "pointer",
+                            fontFamily: "'Afacad', sans-serif",
+                            fontSize: "0.78rem",
+                            fontWeight: 600,
+                            color: "white",
+                            letterSpacing: "0.04em",
+                            whiteSpace: "nowrap",
+                            flexShrink: 0,
+                          }}
+                        >
+                          Open section
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <button
-                data-testid={`button-open-section-${sec.id}`}
-                onClick={() => setOpenSectionId(sec.id)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "7px 14px",
-                  borderRadius: "6px",
-                  background: sec.isComplete ? "rgba(100,210,130,0.1)" : "rgba(255,255,255,0.08)",
-                  border: `0.5px solid ${sec.isComplete ? "rgba(100,210,130,0.25)" : "rgba(255,255,255,0.15)"}`,
-                  cursor: "pointer",
-                  fontFamily: "'Afacad', sans-serif",
-                  fontSize: "0.78rem",
-                  fontWeight: 600,
-                  color: sec.isComplete ? "rgba(100,210,130,0.9)" : "white",
-                  letterSpacing: "0.04em",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
-              >
-                {sec.isComplete ? "Review" : "Open section"}
-              </button>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {!dismissed && openSections.length > 0 && (
           <div style={{ textAlign: "center", paddingTop: "4px" }}>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-definitions";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { Shell } from "@/components/layout/Shell";
@@ -3871,8 +3872,7 @@ function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { conte
           <label className="text-xs font-medium text-muted-foreground">Sections (in order)</label>
           {sectionIds.map((id, i) => (
             <div key={i} className="flex items-center gap-2">
-              <input
-                type="number"
+              <select
                 value={id}
                 onChange={(e) => {
                   const newIds = [...sectionIds];
@@ -3880,9 +3880,16 @@ function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { conte
                   onChange(JSON.stringify({ sectionIds: newIds }));
                 }}
                 className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                placeholder="Section ID"
-                data-testid={`input-${idPrefix}-wl-section-${index}-${i}`}
-              />
+                data-testid={`select-${idPrefix}-wl-section-${index}-${i}`}
+              >
+                {SECTION_CATEGORIES.map(cat => (
+                  <optgroup key={cat.id} label={cat.name}>
+                    {SECTIONS.filter(s => s.categoryId === cat.id).map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() => {
@@ -3896,19 +3903,18 @@ function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { conte
           ))}
           <button
             type="button"
-            onClick={() => onChange(JSON.stringify({ sectionIds: [...sectionIds, 1] }))}
+            onClick={() => onChange(JSON.stringify({ sectionIds: [...sectionIds, SECTIONS[0].id] }))}
             className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
             data-testid={`button-${idPrefix}-wl-add-${index}`}
           >+ Add section</button>
-          <p className="text-[11px] text-muted-foreground/60">Enter the numeric section IDs — they'll appear as a vertical list of "Open section" rows on one slide.</p>
+          <p className="text-[11px] text-muted-foreground/60">Sections appear as a vertical list of "Open section" rows on one slide.</p>
         </div>
       ) : (
         <>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
-            <input
-              type="number"
-              value={(() => { try { const p = JSON.parse(content); return p.sectionId ?? ""; } catch { return ""; } })()}
+            <label className="text-xs font-medium text-muted-foreground">Section (optional)</label>
+            <select
+              value={(() => { try { return JSON.parse(content).sectionId ?? ""; } catch { return ""; } })()}
               onChange={(e) => {
                 try {
                   const p = JSON.parse(content);
@@ -3918,11 +3924,19 @@ function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { conte
                   onChange(JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
                 }
               }}
-              placeholder="Leave blank to link to the workbook root"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              data-testid={`input-${idPrefix}-wl-section-id-${index}`}
-            />
-            <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
+              data-testid={`select-${idPrefix}-wl-section-id-${index}`}
+            >
+              <option value="">— Workbook home (no specific section) —</option>
+              {SECTION_CATEGORIES.map(cat => (
+                <optgroup key={cat.id} label={cat.name}>
+                  {SECTIONS.filter(s => s.categoryId === cat.id).map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <p className="text-[11px] text-muted-foreground/60">Links to this section. Leave unset to link to the workbook home.</p>
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>

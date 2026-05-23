@@ -20,8 +20,15 @@ export interface SectionField {
   enumOptions?: SectionFieldOption[];
 }
 
+export interface SectionCategory {
+  id: number;
+  name: string;
+  description: string;
+}
+
 export interface SectionDefinition {
   id: number;
+  categoryId: number;
   name: string;
   type: SectionType;
   description: string;
@@ -30,9 +37,38 @@ export interface SectionDefinition {
   prayerHint?: string;
 }
 
+export const SECTION_CATEGORIES: SectionCategory[] = [
+  {
+    id: 1,
+    name: "Personal Sins",
+    description: "Sin, brokenness, and the patterns that give the enemy ground in your life.",
+  },
+  {
+    id: 2,
+    name: "Occult & Dark Powers",
+    description: "Involvement with occult practices, false religions, and spiritual powers that are not from God.",
+  },
+  {
+    id: 3,
+    name: "Generational Lines",
+    description: "Sins, patterns, and bondages inherited from your family line.",
+  },
+  {
+    id: 4,
+    name: "Wounds & Forgiveness",
+    description: "The wounds you have received, the people you need to forgive, and the trauma that shaped you.",
+  },
+  {
+    id: 5,
+    name: "The Inner World",
+    description: "The lies you have believed and the vows you have made that quietly govern your life.",
+  },
+];
+
 export const SECTIONS: SectionDefinition[] = [
   {
     id: 1,
+    categoryId: 1,
     name: "Personal Sins",
     type: "list_builder",
     description: `Sin is not first a list of broken rules; it is anything that breaks communion with God, with others, or with the truth of who you were made to be. Every sin, even one nobody else ever saw, gives the enemy a legal foothold and keeps a corner of your heart shut against grace. The good news is that nothing you confess is too large for mercy and nothing is too small to matter. Naming a sin is not wallowing in shame—it is dragging it into the light where it loses its power and can be washed away.`,
@@ -43,6 +79,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 2,
+    categoryId: 4,
     name: "People to Forgive",
     type: "list_builder",
     description: `Unforgiveness often leads to significant torment in people's lives. Forgiveness is a choice rather than an emotion. It involves choosing to forgive someone who has harmed you. Forgiveness does not require you to reconcile with that person nor allow that person back into your life. It is a one-sided action that you do. Forgiveness does not mean you agree with what that person did to you. It merely means you release your judgment against that person and free them from your heart so you can be freed from basanizo torment (Matthew 18:34–35).`,
@@ -55,6 +92,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 3,
+    categoryId: 4,
     name: "Family & Childhood Wounds",
     type: "list_builder",
     description: `The home is where the heart is first shaped, and it is also where the deepest wounds are often inflicted—not always through cruelty, but sometimes through absence, neglect, favoritism, or words spoken in a moment of anger that lodged in a child's soul for decades. These early wounds form the lens through which you still see yourself, God, and authority. Bringing them into the light is not about blaming your family; it is about letting Jesus heal the boy or girl who first received the wound.`,
@@ -78,6 +116,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 4,
+    categoryId: 1,
     name: "Sexual Sin",
     type: "list_builder",
     description: `Sexuality is meant to be a sacred bond, and precisely because it is so powerful, sin in this area creates ties that linger long after the act is over. Pornography, fornication, adultery, fantasy, and abuse all leave imprints—soul ties to past partners, shame that whispers you are "damaged," and patterns that demand to be fed. God is neither shocked nor disgusted by what you bring here. He longs to break every ungodly tie and restore your purity and dignity.`,
@@ -89,6 +128,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 5,
+    categoryId: 2,
     name: "Occult & False Spiritual Power",
     type: "list_builder",
     description: `There is real power in the spiritual world, and not all of it comes from God. Any attempt to gain knowledge, control, or protection apart from Him—however curious, harmless, or "just for fun" it seemed—opens a door to the enemy. This includes practices many treat as entertainment. The point is not fear but renunciation: you are closing doors you may have opened without realizing where they led.`,
@@ -99,6 +139,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 6,
+    categoryId: 5,
     name: "Lies & Truths",
     type: "lies_and_truths",
     description: `The enemy is called the father of lies, and his strategy is rarely a single dramatic deception—it is a quiet sentence about you that you came to accept as fact. These lies become the agreements that govern your life: "I am worthless," "God could never love someone like me," "I have to earn my place." Freedom comes when each lie is renounced and replaced with what God actually says is true. Truth is not a feeling; it is a foundation you choose to stand on.`,
@@ -107,6 +148,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 7,
+    categoryId: 5,
     name: "Vows & Inner Promises",
     type: "list_builder",
     description: `In moments of deep pain we often make silent vows—"I will never let anyone hurt me again," "I will never cry," "I will never be like my mother," "I will never trust again." These promises feel like protection, but they hand control of our hearts to the wound rather than to God. An inner vow can quietly steer decades of decisions, walling off the very places that need healing. Renouncing them returns the throne of your heart to Christ.`,
@@ -117,6 +159,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 8,
+    categoryId: 1,
     name: "Idolatry",
     type: "list_builder",
     description: `An idol is anything that takes the place that belongs to God alone—the thing you run to for security, comfort, identity, or worth. Idols are rarely golden statues; they are usually good things loved in a disordered way: career, money, a relationship, approval, control, comfort, even ministry. The test is simple: what would devastate you to lose, more than losing God? Naming an idol is not about contempt for the thing, but about restoring God to first place.`,
@@ -127,6 +170,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 9,
+    categoryId: 1,
     name: "Pride, Rebellion & Control",
     type: "list_builder",
     description: `At the root of the first sin was a refusal to let God be God—a desire to decide good and evil for ourselves. Pride, rebellion, and control are that same root, grown into the everyday habits of needing to be right, resenting authority, manipulating outcomes, and refusing to submit. They masquerade as strength but leave us isolated and unable to receive. Humility is not weakness; it is the soil in which every other grace can grow.`,
@@ -137,6 +181,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 10,
+    categoryId: 4,
     name: "Abuse, Trauma & Wounded Responses",
     type: "list_builder",
     description: `When someone is abused or deeply traumatized, two things happen: a wound is inflicted, and the soul learns a way to survive it. Those survival responses—numbing, dissociation, rage, perfectionism, people-pleasing, hyper-control—were once protective, but they often outlive the danger and keep you bound. None of the abuse was your fault, and naming it is not weakness; it is the first step in letting the Lord enter the place that was violated. (If you are working through severe trauma, please walk this section gently and alongside a trusted priest, counselor, or therapist—spiritual healing and professional care work together, not against each other.)`,
@@ -148,6 +193,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 11,
+    categoryId: 1,
     name: "Addictions & Compulsions",
     type: "list_builder",
     description: `An addiction is rarely just about the substance or behavior—it is a counterfeit comfort the soul reaches for to soothe a deeper ache it doesn't know how to name. Alcohol, drugs, pornography, food, spending, screens, gambling, work: each promises relief and delivers bondage. Compulsion is a sign that something underneath is unhealed and unfed. Bringing these into the light invites Christ to meet the real hunger they were trying to fill.`,
@@ -158,6 +204,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 12,
+    categoryId: 2,
     name: "False Religion & Spiritual Mixture",
     type: "list_builder",
     description: `Spiritual mixture is the attempt to follow Christ while also holding on to spiritual practices, beliefs, or sources of power that do not come from Him. It often feels open-minded or harmless—"taking the good from every path"—but it divides loyalty and leaves a door cracked open. This includes time spent in false religions, syncretistic devotions, and "Christian" practices borrowed from the occult. The call is to belong wholly to the one true God.`,
@@ -168,6 +215,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 13,
+    categoryId: 1,
     name: "Harm Done to Others",
     type: "list_builder",
     description: `This section turns the mirror around. We are quick to remember our wounds and slow to remember the wounds we have caused. Yet the harm we have done to others—through words, betrayal, neglect, abuse of power, or simple selfishness—weighs on the conscience and often calls for more than confession: it calls for restitution and, where possible and prudent, reconciliation. Owning what we have done frees both us and, sometimes, those we have hurt.`,
@@ -178,6 +226,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 14,
+    categoryId: 1,
     name: "Dominant Spiritual Patterns",
     type: "patterns_checklist",
     description: `When you step back and look at the whole picture—your sins, wounds, vows, and the lies you've believed—recurring themes usually emerge. The same kind of struggle keeps reappearing in different costumes: a spirit of fear, of rejection, of control, of lust, of unworthiness, of heaviness. Identifying these dominant patterns helps you stop fighting symptoms one at a time and address the root the enemy keeps returning to.`,
@@ -186,6 +235,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 15,
+    categoryId: 3,
     name: "Generational Sins & Family Patterns",
     type: "list_builder",
     description: `Scripture speaks of sin and its consequences passing down through family lines (Exodus 20:5), and most families carry recognizable patterns—divorce, addiction, abuse, occult involvement, suicide, rage, poverty, infidelity—that repeat generation after generation as if on a track. You are not guilty of your ancestors' sins, but you can renounce their effects and refuse to pass them on. Naming the pattern breaks the silent assumption that "this is just how our family is."`,
@@ -196,6 +246,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 16,
+    categoryId: 3,
     name: "Family Members & Ancestors of Concern",
     type: "list_builder",
     description: `Sometimes a specific person in the family line stands out—an ancestor known to have practiced witchcraft, made a pact, joined a secret society, dedicated descendants to a false god, or lived in deep unrepentant darkness. Their choices can cast a long shadow. This is not about judging the dead; it is about identifying specific doorways that may need to be renounced and closed on behalf of your line.`,
@@ -207,6 +258,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 17,
+    categoryId: 3,
     name: "Lodges, Secret Societies & Oath-Bound Groups",
     type: "list_builder",
     description: `Secret societies bind their members through oaths, hidden rituals, and divided loyalties—often invoking false gods or swearing blood-curses upon themselves and their descendants if the oath is broken. Freemasonry is the most common, but there are many others. The Church has long warned against them precisely because the oaths create real spiritual bondage. Renouncing membership—your own or an ancestor's—severs those oaths and their inherited effects.`,
@@ -219,6 +271,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 18,
+    categoryId: 1,
     name: "Agreement Sins",
     type: "list_builder",
     description: `Some sins we don't commit ourselves—we agree with, approve of, encourage, or fail to oppose. Scripture treats this consent seriously (Romans 1:32): standing by while someone is harmed, cheering on another's revenge, encouraging a friend's sin, voting for or funding grave evil, or silently approving what we knew was wrong. Agreement joins us to the sin even when our own hands seem clean. Renouncing these agreements withdraws your consent.`,
@@ -229,6 +282,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 19,
+    categoryId: 2,
     name: "Named Spirits, False Deities & Unholy Allegiances",
     type: "list_builder",
     description: `Idolatry and the occult are not merely abstract; they often involve specific named spirits, false gods, or beings to whom devotion, sacrifice, or allegiance was given—by you or your ancestors. A santo, an orisha, a "spirit guide," a familiar spirit, a deity invoked in a ritual, a being you bargained with: each name represents an allegiance that must be specifically renounced. The enemy clings to ground that has never been explicitly reclaimed.`,
@@ -239,6 +293,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 20,
+    categoryId: 2,
     name: "Objects of Concern",
     type: "list_builder",
     description: `Physical objects can carry spiritual significance—either because they were dedicated to a false power, used in occult practice, or simply because they keep a sin or allegiance alive in your home. Scripture records believers burning their occult items as part of repentance (Acts 19:19). This is not superstition about "haunted" objects; it is about removing what stands as a banner or invitation for the enemy in your space.`,
@@ -249,6 +304,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 21,
+    categoryId: 2,
     name: "Curses, Spells & Blood Contracts",
     type: "list_builder",
     description: `A curse is the use of spiritual power to wish or invoke harm, and curses can be spoken over us, inherited from our line, or even pronounced over ourselves in moments of self-hatred. Spells, hexes, and blood contracts are deliberate acts of the same kind. Whether you fear someone cursed you, suspect a generational curse, or recognize the harsh words you've spoken over yourself or your children, these can be renounced and broken in the authority of Christ.`,
@@ -270,6 +326,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 22,
+    categoryId: 3,
     name: "Infirmities",
     type: "list_builder",
     description: `Not every illness is spiritual—but some physical and emotional afflictions are tied to wounds, sins, generational patterns, or oppression, and persist despite every natural remedy. Listing them is not a diagnosis and never a replacement for medical care; it is bringing your body and mind before the Healer and asking whether anything in this workbook may be connected to what you suffer. Often the chronic ailment lifts once the root is addressed.`,
@@ -281,6 +338,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 23,
+    categoryId: 3,
     name: "Future Generation Concerns",
     type: "list_builder",
     description: `Just as sin and wounds can pass down a family line, so can blessing. Having worked to close the doors of your own life, this final section turns toward those who come after you—your children, grandchildren, and descendants not yet born. Here you renounce, on their behalf, the patterns you refuse to pass on, and you intentionally speak blessing and protection over your line. You become the one in whom the old pattern stops and the new inheritance begins.`,
@@ -297,4 +355,8 @@ export function getSectionById(id: number): SectionDefinition | undefined {
 
 export function getSectionName(id: number): string {
   return getSectionById(id)?.name ?? `Section ${id}`;
+}
+
+export function getSectionsByCategory(categoryId: number): SectionDefinition[] {
+  return SECTIONS.filter((s) => s.categoryId === categoryId);
 }
