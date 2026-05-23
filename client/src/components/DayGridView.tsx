@@ -16,7 +16,7 @@ import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
 import certBgNormal from "@assets/Certification_normal_1774299706134.webp";
 import certBgHover from "@assets/Certification_hover_1774299706134.webp";
 import introVideoThumb from "@assets/IntroVideo_1774228694683.webp";
-import bookCoverImg from "@assets/BookDeliverance_1779563461903.png";
+import bookCoverImg from "@assets/WorkbookImage_1779563994953.webp";
 
 interface PrayerCompletionRecord {
   dayNumber: number;
@@ -263,55 +263,38 @@ function WorkbookCard({ module, onClick }: { module: LessonWorkbookModuleWithSta
       style={{
         flexShrink: 0,
         width: "89px",
-        minHeight: "126px",
+        height: "126px",
         position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: "10px 8px 10px 8px",
-        background: "var(--surface-base)",
-        border: "0.5px solid var(--white-5)",
+        padding: 0,
+        background: "transparent",
+        border: "none",
         borderRadius: "6px",
-        overflow: "hidden",
+        overflow: "visible",
         cursor: available ? "pointer" : "not-allowed",
-        opacity: available ? 1 : 0.45,
-        textAlign: "left",
+        opacity: available ? 1 : 0.4,
       }}
       className="day-card-hover"
     >
-      {/* Stacked pages effect — two pseudo-offset layers behind */}
-      <div aria-hidden="true" style={{ position: "absolute", bottom: "-3px", left: "4px", right: "-3px", height: "calc(100% - 6px)", background: "var(--white-4)", border: "0.5px solid var(--white-5)", borderRadius: "5px", zIndex: 0 }} />
-      <div aria-hidden="true" style={{ position: "absolute", bottom: "-6px", left: "7px", right: "-6px", height: "calc(100% - 10px)", background: "var(--white-2)", border: "0.5px solid var(--white-3)", borderRadius: "5px", zIndex: 0 }} />
+      {/* Stacked pages — offset layers behind the cover */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, bottom: "-3px", left: "4px", right: "-4px", background: "rgba(255,255,255,0.06)", border: "0.5px solid rgba(255,255,255,0.06)", borderRadius: "6px", zIndex: 0 }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, bottom: "-6px", left: "8px", right: "-8px", background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(255,255,255,0.03)", borderRadius: "6px", zIndex: 0 }} />
 
-      {/* Book cover image — fills entire card */}
+      {/* Book cover — full bleed, no overlay */}
       <img
         src={bookCoverImg}
-        alt=""
+        alt={module.title}
         style={{
           position: "absolute",
           inset: 0,
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          opacity: 0.55,
-          pointerEvents: "none",
+          objectPosition: "center top",
+          opacity: 0.9,
+          borderRadius: "6px",
           zIndex: 1,
         }}
       />
-      {/* Dark gradient overlay for readability */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(15,16,17,0.25) 0%, rgba(15,16,17,0.72) 100%)", zIndex: 2, pointerEvents: "none" }} />
-
-      {/* State icon — top-left */}
-      <div style={{ position: "relative", zIndex: 3, width: "20px", height: "20px", borderRadius: "4px", background: !available ? "transparent" : completed ? "rgba(0,255,0,0.05)" : "var(--white-5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        {!available ? (
-          <Lock style={{ width: "9px", height: "9px", color: "var(--white-30)" }} />
-        ) : completed ? (
-          <CircleCheck style={{ width: "11px", height: "11px", color: "#00ff00", strokeWidth: 1.8 }} />
-        ) : (
-          <BookOpen style={{ width: "11px", height: "11px", color: "#ffffff", strokeWidth: 1.8 }} />
-        )}
-      </div>
-
     </button>
   );
 }
