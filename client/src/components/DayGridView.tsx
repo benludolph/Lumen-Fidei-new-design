@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { useLocation } from "wouter";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -588,6 +589,7 @@ export function DayGridView({
   allPrelimsComplete = false,
   onPrelimSelect,
 }: DayGridViewProps) {
+  const [, navigate] = useLocation();
   const { data: trackAModules } = useQuery<TrackAModule[]>({
     queryKey: ["/api/track-a-modules"],
     enabled: isTrackA,
@@ -676,7 +678,7 @@ export function DayGridView({
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "12px", position: "relative" }} className="custom-scrollbar">
         <PageContainer variant="narrow">
 
-          <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => setGuideModalOpen(true)} inPrelimSection={inPrelimSection} />
+          <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => isTrackA ? navigate('/program-overview') : setGuideModalOpen(true)} inPrelimSection={inPrelimSection} />
 
           <div style={{ paddingTop: "24px" }}>
             {prelimModulesData && prelimModulesData.length > 0 && (
