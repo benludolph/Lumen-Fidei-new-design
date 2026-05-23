@@ -20,7 +20,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const profileRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const { data: user } = useQuery<{ name: string; email: string; role: string }>({
+  const { data: user } = useQuery<{ name: string; email: string; role: string; track?: string }>({
     queryKey: ["/api/user"],
   });
 
@@ -115,6 +115,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Desktop nav links + profile */}
           <div className="hidden sm:flex items-center gap-1">
             <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
+            {(user?.track === 'A' || user?.role === 'superuser') && (
+              <NavLink href="/program-overview" active={location === "/program-overview"}>Week Summary</NavLink>
+            )}
             <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
             <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
             {/* Collection hidden — not yet released */}
@@ -295,6 +298,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <DrawerLink href="/dashboard" active={location === "/dashboard"} onClick={closeDrawer}>
             Dashboard
           </DrawerLink>
+          {(user?.track === 'A' || user?.role === 'superuser') && (
+            <DrawerLink href="/program-overview" active={location === "/program-overview"} onClick={closeDrawer}>
+              Week Summary
+            </DrawerLink>
+          )}
           <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>
             Messages
           </DrawerLink>

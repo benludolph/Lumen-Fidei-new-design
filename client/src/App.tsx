@@ -28,6 +28,7 @@ import HealingDashboard from "@/pages/HealingDashboard";
 import HealingLesson from "@/pages/HealingLesson";
 import HealingJournal from "@/pages/HealingJournal";
 import ProfilePage from "@/pages/ProfilePage";
+import ProgramOverview from "@/pages/ProgramOverview";
 
 // Standard Protected Route Wrapper — role-based
 function ProtectedRoute({ 
@@ -177,6 +178,10 @@ function Router() {
 
       <Route path="/toolkit">
         <ProtectedRoute component={PrayerToolkit} allowedRoles={['participant', 'superuser']} />
+      </Route>
+
+      <Route path="/program-overview">
+        <ProtectedRoute component={ProgramOverview} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/preview/track-a/:day">
