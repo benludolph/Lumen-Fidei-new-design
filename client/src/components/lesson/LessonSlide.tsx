@@ -19,7 +19,7 @@ import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
 import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
-import { getSectionById } from "@/components/workbook/section-definitions";
+import { getSectionById, SECTIONS } from "@/components/workbook/section-definitions";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { WorkbookSummary, WorkbookStreakStatus, PrayerId } from "@shared/schema";
@@ -2925,12 +2925,10 @@ function WorkbookSessionSlide({
   content: string;
   onInteracted?: () => void;
 }) {
-  let sectionIds: number[] = [];
   let heading = "Your open work";
   let subheading = "Work through what you can.";
   try {
     const parsed = JSON.parse(content || "{}");
-    if (Array.isArray(parsed.sectionIds)) sectionIds = parsed.sectionIds.filter((x: unknown) => typeof x === "number");
     if (typeof parsed.heading === "string" && parsed.heading.trim()) heading = parsed.heading.trim();
     if (typeof parsed.subheading === "string" && parsed.subheading.trim()) subheading = parsed.subheading.trim();
   } catch { /* use defaults */ }
@@ -2939,11 +2937,11 @@ function WorkbookSessionSlide({
   const [openSectionId, setOpenSectionId] = useState<number | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
-  const sections = sectionIds.map(id => {
-    const def = getSectionById(id);
-    const sec = (summary as WorkbookSummary)[id];
+  // Auto-populate: all sections that are not yet attested or have no entries
+  const sections = SECTIONS.map(def => {
+    const sec = (summary as WorkbookSummary)[def.id];
     const isComplete = sec ? (sec.attested || sec.count > 0) : false;
-    return { id, name: def?.name ?? `Section ${id}`, isComplete };
+    return { id: def.id, name: def.name, isComplete };
   });
 
   const openSections = sections.filter(s => !s.isComplete);

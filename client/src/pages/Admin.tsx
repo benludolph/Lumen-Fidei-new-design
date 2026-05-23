@@ -3835,7 +3835,7 @@ function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { conte
   try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
 
   const isMulti = Array.isArray(parsed.sectionIds) && parsed.sectionIds.length > 0;
-  const [multiMode, setMultiMode] = React.useState(isMulti);
+  const [multiMode, setMultiMode] = useState(isMulti);
 
   const sectionIds: number[] = multiMode
     ? (Array.isArray(parsed.sectionIds) ? parsed.sectionIds : [])
@@ -3951,18 +3951,20 @@ function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { conte
 }
 
 function WorkbookSessionSlideEditor({ content, onChange, index, idPrefix }: { content: string; onChange: (val: string) => void; index: number; idPrefix: string }) {
-  let parsed: { sectionIds?: number[]; heading?: string; subheading?: string } = {};
+  let parsed: { heading?: string; subheading?: string } = {};
   try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
-  const sectionIds: number[] = Array.isArray(parsed.sectionIds) ? parsed.sectionIds : [];
   const heading = parsed.heading ?? "Your open work";
   const subheading = parsed.subheading ?? "Work through what you can.";
 
-  const update = (patch: Partial<{ sectionIds: number[]; heading: string; subheading: string }>) => {
-    onChange(JSON.stringify({ sectionIds, heading, subheading, ...patch }));
+  const update = (patch: Partial<{ heading: string; subheading: string }>) => {
+    onChange(JSON.stringify({ heading, subheading, ...patch }));
   };
 
   return (
     <div className="space-y-3">
+      <p className="text-[11px] text-muted-foreground/60 border border-dashed border-muted-foreground/30 rounded-md px-3 py-2">
+        This slide auto-loads every workbook section the participant hasn't completed yet. No configuration needed — just set the heading and subheading below.
+      </p>
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Heading</label>
         <input
@@ -3974,7 +3976,7 @@ function WorkbookSessionSlideEditor({ content, onChange, index, idPrefix }: { co
         />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Subheading</label>
+        <label className="text-xs font-medium text-muted-foreground">Subheading / call to action</label>
         <input
           type="text"
           value={subheading}
@@ -3982,38 +3984,6 @@ function WorkbookSessionSlideEditor({ content, onChange, index, idPrefix }: { co
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           data-testid={`input-${idPrefix}-ws-subheading-${index}`}
         />
-      </div>
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Workbook Sections</label>
-        {sectionIds.map((id, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <input
-              type="number"
-              value={id}
-              onChange={(e) => {
-                const newIds = [...sectionIds];
-                newIds[i] = Number(e.target.value);
-                update({ sectionIds: newIds });
-              }}
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Section ID"
-              data-testid={`input-${idPrefix}-ws-section-${index}-${i}`}
-            />
-            <button
-              type="button"
-              onClick={() => { const newIds = sectionIds.filter((_, j) => j !== i); update({ sectionIds: newIds }); }}
-              className="text-xs text-muted-foreground hover:text-destructive px-2 py-1"
-              data-testid={`button-${idPrefix}-ws-remove-section-${index}-${i}`}
-            >Remove</button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => update({ sectionIds: [...sectionIds, 1] })}
-          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-          data-testid={`button-${idPrefix}-ws-add-section-${index}`}
-        >+ Add section</button>
-        <p className="text-[11px] text-muted-foreground/60">Enter the numeric section IDs from the Freedom Workbook to include in this work session.</p>
       </div>
     </div>
   );
@@ -6423,7 +6393,7 @@ function TrackAContentManagementView() {
     if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
     if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
-    if (type === "workbook_session") return JSON.stringify({ sectionIds: [], heading: "Your open work", subheading: "Work through what you can." });
+    if (type === "workbook_session") return JSON.stringify({ heading: "Your open work", subheading: "Work through what you can." });
     if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
     return "";
   };
