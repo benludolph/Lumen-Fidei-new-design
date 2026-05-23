@@ -7645,7 +7645,7 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
   const [addSlideType, setAddSlideType] = useState<string>("text");
 
   const { data: allModules, isLoading } = useQuery<LessonWorkbookAdminModule[]>({
-    queryKey: ['/api/admin/lesson-workbook-modules'],
+    queryKey: ['/api/admin/workbook-modules'],
   });
 
   const currentModule = allModules?.find(m => m.dayNumber === selectedDay);
@@ -7666,7 +7666,7 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("PUT", `/api/admin/lesson-workbook-modules`, {
+      const res = await apiRequest("PUT", `/api/admin/workbook-modules`, {
         dayNumber: selectedDay,
         title: title || "Workbook Module",
         slides,
@@ -7675,7 +7675,7 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/lesson-workbook-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/workbook-modules'] });
       toast({ title: "Workbook module saved" });
       setEditMode(false);
     },
@@ -7687,10 +7687,10 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!currentModule) return;
-      await apiRequest("DELETE", `/api/admin/lesson-workbook-modules/${currentModule.id}`);
+      await apiRequest("DELETE", `/api/admin/workbook-modules/${currentModule.id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/lesson-workbook-modules'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/workbook-modules'] });
       toast({ title: "Workbook module removed" });
       setTitle("");
       setSlides([]);

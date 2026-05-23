@@ -212,15 +212,15 @@ export default function Dashboard() {
   });
 
   const { data: workbookModules } = useQuery<LessonWorkbookModuleWithStatus[]>({
-    queryKey: ["/api/lesson-workbook-modules"],
+    queryKey: ["/api/workbook-modules"],
     enabled: !!isTrackA,
   });
 
   const completeWorkbookMutation = useMutation({
     mutationFn: (id: number) =>
-      apiRequest("POST", `/api/lesson-workbook-modules/${id}/complete`),
+      apiRequest("POST", `/api/workbook-completions/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/lesson-workbook-modules"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workbook-modules"] });
     },
   });
   

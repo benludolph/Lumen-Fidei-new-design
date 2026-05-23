@@ -682,7 +682,7 @@ export function DayGridView({
   });
 
   const { data: workbookModules } = useQuery<LessonWorkbookModuleWithStatus[]>({
-    queryKey: ["/api/lesson-workbook-modules"],
+    queryKey: ["/api/workbook-modules"],
     enabled: isTrackA,
   });
 
