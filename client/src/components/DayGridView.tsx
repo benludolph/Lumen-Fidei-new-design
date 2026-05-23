@@ -16,7 +16,7 @@ import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
 import certBgNormal from "@assets/Certification_normal_1774299706134.webp";
 import certBgHover from "@assets/Certification_hover_1774299706134.webp";
 import introVideoThumb from "@assets/IntroVideo_1774228694683.webp";
-import bookCoverImg from "@assets/Book1_1779560743958.png";
+import bookCoverImg from "@assets/BookDeliverance_1779563461903.png";
 
 interface PrayerCompletionRecord {
   dayNumber: number;
@@ -251,7 +251,7 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
 
 
 function WorkbookCard({ module, onClick }: { module: LessonWorkbookModuleWithStatus; onClick: () => void }) {
-  const { completed, unlocked, title } = module;
+  const { completed, unlocked } = module;
   const available = unlocked || completed;
 
   return (
@@ -312,23 +312,6 @@ function WorkbookCard({ module, onClick }: { module: LessonWorkbookModuleWithSta
         )}
       </div>
 
-      {/* Title — bottom */}
-      <p
-        className="type-body-xs"
-        style={{
-          position: "relative",
-          zIndex: 3,
-          color: "white",
-          overflow: "hidden",
-          display: "-webkit-box",
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: "vertical",
-          lineHeight: "1.25",
-          letterSpacing: "-0.1px",
-        }}
-      >
-        {title}
-      </p>
     </button>
   );
 }
