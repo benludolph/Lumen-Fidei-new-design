@@ -259,7 +259,7 @@ function WorkbookCard({ module, onClick }: { module: LessonWorkbookModuleWithSta
       onClick={available ? onClick : undefined}
       disabled={!available}
       data-testid={`card-workbook-${module.id}`}
-      title={available ? title : "Complete this day's morning prayer to unlock"}
+      title={available ? module.title : "Complete this day's morning prayer to unlock"}
       style={{
         flexShrink: 0,
         width: "89px",
