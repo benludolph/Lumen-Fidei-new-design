@@ -4,6 +4,7 @@ import {
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
   workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
+  lessonWorkbookModules, lessonWorkbookCompletions,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -31,6 +32,8 @@ import {
   type WorkbookSummary,
   type WorkbookStreak, type PrayerId, type WorkbookStreakStatus,
   type UserProfile,
+  type LessonWorkbookModule, type InsertLessonWorkbookModule,
+  type LessonWorkbookCompletion,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -189,6 +192,15 @@ export interface IStorage {
     chronicIssues: string[];
     chronicIdentityLabels: string[];
   }): Promise<UserProfile>;
+
+  // Lesson Workbook Modules
+  getAllLessonWorkbookModules(): Promise<LessonWorkbookModule[]>;
+  getLessonWorkbookModule(id: number): Promise<LessonWorkbookModule | undefined>;
+  getLessonWorkbookModuleByDay(dayNumber: number): Promise<LessonWorkbookModule | undefined>;
+  upsertLessonWorkbookModule(data: InsertLessonWorkbookModule): Promise<LessonWorkbookModule>;
+  deleteLessonWorkbookModule(id: number): Promise<void>;
+  getLessonWorkbookCompletionsByUser(userId: number): Promise<LessonWorkbookCompletion[]>;
+  completeLessonWorkbookModule(userId: number, workbookModuleId: number): Promise<LessonWorkbookCompletion>;
 
   // session store
   sessionStore: any;
@@ -1287,6 +1299,54 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return result;
+  }
+
+  async getAllLessonWorkbookModules(): Promise<LessonWorkbookModule[]> {
+    return db.select().from(lessonWorkbookModules).orderBy(asc(lessonWorkbookModules.dayNumber));
+  }
+
+  async getLessonWorkbookModule(id: number): Promise<LessonWorkbookModule | undefined> {
+    const [mod] = await db.select().from(lessonWorkbookModules).where(eq(lessonWorkbookModules.id, id));
+    return mod;
+  }
+
+  async getLessonWorkbookModuleByDay(dayNumber: number): Promise<LessonWorkbookModule | undefined> {
+    const [mod] = await db.select().from(lessonWorkbookModules).where(eq(lessonWorkbookModules.dayNumber, dayNumber));
+    return mod;
+  }
+
+  async upsertLessonWorkbookModule(data: InsertLessonWorkbookModule): Promise<LessonWorkbookModule> {
+    const existing = await this.getLessonWorkbookModuleByDay(data.dayNumber);
+    if (existing) {
+      const [updated] = await db
+        .update(lessonWorkbookModules)
+        .set(data)
+        .where(eq(lessonWorkbookModules.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(lessonWorkbookModules).values(data).returning();
+    return created;
+  }
+
+  async deleteLessonWorkbookModule(id: number): Promise<void> {
+    await db.delete(lessonWorkbookModules).where(eq(lessonWorkbookModules.id, id));
+  }
+
+  async getLessonWorkbookCompletionsByUser(userId: number): Promise<LessonWorkbookCompletion[]> {
+    return db.select().from(lessonWorkbookCompletions).where(eq(lessonWorkbookCompletions.userId, userId));
+  }
+
+  async completeLessonWorkbookModule(userId: number, workbookModuleId: number): Promise<LessonWorkbookCompletion> {
+    const [result] = await db
+      .insert(lessonWorkbookCompletions)
+      .values({ userId, workbookModuleId })
+      .onConflictDoNothing()
+      .returning();
+    if (result) return result;
+    const [existing] = await db.select().from(lessonWorkbookCompletions)
+      .where(and(eq(lessonWorkbookCompletions.userId, userId), eq(lessonWorkbookCompletions.workbookModuleId, workbookModuleId)));
+    return existing;
   }
 }
 

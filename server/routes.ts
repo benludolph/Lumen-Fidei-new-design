@@ -2985,6 +2985,65 @@ export async function registerRoutes(
     }
   });
 
+  // === Lesson Workbook Modules ===
+
+  // GET /api/lesson-workbook-modules — all modules with completion status for the current user
+  app.get('/api/lesson-workbook-modules', requireAuth, async (req, res) => {
+    const [modules, completions] = await Promise.all([
+      storage.getAllLessonWorkbookModules(),
+      storage.getLessonWorkbookCompletionsByUser(req.user!.id),
+    ]);
+    const completedIds = new Set(completions.map(c => c.workbookModuleId));
+    // Unlocked when the parent day's morning prayer is complete
+    const morningCompletions = await storage.getUserPrayerCompletions(req.user!.id);
+    const morningDays = new Set(
+      morningCompletions.filter(c => c.period === 'morning').map(c => c.dayNumber)
+    );
+    const result = modules.map(m => ({
+      ...m,
+      completed: completedIds.has(m.id),
+      unlocked: morningDays.has(m.dayNumber),
+    }));
+    res.json(result);
+  });
+
+  // POST /api/lesson-workbook-modules/:id/complete — mark a lesson workbook module as done
+  app.post('/api/lesson-workbook-modules/:id/complete', requireAuth, writeLimiter, async (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.sendStatus(400);
+    const mod = await storage.getLessonWorkbookModule(id);
+    if (!mod) return res.sendStatus(404);
+    const morningCompletions = await storage.getUserPrayerCompletions(req.user!.id);
+    const morningDone = morningCompletions.some(c => c.period === 'morning' && c.dayNumber === mod.dayNumber);
+    if (!morningDone && req.user!.role !== 'admin' && req.user!.role !== 'superuser') {
+      return res.status(403).json({ error: 'Parent day morning prayer must be completed first' });
+    }
+    const completion = await storage.completeLessonWorkbookModule(req.user!.id, id);
+    res.json(completion);
+  });
+
+  // GET /api/admin/lesson-workbook-modules — admin: list all modules
+  app.get('/api/admin/lesson-workbook-modules', requireRole('admin'), async (req, res) => {
+    const modules = await storage.getAllLessonWorkbookModules();
+    res.json(modules);
+  });
+
+  // PUT /api/admin/lesson-workbook-modules — admin: upsert a module by dayNumber
+  app.put('/api/admin/lesson-workbook-modules', requireRole('admin'), async (req, res) => {
+    const { dayNumber, title, slides, completionMessage } = req.body;
+    if (!dayNumber || !title) return res.status(400).json({ error: 'dayNumber and title required' });
+    const mod = await storage.upsertLessonWorkbookModule({ dayNumber, title, slides: slides ?? [], completionMessage: completionMessage ?? null });
+    res.json(mod);
+  });
+
+  // DELETE /api/admin/lesson-workbook-modules/:id — admin: delete a module
+  app.delete('/api/admin/lesson-workbook-modules/:id', requireRole('admin'), async (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.sendStatus(400);
+    await storage.deleteLessonWorkbookModule(id);
+    res.json({ success: true });
+  });
+
   // === Freedom Workbook ===
 
   // GET /api/workbook/summary — aggregated section counts + attestations

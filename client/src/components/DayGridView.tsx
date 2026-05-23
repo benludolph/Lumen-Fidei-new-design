@@ -8,14 +8,15 @@ import { DayCard } from "./DayCard";
 import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
 import { OverviewGuideModal } from "./OverviewGuideModal";
 import type { ContentSummary } from "@/hooks/use-content-summaries";
-import type { TrackAContent, TrackAModule, PrelimModuleWithStatus } from "@shared/schema";
-import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X, Download } from "lucide-react";
+import type { TrackAContent, TrackAModule, PrelimModuleWithStatus, LessonWorkbookModuleWithStatus } from "@shared/schema";
+import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X, Download, BookOpen } from "lucide-react";
 
 import certLockedImg from "@assets/Certificate_Locked_1773979233798.png";
 import certHoverImg from "@assets/Certificate_Hover_1773979233797.png";
 import certBgNormal from "@assets/Certification_normal_1774299706134.webp";
 import certBgHover from "@assets/Certification_hover_1774299706134.webp";
 import introVideoThumb from "@assets/IntroVideo_1774228694683.webp";
+import bookCoverImg from "@assets/Book1_1779560743958.png";
 
 interface PrayerCompletionRecord {
   dayNumber: number;
@@ -36,6 +37,7 @@ interface DayGridViewProps {
   prelimModulesData?: PrelimModuleWithStatus[];
   allPrelimsComplete?: boolean;
   onPrelimSelect?: (position: number) => void;
+  onWorkbookSelect?: (workbookModuleId: number) => void;
 }
 
 function getWeekTheme(weekNumber: number, isTrackA: boolean, trackBSummaries?: ContentSummary[], modules?: TrackAModule[]): string {
@@ -247,6 +249,89 @@ function PrelimCard({ module, isAccessible, onClick }: { module: PrelimModuleWit
 }
 
 
+
+function WorkbookCard({ module, onClick }: { module: LessonWorkbookModuleWithStatus; onClick: () => void }) {
+  const { completed, unlocked, title } = module;
+  const available = unlocked || completed;
+
+  return (
+    <button
+      onClick={available ? onClick : undefined}
+      disabled={!available}
+      data-testid={`card-workbook-${module.id}`}
+      title={available ? title : "Complete this day's morning prayer to unlock"}
+      style={{
+        flexShrink: 0,
+        width: "89px",
+        minHeight: "126px",
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: "10px 8px 10px 8px",
+        background: "var(--surface-base)",
+        border: "0.5px solid var(--white-5)",
+        borderRadius: "6px",
+        overflow: "hidden",
+        cursor: available ? "pointer" : "not-allowed",
+        opacity: available ? 1 : 0.45,
+        textAlign: "left",
+      }}
+      className="day-card-hover"
+    >
+      {/* Stacked pages effect — two pseudo-offset layers behind */}
+      <div aria-hidden="true" style={{ position: "absolute", bottom: "-3px", left: "4px", right: "-3px", height: "calc(100% - 6px)", background: "var(--white-4)", border: "0.5px solid var(--white-5)", borderRadius: "5px", zIndex: 0 }} />
+      <div aria-hidden="true" style={{ position: "absolute", bottom: "-6px", left: "7px", right: "-6px", height: "calc(100% - 10px)", background: "var(--white-2)", border: "0.5px solid var(--white-3)", borderRadius: "5px", zIndex: 0 }} />
+
+      {/* Book cover image — fills entire card */}
+      <img
+        src={bookCoverImg}
+        alt=""
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: 0.55,
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+      {/* Dark gradient overlay for readability */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(15,16,17,0.25) 0%, rgba(15,16,17,0.72) 100%)", zIndex: 2, pointerEvents: "none" }} />
+
+      {/* State icon — top-left */}
+      <div style={{ position: "relative", zIndex: 3, width: "20px", height: "20px", borderRadius: "4px", background: !available ? "transparent" : completed ? "rgba(0,255,0,0.05)" : "var(--white-5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {!available ? (
+          <Lock style={{ width: "9px", height: "9px", color: "var(--white-30)" }} />
+        ) : completed ? (
+          <CircleCheck style={{ width: "11px", height: "11px", color: "#00ff00", strokeWidth: 1.8 }} />
+        ) : (
+          <BookOpen style={{ width: "11px", height: "11px", color: "#ffffff", strokeWidth: 1.8 }} />
+        )}
+      </div>
+
+      {/* Title — bottom */}
+      <p
+        className="type-body-xs"
+        style={{
+          position: "relative",
+          zIndex: 3,
+          color: "white",
+          overflow: "hidden",
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          lineHeight: "1.25",
+          letterSpacing: "-0.1px",
+        }}
+      >
+        {title}
+      </p>
+    </button>
+  );
+}
 
 function StickyWeekBanner({ weekNumber, title, onGuideClick, inPrelimSection }: { weekNumber: number; title: string; onGuideClick: () => void; inPrelimSection?: boolean }) {
   return (
@@ -588,10 +673,16 @@ export function DayGridView({
   prelimModulesData,
   allPrelimsComplete = false,
   onPrelimSelect,
+  onWorkbookSelect,
 }: DayGridViewProps) {
   const [, navigate] = useLocation();
   const { data: trackAModules } = useQuery<TrackAModule[]>({
     queryKey: ["/api/track-a-modules"],
+    enabled: isTrackA,
+  });
+
+  const { data: workbookModules } = useQuery<LessonWorkbookModuleWithStatus[]>({
+    queryKey: ["/api/lesson-workbook-modules"],
     enabled: isTrackA,
   });
 
@@ -749,6 +840,7 @@ export function DayGridView({
                       const completed = isDayCompleted(day);
                       const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
                       const subtitle = isTrackA ? getTrackAAtPosition(day, trackASummaries)?.subtitle ?? undefined : undefined;
+                      const workbookMod = isTrackA ? workbookModules?.find(m => m.dayNumber === day) : undefined;
 
                       let completedLate = false;
                       if (isTrackA && completed && cohortStartDate && prayerCompletions) {
@@ -764,7 +856,7 @@ export function DayGridView({
                         }
                       }
 
-                      return (
+                      const dayCard = (
                         <DayCard
                           key={day}
                           variant="half"
@@ -783,6 +875,21 @@ export function DayGridView({
                           onClick={() => handleCardClick(day)}
                         />
                       );
+
+                      if (workbookMod) {
+                        return (
+                          <div key={day} style={{ display: "flex", alignItems: "stretch", gap: "6px" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>{dayCard}</div>
+                            <span style={{ display: "flex", alignItems: "center", color: "var(--white-25)", fontSize: "14px", flexShrink: 0, lineHeight: 1 }}>+</span>
+                            <WorkbookCard
+                              module={workbookMod}
+                              onClick={() => onWorkbookSelect?.(workbookMod.id)}
+                            />
+                          </div>
+                        );
+                      }
+
+                      return dayCard;
                     })}
                   </TwoColGrid>
                 </div>

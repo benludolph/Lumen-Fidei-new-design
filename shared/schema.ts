@@ -435,6 +435,35 @@ export const prayerCompletionsRelations = relations(prayerCompletions, ({ one })
   }),
 }));
 
+// Lesson Workbook Modules — slide-based modules attached to specific Track A lesson days
+export const lessonWorkbookModules = pgTable("lesson_workbook_modules", {
+  id: serial("id").primaryKey(),
+  dayNumber: integer("day_number").notNull().unique(),
+  title: text("title").notNull(),
+  slides: json("slides").$type<{ type: string; content: string }[]>(),
+  completionMessage: text("completion_message"),
+});
+
+// Tracks which lesson workbook modules each user has completed
+export const lessonWorkbookCompletions = pgTable("lesson_workbook_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  workbookModuleId: integer("workbook_module_id").notNull().references(() => lessonWorkbookModules.id, { onDelete: "cascade" }),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("lesson_workbook_completions_user_module_unique").on(table.userId, table.workbookModuleId),
+]);
+
+export const insertLessonWorkbookModuleSchema = createInsertSchema(lessonWorkbookModules).omit({ id: true });
+export const insertLessonWorkbookCompletionSchema = createInsertSchema(lessonWorkbookCompletions).omit({ id: true, completedAt: true });
+
+export type LessonWorkbookModule = typeof lessonWorkbookModules.$inferSelect;
+export type InsertLessonWorkbookModule = z.infer<typeof insertLessonWorkbookModuleSchema>;
+export type LessonWorkbookCompletion = typeof lessonWorkbookCompletions.$inferSelect;
+export type InsertLessonWorkbookCompletion = z.infer<typeof insertLessonWorkbookCompletionSchema>;
+
+export type LessonWorkbookModuleWithStatus = LessonWorkbookModule & { completed: boolean; unlocked: boolean };
+
 // === BASE SCHEMAS ===
 
 export const insertUserSchema = createInsertSchema(users, {

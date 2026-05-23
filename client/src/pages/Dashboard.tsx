@@ -24,7 +24,7 @@ import { DayGridView } from "@/components/DayGridView";
 import { LessonFlow } from "@/components/lesson/LessonFlow";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-import type { TrackAModule, TrackAContent, PrelimModuleWithStatus } from "@shared/schema";
+import type { TrackAModule, TrackAContent, PrelimModuleWithStatus, LessonWorkbookModuleWithStatus } from "@shared/schema";
 
 function getTrackAAtPosition(position: number, summaries?: TrackAContent[]): TrackAContent | undefined {
   if (!summaries) return undefined;
@@ -130,10 +130,11 @@ export default function Dashboard() {
   const [prayerModalOpen, setPrayerModalOpen] = useState<string | null>(null);
   const [examenModalOpen, setExamenModalOpen] = useState(false);
   
-  const [viewMode, setViewMode] = useState<"grid" | "detail" | "prelim">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "detail" | "prelim" | "workbook">("grid");
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "evening">("morning");
   const [selectedPrelimPosition, setSelectedPrelimPosition] = useState<number>(1);
+  const [selectedWorkbookId, setSelectedWorkbookId] = useState<number>(0);
   const [completedModule, setCompletedModule] = useState<{ type: "prelim" | "day"; id: number; behavior?: ScrollBehavior } | null>(null);
   
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
@@ -207,6 +208,19 @@ export default function Dashboard() {
       apiRequest("POST", `/api/prelim-modules/${position}/complete`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prelim-modules"] });
+    },
+  });
+
+  const { data: workbookModules } = useQuery<LessonWorkbookModuleWithStatus[]>({
+    queryKey: ["/api/lesson-workbook-modules"],
+    enabled: !!isTrackA,
+  });
+
+  const completeWorkbookMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest("POST", `/api/lesson-workbook-modules/${id}/complete`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/lesson-workbook-modules"] });
     },
   });
   
@@ -289,6 +303,22 @@ export default function Dashboard() {
     setViewMode("grid");
   };
 
+  const handleWorkbookSelect = (workbookModuleId: number) => {
+    setSelectedWorkbookId(workbookModuleId);
+    setViewMode("workbook");
+  };
+
+  const handleWorkbookExit = () => {
+    setViewMode("grid");
+    setSelectedWorkbookId(0);
+  };
+
+  const handleWorkbookComplete = (workbookModuleId: number) => {
+    completeWorkbookMutation.mutate(workbookModuleId);
+    setViewMode("grid");
+    setSelectedWorkbookId(0);
+  };
+
   if (viewMode === "grid") {
     return (
       <DashboardLayout>
@@ -316,8 +346,45 @@ export default function Dashboard() {
             prelimModulesData={prelimModulesData}
             allPrelimsComplete={allPrelimsComplete}
             onPrelimSelect={handlePrelimSelect}
+            onWorkbookSelect={handleWorkbookSelect}
           />
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (viewMode === "workbook" && selectedWorkbookId > 0) {
+    const wbMod = workbookModules?.find(m => m.id === selectedWorkbookId);
+    if (!wbMod) {
+      return (
+        <DashboardLayout>
+          <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+            <p className="text-muted-foreground">Workbook module not found.</p>
+            <Button variant="outline" onClick={handleWorkbookExit}>Back</Button>
+          </div>
+        </DashboardLayout>
+      );
+    }
+    const fakeWorkbookContent: TrackAContent = {
+      id: -(1000 + wbMod.id),
+      dayNumber: -(1000 + wbMod.id),
+      weekNumber: 0,
+      centralTheme: wbMod.title,
+      subtitle: null,
+      slides: (wbMod.slides ?? []) as { type: string; content: string }[],
+      imageUrl: null,
+      completionMessage: wbMod.completionMessage ?? null,
+    };
+    return (
+      <DashboardLayout>
+        <LessonFlow
+          key={`workbook-${wbMod.id}`}
+          content={fakeWorkbookContent}
+          dayNumber={-(1000 + wbMod.id)}
+          onExit={handleWorkbookExit}
+          onComplete={() => handleWorkbookComplete(wbMod.id)}
+          previewMode={user?.role === 'superuser'}
+        />
       </DashboardLayout>
     );
   }

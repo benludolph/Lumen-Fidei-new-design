@@ -7117,6 +7117,8 @@ function TrackAContentManagementView() {
 
       <CompletionUnlockSection contextKey={`chat-flow-${selectedDay}`} />
 
+      <LessonWorkbookAdminSection selectedDay={selectedDay} />
+
     </div>
   );
 }
@@ -7619,6 +7621,244 @@ function getDefaultSlideContent(type: string): string {
   if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
   if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
   return "";
+}
+
+// ========================
+// Lesson Workbook Module Day Editor
+// ========================
+
+type LessonWorkbookAdminModule = {
+  id: number;
+  dayNumber: number;
+  title: string;
+  slides: TrackASlide[] | null;
+  completionMessage: string | null;
+};
+
+function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
+  const { toast } = useToast();
+  const [editMode, setEditMode] = useState(false);
+  const [title, setTitle] = useState("");
+  const [completionMessage, setCompletionMessage] = useState("");
+  const [slides, setSlides] = useState<TrackASlide[]>([]);
+  const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
+  const [addSlideType, setAddSlideType] = useState<string>("text");
+
+  const { data: allModules, isLoading } = useQuery<LessonWorkbookAdminModule[]>({
+    queryKey: ['/api/admin/lesson-workbook-modules'],
+  });
+
+  const currentModule = allModules?.find(m => m.dayNumber === selectedDay);
+
+  useEffect(() => {
+    if (currentModule) {
+      setTitle(currentModule.title);
+      setCompletionMessage(currentModule.completionMessage || "");
+      setSlides(currentModule.slides ? [...currentModule.slides] : []);
+    } else {
+      setTitle("");
+      setCompletionMessage("");
+      setSlides([]);
+    }
+    setEditMode(false);
+    setExpandedSlide(null);
+  }, [selectedDay, currentModule?.id]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PUT", `/api/admin/lesson-workbook-modules`, {
+        dayNumber: selectedDay,
+        title: title || "Workbook Module",
+        slides,
+        completionMessage: completionMessage || null,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/lesson-workbook-modules'] });
+      toast({ title: "Workbook module saved" });
+      setEditMode(false);
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to save workbook module", description: error?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentModule) return;
+      await apiRequest("DELETE", `/api/admin/lesson-workbook-modules/${currentModule.id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/lesson-workbook-modules'] });
+      toast({ title: "Workbook module removed" });
+      setTitle("");
+      setSlides([]);
+      setEditMode(false);
+    },
+    onError: () => toast({ title: "Failed to delete", variant: "destructive" }),
+  });
+
+  const addSlide = () => {
+    setSlides(prev => [...prev, { type: addSlideType, content: getDefaultSlideContent(addSlideType) }]);
+    setExpandedSlide(slides.length);
+  };
+
+  const removeSlide = (index: number) => {
+    setSlides(prev => prev.filter((_, i) => i !== index));
+    if (expandedSlide === index) setExpandedSlide(null);
+    else if (expandedSlide !== null && expandedSlide > index) setExpandedSlide(expandedSlide - 1);
+  };
+
+  const moveSlide = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= slides.length) return;
+    setSlides(prev => {
+      const next = [...prev];
+      [next[index], next[newIndex]] = [next[newIndex], next[index]];
+      return next;
+    });
+    if (expandedSlide === index) setExpandedSlide(newIndex);
+    else if (expandedSlide === newIndex) setExpandedSlide(index);
+  };
+
+  const updateSlide = (index: number, field: "type" | "content", value: string) => {
+    setSlides(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+
+  if (isLoading) return null;
+
+  return (
+    <Card data-testid="card-workbook-admin-section">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BookOpen className="w-4 h-4" />
+            Workbook Module for Day {selectedDay}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {currentModule && !editMode && (
+              <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending} data-testid="button-delete-workbook-module">
+                <Trash2 className="w-3.5 h-3.5 text-destructive" />
+              </Button>
+            )}
+            {!editMode ? (
+              <Button size="sm" variant="outline" onClick={() => setEditMode(true)} data-testid="button-edit-workbook-module">
+                {currentModule ? "Edit" : "+ Add Workbook Module"}
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={() => setEditMode(false)}>Cancel</Button>
+                <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} data-testid="button-save-workbook-module">
+                  <Save className="w-3.5 h-3.5 mr-1" /> Save
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        {!currentModule && !editMode && (
+          <p className="text-xs text-muted-foreground mt-1">
+            No workbook module attached to this day. Add one to show a companion book card in the dashboard grid.
+          </p>
+        )}
+        {currentModule && !editMode && (
+          <p className="text-xs text-muted-foreground mt-1">
+            <span className="font-medium">{currentModule.title}</span> — {currentModule.slides?.length || 0} slide{currentModule.slides?.length !== 1 ? "s" : ""}
+          </p>
+        )}
+      </CardHeader>
+
+      {editMode && (
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Module Title</label>
+            <Input
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Freedom Workbook — Chapter 1"
+              data-testid="input-workbook-title"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Completion Message (optional)</label>
+            <Input
+              value={completionMessage}
+              onChange={e => setCompletionMessage(e.target.value)}
+              placeholder="e.g. Module complete!"
+              data-testid="input-workbook-completion-message"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Slides ({slides.length})</label>
+            </div>
+
+            {slides.map((slide, index) => (
+              <div key={index} className="border rounded-lg overflow-hidden" data-testid={`row-workbook-slide-${index}`}>
+                <div
+                  className="flex items-center gap-2 p-3 bg-muted/30 cursor-pointer hover:bg-muted/50"
+                  onClick={() => setExpandedSlide(expandedSlide === index ? null : index)}
+                >
+                  <span className="text-xs text-muted-foreground font-mono w-5">{index + 1}</span>
+                  <Badge variant="outline" className="text-xs capitalize">{slide.type}</Badge>
+                  <p className="text-sm flex-1 truncate text-muted-foreground">
+                    {slide.content?.slice(0, 60) || "(empty)"}
+                  </p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); moveSlide(index, "up"); }} disabled={index === 0}><ChevronUp className="w-3 h-3" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); moveSlide(index, "down"); }} disabled={index === slides.length - 1}><ChevronDown className="w-3 h-3" /></Button>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); removeSlide(index); }}><X className="w-3 h-3 text-destructive" /></Button>
+                  </div>
+                </div>
+                {expandedSlide === index && (
+                  <div className="p-3 border-t space-y-3 bg-background">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-medium w-12 shrink-0">Type</label>
+                      <Select value={slide.type} onValueChange={val => updateSlide(index, "type", val)}>
+                        <SelectTrigger className="h-7 text-xs flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PRELIM_SLIDE_TYPES.map(t => (
+                            <SelectItem key={t} value={t} className="text-xs">{SLIDE_TYPE_LABELS[t] || t}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Textarea
+                      value={slide.content || ""}
+                      onChange={e => updateSlide(index, "content", e.target.value)}
+                      className="text-xs font-mono min-h-[80px]"
+                      placeholder="Slide content (text or JSON)"
+                      data-testid={`textarea-workbook-slide-content-${index}`}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <div className="flex gap-2">
+              <Select value={addSlideType} onValueChange={setAddSlideType}>
+                <SelectTrigger className="flex-1 h-8 text-xs">
+                  <SelectValue placeholder="Slide type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRELIM_SLIDE_TYPES.map(t => (
+                    <SelectItem key={t} value={t} className="text-xs">{SLIDE_TYPE_LABELS[t] || t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" variant="outline" onClick={addSlide} data-testid="button-add-workbook-slide">
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Slide
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      )}
+    </Card>
+  );
 }
 
 // ========================
