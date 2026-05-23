@@ -9284,49 +9284,6 @@ function HealingAdminView() {
                             ) : slide.type === "cross_grid" ? (
                               <CrossGridSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
                             ) : slide.type === "workbook_link" ? (
-                              <div className="space-y-3">
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
-                                  <input
-                                    type="number"
-                                    value={(() => { try { const p = JSON.parse(slide.content); return p.sectionId ?? ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try {
-                                        const p = JSON.parse(slide.content);
-                                        p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
-                                        updateSlide(index, "content", JSON.stringify(p));
-                                      } catch {
-                                        updateSlide(index, "content", JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
-                                      }
-                                    }}
-                                    placeholder="Leave blank to link to the workbook root"
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-healing-workbook-section-id-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
-                                  <input
-                                    type="text"
-                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try {
-                                        const p = JSON.parse(slide.content);
-                                        p.label = e.target.value;
-                                        updateSlide(index, "content", JSON.stringify(p));
-                                      } catch {
-                                        updateSlide(index, "content", JSON.stringify({ sectionId: null, label: e.target.value }));
-                                      }
-                                    }}
-                                    placeholder="Override the default display name..."
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-healing-workbook-label-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
-                                </div>
-                              </div>
-                            ) : slide.type === "workbook_link" ? (
                               <WorkbookLinkSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
