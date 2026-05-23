@@ -216,6 +216,11 @@ export default function Dashboard() {
     enabled: !!isTrackA,
   });
 
+  const { data: openWorkbookModule } = useQuery<LessonWorkbookModuleWithStatus>({
+    queryKey: ["/api/workbook-modules", selectedWorkbookId],
+    enabled: viewMode === "workbook" && selectedWorkbookId > 0,
+  });
+
   const completeWorkbookMutation = useMutation({
     mutationFn: (id: number) =>
       apiRequest("POST", `/api/workbook-completions/${id}`),
@@ -354,35 +359,34 @@ export default function Dashboard() {
   }
 
   if (viewMode === "workbook" && selectedWorkbookId > 0) {
-    const wbMod = workbookModules?.find(m => m.id === selectedWorkbookId);
-    if (!wbMod) {
+    if (!openWorkbookModule) {
       return (
         <DashboardLayout>
           <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-            <p className="text-muted-foreground">Workbook module not found.</p>
+            <p className="text-muted-foreground">Loading workbook…</p>
             <Button variant="outline" onClick={handleWorkbookExit}>Back</Button>
           </div>
         </DashboardLayout>
       );
     }
     const fakeWorkbookContent: TrackAContent = {
-      id: -(1000 + wbMod.id),
-      dayNumber: -(1000 + wbMod.id),
+      id: -(1000 + openWorkbookModule.id),
+      dayNumber: -(1000 + openWorkbookModule.id),
       weekNumber: 0,
-      centralTheme: wbMod.title,
+      centralTheme: openWorkbookModule.title,
       subtitle: null,
-      slides: (wbMod.slides ?? []) as { type: string; content: string }[],
+      slides: (openWorkbookModule.slides ?? []) as { type: string; content: string }[],
       imageUrl: null,
-      completionMessage: wbMod.completionMessage ?? null,
+      completionMessage: openWorkbookModule.completionMessage ?? null,
     };
     return (
       <DashboardLayout>
         <LessonFlow
-          key={`workbook-${wbMod.id}`}
+          key={`workbook-${openWorkbookModule.id}`}
           content={fakeWorkbookContent}
-          dayNumber={-(1000 + wbMod.id)}
+          dayNumber={-(1000 + openWorkbookModule.id)}
           onExit={handleWorkbookExit}
-          onComplete={() => handleWorkbookComplete(wbMod.id)}
+          onComplete={() => handleWorkbookComplete(openWorkbookModule.id)}
           previewMode={user?.role === 'superuser'}
         />
       </DashboardLayout>

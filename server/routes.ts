@@ -2989,6 +2989,7 @@ export async function registerRoutes(
 
   // GET /api/workbook-modules — all modules with completion + unlock status for the current user
   app.get('/api/workbook-modules', requireAuth, async (req, res) => {
+    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'superuser';
     const [modules, completions] = await Promise.all([
       storage.getAllLessonWorkbookModules(),
       storage.getLessonWorkbookCompletionsByUser(req.user!.id),
@@ -2998,20 +2999,41 @@ export async function registerRoutes(
     const morningDays = new Set(
       morningCompletions.filter(c => c.period === 'morning').map(c => c.dayNumber)
     );
-    const result = modules.map(m => ({
-      ...m,
-      completed: completedIds.has(m.id),
-      unlocked: morningDays.has(m.dayNumber),
-    }));
+    const result = modules.map(m => {
+      const completed = completedIds.has(m.id);
+      const unlocked = morningDays.has(m.dayNumber);
+      const accessible = isAdmin || completed || unlocked;
+      return {
+        id: m.id,
+        dayNumber: m.dayNumber,
+        title: m.title,
+        completed,
+        unlocked,
+        // Only expose slides & completionMessage when the module is accessible
+        ...(accessible ? { slides: m.slides, completionMessage: m.completionMessage } : {}),
+      };
+    });
     res.json(result);
   });
 
-  // GET /api/workbook-modules/:id — full module (slides) by id
+  // GET /api/workbook-modules/:id — full module with slides (gated by unlock)
   app.get('/api/workbook-modules/:id', requireAuth, async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) return res.sendStatus(400);
     const mod = await storage.getLessonWorkbookModule(id);
     if (!mod) return res.sendStatus(404);
+    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'superuser';
+    if (!isAdmin) {
+      const [completions, morningCompletions] = await Promise.all([
+        storage.getLessonWorkbookCompletionsByUser(req.user!.id),
+        storage.getUserPrayerCompletions(req.user!.id),
+      ]);
+      const alreadyCompleted = completions.some(c => c.workbookModuleId === id);
+      const morningDone = morningCompletions.some(c => c.period === 'morning' && c.dayNumber === mod.dayNumber);
+      if (!alreadyCompleted && !morningDone) {
+        return res.status(403).json({ error: 'Complete parent day morning prayer to unlock this workbook' });
+      }
+    }
     res.json(mod);
   });
 
