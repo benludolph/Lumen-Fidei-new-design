@@ -3830,6 +3830,126 @@ const CROSS_GRID_DUAL_DEFAULT = JSON.stringify({
   finalText: ["This is how healing happens.", "Not instantly. But truly."],
 }, null, 2);
 
+function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { content: string; onChange: (val: string) => void; index: number; idPrefix: string }) {
+  let parsed: { sectionId?: number | null; sectionIds?: number[]; label?: string } = {};
+  try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
+
+  const isMulti = Array.isArray(parsed.sectionIds) && parsed.sectionIds.length > 0;
+  const [multiMode, setMultiMode] = React.useState(isMulti);
+
+  const sectionIds: number[] = multiMode
+    ? (Array.isArray(parsed.sectionIds) ? parsed.sectionIds : [])
+    : [];
+
+  const switchToMulti = () => {
+    setMultiMode(true);
+    const existing = parsed.sectionId != null ? [parsed.sectionId] : [1];
+    onChange(JSON.stringify({ sectionIds: existing }));
+  };
+
+  const switchToSingle = () => {
+    setMultiMode(false);
+    const first = sectionIds[0] ?? null;
+    onChange(JSON.stringify({ sectionId: first, label: parsed.label ?? "" }));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={multiMode ? switchToSingle : switchToMulti}
+          className="text-xs underline underline-offset-2 text-muted-foreground hover:text-foreground"
+          data-testid={`button-${idPrefix}-wl-toggle-${index}`}
+        >
+          {multiMode ? "Switch to single section" : "Switch to multiple sections"}
+        </button>
+      </div>
+
+      {multiMode ? (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">Sections (in order)</label>
+          {sectionIds.map((id, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                type="number"
+                value={id}
+                onChange={(e) => {
+                  const newIds = [...sectionIds];
+                  newIds[i] = Number(e.target.value);
+                  onChange(JSON.stringify({ sectionIds: newIds }));
+                }}
+                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                placeholder="Section ID"
+                data-testid={`input-${idPrefix}-wl-section-${index}-${i}`}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newIds = sectionIds.filter((_, j) => j !== i);
+                  onChange(JSON.stringify({ sectionIds: newIds }));
+                }}
+                className="text-xs text-muted-foreground hover:text-destructive px-2 py-1"
+                data-testid={`button-${idPrefix}-wl-remove-${index}-${i}`}
+              >Remove</button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onChange(JSON.stringify({ sectionIds: [...sectionIds, 1] }))}
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+            data-testid={`button-${idPrefix}-wl-add-${index}`}
+          >+ Add section</button>
+          <p className="text-[11px] text-muted-foreground/60">Enter the numeric section IDs — they'll appear as a vertical list of "Open section" rows on one slide.</p>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
+            <input
+              type="number"
+              value={(() => { try { const p = JSON.parse(content); return p.sectionId ?? ""; } catch { return ""; } })()}
+              onChange={(e) => {
+                try {
+                  const p = JSON.parse(content);
+                  p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
+                  onChange(JSON.stringify(p));
+                } catch {
+                  onChange(JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
+                }
+              }}
+              placeholder="Leave blank to link to the workbook root"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              data-testid={`input-${idPrefix}-wl-section-id-${index}`}
+            />
+            <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+            <input
+              type="text"
+              value={(() => { try { return JSON.parse(content).label || ""; } catch { return ""; } })()}
+              onChange={(e) => {
+                try {
+                  const p = JSON.parse(content);
+                  p.label = e.target.value;
+                  onChange(JSON.stringify(p));
+                } catch {
+                  onChange(JSON.stringify({ sectionId: null, label: e.target.value }));
+                }
+              }}
+              placeholder="Override the default display name..."
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              data-testid={`input-${idPrefix}-wl-label-${index}`}
+            />
+            <p className="text-[11px] text-muted-foreground/60">Overrides the section name shown in the lesson.</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function WorkbookSessionSlideEditor({ content, onChange, index, idPrefix }: { content: string; onChange: (val: string) => void; index: number; idPrefix: string }) {
   let parsed: { sectionIds?: number[]; heading?: string; subheading?: string } = {};
   try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
@@ -6787,7 +6907,7 @@ function TrackAContentManagementView() {
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate" data-testid={`text-slide-preview-${index}`}>
                               {slide.type === "workbook_link"
-                                ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                ? (() => { try { const p = JSON.parse(slide.content); if (Array.isArray(p.sectionIds) && p.sectionIds.length > 0) return `${p.sectionIds.length} section${p.sectionIds.length === 1 ? "" : "s"}`; return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
                                 : slide.type === "workbook_session"
                                 ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
@@ -6993,48 +7113,12 @@ function TrackAContentManagementView() {
                                 <p className="text-[11px] text-muted-foreground/60">Edit the JSON to configure steps (instruction, input, list_input, choice, prayer, reflection). Variable names in prayer_text use {`{{variable_name}}`} syntax.</p>
                               </div>
                             ) : slide.type === "workbook_link" ? (
-                              <div className="space-y-3">
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
-                                  <input
-                                    type="number"
-                                    value={(() => { try { const p = JSON.parse(slide.content); return p.sectionId ?? ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try {
-                                        const p = JSON.parse(slide.content);
-                                        p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
-                                        updateSlide(index, "content", JSON.stringify(p));
-                                      } catch {
-                                        updateSlide(index, "content", JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
-                                      }
-                                    }}
-                                    placeholder="Leave blank to link to the workbook root"
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-workbook-section-id-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
-                                  <input
-                                    type="text"
-                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try {
-                                        const p = JSON.parse(slide.content);
-                                        p.label = e.target.value;
-                                        updateSlide(index, "content", JSON.stringify(p));
-                                      } catch {
-                                        updateSlide(index, "content", JSON.stringify({ sectionId: null, label: e.target.value }));
-                                      }
-                                    }}
-                                    placeholder="Override the default display name..."
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-workbook-label-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
-                                </div>
-                              </div>
+                              <WorkbookLinkSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                idPrefix="tracka"
+                              />
                             ) : slide.type === "workbook_session" ? (
                               <WorkbookSessionSlideEditor
                                 content={slide.content}
@@ -8164,7 +8248,7 @@ function PrelimContentManagementView() {
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate">
                               {slide.type === "workbook_link"
-                                ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                ? (() => { try { const p = JSON.parse(slide.content); if (Array.isArray(p.sectionIds) && p.sectionIds.length > 0) return `${p.sectionIds.length} section${p.sectionIds.length === 1 ? "" : "s"}`; return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
                                 : slide.type === "workbook_session"
                                 ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
@@ -8339,48 +8423,12 @@ function PrelimContentManagementView() {
                                 <p className="text-[11px] text-muted-foreground/60">Edit the JSON to configure steps (instruction, input, list_input, choice, prayer, reflection). Variable names in prayer_text use {`{{variable_name}}`} syntax.</p>
                               </div>
                             ) : slide.type === "workbook_link" ? (
-                              <div className="space-y-3">
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Section ID (optional)</label>
-                                  <input
-                                    type="number"
-                                    value={(() => { try { const p = JSON.parse(slide.content); return p.sectionId ?? ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try {
-                                        const p = JSON.parse(slide.content);
-                                        p.sectionId = e.target.value !== "" ? Number(e.target.value) : null;
-                                        updateSlide(index, "content", JSON.stringify(p));
-                                      } catch {
-                                        updateSlide(index, "content", JSON.stringify({ sectionId: e.target.value !== "" ? Number(e.target.value) : null, label: "" }));
-                                      }
-                                    }}
-                                    placeholder="Leave blank to link to the workbook root"
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-prelim-workbook-section-id-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Links to a specific workbook section. Leave empty to link to the workbook home.</p>
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
-                                  <input
-                                    type="text"
-                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try {
-                                        const p = JSON.parse(slide.content);
-                                        p.label = e.target.value;
-                                        updateSlide(index, "content", JSON.stringify(p));
-                                      } catch {
-                                        updateSlide(index, "content", JSON.stringify({ sectionId: null, label: e.target.value }));
-                                      }
-                                    }}
-                                    placeholder="Override the default display name..."
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-prelim-workbook-label-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
-                                </div>
-                              </div>
+                              <WorkbookLinkSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                idPrefix="prelim"
+                              />
                             ) : slide.type === "workbook_session" ? (
                               <WorkbookSessionSlideEditor
                                 content={slide.content}
@@ -9201,7 +9249,7 @@ function HealingAdminView() {
                           {!isExpanded && (
                             <span className="text-sm text-muted-foreground truncate">
                               {slide.type === "workbook_link"
-                                ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                ? (() => { try { const p = JSON.parse(slide.content); if (Array.isArray(p.sectionIds) && p.sectionIds.length > 0) return `${p.sectionIds.length} section${p.sectionIds.length === 1 ? "" : "s"}`; return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
                                 : slide.type === "workbook_session"
                                 ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
@@ -9294,6 +9342,13 @@ function HealingAdminView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "workbook_link" ? (
+                              <WorkbookLinkSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                idPrefix="healing"
+                              />
                             ) : slide.type === "workbook_session" ? (
                               <WorkbookSessionSlideEditor
                                 content={slide.content}

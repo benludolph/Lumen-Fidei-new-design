@@ -2779,34 +2779,22 @@ function QuizResultSlide({
   );
 }
 
-function WorkbookLinkSlide({
-  content,
+function WorkbookLinkRow({
+  sectionId,
+  label,
+  summary,
   onInteracted,
 }: {
-  content: string;
-  dayNumber: number;
+  sectionId: number | undefined;
+  label: string | undefined;
+  summary: WorkbookSummary;
   onInteracted?: () => void;
 }) {
-  let sectionId: number | undefined;
-  let label: string | undefined;
-  try {
-    const parsed = JSON.parse(content || "{}");
-    if (typeof parsed.sectionId === "number") sectionId = parsed.sectionId;
-    if (typeof parsed.label === "string" && parsed.label.trim()) label = parsed.label.trim();
-  } catch {
-    /* use defaults */
-  }
-
   const section = sectionId != null ? getSectionById(sectionId) : undefined;
   const displayName = section?.name ?? label ?? "The Deliverance Workbook";
-
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const { data: summary = {} } = useQuery<WorkbookSummary>({
-    queryKey: ["/api/workbook/summary"],
-  });
-
-  const sec = sectionId != null ? (summary as WorkbookSummary)[sectionId] : undefined;
+  const sec = sectionId != null ? summary[sectionId] : undefined;
   const isComplete = sec ? (sec.attested || sec.count > 0) : false;
   const entryCount = sec?.count ?? 0;
 
@@ -2814,16 +2802,10 @@ function WorkbookLinkSlide({
     setSheetOpen(false);
     if (sectionId != null) {
       try {
-        const fresh = await queryClient.fetchQuery<WorkbookSummary>({
-          queryKey: ["/api/workbook/summary"],
-        });
+        const fresh = await queryClient.fetchQuery<WorkbookSummary>({ queryKey: ["/api/workbook/summary"] });
         const newSec = fresh[sectionId];
-        if (newSec && (newSec.attested || newSec.count > 0)) {
-          onInteracted?.();
-        }
-      } catch {
-        /* ignore */
-      }
+        if (newSec && (newSec.attested || newSec.count > 0)) onInteracted?.();
+      } catch { /* ignore */ }
     } else {
       onInteracted?.();
     }
@@ -2845,93 +2827,43 @@ function WorkbookLinkSlide({
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
-            <p
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: "rgba(255,255,255,0.35)",
-                margin: 0,
-              }}
-            >
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", margin: 0 }}>
               The Deliverance Workbook
             </p>
-            {isComplete && (
-              <CheckCircle2
-                style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }}
-              />
-            )}
+            {isComplete && <CheckCircle2 style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }} />}
           </div>
-          <p
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "1rem",
-              color: "rgba(255,255,255,0.85)",
-              margin: 0,
-              marginBottom: isComplete ? "3px" : 0,
-            }}
-          >
+          <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "1rem", color: "rgba(255,255,255,0.85)", margin: 0, marginBottom: isComplete ? "3px" : 0 }}>
             {displayName}
           </p>
           {isComplete && (
-            <p
-              style={{
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.72rem",
-                color: "rgba(100,210,130,0.6)",
-                margin: 0,
-              }}
-            >
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", color: "rgba(100,210,130,0.6)", margin: 0 }}>
               {sec?.attested ? "Marked complete" : `${entryCount} ${entryCount === 1 ? "entry" : "entries"} saved`}
             </p>
           )}
         </div>
         {sectionId != null ? (
           <button
-            data-testid="button-open-workbook"
+            data-testid={`button-open-workbook-${sectionId}`}
             onClick={() => setSheetOpen(true)}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              borderRadius: "6px",
+              display: "inline-flex", alignItems: "center", padding: "8px 16px", borderRadius: "6px",
               background: isComplete ? "rgba(100,210,130,0.1)" : "rgba(255,255,255,0.08)",
               border: `0.5px solid ${isComplete ? "rgba(100,210,130,0.25)" : "rgba(255,255,255,0.15)"}`,
-              cursor: "pointer",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              color: isComplete ? "rgba(100,210,130,0.9)" : "white",
-              letterSpacing: "0.04em",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
+              cursor: "pointer", fontFamily: "'Afacad', sans-serif", fontSize: "0.8rem", fontWeight: 600,
+              color: isComplete ? "rgba(100,210,130,0.9)" : "white", letterSpacing: "0.04em", whiteSpace: "nowrap", flexShrink: 0,
             }}
           >
-            {isComplete ? "Review" : "Open Section"}
+            {isComplete ? "Review" : "Open section"}
           </button>
         ) : (
           <a
             href="/resources/tools/freedom-workbook"
             data-testid="button-open-workbook"
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "8px 16px",
-              borderRadius: "6px",
-              background: "rgba(255,255,255,0.08)",
-              border: "0.5px solid rgba(255,255,255,0.15)",
-              textDecoration: "none",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              color: "white",
-              letterSpacing: "0.04em",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
+              display: "inline-flex", alignItems: "center", padding: "8px 16px", borderRadius: "6px",
+              background: "rgba(255,255,255,0.08)", border: "0.5px solid rgba(255,255,255,0.15)",
+              textDecoration: "none", fontFamily: "'Afacad', sans-serif", fontSize: "0.8rem", fontWeight: 600,
+              color: "white", letterSpacing: "0.04em", whiteSpace: "nowrap", flexShrink: 0,
             }}
           >
             Open Workbook
@@ -2944,6 +2876,45 @@ function WorkbookLinkSlide({
         )}
       </AnimatePresence>
     </>
+  );
+}
+
+function WorkbookLinkSlide({
+  content,
+  onInteracted,
+}: {
+  content: string;
+  dayNumber: number;
+  onInteracted?: () => void;
+}) {
+  let sectionId: number | undefined;
+  let label: string | undefined;
+  let sectionIds: number[] | undefined;
+  try {
+    const parsed = JSON.parse(content || "{}");
+    if (typeof parsed.sectionId === "number") sectionId = parsed.sectionId;
+    if (typeof parsed.label === "string" && parsed.label.trim()) label = parsed.label.trim();
+    if (Array.isArray(parsed.sectionIds) && parsed.sectionIds.length > 0) {
+      sectionIds = parsed.sectionIds.filter((x: unknown) => typeof x === "number");
+    }
+  } catch { /* use defaults */ }
+
+  const { data: summary = {} } = useQuery<WorkbookSummary>({ queryKey: ["/api/workbook/summary"] });
+
+  const handleInteracted = () => onInteracted?.();
+
+  if (sectionIds && sectionIds.length > 0) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {sectionIds.map((id) => (
+          <WorkbookLinkRow key={id} sectionId={id} label={undefined} summary={summary as WorkbookSummary} onInteracted={handleInteracted} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <WorkbookLinkRow sectionId={sectionId} label={label} summary={summary as WorkbookSummary} onInteracted={handleInteracted} />
   );
 }
 
