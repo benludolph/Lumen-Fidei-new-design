@@ -78,6 +78,7 @@ export type SlideType =
   | "pdf_download"
   | "guided_prayer_process"
   | "workbook_link"
+  | "workbook_session"
   | "prayer_link";
 
 
@@ -1494,6 +1495,11 @@ export function LessonSlide({
           <WorkbookLinkSlide
             content={content}
             dayNumber={dayNumber}
+            onInteracted={onInteracted}
+          />
+        ) : type === "workbook_session" ? (
+          <WorkbookSessionSlide
+            content={content}
             onInteracted={onInteracted}
           />
         ) : type === "prayer_link" ? (
@@ -2935,6 +2941,149 @@ function WorkbookLinkSlide({
       <AnimatePresence>
         {sheetOpen && sectionId != null && (
           <WorkbookSectionSheet sectionId={sectionId} onClose={handleClose} />
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function WorkbookSessionSlide({
+  content,
+  onInteracted,
+}: {
+  content: string;
+  onInteracted?: () => void;
+}) {
+  let sectionIds: number[] = [];
+  let heading = "Your open work";
+  let subheading = "Work through what you can.";
+  try {
+    const parsed = JSON.parse(content || "{}");
+    if (Array.isArray(parsed.sectionIds)) sectionIds = parsed.sectionIds.filter((x: unknown) => typeof x === "number");
+    if (typeof parsed.heading === "string" && parsed.heading.trim()) heading = parsed.heading.trim();
+    if (typeof parsed.subheading === "string" && parsed.subheading.trim()) subheading = parsed.subheading.trim();
+  } catch { /* use defaults */ }
+
+  const { data: summary = {} } = useQuery<WorkbookSummary>({ queryKey: ["/api/workbook/summary"] });
+  const [openSectionId, setOpenSectionId] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+
+  const sections = sectionIds.map(id => {
+    const def = getSectionById(id);
+    const sec = (summary as WorkbookSummary)[id];
+    const isComplete = sec ? (sec.attested || sec.count > 0) : false;
+    return { id, name: def?.name ?? `Section ${id}`, isComplete };
+  });
+
+  const openSections = sections.filter(s => !s.isComplete);
+  const doneCount = sections.filter(s => s.isComplete).length;
+  const totalCount = sections.length;
+
+  const handleSectionClose = async (id: number) => {
+    setOpenSectionId(null);
+    await queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
+  };
+
+  const handleDoneForNow = () => {
+    setDismissed(true);
+    onInteracted?.();
+  };
+
+  return (
+    <>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div>
+          <h2 style={{ fontFamily: "'Freight Display Pro', Georgia, serif", fontSize: "1.35rem", fontWeight: 500, color: "white", margin: 0, marginBottom: "4px" }}>{heading}</h2>
+          {totalCount > 0 && (
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.88rem", color: "rgba(255,255,255,0.5)", margin: 0 }}>
+              {dismissed || openSections.length === 0
+                ? doneCount === totalCount
+                  ? `All ${totalCount} sections complete`
+                  : `${doneCount} of ${totalCount} sections complete`
+                : `${openSections.length} section${openSections.length === 1 ? "" : "s"} still open — ${subheading}`}
+            </p>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {sections.map(sec => (
+            <div
+              key={sec.id}
+              style={{
+                borderRadius: "10px",
+                border: `0.5px solid ${sec.isComplete ? "rgba(100,210,130,0.2)" : "rgba(255,255,255,0.1)"}`,
+                background: sec.isComplete ? "rgba(100,210,130,0.04)" : "rgba(255,255,255,0.03)",
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px",
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", margin: 0, marginBottom: "2px" }}>
+                  The Deliverance Workbook
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.95rem", color: "rgba(255,255,255,0.85)", margin: 0 }}>{sec.name}</p>
+                  {sec.isComplete && <CheckCircle2 style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }} />}
+                </div>
+              </div>
+              <button
+                data-testid={`button-open-section-${sec.id}`}
+                onClick={() => setOpenSectionId(sec.id)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "7px 14px",
+                  borderRadius: "6px",
+                  background: sec.isComplete ? "rgba(100,210,130,0.1)" : "rgba(255,255,255,0.08)",
+                  border: `0.5px solid ${sec.isComplete ? "rgba(100,210,130,0.25)" : "rgba(255,255,255,0.15)"}`,
+                  cursor: "pointer",
+                  fontFamily: "'Afacad', sans-serif",
+                  fontSize: "0.78rem",
+                  fontWeight: 600,
+                  color: sec.isComplete ? "rgba(100,210,130,0.9)" : "white",
+                  letterSpacing: "0.04em",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                {sec.isComplete ? "Review" : "Open section"}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {!dismissed && openSections.length > 0 && (
+          <div style={{ textAlign: "center", paddingTop: "4px" }}>
+            <button
+              data-testid="button-done-for-now"
+              onClick={handleDoneForNow}
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.82rem",
+                color: "rgba(255,255,255,0.4)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+                padding: "4px 8px",
+              }}
+            >
+              Done for now — continue
+            </button>
+            <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", color: "rgba(255,255,255,0.25)", margin: "6px 0 0", lineHeight: 1.4 }}>
+              You don't have to finish everything today — whatever's left will be waiting at your next work session.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {openSectionId != null && (
+          <WorkbookSectionSheet sectionId={openSectionId} onClose={() => handleSectionClose(openSectionId)} />
         )}
       </AnimatePresence>
     </>

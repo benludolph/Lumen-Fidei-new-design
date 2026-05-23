@@ -2370,7 +2370,7 @@ type TrackAContentData = {
   completionMessage: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "prayer_link"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2404,6 +2404,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   pdf_download: "PDF Download",
   guided_prayer_process: "Guided Prayer",
   workbook_link: "Workbook Link",
+  workbook_session: "Workbook Session",
   prayer_link: "Prayer Link",
 };
 
@@ -2434,6 +2435,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   pdf_download: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
   guided_prayer_process: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
   workbook_link: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  workbook_session: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   prayer_link: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
 };
 
@@ -3827,6 +3829,75 @@ const CROSS_GRID_DUAL_DEFAULT = JSON.stringify({
   overlayText: ["But it does not heal you.", "It keeps you in control."],
   finalText: ["This is how healing happens.", "Not instantly. But truly."],
 }, null, 2);
+
+function WorkbookSessionSlideEditor({ content, onChange, index, idPrefix }: { content: string; onChange: (val: string) => void; index: number; idPrefix: string }) {
+  let parsed: { sectionIds?: number[]; heading?: string; subheading?: string } = {};
+  try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
+  const sectionIds: number[] = Array.isArray(parsed.sectionIds) ? parsed.sectionIds : [];
+  const heading = parsed.heading ?? "Your open work";
+  const subheading = parsed.subheading ?? "Work through what you can.";
+
+  const update = (patch: Partial<{ sectionIds: number[]; heading: string; subheading: string }>) => {
+    onChange(JSON.stringify({ sectionIds, heading, subheading, ...patch }));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Heading</label>
+        <input
+          type="text"
+          value={heading}
+          onChange={(e) => update({ heading: e.target.value })}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          data-testid={`input-${idPrefix}-ws-heading-${index}`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Subheading</label>
+        <input
+          type="text"
+          value={subheading}
+          onChange={(e) => update({ subheading: e.target.value })}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          data-testid={`input-${idPrefix}-ws-subheading-${index}`}
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Workbook Sections</label>
+        {sectionIds.map((id, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input
+              type="number"
+              value={id}
+              onChange={(e) => {
+                const newIds = [...sectionIds];
+                newIds[i] = Number(e.target.value);
+                update({ sectionIds: newIds });
+              }}
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder="Section ID"
+              data-testid={`input-${idPrefix}-ws-section-${index}-${i}`}
+            />
+            <button
+              type="button"
+              onClick={() => { const newIds = sectionIds.filter((_, j) => j !== i); update({ sectionIds: newIds }); }}
+              className="text-xs text-muted-foreground hover:text-destructive px-2 py-1"
+              data-testid={`button-${idPrefix}-ws-remove-section-${index}-${i}`}
+            >Remove</button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => update({ sectionIds: [...sectionIds, 1] })}
+          className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+          data-testid={`button-${idPrefix}-ws-add-section-${index}`}
+        >+ Add section</button>
+        <p className="text-[11px] text-muted-foreground/60">Enter the numeric section IDs from the Freedom Workbook to include in this work session.</p>
+      </div>
+    </div>
+  );
+}
 
 function CrossGridSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let parsed: Record<string, unknown> = {};
@@ -6232,6 +6303,7 @@ function TrackAContentManagementView() {
     if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
     if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
     if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
+    if (type === "workbook_session") return JSON.stringify({ sectionIds: [], heading: "Your open work", subheading: "Work through what you can." });
     if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
     return "";
   };
@@ -6716,6 +6788,8 @@ function TrackAContentManagementView() {
                             <span className="text-sm text-muted-foreground truncate" data-testid={`text-slide-preview-${index}`}>
                               {slide.type === "workbook_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.type === "workbook_session"
+                                ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
                                 : slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
@@ -6961,6 +7035,13 @@ function TrackAContentManagementView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "workbook_session" ? (
+                              <WorkbookSessionSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                idPrefix="tracka"
+                              />
                             ) : slide.type === "prayer_link" ? (
                               <div className="space-y-3">
                                 <div className="space-y-1">
@@ -7619,6 +7700,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
   if (type === "guided_prayer_process") return GUIDED_PRAYER_OCCULT_DEFAULT;
   if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
+  if (type === "workbook_session") return JSON.stringify({ sectionIds: [], heading: "Your open work", subheading: "Work through what you can." });
   if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
   return "";
 }
@@ -8083,6 +8165,8 @@ function PrelimContentManagementView() {
                             <span className="text-sm text-muted-foreground truncate">
                               {slide.type === "workbook_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.type === "workbook_session"
+                                ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
                                 : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
@@ -8297,6 +8381,13 @@ function PrelimContentManagementView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "workbook_session" ? (
+                              <WorkbookSessionSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                idPrefix="prelim"
+                              />
                             ) : slide.type === "prayer_link" ? (
                               <div className="space-y-3">
                                 <div className="space-y-1">
@@ -9111,6 +9202,8 @@ function HealingAdminView() {
                             <span className="text-sm text-muted-foreground truncate">
                               {slide.type === "workbook_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
+                                : slide.type === "workbook_session"
+                                ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
                                 : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
@@ -9201,6 +9294,13 @@ function HealingAdminView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the section name or default "The Deliverance Workbook" label shown in the lesson.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "workbook_session" ? (
+                              <WorkbookSessionSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                                idPrefix="healing"
+                              />
                             ) : slide.type === "prayer_link" ? (
                               <div className="space-y-3">
                                 <div className="space-y-1">
