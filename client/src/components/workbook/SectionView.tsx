@@ -115,8 +115,8 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
               style={{
                 marginTop: "20px",
                 padding: "16px 20px",
-                borderLeft: "3px solid rgba(255,255,255,0.18)",
-                backgroundColor: "rgba(255,255,255,0.04)",
+                borderLeft: "3px solid rgba(255,208,0,1)",
+                backgroundColor: "rgba(255,208,0,0.2)",
                 borderRadius: "0 8px 8px 0",
               }}
             >
@@ -127,7 +127,7 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  color: "rgba(255,255,255,0.35)",
+                  color: "rgba(255,208,0,1)",
                   margin: 0,
                   marginBottom: "6px",
                 }}
@@ -138,7 +138,7 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
                 style={{
                   fontFamily: "'Afacad', sans-serif",
                   fontSize: "0.95rem",
-                  color: "rgba(255,255,255,0.55)",
+                  color: "rgba(255,208,0,0.55)",
                   margin: 0,
                   lineHeight: 1.6,
                 }}
