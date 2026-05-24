@@ -7966,7 +7966,11 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
                   <div className="p-3 border-t space-y-3 bg-background">
                     <div className="flex items-center gap-2">
                       <label className="text-xs font-medium w-12 shrink-0">Type</label>
-                      <Select value={slide.type} onValueChange={val => updateSlide(index, "type", val)}>
+                      <Select value={slide.type} onValueChange={val => {
+                        updateSlide(index, "type", val);
+                        const def = getDefaultSlideContent(val);
+                        if (def) updateSlide(index, "content", def);
+                      }}>
                         <SelectTrigger className="h-7 text-xs flex-1">
                           <SelectValue />
                         </SelectTrigger>
@@ -7977,13 +7981,48 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Textarea
-                      value={slide.content || ""}
-                      onChange={e => updateSlide(index, "content", e.target.value)}
-                      className="text-xs font-mono min-h-[80px]"
-                      placeholder="Slide content (text or JSON)"
-                      data-testid={`textarea-workbook-slide-content-${index}`}
-                    />
+                    {slide.type === "workbook_link" ? (
+                      <WorkbookLinkSlideEditor
+                        content={slide.content || "{}"}
+                        onChange={(val) => updateSlide(index, "content", val)}
+                        index={index}
+                        idPrefix="wbmod"
+                      />
+                    ) : slide.type === "workbook_session" ? (
+                      <WorkbookSessionSlideEditor
+                        content={slide.content || "{}"}
+                        onChange={(val) => updateSlide(index, "content", val)}
+                        index={index}
+                        idPrefix="wbmod"
+                      />
+                    ) : slide.type === "prayer_link" ? (
+                      <PrayerLinkSlideEditor
+                        content={slide.content || "{}"}
+                        onChange={(val) => updateSlide(index, "content", val)}
+                        index={index}
+                        idPrefix="wbmod"
+                      />
+                    ) : slide.type === "timer" ? (
+                      <TimerSlideEditor
+                        content={slide.content || "{}"}
+                        onChange={(val) => updateSlide(index, "content", val)}
+                        index={index}
+                      />
+                    ) : slide.type === "media" ? (
+                      <MediaSlideEditor
+                        content={slide.content || "{}"}
+                        onChange={(val) => updateSlide(index, "content", val)}
+                        index={index}
+                      />
+                    ) : (
+                      <Textarea
+                        value={slide.content || ""}
+                        onChange={e => updateSlide(index, "content", e.target.value)}
+                        className="text-xs font-mono min-h-[80px]"
+                        placeholder="Slide content (text or JSON)"
+                        data-testid={`textarea-workbook-slide-content-${index}`}
+                      />
+                    )}
                   </div>
                 )}
               </div>
