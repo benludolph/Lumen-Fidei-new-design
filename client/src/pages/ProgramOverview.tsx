@@ -72,13 +72,11 @@ type UnlockPhase = "idle" | "shaking" | "opening" | "revealed" | "cta";
 function getWeekState(
   weekIndex: number,
   currentDay: number,
-  isPrivileged: boolean,
   isComplete: boolean
 ): WeekState {
   if (isComplete) return "complete";
   const firstDay = WEEKS[weekIndex].days[0];
-  const isScheduled = isPrivileged || currentDay >= firstDay;
-  if (!isScheduled) return "locked";
+  if (currentDay < firstDay) return "locked";
   const seenKey = `lf_week_intro_seen_${WEEKS[weekIndex].number}`;
   if (!localStorage.getItem(seenKey)) return "unseen";
   return "seen";
@@ -115,7 +113,7 @@ export default function ProgramOverview() {
   );
 
   const weekStates: WeekState[] = WEEKS.map((week, i) =>
-    getWeekState(i, currentDay, isPrivileged, isWeekComplete(week.days))
+    getWeekState(i, currentDay, isWeekComplete(week.days))
   );
 
   const weekStatesRef = useRef(weekStates);
@@ -295,12 +293,20 @@ export default function ProgramOverview() {
               const isActive = activeIndex === i;
 
               const isRevealed = phase === "revealed" || phase === "cta";
+
+              // Dim overlay: only for locked weeks and unseen weeks before the reveal fires
               const showDimOverlay =
                 weekState === "locked" ||
                 (weekState === "unseen" && !isRevealed);
-              const overlaysHidden =
-                (isActive && !showDimOverlay) || isRevealed;
 
+              // Gradient overlays hidden: seen/complete always show full image;
+              // unseen shows full image once revealed
+              const overlaysHidden =
+                weekState === "seen" ||
+                weekState === "complete" ||
+                isRevealed;
+
+              // Border brightens for active seen/complete, or after an unseen unlock
               const borderColor =
                 weekState === "locked"
                   ? "rgba(255,255,255,0.06)"
