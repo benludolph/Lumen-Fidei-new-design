@@ -45,6 +45,9 @@ import penitentHoverImg from "@assets/Penitent_hover_1773947410450.webp";
 import forgivenessImg from "@assets/Forgiveness_1778525053441.webp";
 import forgivenessHoverImg from "@assets/Forgiveness_hover_1778525053441.webp";
 
+import workbookBentoImg from "@assets/Workbook_(2)_1779735230240.webp";
+import workbookBentoHoverImg from "@assets/Workbook_hover_(1)_1779735230240.webp";
+
 const IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "retaliation", img: retaliationImg },
   { match: "catechism", img: catechismImg },
@@ -128,7 +131,42 @@ function FreedomWorkbookCard() {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(180,140,80,0.08) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0, opacity: hovered ? 1.5 : 1, transition: "opacity 0.2s ease-out" }} />
+        {/* Default background image */}
+        <img
+          src={workbookBentoImg}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center",
+            pointerEvents: "none",
+            opacity: hovered ? 0 : 1,
+            transition: "opacity 0.25s ease-out",
+            zIndex: 0,
+          }}
+        />
+        {/* Hover background image */}
+        <img
+          src={workbookBentoHoverImg}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center",
+            pointerEvents: "none",
+            opacity: hovered ? 1 : 0,
+            transition: "opacity 0.25s ease-out",
+            zIndex: 0,
+          }}
+        />
         <div className="flex items-start relative z-[3]">
           <div
             className="w-6 h-6 rounded flex items-center justify-center shrink-0"
