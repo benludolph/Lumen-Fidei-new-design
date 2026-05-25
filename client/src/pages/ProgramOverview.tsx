@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useUserPrayerCompletions } from "@/hooks/use-prayer-completions";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronLeft } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 import week1Img from "@assets/Week_1_1779734761983.webp";
 import week2Img from "@assets/Week_2_1779734761983.webp";
@@ -64,27 +64,8 @@ const WEEKS = [
   },
 ];
 
-// Ordered items: week0, week1, workbook, week2, week3, week4
-// itemRefs index:    0      1        2        3      4      5
-type NavItem =
-  | { kind: "week"; weekIndex: number; label: string }
-  | { kind: "workbook"; label: string };
-
-const NAV_ITEMS: NavItem[] = [
-  { kind: "week", weekIndex: 0, label: "Week 1" },
-  { kind: "week", weekIndex: 1, label: "Week 2" },
-  { kind: "workbook", label: "Workbook" },
-  { kind: "week", weekIndex: 2, label: "Week 3" },
-  { kind: "week", weekIndex: 3, label: "Week 4" },
-  { kind: "week", weekIndex: 4, label: "Week 5" },
-];
-
-// Map nav item to its itemRefs index
-function navItemToRefIndex(item: NavItem): number {
-  if (item.kind === "workbook") return 2;
-  const map = [0, 1, 3, 4, 5]; // weekIndex 0→ref0, 1→ref1, 2→ref3, 3→ref4, 4→ref5
-  return map[item.weekIndex] ?? 0;
-}
+// 5 week nav tabs only — workbook removed
+const NAV_ITEMS = WEEKS.map((w, i) => ({ weekIndex: i, label: `Week ${w.number}` }));
 
 export default function ProgramOverview() {
   const { data: user } = useQuery<{ role: string; track: string }>({
@@ -110,15 +91,15 @@ export default function ProgramOverview() {
     [prayerCompletions]
   );
 
-  // itemRefs[0..5] in page order: week0, week1, workbook, week2, week3, week4
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
+  // 5 item refs (one per week, in order)
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Stepper state
-  const [activeIndex, setActiveIndex] = useState(0);           // 0–5
-  const [connectorFills, setConnectorFills] = useState<number[]>([0, 0, 0, 0, 0]); // 5 connectors
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [connectorFills, setConnectorFills] = useState<number[]>([0, 0, 0, 0]); // 4 connectors
 
-  const [activeNav, setActiveNav] = useState<string>("week-0");
+  // Workbook accordion — expands below Week 2
+  const [workbookOpen, setWorkbookOpen] = useState(false);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -127,29 +108,21 @@ export default function ProgramOverview() {
     const handleScroll = () => {
       const scrollTop = container.scrollTop;
       const viewH = container.clientHeight;
-      const center = scrollTop + viewH * 0.45; // slightly above midpoint feels more natural
+      const center = scrollTop + viewH * 0.45;
 
       const refs = itemRefs.current;
-
-      // Compute midpoint of each item
       const mids = refs.map((el) =>
         el ? el.offsetTop + el.offsetHeight / 2 : 0
       );
 
-      // Active = last item whose midpoint is at or above viewport center
       let newActive = 0;
       for (let i = 0; i < mids.length; i++) {
         if (mids[i] <= center) newActive = i;
       }
       setActiveIndex(newActive);
 
-      // Update active nav label
-      const navOrder = ["week-0", "week-1", "workbook", "week-2", "week-3", "week-4"];
-      setActiveNav(navOrder[newActive] ?? "week-0");
-
-      // Connector fills: each connector[i] goes from 0→1 as scroll center moves from mids[i] to mids[i+1]
-      const fills = [];
-      for (let i = 0; i < 5; i++) {
+      const fills: number[] = [];
+      for (let i = 0; i < 4; i++) {
         const start = mids[i];
         const end = mids[i + 1] ?? start;
         const raw = end > start ? (center - start) / (end - start) : 0;
@@ -159,35 +132,16 @@ export default function ProgramOverview() {
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // run once on mount
+    handleScroll();
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToRefIndex = (refIndex: number) => {
+  const scrollToWeek = (weekIndex: number) => {
     const container = scrollContainerRef.current;
-    const el = itemRefs.current[refIndex];
+    const el = itemRefs.current[weekIndex];
     if (!container || !el) return;
     container.scrollTo({ top: el.offsetTop - 20, behavior: "smooth" });
   };
-
-  const navKeyForItem = (item: NavItem) =>
-    item.kind === "workbook" ? "workbook" : `week-${item.weekIndex}`;
-
-  // Build the ordered list of cards to render
-  // Each entry: week card (index 0,1,3,4,5) or workbook card (index 2)
-  // refIdx tells us which itemRefs slot to assign
-  type CardEntry =
-    | { kind: "week"; weekIdx: number; refIdx: number }
-    | { kind: "workbook"; refIdx: number };
-
-  const CARD_ENTRIES: CardEntry[] = [
-    { kind: "week", weekIdx: 0, refIdx: 0 },
-    { kind: "week", weekIdx: 1, refIdx: 1 },
-    { kind: "workbook", refIdx: 2 },
-    { kind: "week", weekIdx: 2, refIdx: 3 },
-    { kind: "week", weekIdx: 3, refIdx: 4 },
-    { kind: "week", weekIdx: 4, refIdx: 5 },
-  ];
 
   return (
     <DashboardLayout>
@@ -218,15 +172,17 @@ export default function ProgramOverview() {
 
           {/* Cards + connectors */}
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {CARD_ENTRIES.map((entry, i) => {
-              const isActive = activeIndex === entry.refIdx;
+            {WEEKS.map((week, i) => {
+              const isActive = activeIndex === i;
+              const complete = isWeekComplete(week.days);
+              const isWeek2 = i === 1; // Week 2 has the expandable workbook
 
               return (
-                <div key={entry.refIdx}>
-                  {/* Card */}
+                <div key={week.number}>
+                  {/* Week card */}
                   <div
-                    ref={(el) => { itemRefs.current[entry.refIdx] = el; }}
-                    data-testid={entry.kind === "week" ? `week-section-${WEEKS[entry.weekIdx].number}` : "workbook-callout"}
+                    ref={(el) => { itemRefs.current[i] = el; }}
+                    data-testid={`week-section-${week.number}`}
                     style={{
                       borderRadius: "12px",
                       overflow: "hidden",
@@ -236,28 +192,50 @@ export default function ProgramOverview() {
                       transition: "border-color 0.35s ease",
                     }}
                   >
-                    {entry.kind === "week" ? (
-                      <WeekCard
-                        week={WEEKS[entry.weekIdx]}
-                        complete={isWeekComplete(WEEKS[entry.weekIdx].days)}
-                      />
-                    ) : (
-                      <WorkbookCard />
-                    )}
+                    <WeekCard
+                      week={week}
+                      complete={complete}
+                      active={isActive}
+                      showExpandButton={isWeek2}
+                      workbookOpen={isWeek2 ? workbookOpen : false}
+                      onToggleWorkbook={isWeek2 ? () => setWorkbookOpen((v) => !v) : undefined}
+                    />
                   </div>
 
+                  {/* Workbook accordion — only after Week 2 */}
+                  {isWeek2 && (
+                    <div
+                      style={{
+                        overflow: "hidden",
+                        maxHeight: workbookOpen ? "700px" : "0px",
+                        transition: "max-height 0.45s cubic-bezier(0.4,0,0.2,1)",
+                      }}
+                    >
+                      <div style={{ paddingTop: "12px" }}>
+                        <div
+                          style={{
+                            borderRadius: "12px",
+                            overflow: "hidden",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                          }}
+                          data-testid="workbook-callout"
+                        >
+                          <WorkbookCard />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Connector line (not after last card) */}
-                  {i < CARD_ENTRIES.length - 1 && (
+                  {i < WEEKS.length - 1 && (
                     <div
                       style={{
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
                         height: "36px",
-                        padding: "0",
                       }}
                     >
-                      {/* Track */}
                       <div
                         style={{
                           width: "1px",
@@ -267,7 +245,6 @@ export default function ProgramOverview() {
                           overflow: "hidden",
                         }}
                       >
-                        {/* Fill */}
                         <div
                           style={{
                             position: "absolute",
@@ -287,7 +264,7 @@ export default function ProgramOverview() {
           </div>
         </div>
 
-        {/* Sticky bottom week nav */}
+        {/* Sticky bottom nav — 5 week tabs */}
         <div
           style={{
             position: "sticky",
@@ -316,20 +293,18 @@ export default function ProgramOverview() {
             data-testid="week-nav-bar"
           >
             {NAV_ITEMS.map((item) => {
-              const key = navKeyForItem(item);
-              const isActive = activeNav === key;
+              const isActive = activeIndex === item.weekIndex;
               return (
                 <button
-                  key={key}
-                  data-testid={`week-nav-tab-${key}`}
-                  onClick={() => scrollToRefIndex(navItemToRefIndex(item))}
+                  key={item.weekIndex}
+                  data-testid={`week-nav-tab-week-${item.weekIndex}`}
+                  onClick={() => scrollToWeek(item.weekIndex)}
                   title={item.label}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "5px",
-                    padding: item.kind === "workbook" ? "6px 10px" : "6px 14px",
+                    padding: "6px 14px",
                     borderRadius: "100px",
                     border: "none",
                     cursor: "pointer",
@@ -340,11 +315,7 @@ export default function ProgramOverview() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {item.kind === "workbook" ? (
-                    <BookOpen size={14} />
-                  ) : (
-                    <span className="type-body-xs font-medium">{item.label}</span>
-                  )}
+                  <span className="type-body-xs font-medium">{item.label}</span>
                 </button>
               );
             })}
@@ -355,14 +326,18 @@ export default function ProgramOverview() {
   );
 }
 
-// ─── Week card ───────────────────────────────────────────────────────────────
+// ─── Week card ────────────────────────────────────────────────────────────────
 
 interface WeekCardProps {
   week: (typeof WEEKS)[number];
   complete: boolean;
+  active: boolean;
+  showExpandButton?: boolean;
+  workbookOpen?: boolean;
+  onToggleWorkbook?: () => void;
 }
 
-function WeekCard({ week, complete }: WeekCardProps) {
+function WeekCard({ week, complete, active, showExpandButton, workbookOpen, onToggleWorkbook }: WeekCardProps) {
   return (
     <div
       style={{
@@ -389,15 +364,16 @@ function WeekCard({ week, complete }: WeekCardProps) {
         }}
       />
 
-      {/* Dark overlay */}
+      {/* Overlays — fade out when card is active */}
       <div
         aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
-          background:
-            "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)",
+          background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)",
           pointerEvents: "none",
+          opacity: active ? 0 : 1,
+          transition: "opacity 0.35s ease",
         }}
       />
       <div
@@ -407,6 +383,8 @@ function WeekCard({ week, complete }: WeekCardProps) {
           inset: 0,
           background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)",
           pointerEvents: "none",
+          opacity: active ? 0 : 1,
+          transition: "opacity 0.35s ease",
         }}
       />
 
@@ -448,23 +426,58 @@ function WeekCard({ week, complete }: WeekCardProps) {
           }}
         />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
-          <div>
-            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
-              PURPOSE
-            </p>
-            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
-              {week.purpose}
-            </p>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px", flex: 1 }}>
+            <div>
+              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
+                PURPOSE
+              </p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
+                {week.purpose}
+              </p>
+            </div>
+            <div>
+              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
+                AGENDA
+              </p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
+                {week.agenda}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
-              AGENDA
-            </p>
-            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
-              {week.agenda}
-            </p>
-          </div>
+
+          {/* Expand button for Week 2 */}
+          {showExpandButton && onToggleWorkbook && (
+            <button
+              onClick={onToggleWorkbook}
+              data-testid="button-toggle-workbook"
+              title={workbookOpen ? "Hide Deliverance Workbook" : "Show Deliverance Workbook"}
+              style={{
+                flexShrink: 0,
+                marginTop: "2px",
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.15)",
+                background: "rgba(255,255,255,0.06)",
+                backdropFilter: "blur(8px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "background 0.2s, border-color 0.2s",
+                color: "rgba(255,255,255,0.7)",
+              }}
+            >
+              <ChevronRight
+                size={15}
+                style={{
+                  transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
+                  transform: workbookOpen ? "rotate(90deg)" : "rotate(0deg)",
+                }}
+              />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -486,8 +499,14 @@ function WorkbookCard() {
       }}
       data-testid="workbook-card"
     >
-      {/* Content */}
       <div style={{ position: "relative", zIndex: 2, padding: "40px 36px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+          <BookOpen size={14} style={{ color: "rgba(255,255,255,0.4)" }} />
+          <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: 0 }}>
+            WEEK 2 RESOURCE
+          </p>
+        </div>
+
         <h2
           className="font-serif"
           style={{
