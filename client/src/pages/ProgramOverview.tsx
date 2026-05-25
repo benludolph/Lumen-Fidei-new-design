@@ -3,7 +3,7 @@ import { useLocation, Link } from "wouter";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useUserPrayerCompletions } from "@/hooks/use-prayer-completions";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, Lock, Unlock, ArrowRight, RotateCcw } from "lucide-react";
 
 import week1Img from "@assets/Week_1_1779734761983.webp";
 import week2Img from "@assets/Week_2_1779734761983.webp";
@@ -64,8 +64,25 @@ const WEEKS = [
   },
 ];
 
-// 5 week nav tabs only — workbook removed
 const NAV_ITEMS = WEEKS.map((w, i) => ({ weekIndex: i, label: `Week ${w.number}` }));
+
+type WeekState = "locked" | "unseen" | "seen" | "complete";
+type UnlockPhase = "idle" | "shaking" | "opening" | "revealed" | "cta";
+
+function getWeekState(
+  weekIndex: number,
+  currentDay: number,
+  isPrivileged: boolean,
+  isComplete: boolean
+): WeekState {
+  if (isComplete) return "complete";
+  const firstDay = WEEKS[weekIndex].days[0];
+  const isScheduled = isPrivileged || currentDay >= firstDay;
+  if (!isScheduled) return "locked";
+  const seenKey = `lf_week_intro_seen_${WEEKS[weekIndex].number}`;
+  if (!localStorage.getItem(seenKey)) return "unseen";
+  return "seen";
+}
 
 export default function ProgramOverview() {
   const { data: user } = useQuery<{ role: string; track: string }>({
@@ -80,6 +97,12 @@ export default function ProgramOverview() {
   }, [user, navigate]);
 
   const { data: prayerCompletions } = useUserPrayerCompletions();
+  const { data: cohortData } = useQuery<{ startDate: string; currentDay: number }>({
+    queryKey: ["/api/cohort/start-date"],
+  });
+
+  const currentDay = cohortData?.currentDay ?? 0;
+  const isPrivileged = user?.role === "admin" || user?.role === "superuser";
 
   const isWeekComplete = useCallback(
     (days: number[]) => {
@@ -91,15 +114,47 @@ export default function ProgramOverview() {
     [prayerCompletions]
   );
 
-  // 5 item refs (one per week, in order)
+  const weekStates: WeekState[] = WEEKS.map((week, i) =>
+    getWeekState(i, currentDay, isPrivileged, isWeekComplete(week.days))
+  );
+
+  const weekStatesRef = useRef(weekStates);
+  weekStatesRef.current = weekStates;
+
+  const [phases, setPhases] = useState<UnlockPhase[]>(["idle", "idle", "idle", "idle", "idle"]);
+  const triggeredRef = useRef<boolean[]>([false, false, false, false, false]);
+
+  const triggerUnlock = useCallback((i: number) => {
+    if (triggeredRef.current[i]) return;
+    triggeredRef.current[i] = true;
+
+    const setPhase = (phase: UnlockPhase) => {
+      setPhases((prev) => {
+        const next = [...prev] as UnlockPhase[];
+        next[i] = phase;
+        return next;
+      });
+    };
+
+    setPhase("shaking");
+    setTimeout(() => setPhase("opening"), 400);
+    setTimeout(() => setPhase("revealed"), 700);
+    setTimeout(() => {
+      try {
+        const audio = new Audio("/week-unlock.mp3");
+        audio.play().catch(() => {});
+      } catch {}
+    }, 900);
+    setTimeout(() => {
+      setPhase("cta");
+      localStorage.setItem(`lf_week_intro_seen_${WEEKS[i].number}`, "1");
+    }, 1100);
+  }, []);
+
   const itemRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   const [activeIndex, setActiveIndex] = useState(0);
-  const [connectorFills, setConnectorFills] = useState<number[]>([0, 0, 0, 0]); // 4 connectors
-
-  // Workbook accordion — expands below Week 2
-  const [workbookOpen, setWorkbookOpen] = useState(false);
+  const [connectorFills, setConnectorFills] = useState<number[]>([0, 0, 0, 0]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -129,12 +184,21 @@ export default function ProgramOverview() {
         fills.push(Math.max(0, Math.min(1, raw)));
       }
       setConnectorFills(fills);
+
+      for (let i = 0; i < WEEKS.length; i++) {
+        const state = weekStatesRef.current[i];
+        if (state === "unseen" && !triggeredRef.current[i]) {
+          if (mids[i] <= center) {
+            triggerUnlock(i);
+          }
+        }
+      }
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => container.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [triggerUnlock]);
 
   const scrollToWeek = (weekIndex: number) => {
     const container = scrollContainerRef.current;
@@ -143,22 +207,48 @@ export default function ProgramOverview() {
     container.scrollTo({ top: el.offsetTop - 20, behavior: "smooth" });
   };
 
+  const handleReplay = () => {
+    for (let i = 1; i <= 5; i++) {
+      localStorage.removeItem(`lf_week_intro_seen_${i}`);
+    }
+    window.location.reload();
+  };
+
   return (
     <DashboardLayout>
       <div
         ref={scrollContainerRef}
-        style={{ position: "relative", height: "100%", overflowY: "auto", overflowX: "hidden", background: "var(--surface-ground)" }}
+        style={{
+          position: "relative",
+          height: "100%",
+          overflowY: "auto",
+          overflowX: "hidden",
+          background: "var(--surface-ground)",
+        }}
         data-testid="program-overview-scroll"
       >
         <div style={{ maxWidth: "608px", margin: "0 auto", padding: "0 16px 140px" }}>
 
-          {/* Breadcrumb */}
-          <div style={{ padding: "20px 0 24px" }}>
+          {/* Breadcrumb + replay */}
+          <div
+            style={{
+              padding: "20px 0 24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Link href="/dashboard">
                 <span
                   className="type-body-sm"
-                  style={{ color: "var(--white-50)", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                  style={{
+                    color: "var(--white-50)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
                   data-testid="breadcrumb-dashboard"
                 >
                   <ChevronLeft size={12} />
@@ -168,65 +258,75 @@ export default function ProgramOverview() {
               <span className="type-body-sm" style={{ color: "var(--white-30)" }}>›</span>
               <span className="type-body-sm" style={{ color: "var(--white-70)" }}>Week Summary</span>
             </div>
+
+            {isPrivileged && (
+              <button
+                onClick={handleReplay}
+                data-testid="button-replay-unlock"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  padding: "4px 10px",
+                  borderRadius: "100px",
+                  border: "0.5px solid rgba(255,255,255,0.12)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "rgba(255,255,255,0.35)",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                <RotateCcw size={10} />
+                <span className="type-caption-sm">Replay</span>
+              </button>
+            )}
           </div>
 
           {/* Cards + connectors */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             {WEEKS.map((week, i) => {
+              const weekState = weekStates[i];
+              const phase = phases[i];
               const isActive = activeIndex === i;
-              const complete = isWeekComplete(week.days);
-              const isWeek2 = i === 1; // Week 2 has the expandable workbook
+
+              const isRevealed = phase === "revealed" || phase === "cta";
+              const showDimOverlay =
+                weekState === "locked" ||
+                (weekState === "unseen" && !isRevealed);
+              const overlaysHidden =
+                (isActive && !showDimOverlay) || isRevealed;
+
+              const borderColor =
+                weekState === "locked"
+                  ? "rgba(255,255,255,0.06)"
+                  : weekState === "unseen" && !isRevealed
+                  ? "rgba(255,255,255,0.06)"
+                  : isActive || isRevealed
+                  ? "rgba(255,255,255,0.65)"
+                  : "rgba(255,255,255,0.06)";
 
               return (
                 <div key={week.number}>
-                  {/* Week card */}
                   <div
                     ref={(el) => { itemRefs.current[i] = el; }}
                     data-testid={`week-section-${week.number}`}
                     style={{
                       borderRadius: "12px",
                       overflow: "hidden",
-                      border: isActive
-                        ? "1px solid rgba(255,255,255,0.65)"
-                        : "1px solid rgba(255,255,255,0.06)",
+                      border: `1px solid ${borderColor}`,
                       transition: "border-color 0.35s ease",
                     }}
                   >
                     <WeekCard
                       week={week}
-                      complete={complete}
-                      active={isActive}
-                      showExpandButton={isWeek2}
-                      workbookOpen={isWeek2 ? workbookOpen : false}
-                      onToggleWorkbook={isWeek2 ? () => setWorkbookOpen((v) => !v) : undefined}
+                      weekState={weekState}
+                      phase={phase}
+                      overlaysHidden={overlaysHidden}
+                      showDimOverlay={showDimOverlay}
                     />
                   </div>
 
-                  {/* Workbook accordion — only after Week 2 */}
-                  {isWeek2 && (
-                    <div
-                      style={{
-                        overflow: "hidden",
-                        maxHeight: workbookOpen ? "700px" : "0px",
-                        transition: "max-height 0.45s cubic-bezier(0.4,0,0.2,1)",
-                      }}
-                    >
-                      <div style={{ paddingTop: "12px" }}>
-                        <div
-                          style={{
-                            borderRadius: "12px",
-                            overflow: "hidden",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                          }}
-                          data-testid="workbook-callout"
-                        >
-                          <WorkbookCard />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Connector line (not after last card) */}
+                  {/* Connector line */}
                   {i < WEEKS.length - 1 && (
                     <div
                       style={{
@@ -264,7 +364,7 @@ export default function ProgramOverview() {
           </div>
         </div>
 
-        {/* Sticky bottom nav — 5 week tabs */}
+        {/* Sticky bottom nav */}
         <div
           style={{
             position: "sticky",
@@ -273,7 +373,8 @@ export default function ProgramOverview() {
             display: "flex",
             justifyContent: "center",
             padding: "24px 16px 24px",
-            background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)",
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)",
             pointerEvents: "none",
           }}
         >
@@ -326,18 +427,38 @@ export default function ProgramOverview() {
   );
 }
 
-// ─── Week card ────────────────────────────────────────────────────────────────
+// ─── Week Card ─────────────────────────────────────────────────────────────────
 
 interface WeekCardProps {
   week: (typeof WEEKS)[number];
-  complete: boolean;
-  active: boolean;
-  showExpandButton?: boolean;
-  workbookOpen?: boolean;
-  onToggleWorkbook?: () => void;
+  weekState: WeekState;
+  phase: UnlockPhase;
+  overlaysHidden: boolean;
+  showDimOverlay: boolean;
 }
 
-function WeekCard({ week, complete, active, showExpandButton, workbookOpen, onToggleWorkbook }: WeekCardProps) {
+function WeekCard({ week, weekState, phase, overlaysHidden, showDimOverlay }: WeekCardProps) {
+  const [, navigate] = useLocation();
+
+  const isLocked = weekState === "locked";
+  const isUnseen = weekState === "unseen";
+  const isRevealed = phase === "revealed" || phase === "cta";
+  const showLockIcon = (isLocked || isUnseen) && !isRevealed;
+  const showCtaButton = phase === "cta";
+  const complete = weekState === "complete";
+
+  const captionText = showLockIcon
+    ? `WEEK ${week.number} · LOCKED`
+    : complete
+    ? `WEEK ${week.number} COMPLETE`
+    : `WEEK ${week.number}`;
+
+  const captionColor = showLockIcon
+    ? "rgba(255,255,255,0.3)"
+    : complete
+    ? "rgba(210,180,120,0.8)"
+    : "rgba(255,255,255,0.45)";
+
   return (
     <div
       style={{
@@ -348,7 +469,7 @@ function WeekCard({ week, complete, active, showExpandButton, workbookOpen, onTo
         justifyContent: "flex-end",
       }}
     >
-      {/* Full-bleed background image */}
+      {/* Background image */}
       <img
         src={week.image}
         alt=""
@@ -364,16 +485,32 @@ function WeekCard({ week, complete, active, showExpandButton, workbookOpen, onTo
         }}
       />
 
-      {/* Overlays — fade out when card is active */}
+      {/* Dim overlay — locked / pre-reveal */}
       <div
         aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)",
+          background: "rgba(0,0,0,0.55)",
           pointerEvents: "none",
-          opacity: active ? 0 : 1,
+          opacity: showDimOverlay ? 1 : 0,
           transition: "opacity 0.35s ease",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Diagonal gradient overlay — active/seen state */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)",
+          pointerEvents: "none",
+          opacity: overlaysHidden || showDimOverlay ? 0 : 1,
+          transition: "opacity 0.35s ease",
+          zIndex: 1,
         }}
       />
       <div
@@ -383,22 +520,58 @@ function WeekCard({ week, complete, active, showExpandButton, workbookOpen, onTo
           inset: 0,
           background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)",
           pointerEvents: "none",
-          opacity: active ? 0 : 1,
+          opacity: overlaysHidden || showDimOverlay ? 0 : 1,
           transition: "opacity 0.35s ease",
+          zIndex: 1,
         }}
       />
+
+      {/* Lock / unlock icon */}
+      {(isLocked || isUnseen) && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -60%)",
+            zIndex: 10,
+            opacity: showLockIcon ? 1 : 0,
+            transition: "opacity 0.3s ease",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            className={phase === "shaking" ? "lf-lock-shake" : ""}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border: "0.5px solid rgba(255,255,255,0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {phase === "opening" ? (
+              <Unlock size={22} color="rgba(255,255,255,0.9)" />
+            ) : (
+              <Lock size={22} color="rgba(255,255,255,0.9)" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div style={{ position: "relative", zIndex: 2, padding: "40px 36px" }}>
         <p
           className="type-caption-md"
-          style={{
-            color: complete ? "rgba(210,180,120,0.8)" : "rgba(255,255,255,0.45)",
-            margin: "0 0 10px",
-          }}
+          style={{ color: captionColor, margin: "0 0 10px" }}
           data-testid={`week-status-${week.number}`}
         >
-          WEEK {week.number}{complete ? " COMPLETE" : ""}
+          {captionText}
         </p>
 
         <h2
@@ -426,123 +599,58 @@ function WeekCard({ week, complete, active, showExpandButton, workbookOpen, onTo
           }}
         />
 
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px", flex: 1 }}>
-            <div>
-              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
-                PURPOSE
-              </p>
-              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
-                {week.purpose}
-              </p>
-            </div>
-            <div>
-              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
-                AGENDA
-              </p>
-              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
-                {week.agenda}
-              </p>
-            </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <div>
+            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
+              PURPOSE
+            </p>
+            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
+              {week.purpose}
+            </p>
           </div>
-
-          {/* Expand button for Week 2 */}
-          {showExpandButton && onToggleWorkbook && (
-            <button
-              onClick={onToggleWorkbook}
-              data-testid="button-toggle-workbook"
-              title={workbookOpen ? "Hide Deliverance Workbook" : "Show Deliverance Workbook"}
-              style={{
-                flexShrink: 0,
-                marginTop: "2px",
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.06)",
-                backdropFilter: "blur(8px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "background 0.2s, border-color 0.2s",
-                color: "rgba(255,255,255,0.7)",
-              }}
-            >
-              <ChevronRight
-                size={15}
-                style={{
-                  transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
-                  transform: workbookOpen ? "rotate(90deg)" : "rotate(0deg)",
-                }}
-              />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Workbook card ────────────────────────────────────────────────────────────
-
-function WorkbookCard() {
-  return (
-    <div
-      style={{
-        position: "relative",
-        minHeight: "340px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-end",
-        background: "linear-gradient(to right, #191A1B, #131314)",
-      }}
-      data-testid="workbook-card"
-    >
-      <div style={{ position: "relative", zIndex: 2, padding: "40px 36px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-          <BookOpen size={14} style={{ color: "rgba(255,255,255,0.4)" }} />
-          <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: 0 }}>
-            WEEK 2 RESOURCE
-          </p>
+          <div>
+            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
+              AGENDA
+            </p>
+            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
+              {week.agenda}
+            </p>
+          </div>
         </div>
 
-        <h2
-          className="font-serif"
+        {/* Begin Week CTA */}
+        <div
           style={{
-            color: "white",
-            fontSize: "clamp(24px, 4vw, 36px)",
-            fontWeight: 500,
-            margin: "0 0 16px",
-            lineHeight: 1.15,
-            maxWidth: "260px",
+            marginTop: "24px",
+            opacity: showCtaButton ? 1 : 0,
+            transform: showCtaButton ? "translateY(0)" : "translateY(10px)",
+            transition: "opacity 0.4s ease, transform 0.4s ease",
+            pointerEvents: showCtaButton ? "auto" : "none",
           }}
         >
-          The Deliverance Workbook
-        </h2>
-
-        <p
-          className="type-body-sm"
-          style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.7, margin: "0 0 24px", maxWidth: "480px" }}
-        >
-          This is your deliverance workbook. It has sections where you'll write down unrepented sins,
-          organized by category. The first step in deliverance is repentance, so the workbook is
-          where you'll organize your past so you can bring it to confession later. This week, you'll
-          fill in the first section.
-        </p>
-
-        <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.38)", margin: "0 0 10px" }}>
-          WHY IS THIS IMPORTANT?
-        </p>
-        <p
-          className="type-body-sm"
-          style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: 0, maxWidth: "480px" }}
-        >
-          Over the program you'll fill it in by category: unrepented sins, occult involvement and
-          other doorways, people you need to forgive, soul ties, vows, word curses, and generational
-          patterns. By the end you'll use what you've written to pray through your renunciations and
-          to make your confession. Add to it anytime — it's yours to keep working through.
-        </p>
+          <button
+            data-testid={`button-begin-week-${week.number}`}
+            onClick={() => navigate(`/preview/track-a/${week.days[0]}`)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              width: "100%",
+              padding: "14px 20px",
+              borderRadius: "8px",
+              border: "0.5px solid rgba(255,255,255,0.18)",
+              background: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            <span className="type-caption-md">BEGIN WEEK {week.number}</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );
