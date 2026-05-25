@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 
 interface PrayerWrapScreenProps {
   kind: "opening" | "closing";
@@ -213,16 +213,7 @@ export function PrayerWrapScreen({
       <div className="flex-1 flex flex-col items-center justify-center px-8 pt-16 pb-10 overflow-y-auto">
         <div className="w-full max-w-md flex flex-col items-center gap-10">
           {/* Caption label */}
-          <p
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.75rem",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.38)",
-              fontWeight: 500,
-            }}
-          >
+          <p className="type-caption-lg" style={{ color: "rgba(255,255,255,0.38)" }}>
             {caption}
           </p>
 
@@ -355,44 +346,21 @@ export function PrayerWrapScreen({
           onClick={continueUnlocked ? onContinue : undefined}
           disabled={!continueUnlocked}
           data-testid={`button-prayer-continue-${kind}`}
+          className={`flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] whitespace-nowrap ${continueUnlocked ? "opacity-100 hover:opacity-80" : "opacity-40 cursor-not-allowed"}`}
           style={{
-            width: "100%",
-            maxWidth: "400px",
-            padding: "15px 24px",
-            borderRadius: "100px",
+            background: "var(--surface-float)",
+            borderRadius: "6px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "12px",
+            paddingBottom: "12px",
+            boxShadow: "0px 1px 3px rgba(0,0,0,0.1), 0px 1px 2px rgba(0,0,0,0.06)",
             border: "none",
             cursor: continueUnlocked ? "pointer" : "not-allowed",
-            background: continueUnlocked
-              ? "rgba(255,255,255,0.92)"
-              : "rgba(255,255,255,0.12)",
-            color: continueUnlocked ? "#0c0b09" : "rgba(255,255,255,0.25)",
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "1rem",
-            fontWeight: 600,
-            letterSpacing: "0.04em",
-            transition: "background 200ms, color 200ms",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
           }}
         >
-          {continueUnlocked ? (
-            <>
-              Continue
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              </svg>
-            </>
-          ) : (
-            <>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" style={{ opacity: 0.5 }}>
-                <rect x="3" y="6" width="8" height="6" rx="1" />
-                <path d="M5 6V4a3 3 0 016 0v2" strokeWidth="1.5" stroke="currentColor" fill="none" strokeLinecap="round" />
-              </svg>
-              Continue
-            </>
-          )}
+          CONTINUE
+          <ArrowRight className="w-4 h-4" />
         </button>
 
         {canSkip && (
