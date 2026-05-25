@@ -7,6 +7,11 @@ import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TrackAContent } from "@shared/schema";
 
+interface PrayerWrapPayload {
+  opening: { text: string; audioUrl: string | null } | null;
+  closing: { text: string; audioUrl: string | null } | null;
+}
+
 export default function PreviewLesson() {
   const { user } = useAuth();
   const params = useParams<{ day: string }>();
@@ -21,6 +26,17 @@ export default function PreviewLesson() {
       return res.json();
     },
     enabled: !!user && !isNaN(day),
+  });
+
+  const { data: prayerWrapData } = useQuery<PrayerWrapPayload>({
+    queryKey: ["/api/track-a/prayers", day],
+    queryFn: async () => {
+      const res = await fetch(`/api/track-a/prayers/${day}`, { credentials: "include" });
+      if (!res.ok) return { opening: null, closing: null };
+      return res.json();
+    },
+    enabled: !!user && !isNaN(day),
+    staleTime: 60_000,
   });
 
   if (!user || user.role !== "admin") return null;
@@ -63,6 +79,9 @@ export default function PreviewLesson() {
       previewMode
       onExit={handleExit}
       onComplete={handleExit}
+      openingPrayer={prayerWrapData?.opening ?? null}
+      closingPrayer={prayerWrapData?.closing ?? null}
+      canSkipPrayer={true}
     />
   );
 }

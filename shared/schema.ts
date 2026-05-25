@@ -82,6 +82,17 @@ export const trackAContent = pgTable("track_a_content", {
   slides: json("slides").$type<{ type: string; content: string }[]>(),
   imageUrl: text("image_url"),
   completionMessage: text("completion_message"),
+  openingPrayerText: text("opening_prayer_text"),
+  openingPrayerAudio: text("opening_prayer_audio"),
+  closingPrayerText: text("closing_prayer_text"),
+  closingPrayerAudio: text("closing_prayer_audio"),
+});
+
+export const wrapPrayers = pgTable("wrap_prayers", {
+  id: serial("id").primaryKey(),
+  kind: text("kind", { enum: ["opening", "closing"] }).notNull().unique(),
+  prayerText: text("prayer_text").notNull().default(""),
+  audioUrl: text("audio_url"),
 });
 
 // Pre-cohort onboarding modules — 3 sequential modules users complete before the main program
@@ -485,6 +496,7 @@ export const insertPrayerCompletionSchema = createInsertSchema(prayerCompletions
 export const insertPracticeResourceSchema = createInsertSchema(practiceResources).omit({ id: true });
 export const insertTrackAModuleSchema = createInsertSchema(trackAModules).omit({ id: true });
 export const insertTrackAContentSchema = createInsertSchema(trackAContent).omit({ id: true });
+export const insertWrapPrayerSchema = createInsertSchema(wrapPrayers).omit({ id: true });
 export const insertCohortSettingsSchema = createInsertSchema(cohortSettings).omit({ id: true, updatedAt: true });
 export const insertSurveyResponseSchema = createInsertSchema(surveyResponses).omit({ id: true, submittedAt: true });
 export const insertPrelimModuleSchema = createInsertSchema(prelimModules).omit({ id: true });
@@ -519,6 +531,9 @@ export type InsertTrackAModule = z.infer<typeof insertTrackAModuleSchema>;
 
 export type TrackAContent = typeof trackAContent.$inferSelect;
 export type InsertTrackAContent = z.infer<typeof insertTrackAContentSchema>;
+
+export type WrapPrayer = typeof wrapPrayers.$inferSelect;
+export type InsertWrapPrayer = z.infer<typeof insertWrapPrayerSchema>;
 
 export type CohortSetting = typeof cohortSettings.$inferSelect;
 export type InsertCohortSetting = z.infer<typeof insertCohortSettingsSchema>;

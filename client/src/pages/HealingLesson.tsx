@@ -95,6 +95,10 @@ export default function HealingLesson() {
     slides: (content.slides ?? []) as { type: string; content: string }[],
     imageUrl: null,
     completionMessage: content.completionMessage ?? null,
+    openingPrayerText: null,
+    openingPrayerAudio: null,
+    closingPrayerText: null,
+    closingPrayerAudio: null,
   };
 
   const existingAnswer = answers?.find((a) => a.moduleNumber === moduleNumber)?.content;

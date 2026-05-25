@@ -195,6 +195,17 @@ export default function Dashboard() {
   const { data: trackADayContent, isLoading: isLoadingA } = useTrackADailyContent(
     isTrackA && viewMode === "detail" ? selectedDay : -1
   );
+
+  const { data: prayerWrapData } = useQuery<{ opening: { text: string; audioUrl: string | null } | null; closing: { text: string; audioUrl: string | null } | null }>({
+    queryKey: ["/api/track-a/prayers", selectedDay],
+    queryFn: async () => {
+      const res = await fetch(`/api/track-a/prayers/${selectedDay}`, { credentials: "include" });
+      if (!res.ok) return { opening: null, closing: null };
+      return res.json();
+    },
+    enabled: !!isTrackA && viewMode === "detail" && selectedDay >= 0,
+    staleTime: 60_000,
+  });
   
   const { data: trackASummaries } = useAllTrackAContent();
   const { data: trackBSummaries } = useContentSummaries();
@@ -378,6 +389,10 @@ export default function Dashboard() {
       slides: (openWorkbookModule.slides ?? []) as { type: string; content: string }[],
       imageUrl: null,
       completionMessage: openWorkbookModule.completionMessage ?? null,
+      openingPrayerText: null,
+      openingPrayerAudio: null,
+      closingPrayerText: null,
+      closingPrayerAudio: null,
     };
     return (
       <DashboardLayout>
@@ -412,6 +427,10 @@ export default function Dashboard() {
           slides: (prelimMod.slides ?? []) as { type: string; content: string }[],
           imageUrl: null,
           completionMessage: null,
+          openingPrayerText: null,
+          openingPrayerAudio: null,
+          closingPrayerText: null,
+          closingPrayerAudio: null,
         };
         return (
           <LessonFlow
@@ -444,6 +463,9 @@ export default function Dashboard() {
               handleBackToGrid(selectedDay);
             }}
             previewMode={user?.role === 'superuser'}
+            openingPrayer={prayerWrapData?.opening ?? null}
+            closingPrayer={prayerWrapData?.closing ?? null}
+            canSkipPrayer={['admin', 'superuser'].includes(user?.role ?? '')}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">

@@ -605,6 +605,67 @@ export async function registerRoutes(
     }
   });
 
+  // === Wrap Prayers (opening/closing defaults + per-day overrides) ===
+
+  app.get('/api/admin/wrap-prayers', requireRole('admin', 'superuser'), async (req, res) => {
+    const prayers = await storage.getWrapPrayers();
+    res.json(prayers);
+  });
+
+  app.put('/api/admin/wrap-prayers/:kind', requireRole('admin'), async (req, res) => {
+    const kind = req.params.kind as "opening" | "closing";
+    if (kind !== "opening" && kind !== "closing") return res.status(400).json({ message: "kind must be opening or closing" });
+    const schema = z.object({ prayerText: z.string(), audioUrl: z.string().nullable().optional() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const prayer = await storage.upsertWrapPrayer(kind, parsed.data.prayerText, parsed.data.audioUrl ?? null);
+    res.json(prayer);
+  });
+
+  app.post('/api/admin/wrap-prayers/:kind/audio', requireRole('admin'), uploadLimiter, audioUpload.single('audio'), async (req, res) => {
+    const kind = req.params.kind as "opening" | "closing";
+    if (kind !== "opening" && kind !== "closing") return res.status(400).json({ message: "kind must be opening or closing" });
+    if (!req.file) return res.status(400).json({ message: "No audio file provided" });
+    try {
+      const ext = path.extname(req.file.originalname);
+      const filename = `wrap_prayer_${kind}_${Date.now()}${ext}`;
+      const base64Data = req.file.buffer.toString("base64");
+      await db.insert(uploadedImages).values({ filename, mimeType: req.file.mimetype, data: base64Data })
+        .onConflictDoUpdate({ target: uploadedImages.filename, set: { data: base64Data, mimeType: req.file.mimetype } });
+      res.json({ url: `/api/images/${filename}` });
+    } catch {
+      res.status(500).json({ message: "Failed to save audio" });
+    }
+  });
+
+  // GET /api/track-a/prayers/:day — effective prayers for a day (global defaults merged with per-day overrides)
+  app.get('/api/track-a/prayers/:day', requireAuth, async (req, res) => {
+    const day = Number(req.params.day);
+    if (isNaN(day)) return res.status(400).json({ message: "Invalid day" });
+
+    const [globalPrayers, dayContent] = await Promise.all([
+      storage.getWrapPrayers(),
+      day > 0 ? storage.getTrackAContentByPosition(day) : storage.getTrackAContent(day),
+    ]);
+
+    const globalOpening = globalPrayers.find(p => p.kind === "opening");
+    const globalClosing = globalPrayers.find(p => p.kind === "closing");
+
+    const opening = (() => {
+      const text = dayContent?.openingPrayerText ?? globalOpening?.prayerText ?? "";
+      const audio = dayContent?.openingPrayerAudio ?? globalOpening?.audioUrl ?? null;
+      return (text || audio) ? { text, audioUrl: audio } : null;
+    })();
+
+    const closing = (() => {
+      const text = dayContent?.closingPrayerText ?? globalClosing?.prayerText ?? "";
+      const audio = dayContent?.closingPrayerAudio ?? globalClosing?.audioUrl ?? null;
+      return (text || audio) ? { text, audioUrl: audio } : null;
+    })();
+
+    res.json({ opening, closing });
+  });
+
   // === Track A Modules ===
 
   app.get('/api/track-a-modules', requireAuth, async (req, res) => {

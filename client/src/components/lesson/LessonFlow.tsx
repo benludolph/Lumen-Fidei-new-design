@@ -11,6 +11,7 @@ import slideBg from "@assets/SlideBG_1774302310257.webp";
 import { LessonCompletionScreen } from "./LessonCompletionScreen";
 import { CompletionOverlay, type OverlayConfig } from "./CompletionOverlay";
 import { playClickContinue } from "@/lib/sounds";
+import { PrayerWrapScreen } from "./PrayerWrapScreen";
 
 interface SlideData {
   type: SlideType;
@@ -18,6 +19,11 @@ interface SlideData {
   quizId?: number;
   quizQuestionIndex?: number;
   quizData?: QuizData;
+}
+
+export interface PrayerData {
+  text: string;
+  audioUrl?: string | null;
 }
 
 interface LessonFlowProps {
@@ -29,6 +35,9 @@ interface LessonFlowProps {
   onExit: () => void;
   onComplete: () => void;
   previewMode?: boolean;
+  openingPrayer?: PrayerData | null;
+  closingPrayer?: PrayerData | null;
+  canSkipPrayer?: boolean;
 }
 
 export function LessonFlow({
@@ -40,6 +49,9 @@ export function LessonFlow({
   onExit,
   onComplete,
   previewMode = false,
+  openingPrayer,
+  closingPrayer,
+  canSkipPrayer = false,
 }: LessonFlowProps) {
   const { data: mentorData } = useQuery<{ profilePhotoUrl?: string | null; name?: string | null }>({
     queryKey: ["/api/users", mentorId],
@@ -54,7 +66,7 @@ export function LessonFlow({
   });
   const mentorPhotoUrl = mentorData?.profilePhotoUrl ?? null;
   const mentorName = mentorData?.name ?? null;
-  type FlowState = "loading" | "slides" | "overlay" | "complete";
+  type FlowState = "loading" | "opening_prayer" | "slides" | "overlay" | "closing_prayer" | "complete";
   const [flowState, setFlowState] = useState<FlowState>("loading");
   const overlayShownRef = useRef(false);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -190,8 +202,12 @@ export function LessonFlow({
   }, []);
 
   const handleLoadingComplete = useCallback(() => {
-    setFlowState("slides");
-  }, []);
+    if (openingPrayer && (openingPrayer.text || openingPrayer.audioUrl)) {
+      setFlowState("opening_prayer");
+    } else {
+      setFlowState("slides");
+    }
+  }, [openingPrayer]);
 
   const handleNext = useCallback(() => {
     cancelAutoAdvance();
@@ -309,10 +325,12 @@ export function LessonFlow({
       overlayShownRef.current = true;
       localStorage.setItem(`overlay-seen-${overlayContextKey}`, "true");
       setFlowState("overlay");
+    } else if (closingPrayer && (closingPrayer.text || closingPrayer.audioUrl)) {
+      setFlowState("closing_prayer");
     } else {
       onComplete();
     }
-  }, [onComplete, overlayConfig, overlayContextKey]);
+  }, [onComplete, overlayConfig, overlayContextKey, closingPrayer]);
 
   const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
     setQuizAnswers((prev) => ({
@@ -345,11 +363,41 @@ export function LessonFlow({
     );
   }
 
+  if (flowState === "opening_prayer" && openingPrayer) {
+    return (
+      <PrayerWrapScreen
+        kind="opening"
+        prayerText={openingPrayer.text}
+        audioUrl={openingPrayer.audioUrl}
+        canSkip={canSkipPrayer}
+        onContinue={() => setFlowState("slides")}
+      />
+    );
+  }
+
   if (flowState === "overlay" && overlayConfig?.enabled) {
     return (
       <CompletionOverlay
         overlayConfig={overlayConfig}
-        onDismiss={onComplete}
+        onDismiss={() => {
+          if (closingPrayer && (closingPrayer.text || closingPrayer.audioUrl)) {
+            setFlowState("closing_prayer");
+          } else {
+            onComplete();
+          }
+        }}
+      />
+    );
+  }
+
+  if (flowState === "closing_prayer" && closingPrayer) {
+    return (
+      <PrayerWrapScreen
+        kind="closing"
+        prayerText={closingPrayer.text}
+        audioUrl={closingPrayer.audioUrl}
+        canSkip={canSkipPrayer}
+        onContinue={onComplete}
       />
     );
   }

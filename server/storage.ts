@@ -4,7 +4,7 @@ import {
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
   workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
-  lessonWorkbookModules, lessonWorkbookCompletions,
+  lessonWorkbookModules, lessonWorkbookCompletions, wrapPrayers,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -34,6 +34,7 @@ import {
   type UserProfile,
   type LessonWorkbookModule, type InsertLessonWorkbookModule,
   type LessonWorkbookCompletion,
+  type WrapPrayer,
 } from "@shared/schema";
 import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
 
@@ -201,6 +202,10 @@ export interface IStorage {
   deleteLessonWorkbookModule(id: number): Promise<void>;
   getLessonWorkbookCompletionsByUser(userId: number): Promise<LessonWorkbookCompletion[]>;
   completeLessonWorkbookModule(userId: number, workbookModuleId: number): Promise<LessonWorkbookCompletion>;
+
+  // Wrap Prayers (opening/closing prayer defaults)
+  getWrapPrayers(): Promise<WrapPrayer[]>;
+  upsertWrapPrayer(kind: "opening" | "closing", prayerText: string, audioUrl: string | null): Promise<WrapPrayer>;
 
   // session store
   sessionStore: any;
@@ -1347,6 +1352,23 @@ export class DatabaseStorage implements IStorage {
     const [existing] = await db.select().from(lessonWorkbookCompletions)
       .where(and(eq(lessonWorkbookCompletions.userId, userId), eq(lessonWorkbookCompletions.workbookModuleId, workbookModuleId)));
     return existing;
+  }
+
+  // Wrap Prayers
+  async getWrapPrayers(): Promise<WrapPrayer[]> {
+    return await db.select().from(wrapPrayers);
+  }
+
+  async upsertWrapPrayer(kind: "opening" | "closing", prayerText: string, audioUrl: string | null): Promise<WrapPrayer> {
+    const [result] = await db
+      .insert(wrapPrayers)
+      .values({ kind, prayerText, audioUrl })
+      .onConflictDoUpdate({
+        target: wrapPrayers.kind,
+        set: { prayerText, audioUrl },
+      })
+      .returning();
+    return result;
   }
 }
 

@@ -2369,6 +2369,10 @@ type TrackAContentData = {
   slides: TrackASlide[] | null;
   imageUrl: string | null;
   completionMessage: string | null;
+  openingPrayerText: string | null;
+  openingPrayerAudio: string | null;
+  closingPrayerText: string | null;
+  closingPrayerAudio: string | null;
 };
 
 const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link"] as const;
@@ -5994,6 +5998,133 @@ function SnapshotRow({ snap, allSnapshots, onRestore, onDelete, onPublishToggle,
   );
 }
 
+interface WrapPrayer {
+  id: number;
+  kind: "opening" | "closing";
+  prayerText: string;
+  audioUrl: string | null;
+}
+
+function WrapPrayerEditor({ kind, prayer, onSaved }: { kind: "opening" | "closing"; prayer: WrapPrayer | undefined; onSaved: () => void }) {
+  const { toast } = useToast();
+  const label = kind === "opening" ? "Opening Prayer" : "Closing Prayer";
+  const [text, setText] = useState(prayer?.prayerText ?? "");
+  const [audioUrl, setAudioUrl] = useState<string | null>(prayer?.audioUrl ?? null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setText(prayer?.prayerText ?? "");
+    setAudioUrl(prayer?.audioUrl ?? null);
+  }, [prayer]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("PUT", `/api/admin/wrap-prayers/${kind}`, { prayerText: text, audioUrl });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: `${label} saved` });
+      onSaved();
+    },
+    onError: () => toast({ title: `Failed to save ${label}`, variant: "destructive" }),
+  });
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <div className="space-y-2">
+        <label className="text-xs font-medium">Prayer Text</label>
+        <Textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={`Enter the ${label.toLowerCase()} text…`}
+          rows={4}
+          data-testid={`input-global-${kind}-prayer-text`}
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium">Audio</label>
+        <div className="flex items-center gap-3">
+          {audioUrl ? (
+            <div className="flex items-center gap-2 flex-1 bg-muted rounded-md px-3 py-2 min-w-0">
+              <span className="text-xs text-muted-foreground truncate flex-1">{audioUrl.split("/").pop()}</span>
+              <button
+                type="button"
+                onClick={() => setAudioUrl(null)}
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                data-testid={`button-remove-global-${kind}-audio`}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground">No audio uploaded</span>
+          )}
+          <label className="cursor-pointer flex-shrink-0">
+            <input
+              type="file"
+              accept="audio/*"
+              className="hidden"
+              data-testid={`input-global-${kind}-audio-upload`}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(true);
+                const fd = new FormData();
+                fd.append("audio", file);
+                try {
+                  const res = await fetch("/api/admin/upload-audio", { method: "POST", body: fd, credentials: "include" });
+                  if (res.ok) { const { url } = await res.json(); setAudioUrl(url); }
+                  else toast({ title: "Upload failed", variant: "destructive" });
+                } finally {
+                  setUploading(false);
+                }
+              }}
+            />
+            <span className="text-xs px-3 py-1.5 rounded-md border border-input bg-background hover:bg-accent cursor-pointer">
+              {uploading ? "Uploading…" : "Upload"}
+            </span>
+          </label>
+        </div>
+      </div>
+      <Button
+        size="sm"
+        onClick={() => saveMutation.mutate()}
+        disabled={saveMutation.isPending}
+        data-testid={`button-save-global-${kind}-prayer`}
+      >
+        <Save className="w-3.5 h-3.5 mr-1.5" />
+        {saveMutation.isPending ? "Saving…" : `Save ${label}`}
+      </Button>
+    </div>
+  );
+}
+
+function WrapPrayersManagementSection() {
+  const { data: prayers, refetch } = useQuery<WrapPrayer[]>({
+    queryKey: ["/api/admin/wrap-prayers"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/wrap-prayers", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  const opening = prayers?.find(p => p.kind === "opening");
+  const closing = prayers?.find(p => p.kind === "closing");
+
+  return (
+    <div className="rounded-lg border border-dashed px-4 py-4 bg-muted/30 space-y-5">
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Module Prayers (Global Defaults)</p>
+      <p className="text-xs text-muted-foreground -mt-2">These prayer screens wrap every Track A daily lesson. Per-day overrides can be set inside each day's editor below.</p>
+      <WrapPrayerEditor kind="opening" prayer={opening} onSaved={() => refetch()} />
+      <div className="border-t pt-4">
+        <WrapPrayerEditor kind="closing" prayer={closing} onSaved={() => refetch()} />
+      </div>
+    </div>
+  );
+}
+
 function TrackAContentManagementView() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -6030,6 +6161,11 @@ function TrackAContentManagementView() {
   const [restoreConfirmId, setRestoreConfirmId] = useState<number | null>(null);
   const [restoreConfirmName, setRestoreConfirmName] = useState("");
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
+
+  const [dayOpeningPrayerText, setDayOpeningPrayerText] = useState("");
+  const [dayOpeningPrayerAudio, setDayOpeningPrayerAudio] = useState<string | null>(null);
+  const [dayClosingPrayerText, setDayClosingPrayerText] = useState("");
+  const [dayClosingPrayerAudio, setDayClosingPrayerAudio] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -6312,12 +6448,20 @@ function TrackAContentManagementView() {
       setDayImageUrl(content.imageUrl || null);
       setDaySubtitle(content.subtitle || "");
       setCompletionMessage(content.completionMessage || "");
+      setDayOpeningPrayerText(content.openingPrayerText || "");
+      setDayOpeningPrayerAudio(content.openingPrayerAudio || null);
+      setDayClosingPrayerText(content.closingPrayerText || "");
+      setDayClosingPrayerAudio(content.closingPrayerAudio || null);
     } else {
       setCentralTheme("");
       setSlides([]);
       setDayImageUrl(null);
       setDaySubtitle("");
       setCompletionMessage("");
+      setDayOpeningPrayerText("");
+      setDayOpeningPrayerAudio(null);
+      setDayClosingPrayerText("");
+      setDayClosingPrayerAudio(null);
     }
     setExpandedSlide(null);
   };
@@ -6374,6 +6518,10 @@ function TrackAContentManagementView() {
       slides,
       imageUrl: dayImageUrl,
       completionMessage: completionMessage || null,
+      openingPrayerText: dayOpeningPrayerText || null,
+      openingPrayerAudio: dayOpeningPrayerAudio || null,
+      closingPrayerText: dayClosingPrayerText || null,
+      closingPrayerAudio: dayClosingPrayerAudio || null,
     });
   };
 
@@ -6644,6 +6792,11 @@ function TrackAContentManagementView() {
           </DialogContent>
         </Dialog>
 
+        {/* Global Wrap Prayers */}
+        <WrapPrayersManagementSection />
+
+        <hr className="border-border" />
+
         {/* Pre-Modules section */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest mb-4 text-muted-foreground">
@@ -6869,6 +7022,118 @@ function TrackAContentManagementView() {
                     data-testid="input-completion-message"
                   />
                   <p className="text-xs text-muted-foreground">Custom message shown on the success screen when the lesson is finished. Leave blank for default.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Day Prayer Overrides</CardTitle>
+              <p className="text-xs text-muted-foreground">Optional: override the global opening / closing prayer for this day only. Leave blank to use the global default.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-5">
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-[11px]">Opening Prayer</p>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Prayer Text (override)</label>
+                    <Textarea
+                      value={dayOpeningPrayerText}
+                      onChange={(e) => setDayOpeningPrayerText(e.target.value)}
+                      placeholder="Leave blank to use the global opening prayer"
+                      rows={3}
+                      data-testid="input-day-opening-prayer-text"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Audio (override)</label>
+                    <div className="flex items-center gap-3">
+                      {dayOpeningPrayerAudio ? (
+                        <div className="flex items-center gap-2 flex-1 bg-muted rounded-md px-3 py-2">
+                          <span className="text-xs text-muted-foreground truncate flex-1">{dayOpeningPrayerAudio.split("/").pop()}</span>
+                          <button
+                            type="button"
+                            onClick={() => setDayOpeningPrayerAudio(null)}
+                            className="text-muted-foreground hover:text-foreground"
+                            data-testid="button-remove-day-opening-audio"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No override audio</span>
+                      )}
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          data-testid="input-day-opening-audio-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const fd = new FormData();
+                            fd.append("audio", file);
+                            const res = await fetch("/api/admin/upload-audio", { method: "POST", body: fd, credentials: "include" });
+                            if (res.ok) { const { url } = await res.json(); setDayOpeningPrayerAudio(url); }
+                          }}
+                        />
+                        <span className="text-xs px-3 py-1.5 rounded-md border border-input bg-background hover:bg-accent cursor-pointer">Upload</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-[11px]">Closing Prayer</p>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Prayer Text (override)</label>
+                    <Textarea
+                      value={dayClosingPrayerText}
+                      onChange={(e) => setDayClosingPrayerText(e.target.value)}
+                      placeholder="Leave blank to use the global closing prayer"
+                      rows={3}
+                      data-testid="input-day-closing-prayer-text"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Audio (override)</label>
+                    <div className="flex items-center gap-3">
+                      {dayClosingPrayerAudio ? (
+                        <div className="flex items-center gap-2 flex-1 bg-muted rounded-md px-3 py-2">
+                          <span className="text-xs text-muted-foreground truncate flex-1">{dayClosingPrayerAudio.split("/").pop()}</span>
+                          <button
+                            type="button"
+                            onClick={() => setDayClosingPrayerAudio(null)}
+                            className="text-muted-foreground hover:text-foreground"
+                            data-testid="button-remove-day-closing-audio"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No override audio</span>
+                      )}
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          data-testid="input-day-closing-audio-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const fd = new FormData();
+                            fd.append("audio", file);
+                            const res = await fetch("/api/admin/upload-audio", { method: "POST", body: fd, credentials: "include" });
+                            if (res.ok) { const { url } = await res.json(); setDayClosingPrayerAudio(url); }
+                          }}
+                        />
+                        <span className="text-xs px-3 py-1.5 rounded-md border border-input bg-background hover:bg-accent cursor-pointer">Upload</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
