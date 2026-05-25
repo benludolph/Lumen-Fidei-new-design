@@ -6,13 +6,54 @@ import week2Img from "@assets/Week_2_1779734761983.webp";
 import week3Img from "@assets/Week_3_1779734761982.webp";
 import week4Img from "@assets/Week_4_1779734761982.webp";
 import week5Img from "@assets/Week_5_1779734761982.webp";
+import unlockSound from "@assets/Ni_Sound_-_Timeless_Logos_-_Ascending_Piano_Arpeggio_Chord_Tra_1779742551453.wav";
 
 const WEEK_DATA = [
-  { number: 1, title: "Image of God", image: week1Img },
-  { number: 2, title: "Sin: The Wound", image: week2Img },
-  { number: 3, title: "Healing & Forgiveness", image: week3Img },
-  { number: 4, title: "Deliverance & Renunciation", image: week4Img },
-  { number: 5, title: "New Life", image: week5Img },
+  {
+    number: 1,
+    title: "Image of God",
+    image: week1Img,
+    purpose:
+      "Week 1 covers who God is and who you are. Most people come in with a distorted picture of God, and you can't trust or follow someone you've misread. Before the course asks you to look at sin and the enemy, it settles this foundation first.",
+    agenda:
+      "You'll cover prayer and worry, whether God is really there, the image of God you're carrying and where it came from, that you were made for a personal relationship with Him, and how His love doesn't change. The week ends by introducing the enemy and how he builds a foothold.",
+  },
+  {
+    number: 2,
+    title: "Sin: The Wound",
+    image: week2Img,
+    purpose:
+      "Week 2 is where you look honestly at sin. Sin is real, it shapes your life, and the enemy uses it, especially occult involvement and other doorways, to gain power over you. This week names what's actually wrong so you can begin to deal with it.",
+    agenda:
+      "You'll cover the reality of sin and how it shapes your life, the enemy's power and the specific doorways that give him access (occult sins and others), what conversion and repentance actually mean, the wounds sin leaves, and how inner healing begins.",
+  },
+  {
+    number: 3,
+    title: "Healing & Forgiveness",
+    image: week3Img,
+    purpose:
+      "Week 3 is about healing the wounds underneath the sin. Jesus has authority over what oppresses you, and a lot of what keeps people stuck is unforgiveness, toward themselves and others, and old agreements that were never closed. This week works through those.",
+    agenda:
+      "You'll cover Jesus as your healer, forgiving yourself, closing open doors like soul ties, vows, and word curses, taking your thoughts captive, forgiving others, and dealing with generational and family-line sin.",
+  },
+  {
+    number: 4,
+    title: "Deliverance & Renunciation",
+    image: week4Img,
+    purpose:
+      "Week 4 is the deliverance work. You've identified the sin, the wounds, and the open doors. Now you renounce them out loud and claim the authority you have through Jesus. This is the part the whole workbook has been building toward.",
+    agenda:
+      "You'll cover Jesus as deliverer and king, the power of renunciation, the spiritual weapons available to you, praying a personal renunciation, praying a generational renunciation, and receiving salvation through Jesus Christ.",
+  },
+  {
+    number: 5,
+    title: "New Life",
+    image: week5Img,
+    purpose:
+      "Week 5 is about living free after the deliverance work is done. The hard part is behind you, but old patterns return if nothing replaces them. This week sets up the Catholic life that keeps you close to God.",
+    agenda:
+      "You'll cover conversion as a daily turning back to God, life in the Holy Spirit, what grace is and why effort alone won't change you, the Eucharist and the Mass, saying your own yes to God, and a closing reflection on the thirty days.",
+  },
 ];
 
 type LockPhase = "idle" | "shaking" | "opening" | "revealed" | "cta";
@@ -36,13 +77,10 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
     const timers: ReturnType<typeof setTimeout>[] = [];
     const t = (ms: number, fn: () => void) => { timers.push(setTimeout(fn, ms)); };
 
-    // Overlay fades in
     t(60, () => setVisible(true));
-
-    // Connector starts filling
     t(600, () => setConnectorFilled(true));
 
-    // Pan: scroll the overlay so the toWeek card comes into view
+    // Pan: scroll overlay so toWeek card comes into view
     t(900, () => {
       const overlay = overlayRef.current;
       const fromCard = fromCardRef.current;
@@ -52,19 +90,17 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
       }
     });
 
-    // Lock shakes
     t(1800, () => setLockPhase("shaking"));
-    // Lock → Unlock icon
     t(2250, () => setLockPhase("opening"));
-    // Overlays dissolve, border brightens
     t(2600, () => setLockPhase("revealed"));
-    // Sound
+
+    // Play the arpeggio sound
     t(2700, () => {
       try {
-        new Audio("/week-unlock.mp3").play().catch(() => {});
+        new Audio(unlockSound).play().catch(() => {});
       } catch {}
     });
-    // CTA fades in + key written to localStorage
+
     t(2950, () => {
       setLockPhase("cta");
       localStorage.setItem(`lf_week_cinematic_seen_${toWeek}`, "1");
@@ -97,7 +133,6 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
         alignItems: "center",
       }}
     >
-      {/* Stop propagation so clicks inside the content panel don't dismiss */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{ width: "100%", maxWidth: 608, padding: "28px 16px 100px" }}
@@ -137,7 +172,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           )}
         </div>
 
-        {/* From week card — always shown as completed */}
+        {/* From week card — completed */}
         <div
           ref={fromCardRef}
           style={{
@@ -187,7 +222,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           </div>
         </div>
 
-        {/* To week card — locked → unlocks through animation */}
+        {/* To week card — locked → unlocks */}
         <div
           style={{
             borderRadius: 12,
@@ -212,7 +247,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
 // ─── Individual card ───────────────────────────────────────────────────────────
 
 interface CardProps {
-  week: { number: number; title: string; image: string };
+  week: (typeof WEEK_DATA)[number];
   isCompleted: boolean;
   lockPhase: LockPhase;
   showCta: boolean;
@@ -243,7 +278,7 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
     <div
       style={{
         position: "relative",
-        minHeight: 260,
+        minHeight: 340,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
@@ -279,13 +314,14 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
         }}
       />
 
-      {/* Gradient overlays — present when inactive, hidden after unlock */}
+      {/* Diagonal gradient — active/seen state */}
       <div
         aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 45%, rgba(0,0,0,0.15) 100%)",
+          background:
+            "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)",
           opacity: overlaysHidden || showDimOverlay ? 0 : 1,
           transition: "opacity 0.35s ease",
           zIndex: 1,
@@ -297,7 +333,7 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 55%)",
+          background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)",
           opacity: overlaysHidden || showDimOverlay ? 0 : 1,
           transition: "opacity 0.35s ease",
           zIndex: 1,
@@ -341,11 +377,11 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
         </div>
       </div>
 
-      {/* Text content + CTA */}
-      <div style={{ position: "relative", zIndex: 2, padding: "28px 28px" }}>
+      {/* Card content — matches ProgramOverview layout exactly */}
+      <div style={{ position: "relative", zIndex: 2, padding: "40px 36px" }}>
         <p
           className="type-caption-md"
-          style={{ color: captionColor, margin: "0 0 8px" }}
+          style={{ color: captionColor, margin: "0 0 10px" }}
         >
           {captionText}
         </p>
@@ -354,19 +390,51 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
           className="font-serif"
           style={{
             color: "white",
-            fontSize: "clamp(22px, 4vw, 32px)",
+            fontSize: "clamp(26px, 5vw, 40px)",
             fontWeight: 500,
-            margin: "0 0 16px",
+            margin: "0 0 20px",
             lineHeight: 1.1,
-            maxWidth: 240,
+            maxWidth: 280,
           }}
         >
           {week.title}
         </h2>
 
-        {/* CTA — fades up into view */}
+        {/* Divider */}
         <div
           style={{
+            width: "100%",
+            maxWidth: 329,
+            height: "0.5px",
+            background: "rgba(255,255,255,0.12)",
+            marginBottom: 20,
+          }}
+        />
+
+        {/* PURPOSE / AGENDA two-column grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <div>
+            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
+              PURPOSE
+            </p>
+            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
+              {week.purpose}
+            </p>
+          </div>
+          <div>
+            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>
+              AGENDA
+            </p>
+            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>
+              {week.agenda}
+            </p>
+          </div>
+        </div>
+
+        {/* Begin Week CTA */}
+        <div
+          style={{
+            marginTop: 24,
             opacity: showCta ? 1 : 0,
             transform: showCta ? "translateY(0)" : "translateY(10px)",
             transition: "opacity 0.4s ease, transform 0.4s ease",
@@ -381,7 +449,8 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
               alignItems: "center",
               justifyContent: "center",
               gap: 8,
-              padding: "12px 24px",
+              width: "100%",
+              padding: "14px 20px",
               borderRadius: 8,
               border: "0.5px solid rgba(255,255,255,0.18)",
               background: "rgba(255,255,255,0.1)",
@@ -389,7 +458,6 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
               WebkitBackdropFilter: "blur(12px)",
               color: "white",
               cursor: "pointer",
-              minWidth: 180,
             }}
           >
             <span className="type-caption-md">BEGIN WEEK {week.number}</span>
