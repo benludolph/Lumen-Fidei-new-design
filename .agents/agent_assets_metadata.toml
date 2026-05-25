@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "L76hO8ZPDNimSwzrwB6ye"
@@ -300,3 +299,9 @@ id = "lbJMEc7yNFIfxfLe07grx"
 uri = "file://public/img/50.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "qGrXhYPmsygDsCG9qdFmA"
+uri = "file://attached_assets/catholic-prayer-content_1779223470845.md"
+type = "text"
+title = "Catholic Freedom Workbook — Deliverance Prayer & Categories"
