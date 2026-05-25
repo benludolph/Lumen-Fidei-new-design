@@ -3,14 +3,14 @@ import { useLocation, Link } from "wouter";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useUserPrayerCompletions } from "@/hooks/use-prayer-completions";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, CircleDashed, ChevronLeft, BookOpen } from "lucide-react";
+import { BookOpen, ChevronLeft } from "lucide-react";
 
-import week1Img from "@assets/Week_1_1779507603384.webp";
-import week2Img from "@assets/Week_2_1779507603384.webp";
-import week3Img from "@assets/Week_3_1779507603384.webp";
-import week4Img from "@assets/Week_4_1779507603383.webp";
-import week5Img from "@assets/Week_5_1779507603383.webp";
-import workbookImg from "@assets/Workbook_1779507603382.webp";
+import week1Img from "@assets/Week_1_1779734761983.webp";
+import week2Img from "@assets/Week_2_1779734761983.webp";
+import week3Img from "@assets/Week_3_1779734761982.webp";
+import week4Img from "@assets/Week_4_1779734761982.webp";
+import week5Img from "@assets/Week_5_1779734761982.webp";
+import workbookImg from "@assets/Workbook_1779734761981.webp";
 
 const WEEKS = [
   {
@@ -25,7 +25,7 @@ const WEEKS = [
   },
   {
     number: 2,
-    title: "See The Wound",
+    title: "Sin: The Wound",
     days: [7, 8, 9, 10, 11, 12],
     image: week2Img,
     purpose:
@@ -85,7 +85,7 @@ export default function ProgramOverview() {
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    if (user && user.track !== "A" && user.role !== "superuser") {
+    if (user && user.track !== "A" && user.role !== "superuser" && user.role !== "admin") {
       navigate("/dashboard");
     }
   }, [user, navigate]);
@@ -129,7 +129,7 @@ export default function ProgramOverview() {
           }
         });
       },
-      { root: container, threshold: 0.35 }
+      { root: container, threshold: 0.3 }
     );
 
     allRefs.forEach(({ el }) => { if (el) observer.observe(el); });
@@ -146,7 +146,10 @@ export default function ProgramOverview() {
       const idx = parseInt(key.replace("week-", ""), 10);
       el = weekRefs.current[idx];
     }
-    if (el) container.scrollTo({ top: el.offsetTop, behavior: "smooth" });
+    if (el) {
+      const top = el.offsetTop - 20;
+      container.scrollTo({ top, behavior: "smooth" });
+    }
   };
 
   const navKeyForItem = (item: NavItem) =>
@@ -156,14 +159,14 @@ export default function ProgramOverview() {
     <DashboardLayout>
       <div
         ref={scrollContainerRef}
-        style={{ position: "relative", height: "100%", overflowY: "auto", overflowX: "hidden" }}
+        style={{ position: "relative", height: "100%", overflowY: "auto", overflowX: "hidden", background: "var(--surface-ground)" }}
         data-testid="program-overview-scroll"
       >
-        {/* Content column — 608px max centered */}
-        <div style={{ maxWidth: "608px", margin: "0 auto", padding: "0 0 120px" }}>
+        {/* Content column — centered, max 608px */}
+        <div style={{ maxWidth: "608px", margin: "0 auto", padding: "0 16px 140px" }}>
 
           {/* Breadcrumb */}
-          <div style={{ padding: "20px 32px 0" }}>
+          <div style={{ padding: "20px 0 24px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <Link href="/dashboard">
                 <span
@@ -180,183 +183,168 @@ export default function ProgramOverview() {
             </div>
           </div>
 
-          {/* Week sections */}
-          {WEEKS.map((week, idx) => {
-            const complete = isWeekComplete(week.days);
+          {/* Cards */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {WEEKS.map((week, idx) => {
+              const complete = isWeekComplete(week.days);
 
-            return (
-              <div key={week.number}>
-                {/* Workbook callout between Week 2 and Week 3 */}
-                {idx === 2 && (
-                  <div ref={workbookRef} data-testid="workbook-callout">
-                    <WorkbookCallout />
-                  </div>
-                )}
+              return (
+                <div key={week.number}>
+                  {/* Workbook card between Week 2 and Week 3 */}
+                  {idx === 2 && (
+                    <div
+                      ref={workbookRef}
+                      data-testid="workbook-callout"
+                      style={{ marginBottom: "12px" }}
+                    >
+                      <WorkbookCard />
+                    </div>
+                  )}
 
-                <div
-                  ref={(el) => { weekRefs.current[idx] = el; }}
-                  data-testid={`week-section-${week.number}`}
-                  style={{
-                    position: "relative",
-                    padding: "48px 32px",
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* Week image — top right, bleeds slightly */}
+                  {/* Week card — full-bleed image BG */}
                   <div
+                    ref={(el) => { weekRefs.current[idx] = el; }}
+                    data-testid={`week-section-${week.number}`}
                     style={{
-                      position: "absolute",
-                      top: 0,
-                      right: 0,
-                      width: "54%",
-                      height: "100%",
-                      pointerEvents: "none",
+                      position: "relative",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      minHeight: "340px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-end",
                     }}
                   >
+                    {/* Full-bleed background image */}
                     <img
                       src={week.image}
                       alt=""
+                      aria-hidden="true"
                       style={{
                         position: "absolute",
-                        top: 0,
-                        right: 0,
+                        inset: 0,
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
                         objectPosition: "center top",
+                        pointerEvents: "none",
                       }}
                     />
-                    {/* Gradient fade to left over image */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(to right, var(--surface-ground, #0a0a0a) 0%, rgba(10,10,10,0.7) 40%, rgba(10,10,10,0.1) 100%)",
-                      }}
-                    />
-                    {/* Gradient fade from bottom */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(to top, var(--surface-ground, #0a0a0a) 0%, transparent 40%)",
-                      }}
-                    />
-                  </div>
 
-                  {/* Content — sits on top of image */}
-                  <div style={{ position: "relative", zIndex: 2 }}>
-                    {/* Status indicator */}
+                    {/* Dark overlay — strong on bottom/left, fades top-right */}
                     <div
-                      style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}
-                      data-testid={`week-status-${week.number}`}
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                    {/* Extra bottom fade */}
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+
+                    {/* Card content */}
+                    <div
+                      style={{
+                        position: "relative",
+                        zIndex: 2,
+                        padding: "40px 36px",
+                      }}
                     >
-                      {complete ? (
-                        <CheckCircle2
-                          size={20}
-                          style={{ color: "var(--brand, #a78b5c)", flexShrink: 0 }}
-                          data-testid={`icon-complete-${week.number}`}
-                        />
-                      ) : (
-                        <CircleDashed
-                          size={20}
-                          style={{ color: "var(--white-30)", flexShrink: 0 }}
-                          data-testid={`icon-incomplete-${week.number}`}
-                        />
-                      )}
-                      <span
-                        className="type-body-xs font-semibold"
+                      {/* Week label */}
+                      <p
+                        className="type-caption-md"
                         style={{
-                          color: complete ? "var(--brand, #a78b5c)" : "var(--white-40)",
-                          letterSpacing: "0.12em",
-                          textTransform: "uppercase",
+                          color: complete ? "rgba(210,180,120,0.8)" : "rgba(255,255,255,0.45)",
+                          margin: "0 0 10px",
                         }}
+                        data-testid={`week-status-${week.number}`}
                       >
                         WEEK {week.number}{complete ? " COMPLETE" : ""}
-                      </span>
-                    </div>
+                      </p>
 
-                    {/* Week title */}
-                    <h2
-                      className="font-serif"
-                      style={{
-                        color: "white",
-                        fontSize: "clamp(22px, 3.5vw, 36px)",
-                        fontWeight: 700,
-                        margin: "0 0 20px",
-                        lineHeight: 1.15,
-                        maxWidth: "260px",
-                      }}
-                      data-testid={`week-title-${week.number}`}
-                    >
-                      {week.title}
-                    </h2>
+                      {/* Week title */}
+                      <h2
+                        className="font-serif"
+                        style={{
+                          color: "white",
+                          fontSize: "clamp(26px, 5vw, 40px)",
+                          fontWeight: 500,
+                          margin: "0 0 20px",
+                          lineHeight: 1.1,
+                          maxWidth: "280px",
+                        }}
+                        data-testid={`week-title-${week.number}`}
+                      >
+                        {week.title}
+                      </h2>
 
-                    {/* Separator */}
-                    <div
-                      style={{
-                        width: "100%",
-                        maxWidth: "329px",
-                        height: "0.5px",
-                        background: "var(--white-10)",
-                        marginBottom: "20px",
-                      }}
-                    />
+                      {/* Divider */}
+                      <div
+                        style={{
+                          width: "100%",
+                          maxWidth: "329px",
+                          height: "0.5px",
+                          background: "rgba(255,255,255,0.12)",
+                          marginBottom: "20px",
+                        }}
+                      />
 
-                    {/* Two-col PURPOSE / AGENDA */}
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "0 24px",
-                      }}
-                    >
-                      <div>
-                        <p
-                          className="type-body-xs font-semibold"
-                          style={{
-                            color: "var(--white-40)",
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            marginBottom: "8px",
-                          }}
-                        >
-                          Purpose
-                        </p>
-                        <p
-                          className="type-body-sm"
-                          style={{ color: "var(--white-70)", lineHeight: 1.65, margin: 0 }}
-                        >
-                          {week.purpose}
-                        </p>
-                      </div>
-                      <div>
-                        <p
-                          className="type-body-xs font-semibold"
-                          style={{
-                            color: "var(--white-40)",
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            marginBottom: "8px",
-                          }}
-                        >
-                          Agenda
-                        </p>
-                        <p
-                          className="type-body-sm"
-                          style={{ color: "var(--white-70)", lineHeight: 1.65, margin: 0 }}
-                        >
-                          {week.agenda}
-                        </p>
+                      {/* PURPOSE / AGENDA two-column */}
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "0 24px",
+                        }}
+                      >
+                        <div>
+                          <p
+                            className="type-caption-sm"
+                            style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}
+                          >
+                            PURPOSE
+                          </p>
+                          <p
+                            className="type-body-sm"
+                            style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}
+                          >
+                            {week.purpose}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="type-caption-sm"
+                            style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}
+                          >
+                            AGENDA
+                          </p>
+                          <p
+                            className="type-body-sm"
+                            style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}
+                          >
+                            {week.agenda}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Sticky bottom week nav */}
@@ -367,8 +355,8 @@ export default function ProgramOverview() {
             zIndex: 40,
             display: "flex",
             justifyContent: "center",
-            padding: "16px 16px 20px",
-            background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
+            padding: "24px 16px 24px",
+            background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)",
             pointerEvents: "none",
           }}
         >
@@ -380,7 +368,7 @@ export default function ProgramOverview() {
               background: "rgba(255,255,255,0.06)",
               backdropFilter: "blur(14px)",
               WebkitBackdropFilter: "blur(14px)",
-              border: "0.5px solid rgba(255,255,255,0.08)",
+              border: "0.5px solid rgba(255,255,255,0.1)",
               borderRadius: "100px",
               padding: "5px 6px",
               pointerEvents: "auto",
@@ -407,15 +395,9 @@ export default function ProgramOverview() {
                     cursor: "pointer",
                     transition: "background 0.2s, color 0.2s",
                     background: isActive ? "rgba(255,255,255,0.14)" : "transparent",
-                    color: isActive ? "white" : "var(--white-45)",
+                    color: isActive ? "white" : "rgba(255,255,255,0.45)",
                     outline: "none",
                     whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = "var(--white-80)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = "var(--white-45)";
                   }}
                 >
                   {item.kind === "workbook" ? (
@@ -433,71 +415,83 @@ export default function ProgramOverview() {
   );
 }
 
-function WorkbookCallout() {
+function WorkbookCard() {
   return (
     <div
       style={{
-        padding: "48px 32px",
-        display: "grid",
-        gridTemplateColumns: "auto 1fr",
-        gap: "28px",
-        alignItems: "flex-start",
-        borderTop: "0.5px solid var(--white-8)",
-        borderBottom: "0.5px solid var(--white-8)",
+        position: "relative",
+        borderRadius: "12px",
+        overflow: "hidden",
+        border: "1px solid rgba(255,255,255,0.06)",
+        minHeight: "340px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
       }}
+      data-testid="workbook-card"
     >
-      {/* Workbook image */}
+      {/* Full-bleed book cover image */}
       <img
         src={workbookImg}
-        alt="The Deliverance Workbook"
+        alt=""
+        aria-hidden="true"
         style={{
-          width: "100px",
-          height: "auto",
-          borderRadius: "4px",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-          flexShrink: 0,
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center center",
+          pointerEvents: "none",
         }}
-        data-testid="workbook-image"
       />
 
-      {/* Workbook copy */}
-      <div>
-        <h3
+      {/* Overlay — dark gradient so text reads over the black book cover */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.15) 100%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* Content */}
+      <div style={{ position: "relative", zIndex: 2, padding: "40px 36px" }}>
+        <h2
           className="font-serif"
           style={{
             color: "white",
-            fontSize: "clamp(18px, 2.5vw, 24px)",
-            fontWeight: 700,
-            margin: "0 0 12px",
-            lineHeight: 1.2,
+            fontSize: "clamp(24px, 4vw, 36px)",
+            fontWeight: 500,
+            margin: "0 0 16px",
+            lineHeight: 1.15,
+            maxWidth: "260px",
           }}
         >
           The Deliverance Workbook
-        </h3>
+        </h2>
+
         <p
           className="type-body-sm"
-          style={{ color: "var(--white-65)", lineHeight: 1.7, margin: "0 0 20px" }}
+          style={{ color: "rgba(255,255,255,0.65)", lineHeight: 1.7, margin: "0 0 24px", maxWidth: "480px" }}
         >
           This is your deliverance workbook. It has sections where you'll write down unrepented sins,
           organized by category. The first step in deliverance is repentance, so the workbook is
           where you'll organize your past so you can bring it to confession later. This week, you'll
-          only fill in the first section.
+          fill in the first section.
         </p>
 
         <p
-          className="type-body-xs font-semibold"
-          style={{
-            color: "var(--white-35)",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            margin: "0 0 8px",
-          }}
+          className="type-caption-sm"
+          style={{ color: "rgba(255,255,255,0.38)", margin: "0 0 10px" }}
         >
-          Why is this important?
+          WHY IS THIS IMPORTANT?
         </p>
         <p
           className="type-body-sm"
-          style={{ color: "var(--white-55)", lineHeight: 1.7, margin: 0 }}
+          style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: 0, maxWidth: "480px" }}
         >
           Over the program you'll fill it in by category: unrepented sins, occult involvement and
           other doorways, people you need to forgive, soul ties, vows, word curses, and generational

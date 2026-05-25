@@ -1,0 +1,30 @@
+Two changes to the Catholic Freedom Workbook. Follow the existing conventions in the source-of-truth file: snake_case fields, [slot_name] markers, graceful sentence-omit when a slot is empty, and the info-color visual treatment on user-injected spans.
+Change 1 — Reframe Section 1 (Personal sins). Copy change only, no schema change.
+Keep the section title, the schema, the sin field, and the [personal_sins] slot exactly as they are. Do NOT touch the Personal Deliverance Prayer Page 2 text. Only change the in-app input copy the user sees while filling out Section 1:
+
+Subtitle/helper text → "Everyday sins that don't fit the other sections — the ordinary things you'd bring to Confession (anger, gossip, dishonesty, sloth, missing Mass, etc.). The specific categories below will catch sexual sin, occult, pride, addictions, and so on."
+Field placeholder → "A sin to bring to Confession"
+
+The goal is to stop users from dumping everything into Section 1 before they reach the specialized sections, while keeping it as the catch-all for ordinary confession material. (Optional, lower priority: move Section 1 to the end of the section flow so it functions as mop-up rather than the starting point. Skip this if section order is hardcoded anywhere fragile.)
+Change 2 — Add Section 24, "Soul ties & unhealthy bonds."
+New list_builder section. This is a distinct spiritual operation from forgiveness (Section 2) and from sexual sin (Section 4): forgiveness releases the debt, this severs the bond. Same person may legitimately appear in multiple sections.
+Schema row (Part 1 table):
+24 | Soul ties & unhealthy bonds | list_builder | person_or_relationship (text), how_formed (enum: Sexual, Abusive/controlling, Trauma bond, Emotional dependence/idolatry, Family/parental control, Addiction companion, Grief/the dead, Occult/ritual, Other), still_pulls_at_me (boolean, default true) | [soul_ties]
+Input copy:
+
+person_or_relationship → "Who still has a hold on you?"
+how_formed → "How did this bond form?"
+still_pulls_at_me → "Does this person still have a grip on you, even after you've forgiven them?"
+
+Slot: [soul_ties] renders format=names_comma using person_or_relationship. Apply the info-color injected-span treatment to the rendered names.
+Change 3 — Add a new prayer page to the Personal Deliverance Prayer.
+Insert it immediately AFTER "Page 5 — Sexual sin and unholy attachments" and let the subsequent page numbers shift accordingly. Reference pages by title, not hardcoded number, if numbering is dynamic.
+Render this text VERBATIM. Do not paraphrase, smooth, shorten, or "improve" it — same rule as every other prayer in the file. The only dynamic element is the [soul_ties] slot. If Section 24 is empty, omit the "especially …" sentence gracefully per the standard rule; the rest of the page still renders.
+
+Page — Soul ties and unhealthy bonds
+Lord Jesus Christ, I bring before You every unhealthy bond and unholy soul tie that has formed between me and another person — bonds of the heart, the mind, the will, the emotions, or the body that hold me apart from Your freedom. I bring before You especially {{INJECT: Section 24, format=names_comma using person_or_relationship}}.
+I have already chosen to forgive those who wounded me. Now I ask You to set me free from every cord that still binds me to them. I renounce every soul tie formed through sexual sin, abuse, control, manipulation, fear, trauma, rejection, dependency, idolatry of another person, addiction, grief that would not release the dead, or any unholy agreement, ritual, or covenant — whether I formed it knowingly or unknowingly, whether I remember it or have forgotten it.
+In the holy name of Jesus, and with the sword of His Cross, I sever and break every tie, bond, and attachment I have to these persons, and every tie, bond, and attachment they have to me. I return to them everything I took that was not mine to take, and I reclaim from them everything that was taken from me that was not theirs to take. I reject every spirit that has used these bonds to influence me, control me, drain me, deceive me, or keep me from belonging wholly to God.
+Through the power of the Precious Blood of Jesus, I ask Almighty God to bind every evil spirit connected to these soul ties, to break its power over me, to cast it away from me, and to wash both me and every person I have named in the Precious Blood of Christ. Lord Jesus, gather back every fragmented part of my soul, restore me whole in You, and let me belong fully to You alone.
+
+After implementing, update the Part 1 schema table and the Part 8 summary checklist in the source-of-truth file so the document stays authoritative.
