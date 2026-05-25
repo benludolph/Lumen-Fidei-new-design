@@ -22,6 +22,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { DayGridView } from "@/components/DayGridView";
 import { LessonFlow } from "@/components/lesson/LessonFlow";
+import { WeekTransitionCinematic } from "@/components/WeekTransitionCinematic";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import type { TrackAModule, TrackAContent, PrelimModuleWithStatus, LessonWorkbookModuleWithStatus } from "@shared/schema";
@@ -136,6 +137,8 @@ export default function Dashboard() {
   const [selectedPrelimPosition, setSelectedPrelimPosition] = useState<number>(1);
   const [selectedWorkbookId, setSelectedWorkbookId] = useState<number>(0);
   const [completedModule, setCompletedModule] = useState<{ type: "prelim" | "day"; id: number; behavior?: ScrollBehavior } | null>(null);
+  const [showWeekCinematic, setShowWeekCinematic] = useState<{ fromWeek: number; toWeek: number } | null>(null);
+  const [cinematicKey, setCinematicKey] = useState(0);
   
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
     const saved = localStorage.getItem('lumenFidei_fontSize');
@@ -185,6 +188,8 @@ export default function Dashboard() {
   
   const isTrackA = user?.track === 'A';
   
+  const isPrivileged = user?.role === "admin" || user?.role === "superuser";
+
   const { data: answers } = useUserAnswers(user?.id);
   const { data: prayerCompletions } = useUserPrayerCompletions();
   const markComplete = useMarkPrayerComplete();
@@ -287,6 +292,13 @@ export default function Dashboard() {
     );
   }
 
+  const handleCinematicReplay = () => {
+    for (let i = 1; i <= 5; i++) {
+      localStorage.removeItem(`lf_week_cinematic_seen_${i}`);
+    }
+    setCinematicKey((k) => k + 1);
+  };
+
   const handleDaySelect = (day: number, period?: "morning" | "evening") => {
     setSelectedDay(day);
     setSelectedPeriod(period || "morning");
@@ -365,6 +377,16 @@ export default function Dashboard() {
             onWorkbookSelect={handleWorkbookSelect}
           />
         </div>
+        {showWeekCinematic && (
+          <WeekTransitionCinematic
+            key={cinematicKey}
+            fromWeek={showWeekCinematic.fromWeek}
+            toWeek={showWeekCinematic.toWeek}
+            isPrivileged={isPrivileged}
+            onClose={() => setShowWeekCinematic(null)}
+            onReplay={handleCinematicReplay}
+          />
+        )}
       </DashboardLayout>
     );
   }
@@ -459,6 +481,14 @@ export default function Dashboard() {
             onComplete={() => {
               if (!isPeriodCompleted(selectedDay, "morning")) {
                 markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
+              }
+              const WEEK_LAST_DAYS = [6, 12, 18, 24];
+              if (WEEK_LAST_DAYS.includes(selectedDay)) {
+                const fromWeek = selectedDay / 6;
+                const toWeek = fromWeek + 1;
+                if (!localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
+                  setShowWeekCinematic({ fromWeek, toWeek });
+                }
               }
               handleBackToGrid(selectedDay);
             }}
