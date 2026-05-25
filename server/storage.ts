@@ -1356,19 +1356,24 @@ export class DatabaseStorage implements IStorage {
 
   // Wrap Prayers
   async getWrapPrayers(): Promise<WrapPrayer[]> {
-    return await db.select().from(wrapPrayers);
+    const result = await db.execute(sql`
+      SELECT id, kind, prayer_text AS "prayerText", audio_url AS "audioUrl"
+      FROM wrap_prayers
+      ORDER BY kind
+    `);
+    return result.rows as WrapPrayer[];
   }
 
   async upsertWrapPrayer(kind: "opening" | "closing", prayerText: string, audioUrl: string | null): Promise<WrapPrayer> {
-    const [result] = await db
-      .insert(wrapPrayers)
-      .values({ kind, prayerText, audioUrl })
-      .onConflictDoUpdate({
-        target: wrapPrayers.kind,
-        set: { prayerText, audioUrl },
-      })
-      .returning();
-    return result;
+    const result = await db.execute(sql`
+      INSERT INTO wrap_prayers (kind, prayer_text, audio_url)
+      VALUES (${kind}, ${prayerText}, ${audioUrl})
+      ON CONFLICT (kind) DO UPDATE
+        SET prayer_text = EXCLUDED.prayer_text,
+            audio_url   = EXCLUDED.audio_url
+      RETURNING id, kind, prayer_text AS "prayerText", audio_url AS "audioUrl"
+    `);
+    return result.rows[0] as WrapPrayer;
   }
 }
 
