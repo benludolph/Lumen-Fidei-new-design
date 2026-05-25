@@ -2,11 +2,13 @@ import { Link, useLocation } from "wouter";
 import { PageContainer } from "./PageContainer";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Menu, X, LogOut, KeyRound, Eye, EyeOff, User } from "lucide-react";
+import { Menu, X, LogOut, KeyRound, Eye, EyeOff, User, BookOpen, Lock } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useCohortStartDate } from "@/hooks/use-cohort";
 import logoImg from "@assets/LOGO_1773954119275.png";
+import type { WorkbookSummary } from "@shared/schema";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -372,6 +374,151 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="z-10 overflow-y-auto" style={{ position: "fixed", top: "72px", left: 0, right: 0, bottom: 0 }}>
         {children}
       </div>
+
+      {/* Workbook sticky FAB — participants only */}
+      {(user?.role === "participant" || user?.role === "superuser") && (
+        <WorkbookFAB />
+      )}
+    </div>
+  );
+}
+
+function WorkbookFAB() {
+  const [, navigate] = useLocation();
+  const [showTooltip, setShowTooltip] = useState(false);
+  const { data: cohortData } = useCohortStartDate();
+  const { data: summary = {} } = useQuery<WorkbookSummary>({
+    queryKey: ["/api/workbook/summary"],
+  });
+
+  const currentDay = cohortData?.currentDay ?? 0;
+  const isLocked = currentDay < 8;
+
+  const sectionsWithContent = Object.values(summary).filter(
+    (s) => s && (s.attested || s.count > 0)
+  ).length;
+
+  function handleClick() {
+    navigate("/workbook");
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: "24px",
+        right: "24px",
+        zIndex: 100,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: "8px",
+      }}
+    >
+      {/* Tooltip */}
+      {showTooltip && (
+        <div
+          style={{
+            background: "var(--surface-raised)",
+            border: "0.5px solid rgba(255,255,255,0.1)",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              color: isLocked ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)",
+              margin: 0,
+            }}
+          >
+            {isLocked ? "Available after Week 2" : "The Deliverance Workbook"}
+          </p>
+          {!isLocked && sectionsWithContent > 0 && (
+            <p
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.7rem",
+                color: "rgba(255,255,255,0.35)",
+                margin: "2px 0 0",
+              }}
+            >
+              {sectionsWithContent} section{sectionsWithContent !== 1 ? "s" : ""} filled
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* FAB button */}
+      <button
+        type="button"
+        data-testid="button-workbook-fab"
+        onClick={handleClick}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        aria-label="Open Deliverance Workbook"
+        style={{
+          width: "48px",
+          height: "48px",
+          borderRadius: "50%",
+          background: isLocked
+            ? "rgba(255,255,255,0.05)"
+            : "rgba(255,255,255,0.1)",
+          border: `0.5px solid ${isLocked ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.18)"}`,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          boxShadow: isLocked ? "none" : "0 4px 16px rgba(0,0,0,0.4)",
+          transition: "background 0.15s, box-shadow 0.15s",
+        }}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => setShowTooltip(false)}
+      >
+        {isLocked ? (
+          <Lock style={{ width: "18px", height: "18px", color: "rgba(255,255,255,0.25)" }} />
+        ) : (
+          <BookOpen style={{ width: "18px", height: "18px", color: "rgba(255,255,255,0.75)" }} />
+        )}
+
+        {/* Badge */}
+        {!isLocked && sectionsWithContent > 0 && (
+          <div
+            data-testid="badge-workbook-sections"
+            style={{
+              position: "absolute",
+              top: "-3px",
+              right: "-3px",
+              width: "18px",
+              height: "18px",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.85)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1.5px solid var(--surface-ground)",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                color: "#0a0a0a",
+                lineHeight: 1,
+              }}
+            >
+              {sectionsWithContent > 9 ? "9+" : sectionsWithContent}
+            </span>
+          </div>
+        )}
+      </button>
     </div>
   );
 }

@@ -47,7 +47,7 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
         {/* Section header */}
         <div style={{ marginBottom: "32px" }}>
           {!inSheet && (
-            <Link href="/resources/tools/freedom-workbook">
+            <Link href="/workbook">
               <span
                 data-testid="link-back-to-workbook"
                 style={{

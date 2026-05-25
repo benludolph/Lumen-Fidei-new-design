@@ -123,7 +123,7 @@ function getResourceSubtext(name: string): string {
 function FreedomWorkbookCard() {
   const [hovered, setHovered] = useState(false);
   return (
-    <Link href="/resources/tools/freedom-workbook">
+    <Link href="/workbook">
       <div
         data-testid="card-tool-freedom-workbook"
         className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
@@ -181,7 +181,7 @@ function FreedomWorkbookCard() {
               The Deliverance Workbook
             </p>
             <p className="type-body-xs" style={{ color: "#8a8f98" }}>
-              23-section spiritual inventory
+              5-category spiritual inventory
             </p>
           </div>
           <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
