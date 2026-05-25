@@ -844,3 +844,9 @@
 ::-webkit-scrollbar-corner {
   background: #2C2C2C;
 }
+
+@media (min-width: 1536px) {
+  html {
+    font-size: 18px;
+  }
+}

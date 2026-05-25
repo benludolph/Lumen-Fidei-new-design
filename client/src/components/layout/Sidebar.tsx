@@ -134,7 +134,7 @@ export function Sidebar() {
   if (!user) return null;
 
   return (
-    <div className="hidden md:flex w-64 h-screen bg-background border-r border-border flex-col p-6 fixed left-0 top-0 z-20">
+    <div className="hidden md:flex w-64 2xl:w-72 h-screen bg-background border-r border-border flex-col p-6 fixed left-0 top-0 z-20">
       <SidebarContent />
     </div>
   );
