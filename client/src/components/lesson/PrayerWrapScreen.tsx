@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, X } from "lucide-react";
 
 interface PrayerWrapScreenProps {
   kind: "opening" | "closing";
@@ -8,6 +8,8 @@ interface PrayerWrapScreenProps {
   audioUrl?: string | null;
   canSkip: boolean;
   onContinue: () => void;
+  onExit: () => void;
+  lessonTitle?: string;
 }
 
 export function PrayerWrapScreen({
@@ -16,6 +18,8 @@ export function PrayerWrapScreen({
   audioUrl,
   canSkip,
   onContinue,
+  onExit,
+  lessonTitle,
 }: PrayerWrapScreenProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioReady, setAudioReady] = useState(false);
@@ -112,48 +116,134 @@ export function PrayerWrapScreen({
       style={{ background: "#0c0b09" }}
       data-testid={`prayer-wrap-screen-${kind}`}
     >
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-6 overflow-y-auto">
-        <div className="w-full max-w-md flex flex-col items-center gap-8">
-          <div className="flex flex-col items-center gap-3">
-            <div
-              aria-hidden="true"
-              style={{
-                fontFamily: "'IvyOra Display', serif",
-                fontSize: "clamp(2.5rem, 8vw, 4rem)",
-                color: "rgba(255,255,255,0.18)",
-                lineHeight: 1,
-                userSelect: "none",
-              }}
-            >
-              ✝
-            </div>
-            <p
-              style={{
-                fontFamily: "'IvyOra Display', serif",
-                fontSize: "clamp(0.7rem, 2.5vw, 0.8rem)",
-                letterSpacing: "0.22em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.38)",
-              }}
-            >
-              {caption}
-            </p>
-          </div>
-
-          <div
+      {/* ── Navbar (same as slide pages) ── */}
+      <div
+        className="relative shrink-0 flex items-center justify-between"
+        style={{
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          background: "var(--black-60)",
+          borderBottom: "1px solid var(--white-5)",
+          boxShadow: "0px 4px 10px 0px rgba(0,0,0,0.25)",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+          paddingTop: "16px",
+          paddingBottom: "16px",
+        }}
+      >
+        {/* Left: back/exit */}
+        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+          <button
+            onClick={onExit}
+            className="flex items-center justify-center transition-opacity hover:opacity-80"
             style={{
-              fontFamily: "'IvyOra Display', serif",
-              fontSize: "clamp(1rem, 3.5vw, 1.15rem)",
-              lineHeight: 1.75,
-              color: "rgba(255,255,255,0.82)",
-              textAlign: "center",
-              whiteSpace: "pre-wrap",
-              maxWidth: "38ch",
+              width: "40px",
+              height: "40px",
+              background: "var(--surface-float)",
+              backdropFilter: "blur(11px)",
+              WebkitBackdropFilter: "blur(11px)",
+              borderRadius: "20px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            data-testid={`button-prayer-back-${kind}`}
+          >
+            <ArrowLeft className="w-4 h-4 text-white" />
+          </button>
+        </div>
+
+        {/* Center: lesson title pill */}
+        <div
+          className="flex items-center"
+          style={{
+            background: "var(--surface-float)",
+            borderRadius: "36px",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingTop: "12px",
+            paddingBottom: "12px",
+            maxHeight: "42px",
+          }}
+        >
+          {lessonTitle && (
+            <span
+              className="type-body-md font-medium whitespace-nowrap overflow-hidden"
+              style={{
+                color: "#efefef",
+                lineHeight: "18px",
+                maxWidth: "132px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {lessonTitle}
+            </span>
+          )}
+          <span
+            className="type-body-sm whitespace-nowrap"
+            style={{ color: "#8b8b8b", lineHeight: "18px", paddingLeft: lessonTitle ? "8px" : "0" }}
+          >
+            {caption}
+          </span>
+        </div>
+
+        {/* Right: exit */}
+        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+          <button
+            onClick={onExit}
+            className="flex items-center justify-center transition-opacity hover:opacity-80"
+            style={{
+              width: "40px",
+              height: "40px",
+              background: "var(--surface-float)",
+              backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
+              borderRadius: "20px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            data-testid={`button-prayer-exit-${kind}`}
+          >
+            <X className="w-4 h-4 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 pt-16 pb-10 overflow-y-auto">
+        <div className="w-full max-w-md flex flex-col items-center gap-10">
+          {/* Caption label */}
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.75rem",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.38)",
+              fontWeight: 500,
             }}
           >
-            {prayerText}
-          </div>
+            {caption}
+          </p>
 
+          {/* Prayer text */}
+          {prayerText ? (
+            <div
+              style={{
+                fontFamily: "'IvyOra Display', serif",
+                fontSize: "clamp(1rem, 3.5vw, 1.15rem)",
+                lineHeight: 1.75,
+                color: "rgba(255,255,255,0.82)",
+                textAlign: "center",
+                whiteSpace: "pre-wrap",
+                maxWidth: "38ch",
+              }}
+            >
+              {prayerText}
+            </div>
+          ) : null}
+
+          {/* Audio player */}
           {hasAudio && !audioError && (
             <div
               style={{
@@ -250,9 +340,10 @@ export function PrayerWrapScreen({
         </div>
       </div>
 
+      {/* ── Footer ── */}
       <div
         style={{
-          padding: "16px 24px 32px",
+          padding: "16px 24px 40px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

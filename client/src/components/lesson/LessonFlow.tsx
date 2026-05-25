@@ -371,6 +371,8 @@ export function LessonFlow({
         audioUrl={openingPrayer.audioUrl}
         canSkip={canSkipPrayer}
         onContinue={() => setFlowState("slides")}
+        onExit={onExit}
+        lessonTitle={content.centralTheme ?? undefined}
       />
     );
   }
@@ -398,6 +400,8 @@ export function LessonFlow({
         audioUrl={closingPrayer.audioUrl}
         canSkip={canSkipPrayer}
         onContinue={onComplete}
+        onExit={onExit}
+        lessonTitle={content.centralTheme ?? undefined}
       />
     );
   }
