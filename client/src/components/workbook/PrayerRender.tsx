@@ -197,7 +197,19 @@ function renderNodes(
 
     if (node.type === "conditional_block") {
       const cb = node as ConditionalBlockNode;
-      if (!isProfileFieldNonEmpty(profile, cb.profileField)) return null;
+
+      let shouldRender = false;
+      if (cb.profileField) {
+        shouldRender = isProfileFieldNonEmpty(profile, cb.profileField);
+      } else if (cb.sectionId != null && cb.sectionField) {
+        const entries = allEntries[cb.sectionId] ?? [];
+        shouldRender = entries.some((e) => {
+          const val = String((e.entryData as Record<string, unknown>)?.[cb.sectionField!] ?? "").trim();
+          return val.length > 0;
+        });
+      }
+
+      if (!shouldRender) return null;
       return (
         <span key={key}>
           {renderNodes(

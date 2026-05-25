@@ -71,10 +71,10 @@ export const SECTIONS: SectionDefinition[] = [
     categoryId: 1,
     name: "Personal Sins",
     type: "list_builder",
-    description: `Sin is not first a list of broken rules; it is anything that breaks communion with God, with others, or with the truth of who you were made to be. Every sin, even one nobody else ever saw, gives the enemy a legal foothold and keeps a corner of your heart shut against grace. The good news is that nothing you confess is too large for mercy and nothing is too small to matter. Naming a sin is not wallowing in shame—it is dragging it into the light where it loses its power and can be washed away.`,
-    actionItem: `Ask the Holy Spirit to bring to mind the sins you have personally committed—in thought, word, deed, and omission. Write each one plainly: the lie you told, the gossip you spread, the anger you nursed, the prayer you never made, the person you used. Don't categorize them as "big" or "little" and don't explain why you did it. Name it, then plan to bring these to a priest in the Sacrament of Confession.`,
+    description: `Use this section for personal sins that don't belong in one of the specialized sections that follow — things like pride, anger, envy, gossip, dishonesty, neglected prayer, unkindness, and the ordinary failures of daily life. Sexual sin, occult involvement, idolatry, vows, addictions, and soul ties each have their own dedicated section later. Bring only what doesn't fit there. Nothing you name here is too large for mercy, and nothing is too small to matter.`,
+    actionItem: `Ask the Holy Spirit to surface the personal sins you've committed in thought, word, deed, or omission that belong here. Write each one plainly — no explanations, no minimizing. One entry per sin. These are what you'll bring to the priest in Confession.`,
     fields: [
-      { key: "sin", label: "Sin", placeholder: "Describe briefly", required: true, type: "textarea" },
+      { key: "sin", label: "Sin", placeholder: "A sin to bring to Confession", required: true, type: "textarea" },
     ],
   },
   {
@@ -345,6 +345,44 @@ export const SECTIONS: SectionDefinition[] = [
     actionItem: `Name the patterns, curses, or bondages you most want to ensure are not passed to your children and descendants, and write a blessing you want to speak over them instead. Examples: "The addiction in our family stops with me." "No more divorce and abandonment in this line." "I renounce the occult inheritance on behalf of my children." Then: "I bless my children with faith, freedom, and the love of God. I declare they will know they are wanted and treasured."`,
     fields: [
       { key: "concern", label: "Concern", placeholder: "Describe briefly", required: true, type: "textarea" },
+    ],
+  },
+  {
+    id: 24,
+    categoryId: 1,
+    name: "Soul ties & unhealthy bonds",
+    type: "list_builder",
+    description: `A soul tie is an ungodly spiritual bond formed when two souls become joined in a way that gives one person an unhealthy hold over another. These bonds differ from ordinary forgiveness work (Section 2) and sexual sin (Section 4)—they are persistent attachments where a person still has a grip on you long after the relationship ended or the harm was done. They can form through sexual union, trauma, emotional dependency, spiritual abuse, grief, occult ritual, or any relationship where control, idolatry, or fear created a bond stronger than it should have been. The sign is the "pull"—the way a person still occupies space in your mind, emotions, or decisions even when you know they shouldn't.`,
+    actionItem: `Ask the Holy Spirit to show you the people who still have a hold on you—people you find yourself mentally rehearsing conversations with, emotionally tethered to, or unable to move freely past. Write down each person, how the bond was formed, and whether you feel that pull is still active. These are the ties that need to be severed in prayer.`,
+    fields: [
+      {
+        key: "person_or_relationship",
+        label: "Who still has a hold on you?",
+        placeholder: "Name or describe the person",
+        required: true,
+        type: "text",
+      },
+      {
+        key: "how_formed",
+        label: "How did this bond form?",
+        type: "enum",
+        enumOptions: [
+          { label: "Sexual", value: "Sexual" },
+          { label: "Abusive / controlling", value: "Abusive/controlling" },
+          { label: "Trauma bond", value: "Trauma bond" },
+          { label: "Emotional dependence / idolatry", value: "Emotional dependence/idolatry" },
+          { label: "Family / parental control", value: "Family/parental control" },
+          { label: "Addiction companion", value: "Addiction companion" },
+          { label: "Grief / the dead", value: "Grief/the dead" },
+          { label: "Occult / ritual", value: "Occult/ritual" },
+          { label: "Other", value: "Other" },
+        ],
+      },
+      {
+        key: "still_pulls_at_me",
+        label: "Does this person still have a grip on you, even after you've forgiven them?",
+        type: "boolean",
+      },
     ],
   },
 ];

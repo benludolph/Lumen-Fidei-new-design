@@ -53,7 +53,10 @@ export type InPrayerTextareaNode = { type: "in_prayer_textarea"; placeholder: st
 export type ConditionalBlockNode = {
   type: "conditional_block";
   /** Render inner nodes only when this profile field is non-empty */
-  profileField: string;
+  profileField?: string;
+  /** Render inner nodes only when this section has at least one non-empty value for the given field */
+  sectionId?: number;
+  sectionField?: string;
   nodes: Array<TextNode | InjectNode | InPrayerTextareaNode>;
 };
 export type PrayerNode = TextNode | InjectNode | InPrayerTextareaNode | ConditionalBlockNode;
@@ -111,6 +114,18 @@ const C = (
 ): ConditionalBlockNode => ({
   type: "conditional_block",
   profileField,
+  nodes,
+});
+
+/** Conditional block that renders only when a section has at least one non-empty entry for the given field */
+const CS = (
+  sectionId: number,
+  sectionField: string,
+  nodes: Array<TextNode | InjectNode | InPrayerTextareaNode>,
+): ConditionalBlockNode => ({
+  type: "conditional_block",
+  sectionId,
+  sectionField,
   nodes,
 });
 
@@ -206,7 +221,25 @@ export const PRAYER_1: PrayerTemplate = {
       ],
     },
 
-    // Page 6 — Occult, divination, magic, and false spiritual power
+    // Page 6 — Soul ties and unhealthy bonds
+    {
+      title: "Soul ties and unhealthy bonds",
+      nodes: [
+        T(
+          "Lord Jesus Christ, I bring before You every soul tie, unhealthy bond, and disordered attachment that has given another person an ungodly hold over my heart, my will, my emotions, my body, or my peace.",
+        ),
+        CS(24, "person_or_relationship", [
+          T(" I bring before You especially "),
+          I(24, "person_or_relationship", "names_comma"),
+          T("."),
+        ]),
+        T(
+          "\n\nI acknowledge that these bonds were not holy. I renounce every ungodly soul tie, unhealthy attachment, emotional dependency, and disordered connection formed through sexual sin, trauma, abuse, grief, occult involvement, idolatry of persons, or any relationship where fear, control, or disordered love gave another person ungodly influence over me. I release each person I have named into Your hands. I release myself from every claim these bonds have exercised over my mind, my emotions, my will, my body, and my spiritual life.\n\nIn the holy name of Jesus, I renounce every soul tie, bond, tether, and unholy agreement — spoken or unspoken — formed through these relationships. I reject every spirit that gained access, influence, or torment over me through these bonds.\n\nThrough the power of the Precious Blood of Jesus, I ask Almighty God to sever every ungodly soul tie, to reclaim every part of my heart, soul, mind, will, and body that was given away or taken through these bonds, and to restore what was damaged. Lord Jesus, bind every spirit of soul bondage, unhealthy attachment, emotional dependency, control, domination, grief bondage, and spiritual manipulation, break its power over me, cast it away from me, and restore in me love that is free, ordered, and wholly surrendered to You.",
+        ),
+      ],
+    },
+
+    // Page 7 — Occult, divination, magic, and false spiritual power
     {
       title: "Occult, divination, magic, and false spiritual power",
       nodes: [
