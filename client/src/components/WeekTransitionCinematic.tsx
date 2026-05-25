@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Lock, Unlock, ArrowRight, RotateCcw } from "lucide-react";
+import { Lock, Unlock, ArrowRight, ArrowLeft, RotateCcw } from "lucide-react";
 
 import week1Img from "@assets/Week_1_1779734761983.webp";
 import week2Img from "@assets/Week_2_1779734761983.webp";
@@ -210,6 +210,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
               ctaReady={ctaReady}
               cardStep={cardStep}
               onContinue={() => setCardStep(2)}
+              onBack={() => setCardStep(1)}
               onBegin={onClose}
             />
           ) : (
@@ -305,121 +306,158 @@ interface MultiStepCardProps {
   ctaReady: boolean;
   cardStep: number;
   onContinue: () => void;
+  onBack: () => void;
   onBegin: () => void;
 }
 
-function MultiStepWeekCard({ week, lockPhase, ctaReady, cardStep, onContinue, onBegin }: MultiStepCardProps) {
+function MultiStepWeekCard({ week, lockPhase, ctaReady, cardStep, onContinue, onBack, onBegin }: MultiStepCardProps) {
   const isRevealed = lockPhase === "revealed" || lockPhase === "cta";
-  const showDimOverlay = !isRevealed;
   const lockIconOpacity = isRevealed ? 0 : 1;
 
   return (
     /*
-     * The card container: overflow:hidden clips the internal slider.
-     * The background image sits behind both inner panels.
+     * Flex column: sliding content area on top, fixed action bar on bottom.
+     * overflow:hidden on the outer card (set by parent) clips the sliding track.
      */
-    <div style={{ position: "relative", minHeight: 340 }}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
 
-      {/* Background image — always behind both panels */}
-      <img src={week.image} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", pointerEvents: "none" }} />
+      {/* ── Sliding content area ──────────────────────────────── */}
+      <div style={{ position: "relative", minHeight: 340 }}>
 
-      {/* Dim overlay (locked state) */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", opacity: showDimOverlay ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
+        {/* Background image — fixed behind both panels */}
+        <img src={week.image} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", pointerEvents: "none" }} />
 
-      {/* Diagonal + bottom gradient (unlocked state) */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
+        {/* Dim overlay (locked) */}
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", opacity: isRevealed ? 0 : 1, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
+        {/* Diagonal gradient (unlocked) */}
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
 
-      {/* Lock icon */}
-      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", zIndex: 10, opacity: lockIconOpacity, transition: "opacity 0.3s ease", pointerEvents: "none" }}>
-        <div className={lockPhase === "shaking" ? "lf-lock-shake" : ""} style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {lockPhase === "opening" ? <Unlock size={22} color="rgba(255,255,255,0.9)" /> : <Lock size={22} color="rgba(255,255,255,0.9)" />}
+        {/* Lock icon */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", zIndex: 10, opacity: lockIconOpacity, transition: "opacity 0.3s ease", pointerEvents: "none" }}>
+          <div className={lockPhase === "shaking" ? "lf-lock-shake" : ""} style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {lockPhase === "opening" ? <Unlock size={22} color="rgba(255,255,255,0.9)" /> : <Lock size={22} color="rgba(255,255,255,0.9)" />}
+          </div>
+        </div>
+
+        {/*
+         * Sliding text track — 200% wide.
+         * cardStep 1 → translateX(0)    shows Panel 1
+         * cardStep 2 → translateX(-50%) shows Panel 2
+         */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            display: "flex",
+            width: "200%",
+            transform: cardStep === 2 ? "translateX(-50%)" : "translateX(0%)",
+            transition: "transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
+          {/* Panel 1: week info */}
+          <div style={{ width: "50%", padding: "40px 36px 28px" }}>
+            <p className="type-caption-md" style={{ color: isRevealed ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.3)", margin: "0 0 10px" }}>
+              {isRevealed ? `WEEK ${week.number}` : `WEEK ${week.number} · LOCKED`}
+            </p>
+            <h2 className="font-serif" style={{ color: "white", fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 500, margin: "0 0 20px", lineHeight: 1.1, maxWidth: 280 }}>{week.title}</h2>
+            <div style={{ width: "100%", maxWidth: 329, height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 20 }} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+              <div>
+                <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>PURPOSE</p>
+                <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
+              </div>
+              <div>
+                <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>AGENDA</p>
+                <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel 2: Deliverance Notebook */}
+          <div style={{ width: "50%", padding: "40px 32px 28px", position: "relative", background: "linear-gradient(157.67deg, rgb(25,26,27) 8.978%, rgb(19,19,20) 91.022%)" }}>
+            <div aria-hidden="true" style={{ position: "absolute", top: -62, left: -38, width: 467, height: 172, background: "radial-gradient(ellipse at center, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 70%)", mixBlendMode: "lighten", pointerEvents: "none" }} />
+            <NotebookDecoration />
+            <div style={{ position: "relative", zIndex: 2, maxWidth: 260 }}>
+              <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.5)", letterSpacing: "3.2px", margin: "0 0 8px" }}>NEW</p>
+              <h2 className="font-serif" style={{ color: "white", fontSize: 28, fontWeight: 500, letterSpacing: "-0.56px", margin: "0 0 18px", lineHeight: 1.1 }}>Deliverance Notebook</h2>
+              <div style={{ width: "100%", height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
+              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px", letterSpacing: "1.8px" }}>PURPOSE</p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.65, margin: 0 }}>
+                Over the program you'll fill it in by category: unrepented sins, occult involvement and other doorways, people you need to forgive, soul ties, vows, word curses, and generational patterns. By the end you'll use what you've written to pray through your renunciations and to make your confession.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/*
-       * Internal horizontal slider — 200% wide, clips inside the card.
-       * cardStep 1 → translateX(0%)  (shows left panel)
-       * cardStep 2 → translateX(-50%) (shows right panel)
-       */}
+      {/* ── Fixed action bar — lives OUTSIDE the slider, never moves ── */}
       <div
         style={{
-          position: "relative",
-          zIndex: 2,
           display: "flex",
-          width: "200%",
-          transform: cardStep === 2 ? "translateX(-50%)" : "translateX(0%)",
-          transition: cardStep === 2 ? "transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 24px",
+          borderTop: "0.5px solid rgba(255,255,255,0.08)",
+          background: "rgba(0,0,0,0.45)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          opacity: ctaReady ? 1 : 0,
+          transform: ctaReady ? "translateY(0)" : "translateY(6px)",
+          transition: "opacity 0.4s ease, transform 0.4s ease",
+          pointerEvents: ctaReady ? "auto" : "none",
         }}
       >
-        {/* ── Panel 1: Week card content ─────────────────────── */}
-        <div style={{ width: "50%", padding: "40px 36px" }}>
-          <p className="type-caption-md" style={{ color: isRevealed ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.3)", margin: "0 0 10px" }}>
-            {isRevealed ? `WEEK ${week.number}` : `WEEK ${week.number} · LOCKED`}
-          </p>
-          <h2 className="font-serif" style={{ color: "white", fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 500, margin: "0 0 20px", lineHeight: 1.1, maxWidth: 280 }}>{week.title}</h2>
-          <div style={{ width: "100%", maxWidth: 329, height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 20 }} />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
-            <div>
-              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>PURPOSE</p>
-              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
-            </div>
-            <div>
-              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>AGENDA</p>
-              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
-            </div>
-          </div>
-
-          {/* Continue button — right-aligned, fades in with CTA */}
-          <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", opacity: ctaReady ? 1 : 0, transform: ctaReady ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.4s ease, transform 0.4s ease", pointerEvents: ctaReady ? "auto" : "none" }}>
-            <button
-              data-testid="button-continue-week-2"
-              onClick={onContinue}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", color: "white", cursor: "pointer" }}
-            >
-              <span className="type-caption-md">CONTINUE</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Panel 2: Deliverance Notebook ─────────────────── */}
-        <div
+        {/* Back arrow — visible on step 2 */}
+        <button
+          onClick={onBack}
+          data-testid="button-back-cinematic"
           style={{
-            width: "50%",
-            padding: "48px 32px",
-            position: "relative",
-            background: "linear-gradient(157.67deg, rgb(25,26,27) 8.978%, rgb(19,19,20) 91.022%)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "8px 12px",
+            borderRadius: 8,
+            border: "0.5px solid rgba(255,255,255,0.12)",
+            background: "transparent",
+            color: cardStep === 2 ? "rgba(255,255,255,0.5)" : "transparent",
+            cursor: cardStep === 2 ? "pointer" : "default",
+            pointerEvents: cardStep === 2 ? "auto" : "none",
+            transition: "color 0.25s ease",
+            outline: "none",
           }}
         >
-          {/* Radial glow top-left */}
-          <div aria-hidden="true" style={{ position: "absolute", top: -62, left: -38, width: 467, height: 172, background: "radial-gradient(ellipse at center, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 70%)", mixBlendMode: "lighten", pointerEvents: "none" }} />
+          <ArrowLeft size={14} />
+          <span className="type-caption-sm">Back</span>
+        </button>
 
-          {/* Notebook decoration */}
-          <NotebookDecoration />
+        {/* Step indicator */}
+        <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
+          {cardStep} of 2
+        </p>
 
-          <div style={{ position: "relative", zIndex: 2, maxWidth: 260 }}>
-            <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.5)", letterSpacing: "3.2px", margin: "0 0 8px" }}>NEW</p>
-            <h2 className="font-serif" style={{ color: "white", fontSize: 28, fontWeight: 500, letterSpacing: "-0.56px", margin: "0 0 18px", lineHeight: 1.1 }}>Deliverance Notebook</h2>
-            <div style={{ width: "100%", height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
-            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px", letterSpacing: "1.8px" }}>PURPOSE</p>
-            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.65, margin: "0 0 28px" }}>
-              Over the program you'll fill it in by category: unrepented sins, occult involvement and other doorways, people you need to forgive, soul ties, vows, word curses, and generational patterns. By the end you'll use what you've written to pray through your renunciations and to make your confession.
-            </p>
-
-            {/* Begin Week 2 — right-aligned */}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                data-testid="button-begin-week-2"
-                onClick={onBegin}
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", color: "white", cursor: "pointer" }}
-              >
-                <span className="type-caption-md">BEGIN WEEK 2</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Primary CTA */}
+        <button
+          data-testid={cardStep === 1 ? "button-continue-week-2" : "button-begin-week-2"}
+          onClick={cardStep === 1 ? onContinue : onBegin}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 18px",
+            borderRadius: 8,
+            border: "0.5px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.1)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            color: "white",
+            cursor: "pointer",
+            outline: "none",
+          }}
+        >
+          <span className="type-caption-md">{cardStep === 1 ? "CONTINUE" : "BEGIN WEEK 2"}</span>
+          <ArrowRight size={13} />
+        </button>
       </div>
     </div>
   );
