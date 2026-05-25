@@ -97,7 +97,9 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
     // Play the arpeggio sound
     t(2700, () => {
       try {
-        new Audio(unlockSound).play().catch(() => {});
+        const audio = new Audio(unlockSound);
+        audio.volume = 0.5;
+        audio.play().catch(() => {});
       } catch {}
     });
 
