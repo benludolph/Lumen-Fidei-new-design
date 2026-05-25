@@ -480,15 +480,22 @@ export default function Dashboard() {
             onExit={handleBackToGrid}
             onComplete={() => {
               if (!isPeriodCompleted(selectedDay, "morning")) {
-                markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
-              }
-              const WEEK_LAST_DAYS = [6, 12, 18, 24];
-              if (WEEK_LAST_DAYS.includes(selectedDay)) {
-                const fromWeek = selectedDay / 6;
-                const toWeek = fromWeek + 1;
-                if (!localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
-                  setShowWeekCinematic({ fromWeek, toWeek });
-                }
+                const capturedDay = selectedDay;
+                const WEEK_LAST_DAYS = [6, 12, 18, 24];
+                markComplete.mutate(
+                  { dayNumber: capturedDay, period: "morning" },
+                  {
+                    onSuccess: () => {
+                      if (WEEK_LAST_DAYS.includes(capturedDay)) {
+                        const fromWeek = capturedDay / 6;
+                        const toWeek = fromWeek + 1;
+                        if (!localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
+                          setShowWeekCinematic({ fromWeek, toWeek });
+                        }
+                      }
+                    },
+                  }
+                );
               }
               handleBackToGrid(selectedDay);
             }}

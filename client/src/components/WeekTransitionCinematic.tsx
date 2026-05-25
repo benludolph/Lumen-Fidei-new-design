@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Lock, Unlock, ArrowRight, RotateCcw } from "lucide-react";
 
 import week1Img from "@assets/Week_1_1779734761983.webp";
@@ -29,23 +29,42 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
   const [visible, setVisible] = useState(false);
   const [connectorFilled, setConnectorFilled] = useState(false);
   const [lockPhase, setLockPhase] = useState<LockPhase>("idle");
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const fromCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
-    const t = (ms: number, fn: () => void) => {
-      timers.push(setTimeout(fn, ms));
-    };
+    const t = (ms: number, fn: () => void) => { timers.push(setTimeout(fn, ms)); };
 
+    // Overlay fades in
     t(60, () => setVisible(true));
-    t(650, () => setConnectorFilled(true));
+
+    // Connector starts filling
+    t(600, () => setConnectorFilled(true));
+
+    // Pan: scroll the overlay so the toWeek card comes into view
+    t(900, () => {
+      const overlay = overlayRef.current;
+      const fromCard = fromCardRef.current;
+      if (overlay && fromCard) {
+        const targetScrollTop = fromCard.offsetTop + fromCard.offsetHeight - overlay.clientHeight * 0.15;
+        overlay.scrollTo({ top: Math.max(0, targetScrollTop), behavior: "smooth" });
+      }
+    });
+
+    // Lock shakes
     t(1800, () => setLockPhase("shaking"));
+    // Lock → Unlock icon
     t(2250, () => setLockPhase("opening"));
+    // Overlays dissolve, border brightens
     t(2600, () => setLockPhase("revealed"));
+    // Sound
     t(2700, () => {
       try {
         new Audio("/week-unlock.mp3").play().catch(() => {});
       } catch {}
     });
+    // CTA fades in + key written to localStorage
     t(2950, () => {
       setLockPhase("cta");
       localStorage.setItem(`lf_week_cinematic_seen_${toWeek}`, "1");
@@ -56,12 +75,13 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
 
   const from = WEEK_DATA[fromWeek - 1];
   const to = WEEK_DATA[toWeek - 1];
-
   const isRevealed = lockPhase === "revealed" || lockPhase === "cta";
 
   return (
     <div
+      ref={overlayRef}
       data-testid="week-transition-cinematic"
+      onClick={onClose}
       style={{
         position: "fixed",
         inset: 0,
@@ -77,8 +97,11 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
         alignItems: "center",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 608, padding: "28px 16px 100px" }}>
-
+      {/* Stop propagation so clicks inside the content panel don't dismiss */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 608, padding: "28px 16px 100px" }}
+      >
         {/* Header */}
         <div
           style={{
@@ -114,8 +137,9 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           )}
         </div>
 
-        {/* From week card — completed, always full image */}
+        {/* From week card — always shown as completed */}
         <div
+          ref={fromCardRef}
           style={{
             borderRadius: 12,
             overflow: "hidden",
@@ -163,7 +187,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           </div>
         </div>
 
-        {/* To week card — locked → unlocks */}
+        {/* To week card — locked → unlocks through animation */}
         <div
           style={{
             borderRadius: 12,
@@ -255,7 +279,7 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
         }}
       />
 
-      {/* Gradient overlays — shown when inactive/not-yet-unlocked */}
+      {/* Gradient overlays — present when inactive, hidden after unlock */}
       <div
         aria-hidden="true"
         style={{
@@ -317,7 +341,7 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
         </div>
       </div>
 
-      {/* Content */}
+      {/* Text content + CTA */}
       <div style={{ position: "relative", zIndex: 2, padding: "28px 28px" }}>
         <p
           className="type-caption-md"
@@ -340,7 +364,7 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta, onCta }: Car
           {week.title}
         </h2>
 
-        {/* CTA button */}
+        {/* CTA — fades up into view */}
         <div
           style={{
             opacity: showCta ? 1 : 0,
