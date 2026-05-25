@@ -155,6 +155,7 @@ export default function ProgramOverview() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [connectorFills, setConnectorFills] = useState<number[]>([0, 0, 0, 0]);
+  const isInitialRender = useRef(true);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -185,18 +186,22 @@ export default function ProgramOverview() {
       }
       setConnectorFills(fills);
 
-      for (let i = 0; i < WEEKS.length; i++) {
-        const state = weekStatesRef.current[i];
-        if (state === "unseen" && !triggeredRef.current[i]) {
-          if (mids[i] <= center) {
-            triggerUnlock(i);
+      // Only trigger unlocks on real user scroll — not the initial layout call
+      if (!isInitialRender.current) {
+        for (let i = 0; i < WEEKS.length; i++) {
+          const state = weekStatesRef.current[i];
+          if (state === "unseen" && !triggeredRef.current[i]) {
+            if (mids[i] <= center) {
+              triggerUnlock(i);
+            }
           }
         }
       }
     };
 
     container.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
+    handleScroll(); // sets stepper/fills on mount; unlock guard prevents auto-trigger
+    isInitialRender.current = false;
     return () => container.removeEventListener("scroll", handleScroll);
   }, [triggerUnlock]);
 
@@ -630,7 +635,7 @@ function WeekCard({ week, weekState, phase, overlaysHidden, showDimOverlay }: We
         >
           <button
             data-testid={`button-begin-week-${week.number}`}
-            onClick={() => navigate(`/preview/track-a/${week.days[0]}`)}
+            onClick={() => navigate("/dashboard")}
             style={{
               display: "flex",
               alignItems: "center",
