@@ -479,23 +479,25 @@ export default function Dashboard() {
             mentorId={user?.mentorId}
             onExit={handleBackToGrid}
             onComplete={() => {
-              if (!isPeriodCompleted(selectedDay, "morning")) {
-                const capturedDay = selectedDay;
-                const WEEK_LAST_DAYS = [6, 12, 18, 24];
+              const capturedDay = selectedDay;
+              const WEEK_LAST_DAYS = [6, 12, 18, 24];
+              const checkCinematic = (day: number) => {
+                if (WEEK_LAST_DAYS.includes(day)) {
+                  const fromWeek = day / 6;
+                  const toWeek = fromWeek + 1;
+                  if (!localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
+                    setShowWeekCinematic({ fromWeek, toWeek });
+                  }
+                }
+              };
+              if (!isPeriodCompleted(capturedDay, "morning")) {
                 markComplete.mutate(
                   { dayNumber: capturedDay, period: "morning" },
-                  {
-                    onSuccess: () => {
-                      if (WEEK_LAST_DAYS.includes(capturedDay)) {
-                        const fromWeek = capturedDay / 6;
-                        const toWeek = fromWeek + 1;
-                        if (!localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
-                          setShowWeekCinematic({ fromWeek, toWeek });
-                        }
-                      }
-                    },
-                  }
+                  { onSuccess: () => checkCinematic(capturedDay) }
                 );
+              } else if (isPrivileged) {
+                // Superuser replay path: day already marked, check anyway
+                checkCinematic(capturedDay);
               }
               handleBackToGrid(selectedDay);
             }}
