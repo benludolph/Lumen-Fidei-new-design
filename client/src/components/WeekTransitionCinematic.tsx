@@ -70,13 +70,11 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
   const [visible, setVisible] = useState(false);
   const [connectorFilled, setConnectorFilled] = useState(false);
   const [lockPhase, setLockPhase] = useState<LockPhase>("idle");
-  const [step, setStep] = useState(1);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [cardStep, setCardStep] = useState(1);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const fromCardRef = useRef<HTMLDivElement>(null);
 
-  const hasStep2 = toWeek === 2;
-  const totalSteps = hasStep2 ? 2 : 1;
-  const ctaReady = lockPhase === "cta";
+  const hasInternalSteps = toWeek === 2;
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -85,13 +83,12 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
     t(60, () => setVisible(true));
     t(600, () => setConnectorFilled(true));
 
-    // Scroll content panel so "to" card comes into view
     t(900, () => {
-      const container = contentRef.current;
+      const overlay = overlayRef.current;
       const fromCard = fromCardRef.current;
-      if (container && fromCard) {
-        const targetScrollTop = fromCard.offsetTop + fromCard.offsetHeight - container.clientHeight * 0.15;
-        container.scrollTo({ top: Math.max(0, targetScrollTop), behavior: "smooth" });
+      if (overlay && fromCard) {
+        const targetScrollTop = fromCard.offsetTop + fromCard.offsetHeight - overlay.clientHeight * 0.15;
+        overlay.scrollTo({ top: Math.max(0, targetScrollTop), behavior: "smooth" });
       }
     });
 
@@ -118,31 +115,13 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
   const from = WEEK_DATA[fromWeek - 1];
   const to = WEEK_DATA[toWeek - 1];
   const isRevealed = lockPhase === "revealed" || lockPhase === "cta";
-
-  function handleCta() {
-    if (hasStep2 && step === 1) {
-      setStep(2);
-      // Scroll step 2 panel back to top
-      setTimeout(() => {
-        const track = document.getElementById("cinematic-track");
-        if (track) {
-          const panel2 = track.children[1] as HTMLElement;
-          if (panel2) panel2.scrollTop = 0;
-        }
-      }, 520);
-    } else {
-      onClose();
-    }
-  }
-
-  const ctaLabel =
-    hasStep2 && step === 1
-      ? "CONTINUE"
-      : `BEGIN WEEK ${toWeek}`;
+  const ctaReady = lockPhase === "cta";
 
   return (
     <div
+      ref={overlayRef}
       data-testid="week-transition-cinematic"
+      onClick={onClose}
       style={{
         position: "fixed",
         inset: 0,
@@ -152,186 +131,115 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
         WebkitBackdropFilter: "blur(10px)",
         opacity: visible ? 1 : 0,
         transition: "opacity 0.5s ease",
+        overflowY: "auto",
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
       }}
     >
-      {/* ── Fixed header ───────────────────────────────────────────── */}
       <div
-        style={{
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "28px 20px 0",
-        }}
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 608, padding: "28px 16px 100px" }}
       >
-        <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.35)", margin: 0 }}>
-          WEEK {toWeek} BEGINS
-        </p>
-        {isPrivileged && (
-          <button
-            onClick={onReplay}
-            data-testid="button-replay-cinematic"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "4px 10px",
-              borderRadius: 100,
-              border: "0.5px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.04)",
-              color: "rgba(255,255,255,0.35)",
-              cursor: "pointer",
-              outline: "none",
-            }}
-          >
-            <RotateCcw size={10} />
-            <span className="type-caption-sm">Replay</span>
-          </button>
-        )}
-      </div>
-
-      {/* ── Sliding content area ────────────────────────────────────── */}
-      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
-        {/* Slider track — two panels side-by-side */}
-        <div
-          id="cinematic-track"
-          style={{
-            display: "flex",
-            width: `${totalSteps * 100}%`,
-            height: "100%",
-            transform: `translateX(-${((step - 1) / totalSteps) * 100}%)`,
-            transition: step === 1 ? "none" : "transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          {/* Panel 1: Week cards */}
-          <div
-            ref={contentRef}
-            style={{
-              width: `${100 / totalSteps}%`,
-              height: "100%",
-              overflowY: "auto",
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ maxWidth: 608, margin: "0 auto", padding: "24px 16px 24px" }}>
-              {/* From week card */}
-              <div
-                ref={fromCardRef}
-                style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.65)" }}
-              >
-                <CinematicWeekCard week={from} isCompleted lockPhase="idle" />
-              </div>
-
-              {/* Connector line */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 52 }}>
-                <div style={{ width: 1, height: "100%", background: "rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: connectorFilled ? "100%" : "0%",
-                      background: "rgba(255,255,255,0.7)",
-                      transition: connectorFilled ? "height 1.15s ease-in-out" : "none",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* To week card */}
-              <div
-                style={{
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  border: `1px solid ${isRevealed ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.06)"}`,
-                  transition: "border-color 0.35s ease",
-                }}
-              >
-                <CinematicWeekCard week={to} isCompleted={false} lockPhase={lockPhase} />
-              </div>
-            </div>
-          </div>
-
-          {/* Panel 2: Deliverance Notebook (week 2 only) */}
-          {hasStep2 && (
-            <div
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
+          <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.35)", margin: 0 }}>
+            WEEK {toWeek} BEGINS
+          </p>
+          {isPrivileged && (
+            <button
+              onClick={onReplay}
+              data-testid="button-replay-cinematic"
               style={{
-                width: `${100 / totalSteps}%`,
-                height: "100%",
-                overflowY: "auto",
-                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "4px 10px",
+                borderRadius: 100,
+                border: "0.5px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.35)",
+                cursor: "pointer",
+                outline: "none",
               }}
             >
-              <div style={{ maxWidth: 608, margin: "0 auto", padding: "24px 16px 24px" }}>
-                <DeliveranceNotebookCard />
-              </div>
-            </div>
+              <RotateCcw size={10} />
+              <span className="type-caption-sm">Replay</span>
+            </button>
           )}
         </div>
-      </div>
 
-      {/* ── Fixed footer ───────────────────────────────────────────── */}
-      <div
-        style={{
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: totalSteps > 1 ? "space-between" : "flex-end",
-          padding: "16px 20px 36px",
-          opacity: ctaReady ? 1 : 0,
-          transform: ctaReady ? "translateY(0)" : "translateY(8px)",
-          transition: "opacity 0.4s ease, transform 0.4s ease",
-          pointerEvents: ctaReady ? "auto" : "none",
-        }}
-      >
-        {/* Step indicator */}
-        {totalSteps > 1 && (
-          <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.3)", margin: 0 }}>
-            {step} of {totalSteps}
-          </p>
-        )}
+        {/* From week card — stays still */}
+        <div
+          ref={fromCardRef}
+          style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.65)" }}
+        >
+          <CinematicWeekCard week={from} isCompleted lockPhase="idle" />
+        </div>
 
-        {/* CTA */}
-        <button
-          data-testid="button-cta-cinematic"
-          onClick={handleCta}
+        {/* Connector line — stays still */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 52 }}>
+          <div style={{ width: 1, height: "100%", background: "rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: connectorFilled ? "100%" : "0%",
+                background: "rgba(255,255,255,0.7)",
+                transition: connectorFilled ? "height 1.15s ease-in-out" : "none",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* To week card — the card shell stays still; only its inner content slides */}
+        <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "12px 22px",
-            borderRadius: 8,
-            border: "0.5px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.1)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            color: "white",
-            cursor: "pointer",
+            borderRadius: 12,
+            overflow: "hidden",             /* clips the sliding inner content */
+            border: `1px solid ${isRevealed ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.06)"}`,
+            transition: "border-color 0.35s ease",
           }}
         >
-          <span className="type-caption-md">{ctaLabel}</span>
-          <ArrowRight size={14} />
-        </button>
+          {hasInternalSteps ? (
+            <MultiStepWeekCard
+              week={to}
+              lockPhase={lockPhase}
+              ctaReady={ctaReady}
+              cardStep={cardStep}
+              onContinue={() => setCardStep(2)}
+              onBegin={onClose}
+            />
+          ) : (
+            <CinematicWeekCard
+              week={to}
+              isCompleted={false}
+              lockPhase={lockPhase}
+              showCta={ctaReady}
+              onCta={onClose}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Week card (no CTA — footer owns the CTA) ─────────────────────────────────
+// ─── Standard week card (no internal steps) ───────────────────────────────────
 
 interface CardProps {
   week: (typeof WEEK_DATA)[number];
   isCompleted: boolean;
   lockPhase: LockPhase;
+  showCta?: boolean;
+  onCta?: () => void;
 }
 
-function CinematicWeekCard({ week, isCompleted, lockPhase }: CardProps) {
+function CinematicWeekCard({ week, isCompleted, lockPhase, showCta = false, onCta }: CardProps) {
   const isRevealed = lockPhase === "revealed" || lockPhase === "cta";
   const isToCard = !isCompleted;
-
   const showDimOverlay = isToCard && !isRevealed;
   const overlaysHidden = isCompleted || isRevealed;
   const lockIconOpacity = isToCard ? (isRevealed ? 0 : 1) : 0;
@@ -350,39 +258,21 @@ function CinematicWeekCard({ week, isCompleted, lockPhase }: CardProps) {
 
   return (
     <div style={{ position: "relative", minHeight: 340, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-      <img
-        src={week.image}
-        alt=""
-        aria-hidden="true"
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", pointerEvents: "none" }}
-      />
-
+      <img src={week.image} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", pointerEvents: "none" }} />
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", opacity: showDimOverlay ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)", opacity: overlaysHidden || showDimOverlay ? 0 : 1, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)", opacity: overlaysHidden || showDimOverlay ? 0 : 1, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
 
-      {/* Lock / unlock icon */}
       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", zIndex: 10, opacity: lockIconOpacity, transition: "opacity 0.3s ease", pointerEvents: "none" }}>
-        <div
-          className={lockPhase === "shaking" ? "lf-lock-shake" : ""}
-          style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}
-        >
+        <div className={lockPhase === "shaking" ? "lf-lock-shake" : ""} style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {lockPhase === "opening" ? <Unlock size={22} color="rgba(255,255,255,0.9)" /> : <Lock size={22} color="rgba(255,255,255,0.9)" />}
         </div>
       </div>
 
-      {/* Content */}
       <div style={{ position: "relative", zIndex: 2, padding: "40px 36px" }}>
-        <p className="type-caption-md" style={{ color: captionColor, margin: "0 0 10px" }}>
-          {captionText}
-        </p>
-
-        <h2 className="font-serif" style={{ color: "white", fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 500, margin: "0 0 20px", lineHeight: 1.1, maxWidth: 280 }}>
-          {week.title}
-        </h2>
-
+        <p className="type-caption-md" style={{ color: captionColor, margin: "0 0 10px" }}>{captionText}</p>
+        <h2 className="font-serif" style={{ color: "white", fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 500, margin: "0 0 20px", lineHeight: 1.1, maxWidth: 280 }}>{week.title}</h2>
         <div style={{ width: "100%", maxWidth: 329, height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 20 }} />
-
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
           <div>
             <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>PURPOSE</p>
@@ -393,51 +283,143 @@ function CinematicWeekCard({ week, isCompleted, lockPhase }: CardProps) {
             <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
           </div>
         </div>
+
+        {onCta && (
+          <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", opacity: showCta ? 1 : 0, transform: showCta ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.4s ease, transform 0.4s ease", pointerEvents: showCta ? "auto" : "none" }}>
+            <button data-testid={`button-begin-week-${week.number}`} onClick={onCta} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", color: "white", cursor: "pointer" }}>
+              <span className="type-caption-md">BEGIN WEEK {week.number}</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// ─── Deliverance Notebook intro card ─────────────────────────────────────────
+// ─── Week 2 card with internal multi-step slider ──────────────────────────────
 
-function DeliveranceNotebookCard() {
+interface MultiStepCardProps {
+  week: (typeof WEEK_DATA)[number];
+  lockPhase: LockPhase;
+  ctaReady: boolean;
+  cardStep: number;
+  onContinue: () => void;
+  onBegin: () => void;
+}
+
+function MultiStepWeekCard({ week, lockPhase, ctaReady, cardStep, onContinue, onBegin }: MultiStepCardProps) {
+  const isRevealed = lockPhase === "revealed" || lockPhase === "cta";
+  const showDimOverlay = !isRevealed;
+  const lockIconOpacity = isRevealed ? 0 : 1;
+
   return (
-    <div
-      style={{
-        position: "relative",
-        borderRadius: 12,
-        overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.06)",
-        background: "linear-gradient(157.67deg, rgb(25,26,27) 8.978%, rgb(19,19,20) 91.022%)",
-        boxShadow: "0px 4px 4px 0px rgba(0,0,0,0.6)",
-        padding: "48px 32px 48px 32px",
-        minHeight: 380,
-      }}
-    >
-      {/* Radial glow */}
-      <div aria-hidden="true" style={{ position: "absolute", top: -62, left: -38, width: 467, height: 172, background: "radial-gradient(ellipse at center, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 70%)", mixBlendMode: "lighten", pointerEvents: "none" }} />
+    /*
+     * The card container: overflow:hidden clips the internal slider.
+     * The background image sits behind both inner panels.
+     */
+    <div style={{ position: "relative", minHeight: 340 }}>
 
-      {/* Notebook decoration */}
-      <NotebookDecoration />
+      {/* Background image — always behind both panels */}
+      <img src={week.image} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", pointerEvents: "none" }} />
 
-      {/* Text */}
-      <div style={{ position: "relative", zIndex: 2, maxWidth: 275 }}>
-        <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.5)", letterSpacing: "3.2px", margin: "0 0 8px" }}>
-          NEW
-        </p>
+      {/* Dim overlay (locked state) */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", opacity: showDimOverlay ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
 
-        <h2 className="font-serif" style={{ color: "white", fontSize: 32, fontWeight: 500, letterSpacing: "-0.64px", margin: "0 0 20px", lineHeight: 1.1 }}>
-          Deliverance Notebook
-        </h2>
+      {/* Diagonal + bottom gradient (unlocked state) */}
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
 
-        <div style={{ width: "100%", maxWidth: 329, height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 20 }} />
+      {/* Lock icon */}
+      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", zIndex: 10, opacity: lockIconOpacity, transition: "opacity 0.3s ease", pointerEvents: "none" }}>
+        <div className={lockPhase === "shaking" ? "lf-lock-shake" : ""} style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: "0.5px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          {lockPhase === "opening" ? <Unlock size={22} color="rgba(255,255,255,0.9)" /> : <Lock size={22} color="rgba(255,255,255,0.9)" />}
+        </div>
+      </div>
 
-        <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px", letterSpacing: "1.8px" }}>
-          PURPOSE
-        </p>
-        <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.65, margin: 0 }}>
-          Over the program you'll fill it in by category: unrepented sins, occult involvement and other doorways, people you need to forgive, soul ties, vows, word curses, and generational patterns. By the end you'll use what you've written to pray through your renunciations and to make your confession. Add to it anytime — it's yours to keep working through.
-        </p>
+      {/*
+       * Internal horizontal slider — 200% wide, clips inside the card.
+       * cardStep 1 → translateX(0%)  (shows left panel)
+       * cardStep 2 → translateX(-50%) (shows right panel)
+       */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          width: "200%",
+          transform: cardStep === 2 ? "translateX(-50%)" : "translateX(0%)",
+          transition: cardStep === 2 ? "transform 0.48s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+        }}
+      >
+        {/* ── Panel 1: Week card content ─────────────────────── */}
+        <div style={{ width: "50%", padding: "40px 36px" }}>
+          <p className="type-caption-md" style={{ color: isRevealed ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.3)", margin: "0 0 10px" }}>
+            {isRevealed ? `WEEK ${week.number}` : `WEEK ${week.number} · LOCKED`}
+          </p>
+          <h2 className="font-serif" style={{ color: "white", fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 500, margin: "0 0 20px", lineHeight: 1.1, maxWidth: 280 }}>{week.title}</h2>
+          <div style={{ width: "100%", maxWidth: 329, height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 20 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <div>
+              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>PURPOSE</p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
+            </div>
+            <div>
+              <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>AGENDA</p>
+              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
+            </div>
+          </div>
+
+          {/* Continue button — right-aligned, fades in with CTA */}
+          <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end", opacity: ctaReady ? 1 : 0, transform: ctaReady ? "translateY(0)" : "translateY(10px)", transition: "opacity 0.4s ease, transform 0.4s ease", pointerEvents: ctaReady ? "auto" : "none" }}>
+            <button
+              data-testid="button-continue-week-2"
+              onClick={onContinue}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", color: "white", cursor: "pointer" }}
+            >
+              <span className="type-caption-md">CONTINUE</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Panel 2: Deliverance Notebook ─────────────────── */}
+        <div
+          style={{
+            width: "50%",
+            padding: "48px 32px",
+            position: "relative",
+            background: "linear-gradient(157.67deg, rgb(25,26,27) 8.978%, rgb(19,19,20) 91.022%)",
+          }}
+        >
+          {/* Radial glow top-left */}
+          <div aria-hidden="true" style={{ position: "absolute", top: -62, left: -38, width: 467, height: 172, background: "radial-gradient(ellipse at center, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 70%)", mixBlendMode: "lighten", pointerEvents: "none" }} />
+
+          {/* Notebook decoration */}
+          <NotebookDecoration />
+
+          <div style={{ position: "relative", zIndex: 2, maxWidth: 260 }}>
+            <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.5)", letterSpacing: "3.2px", margin: "0 0 8px" }}>NEW</p>
+            <h2 className="font-serif" style={{ color: "white", fontSize: 28, fontWeight: 500, letterSpacing: "-0.56px", margin: "0 0 18px", lineHeight: 1.1 }}>Deliverance Notebook</h2>
+            <div style={{ width: "100%", height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
+            <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px", letterSpacing: "1.8px" }}>PURPOSE</p>
+            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.65, margin: "0 0 28px" }}>
+              Over the program you'll fill it in by category: unrepented sins, occult involvement and other doorways, people you need to forgive, soul ties, vows, word curses, and generational patterns. By the end you'll use what you've written to pray through your renunciations and to make your confession.
+            </p>
+
+            {/* Begin Week 2 — right-aligned */}
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                data-testid="button-begin-week-2"
+                onClick={onBegin}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 8, border: "0.5px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", color: "white", cursor: "pointer" }}
+              >
+                <span className="type-caption-md">BEGIN WEEK 2</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -447,19 +429,17 @@ function DeliveranceNotebookCard() {
 
 function NotebookDecoration() {
   return (
-    <div aria-hidden="true" style={{ position: "absolute", right: -16, top: 80, width: 200, height: 290, zIndex: 1 }}>
-      <div style={{ position: "absolute", top: 12, left: 14, width: 172, height: 256, borderRadius: 6, background: "#302929", border: "0.5px solid rgba(255,255,255,0.18)", boxShadow: "10px -1px 4px 0px rgba(0,0,0,0.25)", transform: "rotate(1.8deg)" }} />
-      <div style={{ position: "absolute", top: 8, left: 6, width: 174, height: 254, borderRadius: 6, background: "white", border: "0.5px solid rgba(255,255,255,0.18)", boxShadow: "10px -1px 4px 0px rgba(0,0,0,0.25)", transform: "rotate(0.8deg)" }} />
-      <div style={{ position: "absolute", top: 0, left: 0, width: 176, height: 260, borderRadius: 6, background: "linear-gradient(211.78deg, rgba(0,0,0,0) 21.77%, rgb(0,0,0) 85.02%)", backgroundColor: "#1a1612", border: "0.5px solid rgba(255,255,255,0.06)", boxShadow: "10px -1px 4px 0px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+    <div aria-hidden="true" style={{ position: "absolute", right: -16, top: 60, width: 180, height: 260, zIndex: 1 }}>
+      <div style={{ position: "absolute", top: 10, left: 12, width: 154, height: 230, borderRadius: 5, background: "#302929", border: "0.5px solid rgba(255,255,255,0.18)", boxShadow: "10px -1px 4px 0px rgba(0,0,0,0.25)", transform: "rotate(1.8deg)" }} />
+      <div style={{ position: "absolute", top: 6, left: 4, width: 156, height: 228, borderRadius: 5, background: "white", border: "0.5px solid rgba(255,255,255,0.18)", boxShadow: "10px -1px 4px 0px rgba(0,0,0,0.25)", transform: "rotate(0.8deg)" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, width: 158, height: 234, borderRadius: 5, background: "linear-gradient(211.78deg, rgba(0,0,0,0) 21.77%, rgb(0,0,0) 85.02%)", backgroundColor: "#1a1612", border: "0.5px solid rgba(255,255,255,0.06)", boxShadow: "10px -1px 4px 0px rgba(0,0,0,0.25)", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, opacity: 0.04, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(255,255,255,0.8) 18px, rgba(255,255,255,0.8) 19px)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: 20, left: 20, right: 20, height: "0.5px", background: "rgba(210,180,120,0.4)" }} />
-        <div style={{ position: "absolute", bottom: 24, left: 20, right: 12 }}>
-          <p className="font-serif" style={{ color: "white", fontSize: 20, fontWeight: 500, lineHeight: 1.25, margin: 0, letterSpacing: "-0.4px" }}>
-            The<br />Deliverance<br />Workbook
-          </p>
+        <div style={{ position: "absolute", top: 16, left: 16, right: 16, height: "0.5px", background: "rgba(210,180,120,0.4)" }} />
+        <div style={{ position: "absolute", bottom: 20, left: 16, right: 10 }}>
+          <p className="font-serif" style={{ color: "white", fontSize: 17, fontWeight: 500, lineHeight: 1.25, margin: 0, letterSpacing: "-0.34px" }}>The<br />Deliverance<br />Workbook</p>
         </div>
       </div>
-      <div style={{ position: "absolute", top: -8, left: 120, width: 12, height: 52, background: "rgba(210,180,120,0.7)", borderBottomLeftRadius: 4, borderBottomRightRadius: 4, boxShadow: "0 2px 6px rgba(0,0,0,0.4)" }} />
+      <div style={{ position: "absolute", top: -6, left: 108, width: 10, height: 46, background: "rgba(210,180,120,0.7)", borderBottomLeftRadius: 3, borderBottomRightRadius: 3, boxShadow: "0 2px 6px rgba(0,0,0,0.4)" }} />
     </div>
   );
 }
