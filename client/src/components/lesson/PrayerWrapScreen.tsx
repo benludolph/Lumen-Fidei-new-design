@@ -22,6 +22,10 @@ export function PrayerWrapScreen({
   lessonTitle,
 }: PrayerWrapScreenProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onContinueRef = useRef(onContinue);
+  useEffect(() => { onContinueRef.current = onContinue; }, [onContinue]);
+
   const [audioReady, setAudioReady] = useState(false);
   const [audioDone, setAudioDone] = useState(!audioUrl);
   const [audioError, setAudioError] = useState(false);
@@ -60,6 +64,9 @@ export function PrayerWrapScreen({
     const onEnded = () => {
       setAudioDone(true);
       setIsPlaying(false);
+      if (kind === "opening") {
+        autoAdvanceTimer.current = setTimeout(() => onContinueRef.current(), 900);
+      }
     };
     const onError = () => {
       setAudioError(true);
@@ -86,8 +93,9 @@ export function PrayerWrapScreen({
       el.removeEventListener("error", onError);
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
     };
-  }, [audioUrl, tryAutoPlay]);
+  }, [audioUrl, tryAutoPlay, kind]);
 
   const togglePlay = () => {
     const el = audioRef.current;
