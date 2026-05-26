@@ -417,9 +417,6 @@ function WorkbookFAB() {
   const unlockedCategories = unlockStatus?.unlockedCategories ?? [];
   const isLocked = unlockedCategories.length === 0 && currentDay < 8;
 
-  // Hide entirely before Week 2 starts (Day 7 is the first workbook trigger)
-  if (currentDay < 7) return null;
-
   const sectionsWithContent = Object.values(summary).filter(
     (s) => s && (s.attested || s.count > 0)
   ).length;
@@ -445,6 +442,9 @@ function WorkbookFAB() {
       return () => clearTimeout(timer);
     }
   }, [spotlightSlug, isDashboard]);
+
+  // Hide entirely before Week 2 starts (Day 7 is the first workbook trigger)
+  if (currentDay < 7) return null;
 
   function handleClick() {
     setSpotlightSlug(null);
