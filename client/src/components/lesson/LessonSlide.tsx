@@ -19,6 +19,7 @@ import { PotBandageScene } from "./PotBandageScene";
 import { CaptivityBuilderSlide } from "./CaptivityBuilderSlide";
 import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
 import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
+import { SelectionRevealSlide } from "./SelectionRevealSlide";
 import { getSectionById, SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-definitions";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -79,7 +80,8 @@ export type SlideType =
   | "guided_prayer_process"
   | "workbook_link"
   | "workbook_session"
-  | "prayer_link";
+  | "prayer_link"
+  | "selection_reveal";
 
 
 export interface QuizData {
@@ -1599,6 +1601,8 @@ export function LessonSlide({
           />
         ) : type === "prayer_link" ? (
           <PrayerLinkSlide content={content} onInteracted={onInteracted} />
+        ) : type === "selection_reveal" ? (
+          <SelectionRevealSlide content={content} onInteracted={onInteracted} />
         ) : (
           <TextSlide content={content} />
         )}

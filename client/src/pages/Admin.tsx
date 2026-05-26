@@ -2375,7 +2375,7 @@ type TrackAContentData = {
   closingPrayerAudio: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link", "selection_reveal"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2411,6 +2411,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   workbook_link: "Workbook Link",
   workbook_session: "Workbook Session",
   prayer_link: "Prayer Link",
+  selection_reveal: "Selection Reveal",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2442,6 +2443,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   workbook_link: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   workbook_session: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   prayer_link: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
+  selection_reveal: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 };
 
 // ============================================================
@@ -3791,6 +3793,158 @@ function ImageCarouselSlideEditor({ content, onChange, index }: { content: strin
     </div>
   );
 }
+
+function SelectionRevealSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let parsed: { selectionHeadline: string; selectionSubtext: string; options: any[] } = {
+    selectionHeadline: "What have you been involved with?",
+    selectionSubtext: "Select everything that applies to you.",
+    options: [],
+  };
+  try {
+    const p = JSON.parse(content || "{}");
+    parsed = {
+      selectionHeadline: p.selectionHeadline ?? "What have you been involved with?",
+      selectionSubtext: p.selectionSubtext ?? "Select everything that applies to you.",
+      options: Array.isArray(p.options) ? p.options : [],
+    };
+  } catch {}
+
+  const update = (next: typeof parsed) => onChange(JSON.stringify(next, null, 2));
+
+  const updateOption = (i: number, field: string, val: any) => {
+    const opts = [...parsed.options];
+    opts[i] = { ...opts[i], [field]: val };
+    update({ ...parsed, options: opts });
+  };
+
+  const addOption = () => {
+    const id = `option_${Date.now()}`;
+    update({ ...parsed, options: [...parsed.options, { id, label: "", subtitle: "", body: "", examples: [], verses: [] }] });
+  };
+
+  const removeOption = (i: number) => update({ ...parsed, options: parsed.options.filter((_: any, idx: number) => idx !== i) });
+
+  const moveOption = (i: number, dir: "up" | "down") => {
+    const opts = [...parsed.options];
+    const j = dir === "up" ? i - 1 : i + 1;
+    if (j < 0 || j >= opts.length) return;
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+    update({ ...parsed, options: opts });
+  };
+
+  return (
+    <div className="space-y-4" data-testid={`selection-reveal-editor-${index}`}>
+      <div className="space-y-2">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Selection headline</label>
+          <input
+            type="text"
+            value={parsed.selectionHeadline}
+            onChange={e => update({ ...parsed, selectionHeadline: e.target.value })}
+            placeholder="What have you been involved with?"
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            data-testid={`input-sr-headline-${index}`}
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Selection subtext</label>
+          <input
+            type="text"
+            value={parsed.selectionSubtext}
+            onChange={e => update({ ...parsed, selectionSubtext: e.target.value })}
+            placeholder="Select everything that applies to you."
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            data-testid={`input-sr-subtext-${index}`}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Options</label>
+        {parsed.options.map((opt: any, i: number) => (
+          <div key={opt.id ?? i} className="border rounded-md bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-mono w-5">{i + 1}</span>
+              <input
+                type="text"
+                value={opt.label ?? ""}
+                onChange={e => updateOption(i, "label", e.target.value)}
+                placeholder="Label (e.g. Divination)"
+                className="flex-1 px-2 py-1 text-sm border rounded bg-background"
+                data-testid={`input-sr-label-${index}-${i}`}
+              />
+              <button type="button" onClick={() => moveOption(i, "up")} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1" data-testid={`button-sr-up-${index}-${i}`}>↑</button>
+              <button type="button" onClick={() => moveOption(i, "down")} disabled={i === parsed.options.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1" data-testid={`button-sr-down-${index}-${i}`}>↓</button>
+              <button type="button" onClick={() => removeOption(i)} className="text-destructive hover:opacity-70 p-1 text-xs" data-testid={`button-sr-remove-${index}-${i}`}>✕</button>
+            </div>
+            <input
+              type="text"
+              value={opt.subtitle ?? ""}
+              onChange={e => updateOption(i, "subtitle", e.target.value)}
+              placeholder="Subtitle (e.g. Astrology, tarot, fortune-telling)"
+              className="w-full px-2 py-1 text-sm border rounded bg-background"
+              data-testid={`input-sr-subtitle-${index}-${i}`}
+            />
+            <textarea
+              value={opt.body ?? ""}
+              onChange={e => updateOption(i, "body", e.target.value)}
+              placeholder="Explanation — why this is contrary to faith..."
+              rows={3}
+              className="w-full px-2 py-1 text-sm border rounded bg-background resize-y"
+              data-testid={`textarea-sr-body-${index}-${i}`}
+            />
+            <textarea
+              value={Array.isArray(opt.examples) ? opt.examples.join("\n") : ""}
+              onChange={e => updateOption(i, "examples", e.target.value.split("\n").filter(Boolean))}
+              placeholder={"Examples (one per line):\nAstrology and horoscopes\nTarot cards\nPalm reading"}
+              rows={3}
+              className="w-full px-2 py-1 text-xs border rounded bg-background resize-y font-mono"
+              data-testid={`textarea-sr-examples-${index}-${i}`}
+            />
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground/70">Verses (reference | text, one per line)</label>
+              <textarea
+                value={Array.isArray(opt.verses) ? opt.verses.map((v: any) => `${v.reference} | ${v.text}`).join("\n") : ""}
+                onChange={e => {
+                  const verses = e.target.value.split("\n").filter(Boolean).map(line => {
+                    const sep = line.indexOf(" | ");
+                    if (sep === -1) return { reference: line.trim(), text: "" };
+                    return { reference: line.slice(0, sep).trim(), text: line.slice(sep + 3).trim() };
+                  });
+                  updateOption(i, "verses", verses);
+                }}
+                placeholder={"Deuteronomy 18:10–12 | Let no one be found among you…\nLeviticus 19:26 | Do not practice divination or seek omens."}
+                rows={2}
+                className="w-full px-2 py-1 text-xs border rounded bg-background resize-y font-mono"
+                data-testid={`textarea-sr-verses-${index}-${i}`}
+              />
+            </div>
+          </div>
+        ))}
+        <Button variant="outline" size="sm" onClick={addOption} className="gap-2 w-full" data-testid={`button-sr-add-option-${index}`}>
+          <Plus className="w-3 h-3" /> Add Option
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+const SELECTION_REVEAL_DEFAULT = JSON.stringify({
+  selectionHeadline: "What have you been involved with?",
+  selectionSubtext: "Select everything that applies to you.",
+  options: [
+    {
+      id: "divination",
+      label: "Divination",
+      subtitle: "Astrology, tarot, fortune-telling",
+      body: "Divination attempts to obtain hidden knowledge or control over the future apart from God's providence. Such practices can foster superstition, fear, and spiritual dependence on predictions rather than God.",
+      examples: ["Astrology and horoscopes", "Tarot cards", "Palm reading", "Numerology", "Fortune-telling"],
+      verses: [
+        { reference: "Deuteronomy 18:10–12", text: "Let no one be found among you who practices divination or sorcery, interprets omens, engages in witchcraft, or casts spells…" }
+      ]
+    }
+  ]
+}, null, 2);
 
 const IMAGE_CAROUSEL_DEFAULT = JSON.stringify({
   headline: "Many sins begin as attempts to meet real needs in unhealthy ways.",
@@ -6557,6 +6711,7 @@ function TrackAContentManagementView() {
     if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
     if (type === "workbook_session") return JSON.stringify({ heading: "Your open work", subheading: "Work through what you can." });
     if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
+    if (type === "selection_reveal") return SELECTION_REVEAL_DEFAULT;
     return "";
   };
 
@@ -7410,6 +7565,12 @@ function TrackAContentManagementView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "selection_reveal" ? (
+                              <SelectionRevealSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -8035,6 +8196,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
   if (type === "workbook_session") return JSON.stringify({ sectionIds: [], heading: "Your open work", subheading: "Work through what you can." });
   if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
+  if (type === "selection_reveal") return SELECTION_REVEAL_DEFAULT;
   return "";
 }
 
@@ -8759,6 +8921,12 @@ function PrelimContentManagementView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "selection_reveal" ? (
+                              <SelectionRevealSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -9636,6 +9804,12 @@ function HealingAdminView() {
                                   <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
                                 </div>
                               </div>
+                            ) : slide.type === "selection_reveal" ? (
+                              <SelectionRevealSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
