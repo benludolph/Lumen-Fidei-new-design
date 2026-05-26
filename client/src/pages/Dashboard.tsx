@@ -125,6 +125,14 @@ const FONT_SIZES = {
 
 type FontSizeKey = keyof typeof FONT_SIZES;
 
+const TRIGGER_DAY_TO_CATEGORY: Record<number, { name: string; slug: string }> = {
+  7:  { name: "Personal Sins",       slug: "personal-sins" },
+  9:  { name: "Occult & Dark Powers", slug: "occult-dark-powers" },
+  11: { name: "Generational Lines",  slug: "generational-lines" },
+  12: { name: "Inner Vows",          slug: "inner-vows" },
+  15: { name: "Wounds & Forgiveness", slug: "wounds-forgiveness" },
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [_, setLocation] = useLocation();
@@ -229,6 +237,11 @@ export default function Dashboard() {
 
   const { data: workbookModules } = useQuery<LessonWorkbookModuleWithStatus[]>({
     queryKey: ["/api/workbook-modules"],
+    enabled: !!isTrackA,
+  });
+
+  const { data: week4Ready } = useQuery<{ ready: boolean }>({
+    queryKey: ["/api/workbook/week4-ready"],
     enabled: !!isTrackA,
   });
 
@@ -375,6 +388,7 @@ export default function Dashboard() {
             allPrelimsComplete={allPrelimsComplete}
             onPrelimSelect={handlePrelimSelect}
             onWorkbookSelect={handleWorkbookSelect}
+            week4Ready={week4Ready?.ready}
           />
         </div>
         {showWeekCinematic && (
@@ -505,6 +519,7 @@ export default function Dashboard() {
             openingPrayer={prayerWrapData?.opening ?? null}
             closingPrayer={prayerWrapData?.closing ?? null}
             canSkipPrayer={['admin', 'superuser'].includes(user?.role ?? '')}
+            notebookUnlockCategory={isTrackA ? (TRIGGER_DAY_TO_CATEGORY[selectedDay] ?? null) : null}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">

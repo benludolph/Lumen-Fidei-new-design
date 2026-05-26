@@ -8,6 +8,65 @@ import CategorySession from "@/components/workbook/CategorySession";
 import { Lock, ChevronRight, BookOpen } from "lucide-react";
 import type { WorkbookSummary } from "@shared/schema";
 
+function LockedCategoryCard({ name }: { name: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        padding: "20px 20px",
+        borderRadius: "10px",
+        background: "rgba(255,255,255,0.01)",
+        border: "0.5px solid rgba(255,255,255,0.05)",
+        width: "100%",
+        opacity: 0.45,
+        cursor: "not-allowed",
+        userSelect: "none",
+      }}
+    >
+      <div
+        style={{
+          width: "40px",
+          height: "40px",
+          borderRadius: "10px",
+          background: "rgba(255,255,255,0.03)",
+          border: "0.5px solid rgba(255,255,255,0.07)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Lock style={{ width: "16px", height: "16px", color: "rgba(255,255,255,0.25)" }} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "1rem",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.4)",
+            margin: "0 0 2px",
+          }}
+        >
+          {name}
+        </p>
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.8rem",
+            color: "rgba(255,255,255,0.2)",
+            margin: 0,
+          }}
+        >
+          Complete the corresponding lesson to unlock
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function CategoryCard({
   categoryId,
   name,
@@ -205,11 +264,15 @@ export default function WorkbookPage() {
     queryKey: ["/api/workbook/summary"],
   });
 
+  const { data: unlockStatus, isLoading: unlockLoading } = useQuery<{ unlockedCategories: number[] }>({
+    queryKey: ["/api/workbook/unlock-status"],
+  });
+
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
-  const currentDay = cohortData?.currentDay ?? 0;
-  const isLocked = currentDay < 8;
-  const isLoading = cohortLoading || summaryLoading;
+  const unlockedCategories = unlockStatus?.unlockedCategories ?? [];
+  const isLocked = unlockedCategories.length === 0 && !unlockLoading;
+  const isLoading = cohortLoading || summaryLoading || unlockLoading;
 
   const totalSectionsWithContent = Object.values(summary).filter(
     (s) => s && (s.attested || s.count > 0)
@@ -350,16 +413,22 @@ export default function WorkbookPage() {
 
                 {/* Category cards */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {SECTION_CATEGORIES.map((cat) => (
-                    <CategoryCard
-                      key={cat.id}
-                      categoryId={cat.id}
-                      name={cat.name}
-                      description={cat.description}
-                      summary={summary}
-                      onClick={() => setActiveCategoryId(cat.id)}
-                    />
-                  ))}
+                  {SECTION_CATEGORIES.map((cat) => {
+                    const catUnlocked = unlockedCategories.includes(cat.id);
+                    if (!catUnlocked) {
+                      return <LockedCategoryCard key={cat.id} name={cat.name} />;
+                    }
+                    return (
+                      <CategoryCard
+                        key={cat.id}
+                        categoryId={cat.id}
+                        name={cat.name}
+                        description={cat.description}
+                        summary={summary}
+                        onClick={() => setActiveCategoryId(cat.id)}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Hint */}

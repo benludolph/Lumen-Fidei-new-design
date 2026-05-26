@@ -55,13 +55,13 @@ export const SECTION_CATEGORIES: SectionCategory[] = [
   },
   {
     id: 4,
-    name: "Wounds & Forgiveness",
-    description: "The wounds you have received, the people you need to forgive, and the trauma that shaped you.",
+    name: "Inner Vows",
+    description: "The lies you have believed and the vows you have made that quietly govern your life.",
   },
   {
     id: 5,
-    name: "The Inner World",
-    description: "The lies you have believed and the vows you have made that quietly govern your life.",
+    name: "Wounds & Forgiveness",
+    description: "The wounds you have received, the people you need to forgive, and the trauma that shaped you.",
   },
 ];
 
@@ -79,7 +79,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 2,
-    categoryId: 4,
+    categoryId: 5,
     name: "People to Forgive",
     type: "list_builder",
     description: `Unforgiveness often leads to significant torment in people's lives. Forgiveness is a choice rather than an emotion. It involves choosing to forgive someone who has harmed you. Forgiveness does not require you to reconcile with that person nor allow that person back into your life. It is a one-sided action that you do. Forgiveness does not mean you agree with what that person did to you. It merely means you release your judgment against that person and free them from your heart so you can be freed from basanizo torment (Matthew 18:34–35).`,
@@ -92,7 +92,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 3,
-    categoryId: 4,
+    categoryId: 5,
     name: "Family & Childhood Wounds",
     type: "list_builder",
     description: `The home is where the heart is first shaped, and it is also where the deepest wounds are often inflicted—not always through cruelty, but sometimes through absence, neglect, favoritism, or words spoken in a moment of anger that lodged in a child's soul for decades. These early wounds form the lens through which you still see yourself, God, and authority. Bringing them into the light is not about blaming your family; it is about letting Jesus heal the boy or girl who first received the wound.`,
@@ -139,7 +139,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 6,
-    categoryId: 5,
+    categoryId: 4,
     name: "Lies & Truths",
     type: "lies_and_truths",
     description: `The enemy is called the father of lies, and his strategy is rarely a single dramatic deception—it is a quiet sentence about you that you came to accept as fact. These lies become the agreements that govern your life: "I am worthless," "God could never love someone like me," "I have to earn my place." Freedom comes when each lie is renounced and replaced with what God actually says is true. Truth is not a feeling; it is a foundation you choose to stand on.`,
@@ -148,7 +148,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 7,
-    categoryId: 5,
+    categoryId: 4,
     name: "Vows & Inner Promises",
     type: "list_builder",
     description: `In moments of deep pain we often make silent vows—"I will never let anyone hurt me again," "I will never cry," "I will never be like my mother," "I will never trust again." These promises feel like protection, but they hand control of our hearts to the wound rather than to God. An inner vow can quietly steer decades of decisions, walling off the very places that need healing. Renouncing them returns the throne of your heart to Christ.`,
@@ -181,7 +181,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 10,
-    categoryId: 4,
+    categoryId: 5,
     name: "Abuse, Trauma & Wounded Responses",
     type: "list_builder",
     description: `When someone is abused or deeply traumatized, two things happen: a wound is inflicted, and the soul learns a way to survive it. Those survival responses—numbing, dissociation, rage, perfectionism, people-pleasing, hyper-control—were once protective, but they often outlive the danger and keep you bound. None of the abuse was your fault, and naming it is not weakness; it is the first step in letting the Lord enter the place that was violated. (If you are working through severe trauma, please walk this section gently and alongside a trusted priest, counselor, or therapist—spiritual healing and professional care work together, not against each other.)`,

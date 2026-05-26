@@ -3173,6 +3173,65 @@ export async function registerRoutes(
     res.json(summary);
   });
 
+  // Trigger-day → category mapping for progressive unlock
+  const WORKBOOK_TRIGGER_DAY_CATEGORY: Record<number, number> = {
+    7: 1,  // Personal Sins
+    9: 2,  // Occult & Dark Powers
+    11: 3, // Generational Lines
+    12: 4, // Inner Vows
+    15: 5, // Wounds & Forgiveness
+  };
+
+  // Section-to-category mapping (mirrors client section-definitions.ts after swap)
+  const WORKBOOK_CATEGORY_SECTIONS: Record<number, number[]> = {
+    1: [1, 4, 8, 9, 11, 13, 14, 18, 24],
+    2: [5, 12, 19, 20, 21],
+    3: [15, 16, 17, 22, 23],
+    4: [6, 7],
+    5: [2, 3, 10],
+  };
+
+  // GET /api/workbook/unlock-status — which categories the current user has unlocked
+  app.get("/api/workbook/unlock-status", requireAuth, async (req, res) => {
+    const user = req.user!;
+    if (user.role === 'admin' || user.role === 'superuser') {
+      return res.json({ unlockedCategories: [1, 2, 3, 4, 5] });
+    }
+    if (user.track !== 'A') {
+      return res.json({ unlockedCategories: [] });
+    }
+    const completions = await storage.getUserPrayerCompletions(user.id);
+    const completedDays = new Set(
+      completions.filter(c => c.period === 'morning').map(c => c.dayNumber)
+    );
+    const unlockedCategories: number[] = [];
+    for (const [dayStr, catId] of Object.entries(WORKBOOK_TRIGGER_DAY_CATEGORY)) {
+      if (completedDays.has(Number(dayStr))) {
+        unlockedCategories.push(catId);
+      }
+    }
+    return res.json({ unlockedCategories });
+  });
+
+  // GET /api/workbook/week4-ready — whether all 5 workbook categories have ≥1 entry or attestation
+  app.get("/api/workbook/week4-ready", requireAuth, async (req, res) => {
+    const user = req.user!;
+    if (user.role === 'admin' || user.role === 'superuser') {
+      return res.json({ ready: true });
+    }
+    if (user.track !== 'A') {
+      return res.json({ ready: false });
+    }
+    const summary = await storage.getWorkbookSummary(user.id);
+    const allCategoriesReady = Object.values(WORKBOOK_CATEGORY_SECTIONS).every((sectionIds) =>
+      sectionIds.some(id => {
+        const sec = summary[id];
+        return sec && (sec.count > 0 || sec.attested);
+      })
+    );
+    return res.json({ ready: allCategoriesReady });
+  });
+
   // GET /api/workbook/:sectionId — entries for one section
   app.get("/api/workbook/:sectionId", requireAuth, async (req, res) => {
     const sectionId = Number(req.params.sectionId);

@@ -383,6 +383,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 }
 
+const WORKBOOK_SPOTLIGHT_SLUGS = [
+  "personal-sins",
+  "occult-dark-powers",
+  "generational-lines",
+  "inner-vows",
+  "wounds-forgiveness",
+];
+
+const WORKBOOK_SLUG_TO_NAME: Record<string, string> = {
+  "personal-sins": "Personal Sins",
+  "occult-dark-powers": "Occult & Dark Powers",
+  "generational-lines": "Generational Lines",
+  "inner-vows": "Inner Vows",
+  "wounds-forgiveness": "Wounds & Forgiveness",
+};
+
 function WorkbookFAB() {
   const [, navigate] = useLocation();
   const [showTooltip, setShowTooltip] = useState(false);
@@ -391,14 +407,37 @@ function WorkbookFAB() {
     queryKey: ["/api/workbook/summary"],
   });
 
+  const { data: unlockStatus } = useQuery<{ unlockedCategories: number[] }>({
+    queryKey: ["/api/workbook/unlock-status"],
+  });
+
   const currentDay = cohortData?.currentDay ?? 0;
-  const isLocked = currentDay < 8;
+  const unlockedCategories = unlockStatus?.unlockedCategories ?? [];
+  const isLocked = unlockedCategories.length === 0 && currentDay < 8;
 
   const sectionsWithContent = Object.values(summary).filter(
     (s) => s && (s.attested || s.count > 0)
   ).length;
 
+  const [spotlightSlug, setSpotlightSlug] = useState<string | null>(() => {
+    for (const slug of WORKBOOK_SPOTLIGHT_SLUGS) {
+      if (localStorage.getItem(`lf_workbook_spotlight_seen_${slug}`) === "pending") {
+        return slug;
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (spotlightSlug) {
+      localStorage.setItem(`lf_workbook_spotlight_seen_${spotlightSlug}`, "seen");
+      const timer = setTimeout(() => setSpotlightSlug(null), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [spotlightSlug]);
+
   function handleClick() {
+    setSpotlightSlug(null);
     navigate("/workbook");
   }
 
@@ -415,8 +454,63 @@ function WorkbookFAB() {
         gap: "8px",
       }}
     >
-      {/* Tooltip */}
-      {showTooltip && (
+      {/* Spotlight backdrop */}
+      {spotlightSlug && (
+        <div
+          data-testid="workbook-spotlight-backdrop"
+          onClick={handleClick}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99,
+            background: "rgba(0,0,0,0.65)",
+            cursor: "pointer",
+          }}
+        />
+      )}
+
+      {/* Spotlight tooltip */}
+      {spotlightSlug && (
+        <div
+          data-testid="workbook-spotlight-tooltip"
+          style={{
+            position: "relative",
+            zIndex: 101,
+            background: "var(--surface-raised)",
+            border: "0.5px solid rgba(255,255,255,0.15)",
+            borderRadius: "8px",
+            padding: "10px 14px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.78rem",
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.9)",
+              margin: "0 0 2px",
+            }}
+          >
+            Notebook Unlocked
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.72rem",
+              color: "rgba(255,255,255,0.45)",
+              margin: 0,
+            }}
+          >
+            {WORKBOOK_SLUG_TO_NAME[spotlightSlug]} is now open
+          </p>
+        </div>
+      )}
+
+      {/* Hover tooltip (only when no spotlight) */}
+      {showTooltip && !spotlightSlug && (
         <div
           style={{
             background: "var(--surface-raised)",
@@ -466,17 +560,25 @@ function WorkbookFAB() {
           width: "48px",
           height: "48px",
           borderRadius: "50%",
-          background: isLocked
+          background: spotlightSlug
+            ? "rgba(255,255,255,0.18)"
+            : isLocked
             ? "rgba(255,255,255,0.05)"
             : "rgba(255,255,255,0.1)",
-          border: `0.5px solid ${isLocked ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.18)"}`,
+          border: `0.5px solid ${isLocked && !spotlightSlug ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.25)"}`,
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           position: "relative",
-          boxShadow: isLocked ? "none" : "0 4px 16px rgba(0,0,0,0.4)",
+          zIndex: 101,
+          boxShadow: spotlightSlug
+            ? "0 0 0 6px rgba(255,255,255,0.12), 0 4px 16px rgba(0,0,0,0.5)"
+            : isLocked
+            ? "none"
+            : "0 4px 16px rgba(0,0,0,0.4)",
           transition: "background 0.15s, box-shadow 0.15s",
+          animation: spotlightSlug ? "fabPulse 1.4s ease-in-out infinite" : undefined,
         }}
         onFocus={() => setShowTooltip(true)}
         onBlur={() => setShowTooltip(false)}

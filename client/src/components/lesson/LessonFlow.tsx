@@ -12,6 +12,7 @@ import { LessonCompletionScreen } from "./LessonCompletionScreen";
 import { CompletionOverlay, type OverlayConfig } from "./CompletionOverlay";
 import { playClickContinue } from "@/lib/sounds";
 import { PrayerWrapScreen } from "./PrayerWrapScreen";
+import { NotebookUnlockedScreen } from "./NotebookUnlockedScreen";
 
 interface SlideData {
   type: SlideType;
@@ -38,6 +39,7 @@ interface LessonFlowProps {
   openingPrayer?: PrayerData | null;
   closingPrayer?: PrayerData | null;
   canSkipPrayer?: boolean;
+  notebookUnlockCategory?: { name: string; slug: string } | null;
 }
 
 export function LessonFlow({
@@ -52,6 +54,7 @@ export function LessonFlow({
   openingPrayer,
   closingPrayer,
   canSkipPrayer = false,
+  notebookUnlockCategory,
 }: LessonFlowProps) {
   const { data: mentorData } = useQuery<{ profilePhotoUrl?: string | null; name?: string | null }>({
     queryKey: ["/api/users", mentorId],
@@ -66,7 +69,7 @@ export function LessonFlow({
   });
   const mentorPhotoUrl = mentorData?.profilePhotoUrl ?? null;
   const mentorName = mentorData?.name ?? null;
-  type FlowState = "loading" | "opening_prayer" | "slides" | "overlay" | "closing_prayer" | "complete";
+  type FlowState = "loading" | "opening_prayer" | "slides" | "overlay" | "closing_prayer" | "complete" | "notebook_unlock";
   const [flowState, setFlowState] = useState<FlowState>("loading");
   const overlayShownRef = useRef(false);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -319,6 +322,18 @@ export function LessonFlow({
     setSessionVars((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  const handleFinalComplete = useCallback(() => {
+    if (notebookUnlockCategory) {
+      const seenKey = `lf_nb_unlock_shown_${notebookUnlockCategory.slug}`;
+      if (!localStorage.getItem(seenKey)) {
+        localStorage.setItem(seenKey, "true");
+        setFlowState("notebook_unlock");
+        return;
+      }
+    }
+    onComplete();
+  }, [notebookUnlockCategory, onComplete]);
+
   const handleContinue = useCallback(() => {
     const alreadySeen = localStorage.getItem(`overlay-seen-${overlayContextKey}`) === "true";
     if (overlayConfig?.enabled && !overlayShownRef.current && !alreadySeen) {
@@ -328,9 +343,9 @@ export function LessonFlow({
     } else if (closingPrayer && (closingPrayer.text || closingPrayer.audioUrl)) {
       setFlowState("closing_prayer");
     } else {
-      onComplete();
+      handleFinalComplete();
     }
-  }, [onComplete, overlayConfig, overlayContextKey, closingPrayer]);
+  }, [handleFinalComplete, overlayConfig, overlayContextKey, closingPrayer]);
 
   const handleQuizAnswer = useCallback((quizId: number, questionIndex: number, letter: string) => {
     setQuizAnswers((prev) => ({
@@ -385,7 +400,7 @@ export function LessonFlow({
           if (closingPrayer && (closingPrayer.text || closingPrayer.audioUrl)) {
             setFlowState("closing_prayer");
           } else {
-            onComplete();
+            handleFinalComplete();
           }
         }}
       />
@@ -399,9 +414,20 @@ export function LessonFlow({
         prayerText={closingPrayer.text}
         audioUrl={closingPrayer.audioUrl}
         canSkip={canSkipPrayer}
-        onContinue={onComplete}
+        onContinue={handleFinalComplete}
         onExit={onExit}
         lessonTitle={content.centralTheme ?? undefined}
+      />
+    );
+  }
+
+  if (flowState === "notebook_unlock" && notebookUnlockCategory) {
+    return (
+      <NotebookUnlockedScreen
+        categoryName={notebookUnlockCategory.name}
+        categorySlug={notebookUnlockCategory.slug}
+        onContinue={onComplete}
+        onOpenWorkbook={onComplete}
       />
     );
   }

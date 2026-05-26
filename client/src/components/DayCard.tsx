@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Lock, Loader, CircleCheck, Sun, Moon } from "lucide-react";
+import { Lock, Loader, CircleCheck, Sun, Moon, BookOpen } from "lucide-react";
 
 export type DayCardVariant = "full" | "half";
 
@@ -12,6 +12,7 @@ interface DayCardProps {
   isCompletedOutOfOrder?: boolean;
   isToday: boolean;
   isLocked: boolean;
+  isWorkbookGate?: boolean;
   morningCompleted?: boolean;
   eveningCompleted?: boolean;
   isTrackB?: boolean;
@@ -40,6 +41,7 @@ export function DayCard({
   isCompletedOutOfOrder,
   isToday,
   isLocked,
+  isWorkbookGate,
   morningCompleted,
   eveningCompleted,
   isTrackB,
@@ -47,7 +49,9 @@ export function DayCard({
   cohortStartDate,
   onClick,
 }: DayCardProps) {
-  const tooltipTitle = isLocked && cohortStartDate
+  const tooltipTitle = isWorkbookGate
+    ? "Complete all Workbook categories to unlock Week 4"
+    : isLocked && cohortStartDate
     ? getUnlockDateLabel(cohortStartDate, dayNumber)
     : undefined;
 
@@ -110,7 +114,9 @@ export function DayCard({
           flexShrink: 0,
         }}
       >
-        {isLocked ? (
+        {isWorkbookGate ? (
+          <BookOpen style={{ width: "10px", height: "10px", color: "var(--white-30)" }} />
+        ) : isLocked ? (
           <Lock style={{ width: "10px", height: "10px", color: "var(--white-30)" }} />
         ) : isCompleted ? (
           <CircleCheck style={{ width: "13px", height: "13px", color: "#00ff00", strokeWidth: 1.8 }} />

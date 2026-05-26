@@ -38,6 +38,7 @@ interface DayGridViewProps {
   allPrelimsComplete?: boolean;
   onPrelimSelect?: (position: number) => void;
   onWorkbookSelect?: (workbookModuleId: number) => void;
+  week4Ready?: boolean;
 }
 
 function getWeekTheme(weekNumber: number, isTrackA: boolean, trackBSummaries?: ContentSummary[], modules?: TrackAModule[]): string {
@@ -640,6 +641,7 @@ export function DayGridView({
   allPrelimsComplete = false,
   onPrelimSelect,
   onWorkbookSelect,
+  week4Ready,
 }: DayGridViewProps) {
   const [, navigate] = useLocation();
   const { data: trackAModules } = useQuery<TrackAModule[]>({
@@ -801,8 +803,9 @@ export function DayGridView({
 
                   <TwoColGrid>
                     {days.map((day) => {
-                      const isLocked = day > currentDay || !allPrelimsComplete;
-                      const isToday = day === currentDay && allPrelimsComplete;
+                      const isWorkbookGate = isTrackA && day === 19 && !week4Ready && day <= currentDay && allPrelimsComplete;
+                      const isLocked = day > currentDay || !allPrelimsComplete || isWorkbookGate;
+                      const isToday = day === currentDay && allPrelimsComplete && !isWorkbookGate;
                       const completed = isDayCompleted(day);
                       const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
                       const subtitle = isTrackA ? getTrackAAtPosition(day, trackASummaries)?.subtitle ?? undefined : undefined;
@@ -833,6 +836,7 @@ export function DayGridView({
                           isCompletedOutOfOrder={completedLate}
                           isToday={isToday}
                           isLocked={isLocked}
+                          isWorkbookGate={isWorkbookGate}
                           isTrackB={!isTrackA}
                           morningCompleted={isPeriodCompleted(day, "morning")}
                           eveningCompleted={isPeriodCompleted(day, "evening")}
