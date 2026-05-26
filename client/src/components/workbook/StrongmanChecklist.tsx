@@ -4,6 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { STRONGMAN_CATEGORIES } from "./strongman-data";
 import type { WorkbookEntry } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 const SECTION_ID = 16;
 
@@ -24,6 +25,7 @@ function parseChecklistData(entries: WorkbookEntry[]): ChecklistData {
 }
 
 export default function StrongmanChecklist() {
+  const { toast } = useToast();
   const { data: entries = [], isLoading } = useQuery<WorkbookEntry[]>({
     queryKey: [`/api/workbook/${SECTION_ID}`],
   });
@@ -66,6 +68,13 @@ export default function StrongmanChecklist() {
       }
       queryClient.invalidateQueries({ queryKey: [`/api/workbook/${SECTION_ID}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 

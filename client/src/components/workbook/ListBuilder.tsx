@@ -7,6 +7,7 @@ import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import type { SectionDefinition } from "./section-definitions";
 import type { SectionField } from "./section-definitions";
 import type { WorkbookEntry } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 interface ListBuilderProps {
   section: SectionDefinition;
@@ -31,6 +32,7 @@ function EntryCard({
     const d = entry.entryData as EntryData;
     return section.fields.reduce((acc, f) => ({ ...acc, [f.key]: d[f.key] ?? "" }), {} as EntryData);
   });
+  const { toast } = useToast();
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -43,6 +45,13 @@ function EntryCard({
       queryClient.invalidateQueries({ queryKey: [`/api/workbook/${section.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
       setEditing(false);
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -357,6 +366,7 @@ function AddEntryForm({
   const [form, setForm] = useState<EntryData>(() =>
     section.fields.reduce((acc, f) => ({ ...acc, [f.key]: "" }), {} as EntryData)
   );
+  const { toast } = useToast();
 
   const requiredKeys = section.fields.filter((f) => f.required).map((f) => f.key);
   const isValid = requiredKeys.every((k) => (form[k] ?? "").trim().length > 0);
@@ -371,6 +381,13 @@ function AddEntryForm({
       queryClient.invalidateQueries({ queryKey: [`/api/workbook/${section.id}`] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
       onSaved();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -517,6 +534,7 @@ function AddEntryForm({
 
 export default function ListBuilder({ section, onClose }: ListBuilderProps & { onClose?: () => void }) {
   const [showAddForm, setShowAddForm] = useState(false);
+  const { toast } = useToast();
 
   const { data: entries = [], isLoading } = useQuery<WorkbookEntry[]>({
     queryKey: [`/api/workbook/${section.id}`],
@@ -533,6 +551,13 @@ export default function ListBuilder({ section, onClose }: ListBuilderProps & { o
     onSuccess: (_data, on) => {
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
       if (on) onClose?.();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 

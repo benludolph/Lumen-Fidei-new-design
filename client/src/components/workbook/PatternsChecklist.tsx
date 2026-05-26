@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { DOMINANT_PATTERNS } from "@/data/patterns_data";
 import type { WorkbookEntry } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 type Section14Data = {
   checked: string[];
@@ -19,6 +20,7 @@ function parseData(entry: WorkbookEntry | undefined): Section14Data {
 }
 
 export default function PatternsChecklist() {
+  const { toast } = useToast();
   const { data: entries = [], isLoading } = useQuery<WorkbookEntry[]>({
     queryKey: ["/api/workbook/14"],
   });
@@ -63,6 +65,13 @@ export default function PatternsChecklist() {
       }
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/14"] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
     onSettled: () => {
       isSavingRef.current = false;

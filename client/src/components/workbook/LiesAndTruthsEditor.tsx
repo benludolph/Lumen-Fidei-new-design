@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Plus, Trash2, ChevronDown, ChevronUp, Check, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   LYING_SPIRITS,
   getSuggestedScriptures,
@@ -80,6 +81,7 @@ function AddLieForm({
 }) {
   const [lie, setLie] = useState("");
   const [spokenBy, setSpokenBy] = useState("");
+  const { toast } = useToast();
 
   const saveMutation = useMutation({
     mutationFn: () =>
@@ -91,6 +93,13 @@ function AddLieForm({
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/6"] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
       onSaved();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -197,6 +206,8 @@ function DeeperPathPanel({
       : "spirit",
   });
 
+  const { toast } = useToast();
+
   const saveMutation = useMutation({
     mutationFn: () =>
       apiRequest("POST", "/api/workbook/6", {
@@ -214,6 +225,13 @@ function DeeperPathPanel({
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/6"] });
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
       onClose();
+    },
+    onError: () => {
+      toast({
+        title: "Couldn't save",
+        description: "Your entry couldn't be saved. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
