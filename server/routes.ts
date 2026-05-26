@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -3235,7 +3235,7 @@ export async function registerRoutes(
   // GET /api/workbook/:sectionId — entries for one section
   app.get("/api/workbook/:sectionId", requireAuth, async (req, res) => {
     const sectionId = Number(req.params.sectionId);
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > 24) return res.sendStatus(400);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     const entries = await storage.getWorkbookEntries(req.user!.id, sectionId);
     res.json(entries);
   });
@@ -3243,7 +3243,7 @@ export async function registerRoutes(
   // POST /api/workbook/:sectionId — create or update an entry
   app.post("/api/workbook/:sectionId", requireAuth, writeLimiter, async (req, res) => {
     const sectionId = Number(req.params.sectionId);
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > 24) return res.sendStatus(400);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
 
     const schema = z.object({
       id: z.number().optional(),
@@ -3289,7 +3289,7 @@ export async function registerRoutes(
   // POST /api/workbook/attest/:sectionId — set attestation
   app.post("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
     const sectionId = Number(req.params.sectionId);
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > 24) return res.sendStatus(400);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     await storage.setWorkbookAttestation(req.user!.id, sectionId);
     res.sendStatus(204);
   });
@@ -3297,7 +3297,7 @@ export async function registerRoutes(
   // DELETE /api/workbook/attest/:sectionId — clear attestation
   app.delete("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
     const sectionId = Number(req.params.sectionId);
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > 24) return res.sendStatus(400);
+    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     await storage.clearWorkbookAttestation(req.user!.id, sectionId);
     res.sendStatus(204);
   });

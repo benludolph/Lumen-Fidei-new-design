@@ -1,3 +1,5 @@
+import { WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
+
 export type SectionType =
   | "list_builder"
   | "strongman_checklist"
@@ -386,6 +388,15 @@ export const SECTIONS: SectionDefinition[] = [
     ],
   },
 ];
+
+const _maxSectionId = Math.max(...SECTIONS.map((s) => s.id));
+if (_maxSectionId !== WORKBOOK_MAX_SECTION_ID) {
+  throw new Error(
+    `WORKBOOK_MAX_SECTION_ID (${WORKBOOK_MAX_SECTION_ID}) is out of sync with the SECTIONS array (max id: ${_maxSectionId}). Update WORKBOOK_MAX_SECTION_ID in shared/schema.ts.`
+  );
+}
+
+export { WORKBOOK_MAX_SECTION_ID };
 
 export function getSectionById(id: number): SectionDefinition | undefined {
   return SECTIONS.find((s) => s.id === id);
