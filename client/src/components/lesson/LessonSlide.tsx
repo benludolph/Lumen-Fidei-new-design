@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } fro
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, Music, Download } from "lucide-react";
+import { Square, CheckSquare, Circle, CheckCircle2, Send, CheckCircle, ArrowRight, X as XIcon, ExternalLink, Play, Pause, Volume2, User, Music, Download, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCreateAnswer } from "@/hooks/use-answers";
 import { useSendMessage } from "@/hooks/use-chat";
@@ -343,6 +343,119 @@ function MusicCard({ url, title }: { url: string; title?: string }) {
   );
 }
 
+function ZoomableImage({ src, testId }: { src: string; testId?: string }) {
+  const [zoomed, setZoomed] = useState(false);
+
+  useEffect(() => {
+    if (!zoomed) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomed(false); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [zoomed]);
+
+  return (
+    <>
+      <div style={{ position: "relative", width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }} className="group">
+        <img
+          src={src}
+          alt=""
+          style={{ width: "100%", height: "100%", maxHeight: "35vh", objectFit: "cover", display: "block" }}
+          data-testid={testId ?? "media-image"}
+        />
+        <button
+          type="button"
+          data-testid="button-zoom-media-image"
+          onClick={() => setZoomed(true)}
+          style={{
+            position: "absolute",
+            bottom: 8,
+            right: 8,
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            border: "0.5px solid rgba(255,255,255,0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: "rgba(255,255,255,0.85)",
+            opacity: 0,
+            transition: "opacity 0.15s",
+          }}
+          className="zoom-btn"
+        >
+          <ZoomIn size={14} />
+        </button>
+      </div>
+
+      {zoomed && (
+        <div
+          data-testid="image-zoom-overlay"
+          onClick={() => setZoomed(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10000,
+            background: "rgba(0,0,0,0.92)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            animation: "lf-fade-in 0.18s ease",
+          }}
+        >
+          <button
+            type="button"
+            data-testid="button-zoom-close"
+            onClick={() => setZoomed(false)}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)",
+              border: "0.5px solid rgba(255,255,255,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            <XIcon size={16} />
+          </button>
+          <img
+            src={src}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              borderRadius: 10,
+              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+            }}
+          />
+        </div>
+      )}
+
+      <style>{`
+        .group:hover .zoom-btn,
+        .group:focus-within .zoom-btn { opacity: 1 !important; }
+        @media (pointer: coarse) { .zoom-btn { opacity: 1 !important; } }
+        @keyframes lf-fade-in { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
+    </>
+  );
+}
+
 function MediaContent({ text, mediaType, title }: { text: string; mediaType?: string; title?: string }) {
   if (!text) return null;
 
@@ -381,30 +494,12 @@ function MediaContent({ text, mediaType, title }: { text: string; mediaType?: st
   }
 
   if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
-    return (
-      <div style={{ width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }}>
-        <img
-          src={trimmed}
-          alt=""
-          style={{ width: "100%", height: "100%", maxHeight: "35vh", objectFit: "cover", display: "block" }}
-          data-testid="media-image"
-        />
-      </div>
-    );
+    return <ZoomableImage src={trimmed} />;
   }
 
   if (trimmed.startsWith("http")) {
     if (/\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
-      return (
-        <div style={{ width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }}>
-          <img
-            src={trimmed}
-            alt=""
-            style={{ width: "100%", height: "100%", maxHeight: "35vh", objectFit: "cover", display: "block" }}
-            data-testid="media-image"
-          />
-        </div>
-      );
+      return <ZoomableImage src={trimmed} />;
     }
     return (
       <a
