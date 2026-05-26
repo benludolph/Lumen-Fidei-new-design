@@ -271,14 +271,21 @@ export default function CategorySession({ categoryId, summary, onDismiss }: Cate
         {/* Section index strip */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "10px 16px",
             overflowX: "auto",
             scrollbarWidth: "none",
             borderBottom: "1px solid var(--white-8)",
             background: "rgba(0,0,0,0.2)",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "10px 16px",
+            flexShrink: 0,
           }}
         >
           {/* Opening Prayer chip */}
@@ -414,6 +421,7 @@ export default function CategorySession({ categoryId, summary, onDismiss }: Cate
             <Scroll style={{ width: "11px", height: "11px", flexShrink: 0 }} />
             Closing
           </button>
+        </div>
         </div>
       </div>
 
