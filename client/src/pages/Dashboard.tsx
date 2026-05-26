@@ -499,7 +499,7 @@ export default function Dashboard() {
                 if (WEEK_LAST_DAYS.includes(day)) {
                   const fromWeek = day / 6;
                   const toWeek = fromWeek + 1;
-                  if (!localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
+                  if (isPrivileged || !localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
                     setShowWeekCinematic({ fromWeek, toWeek });
                   }
                 }
