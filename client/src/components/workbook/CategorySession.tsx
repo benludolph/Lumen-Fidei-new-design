@@ -11,12 +11,17 @@ interface CategorySessionProps {
 }
 
 const OPENING_PRAYER =
-  "Lord, as we begin this time of reflection, we ask for Your grace and courage. " +
-  "Open our hearts to Your truth and let Your light illuminate anything that needs to be brought before You. Amen.";
+  "Lord Jesus,\nplease guide me as I fill out these lists.\n\n" +
+  "Send the Holy Spirit to help me remember what I need to bring before You: my sins, the people I need to forgive, the things I need to renounce, and anything else that needs Your mercy.\n\n" +
+  "Help me be honest without fear.\nHelp me stay peaceful and clear.\nProtect this time from distraction, confusion, or discouragement.\n\n" +
+  "Jesus, I trust You with everything I write down.\nAmen.";
 
 const CLOSING_PRAYER =
-  "Lord, thank You for this time of honest reflection. " +
-  "We place what we have uncovered into Your hands. May Your healing continue as we trust in Your mercy. Amen.";
+  "Lord Jesus,\nI have finished these lists as best I can.\n\n" +
+  "If there is anything else I need to add, please bring it to mind.\n\n" +
+  "If I have forgotten something, I trust You to show me in the right time.\n" +
+  "Thank You for guiding me, protecting me, and helping me be honest before You.\n" +
+  "Jesus, I place everything I have written into Your mercy.\nAmen.";
 
 type SessionStep = "prompt" | "opening" | "subsection" | "closing";
 
