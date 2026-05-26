@@ -5,6 +5,14 @@ import { BookOpen, ArrowRight } from "lucide-react";
 import slideBg from "@assets/SlideBG_1774302310257.webp";
 import crossDividerImg from "@assets/Cross_Divider_1774243395976.webp";
 
+const CATEGORY_DESCRIPTOR: Record<string, string> = {
+  "personal-sins": "Sins to bring before God in the Sacrament of Confession",
+  "occult-dark-powers": "Occult involvement and dark power connections to renounce",
+  "generational-lines": "Ancestral patterns and curses to break through prayer",
+  "inner-vows": "Inner vows and promises made in pain that bind the heart",
+  "wounds-forgiveness": "People and hurts to forgive and release in freedom",
+};
+
 interface NotebookUnlockedScreenProps {
   categoryName: string;
   categorySlug: string;
@@ -169,15 +177,28 @@ export function NotebookUnlockedScreen({
                 style={{ width: "120px", height: "auto", opacity: 0.35 }}
               />
 
-              <p
-                className="type-body-sm text-[var(--white-40)] text-center"
-                style={{ maxWidth: "380px", lineHeight: 1.6 }}
+              <div
+                className="flex flex-col items-center"
+                style={{ gap: "8px", maxWidth: "380px" }}
               >
-                <span style={{ color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>
-                  {categoryName}
-                </span>{" "}
-                is now open in your Deliverance Workbook.
-              </p>
+                <p
+                  className="type-body-sm text-[var(--white-40)] text-center"
+                  style={{ lineHeight: 1.6 }}
+                >
+                  <span style={{ color: "rgba(255,255,255,0.65)", fontWeight: 500 }}>
+                    {categoryName}
+                  </span>{" "}
+                  is now open in your Deliverance Workbook.
+                </p>
+                {CATEGORY_DESCRIPTOR[categorySlug] && (
+                  <p
+                    className="type-body-xs text-center"
+                    style={{ color: "rgba(255,255,255,0.28)", lineHeight: 1.5, fontStyle: "italic" }}
+                  >
+                    {CATEGORY_DESCRIPTOR[categorySlug]}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

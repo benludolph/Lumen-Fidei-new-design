@@ -8,7 +8,12 @@ import CategorySession from "@/components/workbook/CategorySession";
 import { Lock, ChevronRight, BookOpen } from "lucide-react";
 import type { WorkbookSummary } from "@shared/schema";
 
-function LockedCategoryCard({ name }: { name: string }) {
+const CATEGORY_UNLOCK_DAY: Record<number, number> = {
+  1: 7, 2: 9, 3: 11, 4: 12, 5: 15,
+};
+
+function LockedCategoryCard({ categoryId, name }: { categoryId: number; name: string }) {
+  const unlockDay = CATEGORY_UNLOCK_DAY[categoryId];
   return (
     <div
       style={{
@@ -60,7 +65,7 @@ function LockedCategoryCard({ name }: { name: string }) {
             margin: 0,
           }}
         >
-          Complete the corresponding lesson to unlock
+          {unlockDay ? `Available after Day ${unlockDay}` : "Complete the corresponding lesson to unlock"}
         </p>
       </div>
     </div>
@@ -416,7 +421,7 @@ export default function WorkbookPage() {
                   {SECTION_CATEGORIES.map((cat) => {
                     const catUnlocked = unlockedCategories.includes(cat.id);
                     if (!catUnlocked) {
-                      return <LockedCategoryCard key={cat.id} name={cat.name} />;
+                      return <LockedCategoryCard key={cat.id} categoryId={cat.id} name={cat.name} />;
                     }
                     return (
                       <CategoryCard

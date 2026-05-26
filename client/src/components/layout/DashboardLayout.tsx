@@ -400,8 +400,9 @@ const WORKBOOK_SLUG_TO_NAME: Record<string, string> = {
 };
 
 function WorkbookFAB() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [showTooltip, setShowTooltip] = useState(false);
+  const isDashboard = location === "/" || location === "";
   const { data: cohortData } = useCohortStartDate();
   const { data: summary = {} } = useQuery<WorkbookSummary>({
     queryKey: ["/api/workbook/summary"],
@@ -454,11 +455,11 @@ function WorkbookFAB() {
         gap: "8px",
       }}
     >
-      {/* Spotlight backdrop */}
-      {spotlightSlug && (
+      {/* Spotlight backdrop — dashboard only, dismiss-only tap */}
+      {spotlightSlug && isDashboard && (
         <div
           data-testid="workbook-spotlight-backdrop"
-          onClick={handleClick}
+          onClick={() => setSpotlightSlug(null)}
           style={{
             position: "fixed",
             inset: 0,
@@ -470,7 +471,7 @@ function WorkbookFAB() {
       )}
 
       {/* Spotlight tooltip */}
-      {spotlightSlug && (
+      {spotlightSlug && isDashboard && (
         <div
           data-testid="workbook-spotlight-tooltip"
           style={{

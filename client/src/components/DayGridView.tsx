@@ -804,11 +804,13 @@ export function DayGridView({
                   <TwoColGrid>
                     {days.map((day) => {
                       const isWorkbookGate = isTrackA && day === 19 && !week4Ready && day <= currentDay && allPrelimsComplete;
-                      const isLocked = day > currentDay || !allPrelimsComplete || isWorkbookGate;
-                      const isToday = day === currentDay && allPrelimsComplete && !isWorkbookGate;
+                      const isLocked = (day > currentDay || !allPrelimsComplete) && !isWorkbookGate;
+                      const isToday = day === currentDay && allPrelimsComplete;
                       const completed = isDayCompleted(day);
                       const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
-                      const subtitle = isTrackA ? getTrackAAtPosition(day, trackASummaries)?.subtitle ?? undefined : undefined;
+                      const subtitle = isWorkbookGate
+                        ? "Complete your Notebook to begin Week 4"
+                        : isTrackA ? getTrackAAtPosition(day, trackASummaries)?.subtitle ?? undefined : undefined;
                       const workbookMod = isTrackA ? workbookModules?.find(m => m.dayNumber === day) : undefined;
 
                       let completedLate = false;
@@ -842,7 +844,7 @@ export function DayGridView({
                           eveningCompleted={isPeriodCompleted(day, "evening")}
                           backgroundImage={isTrackA ? getTrackAImage(day, trackASummaries) : undefined}
                           cohortStartDate={cohortStartDate}
-                          onClick={() => handleCardClick(day)}
+                          onClick={isWorkbookGate ? () => navigate("/workbook") : () => handleCardClick(day)}
                         />
                       );
 
