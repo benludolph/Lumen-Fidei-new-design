@@ -169,7 +169,27 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           )}
         </div>
 
-        {/* From week card — stays still, slightly dimmed to push it back */}
+        {/* All previously completed weeks (weeks 1 … fromWeek-1) */}
+        {Array.from({ length: fromWeek - 1 }, (_, i) => i + 1).map((weekNum) => (
+          <div key={weekNum}>
+            <div
+              style={{
+                borderRadius: 12,
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.2)",
+                opacity: 0.42,
+              }}
+            >
+              <CinematicWeekCard week={WEEK_DATA[weekNum - 1]} isCompleted lockPhase="idle" />
+            </div>
+            {/* Static filled connector between prior weeks */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 52 }}>
+              <div style={{ width: 1, height: "100%", background: "rgba(255,255,255,0.25)" }} />
+            </div>
+          </div>
+        ))}
+
+        {/* From week card — just completed, slightly dimmed */}
         <div
           ref={fromCardRef}
           style={{
@@ -182,7 +202,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           <CinematicWeekCard week={from} isCompleted lockPhase="idle" />
         </div>
 
-        {/* Connector line — stays still */}
+        {/* Animated connector line — fromWeek → toWeek */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 52 }}>
           <div style={{ width: 1, height: "100%", background: "rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
             <div
