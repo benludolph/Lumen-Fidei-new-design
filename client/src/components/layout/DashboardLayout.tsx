@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { PageContainer } from "./PageContainer";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -401,8 +401,9 @@ const WORKBOOK_SLUG_TO_NAME: Record<string, string> = {
 
 function WorkbookFAB() {
   const [location, navigate] = useLocation();
+  const search = useSearch();
   const [showTooltip, setShowTooltip] = useState(false);
-  const isDashboard = location === "/" || location === "";
+  const isDashboard = location.startsWith("/dashboard");
   const { data: cohortData } = useCohortStartDate();
   const { data: summary = {} } = useQuery<WorkbookSummary>({
     queryKey: ["/api/workbook/summary"],
@@ -420,22 +421,27 @@ function WorkbookFAB() {
     (s) => s && (s.attested || s.count > 0)
   ).length;
 
-  const [spotlightSlug, setSpotlightSlug] = useState<string | null>(() => {
-    for (const slug of WORKBOOK_SPOTLIGHT_SLUGS) {
-      if (localStorage.getItem(`lf_workbook_spotlight_seen_${slug}`) === "pending") {
-        return slug;
-      }
-    }
-    return null;
-  });
+  const [spotlightSlug, setSpotlightSlug] = useState<string | null>(null);
 
+  // Detect ?unlocked=<slug> query param when landing on dashboard
   useEffect(() => {
-    if (spotlightSlug) {
-      localStorage.setItem(`lf_workbook_spotlight_seen_${spotlightSlug}`, "seen");
+    if (!isDashboard) return;
+    const params = new URLSearchParams(search);
+    const slug = params.get("unlocked");
+    if (slug && WORKBOOK_SPOTLIGHT_SLUGS.includes(slug)) {
+      setSpotlightSlug(slug);
+      // Clean the query param from URL without pushing a history entry
+      window.history.replaceState(null, "", "/dashboard");
+    }
+  }, [search, isDashboard]);
+
+  // Auto-dismiss spotlight after 4.5 s — only while on dashboard
+  useEffect(() => {
+    if (spotlightSlug && isDashboard) {
       const timer = setTimeout(() => setSpotlightSlug(null), 4500);
       return () => clearTimeout(timer);
     }
-  }, [spotlightSlug]);
+  }, [spotlightSlug, isDashboard]);
 
   function handleClick() {
     setSpotlightSlug(null);

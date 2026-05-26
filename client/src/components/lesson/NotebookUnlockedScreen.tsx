@@ -30,7 +30,6 @@ export function NotebookUnlockedScreen({
   const [, navigate] = useLocation();
 
   useEffect(() => {
-    localStorage.setItem(`lf_workbook_spotlight_seen_${categorySlug}`, "pending");
     const t1 = setTimeout(() => setStage(1), 80);
     const t2 = setTimeout(() => setStage(2), 1400);
     return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -42,6 +41,7 @@ export function NotebookUnlockedScreen({
   };
 
   const handleBackToDashboard = () => {
+    navigate(`/dashboard?unlocked=${categorySlug}`);
     onContinue();
   };
 
