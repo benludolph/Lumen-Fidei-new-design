@@ -169,10 +169,15 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           )}
         </div>
 
-        {/* From week card — stays still */}
+        {/* From week card — stays still, slightly dimmed to push it back */}
         <div
           ref={fromCardRef}
-          style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.65)" }}
+          style={{
+            borderRadius: 12,
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.35)",
+            opacity: 0.72,
+          }}
         >
           <CinematicWeekCard week={from} isCompleted lockPhase="idle" />
         </div>
@@ -198,9 +203,12 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
         <div
           style={{
             borderRadius: 12,
-            overflow: "hidden",             /* clips the sliding inner content */
+            overflow: "hidden",
             border: `1px solid ${isRevealed ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.06)"}`,
-            transition: "border-color 0.35s ease",
+            boxShadow: isRevealed
+              ? "0 0 0 1px rgba(255,255,255,0.12), 0 12px 60px rgba(255,255,255,0.07), 0 4px 20px rgba(255,255,255,0.04)"
+              : "none",
+            transition: "border-color 0.35s ease, box-shadow 0.5s ease",
           }}
         >
           {hasInternalSteps ? (
@@ -277,11 +285,11 @@ function CinematicWeekCard({ week, isCompleted, lockPhase, showCta = false, onCt
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
           <div>
             <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>PURPOSE</p>
-            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
+            <p style={{ fontSize: "clamp(14px, 2.5vw, 16px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
           </div>
           <div>
             <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>AGENDA</p>
-            <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
+            <p style={{ fontSize: "clamp(14px, 2.5vw, 16px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
           </div>
         </div>
 
@@ -327,11 +335,10 @@ function MultiStepWeekCard({ week, lockPhase, ctaReady, cardStep, onContinue, on
         {/* Background image — fixed behind both panels */}
         <img src={week.image} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top", pointerEvents: "none" }} />
 
-        {/* Dim overlay (locked) */}
+        {/* Dim overlay — only shown while locked, fades out on reveal */}
         <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", opacity: isRevealed ? 0 : 1, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
-        {/* Diagonal gradient (unlocked) */}
-        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.25) 100%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
-        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%)", opacity: isRevealed ? 1 : 0, transition: "opacity 0.35s ease", zIndex: 1, pointerEvents: "none" }} />
+        {/* Subtle bottom vignette for text legibility — always present, lightweight */}
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 50%)", zIndex: 1, pointerEvents: "none" }} />
 
         {/* Lock icon */}
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -60%)", zIndex: 10, opacity: lockIconOpacity, transition: "opacity 0.3s ease", pointerEvents: "none" }}>
@@ -365,11 +372,11 @@ function MultiStepWeekCard({ week, lockPhase, ctaReady, cardStep, onContinue, on
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
               <div>
                 <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>PURPOSE</p>
-                <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
+                <p style={{ fontSize: "clamp(14px, 2.5vw, 16px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.purpose}</p>
               </div>
               <div>
                 <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px" }}>AGENDA</p>
-                <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
+                <p style={{ fontSize: "clamp(14px, 2.5vw, 16px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, margin: 0 }}>{week.agenda}</p>
               </div>
             </div>
           </div>
@@ -383,7 +390,7 @@ function MultiStepWeekCard({ week, lockPhase, ctaReady, cardStep, onContinue, on
               <h2 className="font-serif" style={{ color: "white", fontSize: 28, fontWeight: 500, letterSpacing: "-0.56px", margin: "0 0 18px", lineHeight: 1.1 }}>Deliverance Notebook</h2>
               <div style={{ width: "100%", height: "0.5px", background: "rgba(255,255,255,0.12)", marginBottom: 18 }} />
               <p className="type-caption-sm" style={{ color: "rgba(255,255,255,0.4)", margin: "0 0 8px", letterSpacing: "1.8px" }}>PURPOSE</p>
-              <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.5)", lineHeight: 1.65, margin: 0 }}>
+              <p style={{ fontSize: "clamp(14px, 2.5vw, 16px)", color: "rgba(255,255,255,0.5)", lineHeight: 1.65, margin: 0 }}>
                 Over the program you'll fill it in by category: unrepented sins, occult involvement and other doorways, people you need to forgive, soul ties, vows, word curses, and generational patterns. By the end you'll use what you've written to pray through your renunciations and to make your confession.
               </p>
             </div>
