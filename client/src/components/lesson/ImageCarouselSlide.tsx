@@ -1,29 +1,37 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { motion, useMotionValue, animate } from "framer-motion";
-import { ZoomIn, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+interface CarouselItem {
+  imageUrl: string;
+  description: string;
+}
 
 interface ImageCarouselContent {
-  headline?: string;
-  body?: string;
-  images?: string[];
+  items: CarouselItem[];
 }
 
 function parse(content: string): ImageCarouselContent {
   try {
     const p = JSON.parse(content);
-    return {
-      headline: typeof p.headline === "string" ? p.headline : undefined,
-      body: typeof p.body === "string" ? p.body : undefined,
-      images: Array.isArray(p.images) ? p.images.filter((s: unknown) => typeof s === "string") : [],
-    };
-  } catch {
-    return { images: [] };
-  }
+    if (Array.isArray(p.items)) {
+      return {
+        items: p.items
+          .filter((it: unknown) => it && typeof it === "object")
+          .map((it: { imageUrl?: unknown; description?: unknown }) => ({
+            imageUrl: typeof it.imageUrl === "string" ? it.imageUrl : "",
+            description: typeof it.description === "string" ? it.description : "",
+          })),
+      };
+    }
+    // Legacy fallback: old shape had images[] + headline/body — render as items with no description
+    if (Array.isArray(p.images)) {
+      return {
+        items: (p.images as string[]).map((url) => ({ imageUrl: url, description: p.body ?? "" })),
+      };
+    }
+  } catch {}
+  return { items: [] };
 }
-
-const IMG_W = 158;
-const IMG_H = 164;
-const GAP = 10;
 
 export function ImageCarouselSlide({
   content,
@@ -32,268 +40,257 @@ export function ImageCarouselSlide({
   content: string;
   onInteracted?: () => void;
 }) {
-  const { headline, body, images = [] } = parse(content);
+  const { items } = parse(content);
+  const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const [animating, setAnimating] = useState(false);
+  const [hasNavigated, setHasNavigated] = useState(false);
 
-  // Duplicate for seamless loop — need at least one full pass
-  const loopImages = images.length > 0 ? [...images, ...images, ...images] : [];
-  const singlePassW = images.length * (IMG_W + GAP);
+  const count = items.length;
+  const current = items[index] ?? null;
 
-  // Signal interacted immediately — this is a display-only slide
+  // Single item — mark interacted immediately
   useEffect(() => {
-    onInteracted?.();
+    if (count <= 1) onInteracted?.();
   }, []);
 
-  const x = useMotionValue(0);
-  const controlRef = useRef<ReturnType<typeof animate> | null>(null);
-  const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
+  function go(dir: 1 | -1) {
+    if (animating || count < 2) return;
+    setDirection(dir);
+    setAnimating(true);
+    setTimeout(() => {
+      setIndex((prev) => (prev + dir + count) % count);
+      setAnimating(false);
+      if (!hasNavigated) {
+        setHasNavigated(true);
+        onInteracted?.();
+      }
+    }, 220);
+  }
 
-  const startAnimation = useCallback(() => {
-    if (singlePassW === 0) return;
-    controlRef.current?.stop();
-    const speed = 18; // px per second
-    const duration = singlePassW / speed;
-    controlRef.current = animate(x, -singlePassW, {
-      duration,
-      ease: "linear",
-      repeat: Infinity,
-      repeatType: "loop",
-      onRepeat: () => x.set(0),
-    });
-  }, [singlePassW, x]);
+  if (count === 0) return null;
 
-  useEffect(() => {
-    startAnimation();
-    return () => controlRef.current?.stop();
-  }, [startAnimation]);
-
-  // Pause animation while zoomed
-  useEffect(() => {
-    if (zoomedSrc) {
-      controlRef.current?.stop();
-    } else {
-      startAnimation();
-    }
-  }, [zoomedSrc, startAnimation]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!zoomedSrc) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setZoomedSrc(null);
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [zoomedSrc]);
-
-  // Parse body into lines for bullet support
-  const lines = (body ?? "").split("\n").filter(Boolean);
+  const slideStyle: React.CSSProperties = {
+    transition: animating ? "opacity 0.18s ease, transform 0.22s ease" : "none",
+    opacity: animating ? 0 : 1,
+    transform: animating
+      ? `translateX(${direction * 24}px)`
+      : "translateX(0)",
+  };
 
   return (
-    <>
+    <div
+      data-testid="slide-image-carousel"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        alignItems: "center",
+        gap: 0,
+        userSelect: "none",
+      }}
+    >
+      {/* ── Image + arrows row ─────────────────────────────── */}
       <div
-        className="flex flex-col w-full"
-        data-testid="slide-image-carousel"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          gap: 12,
+          padding: "0 8px",
+        }}
       >
-        {/* ── Image strip ──────────────────────────────────────── */}
-        <div style={{ overflow: "hidden", width: "100%", flexShrink: 0 }}>
-          <motion.div
-            style={{
-              x,
-              display: "flex",
-              gap: GAP,
-              paddingLeft: GAP,
-              width: "max-content",
-            }}
-          >
-            {loopImages.map((src, i) => (
-              <div
-                key={i}
-                style={{ position: "relative", flexShrink: 0 }}
-                className="group"
-              >
-                <img
-                  src={src}
-                  alt=""
-                  draggable={false}
-                  style={{
-                    width: IMG_W,
-                    height: IMG_H,
-                    objectFit: "cover",
-                    objectPosition: "center",
-                    borderRadius: 6,
-                    display: "block",
-                  }}
-                />
-                {/* Zoom button — bottom-right corner */}
-                <button
-                  type="button"
-                  data-testid={`button-zoom-image-${i}`}
-                  onClick={() => setZoomedSrc(src)}
-                  style={{
-                    position: "absolute",
-                    bottom: 6,
-                    right: 6,
-                    width: 28,
-                    height: 28,
-                    borderRadius: 6,
-                    background: "rgba(0,0,0,0.55)",
-                    backdropFilter: "blur(6px)",
-                    WebkitBackdropFilter: "blur(6px)",
-                    border: "0.5px solid rgba(255,255,255,0.2)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    color: "rgba(255,255,255,0.85)",
-                    opacity: 0,
-                    transition: "opacity 0.15s",
-                  }}
-                  className="zoom-btn"
-                >
-                  <ZoomIn size={13} />
-                </button>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* ── Text content ─────────────────────────────────────── */}
-        {(headline || lines.length > 0) && (
-          <div
-            style={{
-              padding: "28px 24px 32px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            {headline && (
-              <h2
-                style={{
-                  fontFamily: "'Ivy Ora Display', 'Cormorant Garamond', Georgia, serif",
-                  fontSize: "clamp(20px, 5vw, 26px)",
-                  fontWeight: 500,
-                  color: "rgba(255,255,255,0.95)",
-                  lineHeight: 1.25,
-                  margin: 0,
-                  letterSpacing: "-0.01em",
-                }}
-                data-testid="carousel-headline"
-              >
-                {headline}
-              </h2>
-            )}
-
-            {lines.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {lines.map((line, i) => {
-                  const isBullet = line.startsWith("•") || line.startsWith("-") || line.startsWith("*");
-                  const text = isBullet ? line.replace(/^[•\-\*]\s*/, "") : line;
-                  return (
-                    <p
-                      key={i}
-                      className="type-body-xl"
-                      style={{
-                        fontWeight: 400,
-                        color: "var(--white-80)",
-                        lineHeight: 1.5,
-                        margin: 0,
-                        paddingLeft: isBullet ? "16px" : 0,
-                        position: "relative",
-                      }}
-                      data-testid={`carousel-body-line-${i}`}
-                    >
-                      {isBullet && (
-                        <span style={{ position: "absolute", left: 0, color: "rgba(255,255,255,0.35)" }}>
-                          •
-                        </span>
-                      )}
-                      {text}
-                    </p>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ── Zoom overlay ─────────────────────────────────────── */}
-      {zoomedSrc && (
-        <div
-          data-testid="image-zoom-overlay"
-          onClick={() => setZoomedSrc(null)}
+        {/* Left arrow */}
+        <button
+          type="button"
+          data-testid="button-carousel-prev"
+          onClick={() => go(-1)}
+          disabled={count < 2}
           style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 10000,
-            background: "rgba(0,0,0,0.92)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
+            flexShrink: 0,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.07)",
+            border: "0.5px solid rgba(255,255,255,0.14)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 20,
-            animation: "lf-fade-in 0.18s ease",
+            cursor: count < 2 ? "default" : "pointer",
+            color: count < 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+            transition: "background 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            if (count < 2) return;
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.13)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
           }}
         >
-          {/* Close button */}
-          <button
-            type="button"
-            data-testid="button-zoom-close"
-            onClick={() => setZoomedSrc(null)}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)",
-              border: "0.5px solid rgba(255,255,255,0.15)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              color: "rgba(255,255,255,0.7)",
-              zIndex: 1,
-            }}
-          >
-            <X size={16} />
-          </button>
+          <ChevronLeft size={18} />
+        </button>
 
-          {/* Image */}
-          <img
-            src={zoomedSrc}
-            alt=""
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: "100%",
-              maxHeight: "90vh",
-              objectFit: "contain",
-              borderRadius: 10,
-              boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
-            }}
-          />
+        {/* Image */}
+        <div
+          style={{
+            flex: 1,
+            maxWidth: 300,
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: 10,
+            aspectRatio: "3/4",
+            background: "rgba(255,255,255,0.04)",
+          }}
+        >
+          {current?.imageUrl ? (
+            <img
+              key={index}
+              src={current.imageUrl}
+              alt=""
+              draggable={false}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center top",
+                display: "block",
+                borderRadius: 10,
+                ...slideStyle,
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "rgba(255,255,255,0.2)",
+                fontSize: 13,
+              }}
+            >
+              No image
+            </div>
+          )}
+        </div>
+
+        {/* Right arrow */}
+        <button
+          type="button"
+          data-testid="button-carousel-next"
+          onClick={() => go(1)}
+          disabled={count < 2}
+          style={{
+            flexShrink: 0,
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.07)",
+            border: "0.5px solid rgba(255,255,255,0.14)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: count < 2 ? "default" : "pointer",
+            color: count < 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+            transition: "background 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            if (count < 2) return;
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.13)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+          }}
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {/* ── Dot indicators ─────────────────────────────────── */}
+      {count > 1 && (
+        <div
+          style={{
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+            marginTop: 14,
+          }}
+        >
+          {items.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              data-testid={`button-carousel-dot-${i}`}
+              onClick={() => {
+                if (i === index || animating) return;
+                setDirection(i > index ? 1 : -1);
+                setAnimating(true);
+                setTimeout(() => {
+                  setIndex(i);
+                  setAnimating(false);
+                  if (!hasNavigated) {
+                    setHasNavigated(true);
+                    onInteracted?.();
+                  }
+                }, 220);
+              }}
+              style={{
+                width: i === index ? 18 : 8,
+                height: 8,
+                borderRadius: 4,
+                background: i === index ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.2)",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                transition: "width 0.25s ease, background 0.25s ease",
+              }}
+            />
+          ))}
         </div>
       )}
 
-      {/* Hover styles for zoom button */}
-      <style>{`
-        .group:hover .zoom-btn,
-        .group:focus-within .zoom-btn {
-          opacity: 1 !important;
-        }
-        @media (pointer: coarse) {
-          .zoom-btn {
-            opacity: 1 !important;
-          }
-        }
-        @keyframes lf-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
-    </>
+      {/* ── Per-item description ────────────────────────────── */}
+      {current?.description && (
+        <p
+          key={index}
+          data-testid="carousel-item-description"
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "clamp(15px, 2.5vw, 17px)",
+            color: "rgba(255,255,255,0.72)",
+            lineHeight: 1.65,
+            margin: 0,
+            marginTop: 20,
+            padding: "0 4px",
+            textAlign: "center",
+            maxWidth: 380,
+            ...slideStyle,
+          }}
+        >
+          {current.description}
+        </p>
+      )}
+
+      {/* ── Counter ─────────────────────────────────────────── */}
+      {count > 1 && (
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.7rem",
+            fontWeight: 600,
+            color: "rgba(255,255,255,0.25)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            margin: 0,
+            marginTop: 10,
+          }}
+        >
+          {index + 1} of {count}
+        </p>
+      )}
+    </div>
   );
 }

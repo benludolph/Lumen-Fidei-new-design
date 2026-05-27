@@ -3732,66 +3732,68 @@ function CarouselImageUpload({ index, editorIndex, currentUrl, onUploaded, onRem
 }
 
 function ImageCarouselSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  let parsed: { headline: string; body: string; images: string[] } = { headline: "", body: "", images: [] };
+  type CarouselItem = { imageUrl: string; description: string };
+  let parsed: { items: CarouselItem[] } = { items: [] };
   try {
     const p = JSON.parse(content || "{}");
-    parsed = {
-      headline: p.headline ?? "",
-      body: p.body ?? "",
-      images: Array.isArray(p.images) ? p.images : [],
-    };
+    if (Array.isArray(p.items)) {
+      parsed = {
+        items: p.items.map((it: { imageUrl?: string; description?: string }) => ({
+          imageUrl: it.imageUrl ?? "",
+          description: it.description ?? "",
+        })),
+      };
+    } else if (Array.isArray(p.images)) {
+      // migrate legacy shape
+      parsed = { items: (p.images as string[]).map((url) => ({ imageUrl: url, description: p.body ?? "" })) };
+    }
   } catch {}
 
   const update = (next: typeof parsed) => onChange(JSON.stringify(next));
 
-  const setImage = (i: number, url: string) => {
-    const imgs = [...parsed.images];
-    imgs[i] = url;
-    update({ ...parsed, images: imgs });
+  const setItem = (i: number, field: keyof CarouselItem, val: string) => {
+    const items = parsed.items.map((it, idx) => idx === i ? { ...it, [field]: val } : it);
+    update({ items });
   };
-  const removeImage = (i: number) => update({ ...parsed, images: parsed.images.filter((_, idx) => idx !== i) });
-  const addImage = () => update({ ...parsed, images: [...parsed.images, ""] });
+  const removeItem = (i: number) => update({ items: parsed.items.filter((_, idx) => idx !== i) });
+  const addItem = () => update({ items: [...parsed.items, { imageUrl: "", description: "" }] });
 
   return (
     <div className="space-y-4" data-testid={`carousel-editor-${index}`}>
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">Images</label>
-        {parsed.images.map((url, i) => (
+      {parsed.items.map((item, i) => (
+        <div key={i} className="space-y-2 p-3 border rounded-md bg-muted/30">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Item {i + 1}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => removeItem(i)}
+              className="h-6 px-2 text-xs text-destructive"
+              data-testid={`button-carousel-remove-item-${index}-${i}`}
+            >
+              Remove
+            </Button>
+          </div>
           <CarouselImageUpload
-            key={i}
             index={i}
             editorIndex={index}
-            currentUrl={url}
-            onUploaded={(u) => setImage(i, u)}
-            onRemove={() => removeImage(i)}
+            currentUrl={item.imageUrl}
+            onUploaded={(u) => setItem(i, "imageUrl", u)}
+            onRemove={() => setItem(i, "imageUrl", "")}
           />
-        ))}
-        <Button variant="outline" size="sm" onClick={addImage} className="gap-2 w-full" data-testid={`carousel-add-image-${index}`}>
-          <Plus className="w-3 h-3" /> Add Image
-        </Button>
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Headline (optional)</label>
-        <input
-          type="text"
-          value={parsed.headline}
-          onChange={(e) => update({ ...parsed, headline: e.target.value })}
-          placeholder="e.g. Many sins begin as attempts to meet real needs…"
-          className="w-full px-3 py-2 text-sm border rounded-md bg-background"
-          data-testid={`input-carousel-headline-${index}`}
-        />
-      </div>
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Body text (optional — use • for bullets)</label>
-        <textarea
-          value={parsed.body}
-          onChange={(e) => update({ ...parsed, body: e.target.value })}
-          placeholder={"e.g. A person may want love but look for it in destructive places.\n• Bullet point"}
-          rows={4}
-          className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-y"
-          data-testid={`textarea-carousel-body-${index}`}
-        />
-      </div>
+          <textarea
+            value={item.description}
+            onChange={(e) => setItem(i, "description", e.target.value)}
+            placeholder="Description shown below this image…"
+            rows={3}
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background resize-y"
+            data-testid={`textarea-carousel-desc-${index}-${i}`}
+          />
+        </div>
+      ))}
+      <Button variant="outline" size="sm" onClick={addItem} className="gap-2 w-full" data-testid={`carousel-add-item-${index}`}>
+        <Plus className="w-3 h-3" /> Add Item
+      </Button>
     </div>
   );
 }
@@ -4231,14 +4233,10 @@ const BENTO_REVEAL_DEFAULT = JSON.stringify({
 }, null, 2);
 
 const IMAGE_CAROUSEL_DEFAULT = JSON.stringify({
-  headline: "Many sins begin as attempts to meet real needs in unhealthy ways.",
-  body: "Many sins begin as attempts to meet real needs in unhealthy ways.\n• A person may want love but look for it in destructive places.\n• A person may want peace but turn toward habits that numb pain.\n• A person may want control and begin manipulating others.\nSin often grows from wounded desires.",
-  images: [
-    "/img/01.png",
-    "/img/02.png",
-    "/img/03.png",
-    "/img/04.png",
-    "/img/05.png",
+  items: [
+    { imageUrl: "", description: "Add a description for this image." },
+    { imageUrl: "", description: "Add a description for this image." },
+    { imageUrl: "", description: "Add a description for this image." },
   ],
 }, null, 2);
 
