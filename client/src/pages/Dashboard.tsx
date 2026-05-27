@@ -316,6 +316,19 @@ export default function Dashboard() {
     setSelectedDay(day);
     setSelectedPeriod(period || "morning");
     setViewMode("detail");
+    // Show week transition cinematic when the user opens the first day of a new week
+    const WEEK_FIRST_DAYS: Record<number, { fromWeek: number; toWeek: number }> = {
+      7:  { fromWeek: 1, toWeek: 2 },
+      13: { fromWeek: 2, toWeek: 3 },
+      19: { fromWeek: 3, toWeek: 4 },
+      25: { fromWeek: 4, toWeek: 5 },
+    };
+    const weekTransition = WEEK_FIRST_DAYS[day];
+    if (weekTransition) {
+      if (isPrivileged || !localStorage.getItem(`lf_week_cinematic_seen_${weekTransition.toWeek}`)) {
+        setShowWeekCinematic(weekTransition);
+      }
+    }
   };
 
   const handleBackToGrid = (dayToScrollTo?: number) => {
@@ -494,24 +507,8 @@ export default function Dashboard() {
             onExit={handleBackToGrid}
             onComplete={() => {
               const capturedDay = selectedDay;
-              const WEEK_LAST_DAYS = [6, 12, 18, 24];
-              const checkCinematic = (day: number) => {
-                if (WEEK_LAST_DAYS.includes(day)) {
-                  const fromWeek = day / 6;
-                  const toWeek = fromWeek + 1;
-                  if (isPrivileged || !localStorage.getItem(`lf_week_cinematic_seen_${toWeek}`)) {
-                    setShowWeekCinematic({ fromWeek, toWeek });
-                  }
-                }
-              };
               if (!isPeriodCompleted(capturedDay, "morning")) {
-                markComplete.mutate(
-                  { dayNumber: capturedDay, period: "morning" },
-                  { onSuccess: () => checkCinematic(capturedDay) }
-                );
-              } else if (isPrivileged) {
-                // Superuser replay path: day already marked, check anyway
-                checkCinematic(capturedDay);
+                markComplete.mutate({ dayNumber: capturedDay, period: "morning" });
               }
               handleBackToGrid(selectedDay);
             }}
