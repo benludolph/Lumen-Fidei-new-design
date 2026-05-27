@@ -1367,6 +1367,8 @@ interface LessonSlideProps {
   onSaveSessionVar?: (key: string, value: unknown) => void;
   // guided_prayer_process specific
   guidedPrayerSlideIndex?: number;
+  // selection_reveal specific
+  onSelectionRevealComplete?: () => void;
 }
 
 export function LessonSlide({
@@ -1403,6 +1405,7 @@ export function LessonSlide({
   sessionVars = {},
   onSaveSessionVar,
   guidedPrayerSlideIndex,
+  onSelectionRevealComplete,
 }: LessonSlideProps) {
 
   function resolveVars(template: string, vars: Record<string, unknown>): string {
@@ -1602,7 +1605,7 @@ export function LessonSlide({
         ) : type === "prayer_link" ? (
           <PrayerLinkSlide content={content} onInteracted={onInteracted} />
         ) : type === "selection_reveal" ? (
-          <SelectionRevealSlide content={content} onInteracted={onInteracted} />
+          <SelectionRevealSlide content={content} onSelectionRevealComplete={onSelectionRevealComplete} />
         ) : (
           <TextSlide content={content} />
         )}

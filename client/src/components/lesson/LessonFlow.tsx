@@ -87,6 +87,7 @@ export function LessonFlow({
   const [isShowingInjected, setIsShowingInjected] = useState(false);
   const [practiceChunkSelections, setPracticeChunkSelections] = useState<Record<number, number>>({});
   const [sessionVars, setSessionVars] = useState<Record<string, unknown>>({});
+  const [selectionRevealHasSelection, setSelectionRevealHasSelection] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -132,6 +133,20 @@ export function LessonFlow({
       ro.disconnect();
     };
   }, [currentSlide, content.slides]);
+
+  // Track selection_reveal chip state so we can gate the main Continue button
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setSelectionRevealHasSelection((e as CustomEvent).detail?.hasSelection ?? false);
+    };
+    window.addEventListener("lf:sr-selection-update", handler);
+    return () => window.removeEventListener("lf:sr-selection-update", handler);
+  }, []);
+
+  // Reset selection_reveal gate when the slide changes
+  useEffect(() => {
+    setSelectionRevealHasSelection(false);
+  }, [currentSlide]);
 
   const handleContentScroll = useCallback(() => {
     const el = scrollContentRef.current;
@@ -526,6 +541,7 @@ export function LessonFlow({
       onKnowledgeQuizComplete={effectiveSlideData.type === "knowledge_quiz" ? handleNext : undefined}
       sessionVars={sessionVars}
       onSaveSessionVar={effectiveSlideData.type === "confession_finder" ? handleSaveSessionVar : undefined}
+      onSelectionRevealComplete={effectiveSlideData.type === "selection_reveal" ? handleNext : undefined}
     />
   );
 
@@ -542,7 +558,10 @@ export function LessonFlow({
   // without pendingInjectedSlide, Continue would skip the video slide entirely.
   const pathSelectorBlocked = effectiveSlideData.type === "path_selector" && !slideInteracted;
 
-  const navBlocked = pathSelectorBlocked || (!previewMode && (
+  // selection_reveal: main Continue is blocked until the user picks at least one chip
+  const selectionRevealBlocked = effectiveSlideData.type === "selection_reveal" && !selectionRevealHasSelection;
+
+  const navBlocked = pathSelectorBlocked || selectionRevealBlocked || (!previewMode && (
     (currentSlideData.type === "timer" && !timerDone) ||
     (effectiveSlideData.type === "scripture_practice" && !timerDone) ||
     (effectiveSlideData.type === "scene" && !timerDone) ||
@@ -764,7 +783,16 @@ export function LessonFlow({
         >
           <div className="max-w-[780px] w-full flex items-center justify-end">
             <button
-              onClick={handleNext}
+              onClick={() => {
+                // For selection_reveal, the main Continue button drives phase/card
+                // transitions inside the component via a custom event rather than
+                // advancing the lesson slide directly.
+                if (effectiveSlideData.type === "selection_reveal") {
+                  window.dispatchEvent(new CustomEvent("lf:sr-continue"));
+                  return;
+                }
+                handleNext();
+              }}
               disabled={navBlocked || (!previewMode && canScroll && !hasReachedBottom)}
               className={cn(
                 "flex items-center gap-2 justify-center type-caption-lg text-[#fafafa] whitespace-nowrap",

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Check } from "lucide-react";
 
 interface Verse {
   reference: string;
@@ -52,10 +52,10 @@ type Phase = "selection" | "reveal";
 
 export function SelectionRevealSlide({
   content,
-  onInteracted,
+  onSelectionRevealComplete,
 }: {
   content: string;
-  onInteracted?: () => void;
+  onSelectionRevealComplete?: () => void;
 }) {
   const { selectionHeadline, selectionSubtext, options } = parse(content);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -63,6 +63,16 @@ export function SelectionRevealSlide({
   const [cardIndex, setCardIndex] = useState(0);
 
   const selectedOptions = options.filter(o => selected.has(o.id));
+
+  // Refs so the event listener can always read current state
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const cardIndexRef = useRef(cardIndex);
+  cardIndexRef.current = cardIndex;
+  const selectedOptionsRef = useRef(selectedOptions);
+  selectedOptionsRef.current = selectedOptions;
+  const onCompleteRef = useRef(onSelectionRevealComplete);
+  onCompleteRef.current = onSelectionRevealComplete;
 
   const toggle = (id: string) => {
     setSelected(prev => {
@@ -73,32 +83,55 @@ export function SelectionRevealSlide({
     });
   };
 
-  const handleContinue = () => {
-    if (selectedOptions.length === 0) {
-      onInteracted?.();
-      return;
-    }
-    setCardIndex(0);
-    setPhase("reveal");
-  };
-
-  const handleNext = () => {
-    if (cardIndex < selectedOptions.length - 1) {
-      setCardIndex(i => i + 1);
-    } else {
-      onInteracted?.();
-    }
-  };
-
-  // Signal interacted if there are no options configured at all
+  // Emit selection state to LessonFlow whenever selection changes
   useEffect(() => {
-    if (options.length === 0) onInteracted?.();
+    window.dispatchEvent(new CustomEvent("lf:sr-selection-update", {
+      detail: { hasSelection: selected.size > 0 },
+    }));
+  }, [selected.size]);
+
+  // Clean up on unmount — tell LessonFlow no selection is active
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(new CustomEvent("lf:sr-selection-update", {
+        detail: { hasSelection: false },
+      }));
+    };
+  }, []);
+
+  // Signal immediately if no options are configured at all
+  useEffect(() => {
+    if (options.length === 0) onSelectionRevealComplete?.();
+  }, []);
+
+  // Listen for the main Continue button press (dispatched by LessonFlow)
+  useEffect(() => {
+    const handler = () => {
+      if (phaseRef.current === "selection") {
+        const opts = selectedOptionsRef.current;
+        if (opts.length === 0) return; // nothing selected yet — button should be disabled anyway
+        setCardIndex(0);
+        setPhase("reveal");
+      } else {
+        // reveal phase
+        const opts = selectedOptionsRef.current;
+        const idx = cardIndexRef.current;
+        if (idx < opts.length - 1) {
+          setCardIndex(i => i + 1);
+        } else {
+          // Last card — advance the lesson
+          onCompleteRef.current?.();
+        }
+      }
+    };
+    window.addEventListener("lf:sr-continue", handler);
+    return () => window.removeEventListener("lf:sr-continue", handler);
   }, []);
 
   if (phase === "selection") {
     return (
       <div
-        style={{ display: "flex", flexDirection: "column", gap: 0, paddingBottom: 24 }}
+        style={{ display: "flex", flexDirection: "column", gap: 0, paddingBottom: 8 }}
         data-testid="slide-selection-reveal-selection"
       >
         {/* Header */}
@@ -124,14 +157,7 @@ export function SelectionRevealSlide({
         </div>
 
         {/* Option chips */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            padding: "0 24px",
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
           {options.map(opt => {
             const isOn = selected.has(opt.id);
             return (
@@ -146,16 +172,13 @@ export function SelectionRevealSlide({
                   gap: 12,
                   padding: "11px 14px",
                   borderRadius: 10,
-                  border: isOn
-                    ? "1px solid rgba(255,255,255,0.25)"
-                    : "1px solid rgba(255,255,255,0.1)",
+                  border: isOn ? "1px solid rgba(255,255,255,0.25)" : "1px solid rgba(255,255,255,0.1)",
                   background: isOn ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)",
                   cursor: "pointer",
                   textAlign: "left",
                   transition: "background 0.15s, border-color 0.15s",
                 }}
               >
-                {/* Checkbox */}
                 <span
                   style={{
                     width: 20,
@@ -172,26 +195,12 @@ export function SelectionRevealSlide({
                 >
                   {isOn && <Check size={12} color="#000" strokeWidth={3} />}
                 </span>
-
                 <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <span
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 500,
-                      color: isOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.75)",
-                      lineHeight: 1.3,
-                    }}
-                  >
+                  <span style={{ fontSize: 15, fontWeight: 500, color: isOn ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.75)", lineHeight: 1.3 }}>
                     {opt.label}
                   </span>
                   {opt.subtitle && (
-                    <span
-                      style={{
-                        fontSize: 14,
-                        color: "rgba(255,255,255,0.4)",
-                        lineHeight: 1.3,
-                      }}
-                    >
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", lineHeight: 1.3 }}>
                       {opt.subtitle}
                     </span>
                   )}
@@ -201,31 +210,24 @@ export function SelectionRevealSlide({
           })}
         </div>
 
-        {/* Continue button */}
-        <div style={{ padding: "20px 24px 0" }}>
+        {/* "Nothing applies" skip link */}
+        <div style={{ padding: "16px 24px 0", textAlign: "center" }}>
           <button
             type="button"
-            data-testid="button-selection-continue"
-            onClick={handleContinue}
+            data-testid="button-selection-nothing-applies"
+            onClick={() => onSelectionRevealComplete?.()}
             style={{
-              width: "100%",
-              padding: "13px 20px",
-              borderRadius: 10,
-              background: selected.size > 0 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.12)",
-              color: selected.size > 0 ? "#000" : "rgba(255,255,255,0.4)",
+              background: "none",
               border: "none",
+              padding: "4px 0",
               cursor: "pointer",
-              fontSize: 15,
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              transition: "background 0.2s, color 0.2s",
+              fontSize: 14,
+              color: "rgba(255,255,255,0.3)",
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
             }}
           >
-            {selected.size === 0 ? "Nothing applies to me" : `Continue (${selected.size} selected)`}
-            <ArrowRight size={15} />
+            Nothing applies to me
           </button>
         </div>
       </div>
@@ -234,12 +236,11 @@ export function SelectionRevealSlide({
 
   // Phase: reveal
   const card = selectedOptions[cardIndex];
-  const isLast = cardIndex === selectedOptions.length - 1;
   const progressText = `${cardIndex + 1} of ${selectedOptions.length}`;
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", minHeight: "100%", paddingBottom: 24 }}
+      style={{ display: "flex", flexDirection: "column", minHeight: "100%", paddingBottom: 8 }}
       data-testid="slide-selection-reveal-card"
     >
       {/* Progress */}
@@ -266,20 +267,8 @@ export function SelectionRevealSlide({
 
         {/* Option image */}
         {card.imageUrl && (
-          <div
-            style={{
-              width: "100%",
-              borderRadius: 12,
-              overflow: "hidden",
-              aspectRatio: "16/9",
-              background: "rgba(255,255,255,0.05)",
-            }}
-          >
-            <img
-              src={card.imageUrl}
-              alt={card.label}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
+          <div style={{ width: "100%", borderRadius: 12, overflow: "hidden", aspectRatio: "16/9", background: "rgba(255,255,255,0.05)" }}>
+            <img src={card.imageUrl} alt={card.label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </div>
         )}
 
@@ -305,48 +294,20 @@ export function SelectionRevealSlide({
 
         {/* Body */}
         {card.body && (
-          <p
-            className="type-body-xl"
-            style={{
-              margin: 0,
-              color: "rgba(255,255,255,0.82)",
-              lineHeight: 1.6,
-              whiteSpace: "pre-wrap",
-            }}
-          >
+          <p className="type-body-xl" style={{ margin: 0, color: "rgba(255,255,255,0.82)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
             {card.body}
           </p>
         )}
 
         {/* Examples */}
         {card.examples && card.examples.length > 0 && (
-          <div
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              borderRadius: 10,
-              padding: "12px 14px",
-              border: "0.5px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <p
-              style={{
-                margin: "0 0 8px",
-                fontSize: 11,
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.4)",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
+          <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: "12px 14px", border: "0.5px solid rgba(255,255,255,0.08)" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.4)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
               Examples
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {card.examples.map((ex, i) => (
-                <p
-                  key={i}
-                  className="type-body-xl"
-                  style={{ margin: 0, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}
-                >
+                <p key={i} className="type-body-xl" style={{ margin: 0, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>
                   • {ex}
                 </p>
               ))}
@@ -358,66 +319,17 @@ export function SelectionRevealSlide({
         {card.verses && card.verses.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {card.verses.map((v, i) => (
-              <div
-                key={i}
-                style={{
-                  borderLeft: "2px solid rgba(255,255,255,0.2)",
-                  paddingLeft: 14,
-                }}
-              >
-                <p
-                  className="type-body-xl"
-                  style={{
-                    margin: "0 0 4px",
-                    fontStyle: "italic",
-                    color: "rgba(255,255,255,0.65)",
-                    lineHeight: 1.6,
-                  }}
-                >
+              <div key={i} style={{ borderLeft: "2px solid rgba(255,255,255,0.2)", paddingLeft: 14 }}>
+                <p className="type-body-xl" style={{ margin: "0 0 4px", fontStyle: "italic", color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>
                   {v.text}
                 </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.35)",
-                    letterSpacing: "0.04em",
-                  }}
-                >
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em" }}>
                   — {v.reference}
                 </p>
               </div>
             ))}
           </div>
         )}
-      </div>
-
-      {/* Next / Done button */}
-      <div style={{ padding: "20px 24px 0" }}>
-        <button
-          type="button"
-          data-testid={isLast ? "button-reveal-done" : "button-reveal-next"}
-          onClick={handleNext}
-          style={{
-            width: "100%",
-            padding: "13px 20px",
-            borderRadius: 10,
-            background: "rgba(255,255,255,0.95)",
-            color: "#000",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 15,
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          {isLast ? "Done" : "Next"}
-          <ArrowRight size={15} />
-        </button>
       </div>
     </div>
   );
