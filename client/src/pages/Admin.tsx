@@ -2375,7 +2375,7 @@ type TrackAContentData = {
   closingPrayerAudio: string | null;
 };
 
-const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link", "selection_reveal"] as const;
+const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link", "selection_reveal", "bento_reveal"] as const;
 
 const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
 
@@ -2412,6 +2412,7 @@ const SLIDE_TYPE_LABELS: Record<string, string> = {
   workbook_session: "Workbook Session",
   prayer_link: "Prayer Link",
   selection_reveal: "Selection Reveal",
+  bento_reveal: "Bento Reveal",
 };
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
@@ -2444,6 +2445,7 @@ const SLIDE_TYPE_COLORS: Record<string, string> = {
   workbook_session: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
   prayer_link: "bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200",
   selection_reveal: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  bento_reveal: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
 };
 
 // ============================================================
@@ -3937,6 +3939,144 @@ function SelectionRevealSlideEditor({ content, onChange, index }: { content: str
   );
 }
 
+function BentoRevealSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
+  let parsed: { headline: string; items: any[]; completionText: string; completionColor: string } = {
+    headline: "",
+    items: [],
+    completionText: "",
+    completionColor: "#2d6b3a",
+  };
+  try {
+    const p = JSON.parse(content || "{}");
+    parsed = {
+      headline: p.headline ?? "",
+      items: Array.isArray(p.items) ? p.items : [],
+      completionText: p.completionText ?? "",
+      completionColor: p.completionColor ?? "#2d6b3a",
+    };
+  } catch {}
+
+  const update = (next: typeof parsed) => onChange(JSON.stringify(next, null, 2));
+
+  const updateItem = (i: number, field: string, val: any) => {
+    const items = [...parsed.items];
+    items[i] = { ...items[i], [field]: val };
+    update({ ...parsed, items });
+  };
+
+  const addItem = () => update({
+    ...parsed,
+    items: [...parsed.items, { imageUrl: "", label: "", revealText: "", accentColor: "#7c6af7" }],
+  });
+
+  const removeItem = (i: number) => update({
+    ...parsed,
+    items: parsed.items.filter((_: any, idx: number) => idx !== i),
+  });
+
+  const moveItem = (i: number, dir: "up" | "down") => {
+    const items = [...parsed.items];
+    const j = dir === "up" ? i - 1 : i + 1;
+    if (j < 0 || j >= items.length) return;
+    [items[i], items[j]] = [items[j], items[i]];
+    update({ ...parsed, items });
+  };
+
+  return (
+    <div className="space-y-4" data-testid={`bento-reveal-editor-${index}`}>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Headline (shown above the grid)</label>
+        <textarea
+          value={parsed.headline}
+          onChange={e => update({ ...parsed, headline: e.target.value })}
+          placeholder="Tap each to see what it stands for."
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background min-h-[60px] resize-y"
+          data-testid={`input-bento-headline-${index}`}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">Cards</label>
+        {parsed.items.map((item: any, i: number) => (
+          <div key={i} className="border rounded-md bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-mono w-5">{i + 1}</span>
+              <input
+                type="text"
+                value={item.label ?? ""}
+                onChange={e => updateItem(i, "label", e.target.value)}
+                placeholder="Card label"
+                className="flex-1 px-2 py-1 text-sm border rounded bg-background"
+                data-testid={`input-bento-label-${index}-${i}`}
+              />
+              <button type="button" onClick={() => moveItem(i, "up")} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1" data-testid={`button-bento-up-${index}-${i}`}>↑</button>
+              <button type="button" onClick={() => moveItem(i, "down")} disabled={i === parsed.items.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1" data-testid={`button-bento-down-${index}-${i}`}>↓</button>
+              <button type="button" onClick={() => removeItem(i)} className="text-destructive hover:opacity-70 p-1 text-xs" data-testid={`button-bento-remove-${index}-${i}`}>✕</button>
+            </div>
+            <input
+              type="text"
+              value={item.imageUrl ?? ""}
+              onChange={e => updateItem(i, "imageUrl", e.target.value)}
+              placeholder="Image URL (optional)"
+              className="w-full px-2 py-1 text-sm border rounded bg-background"
+              data-testid={`input-bento-imageurl-${index}-${i}`}
+            />
+            <textarea
+              value={item.revealText ?? ""}
+              onChange={e => updateItem(i, "revealText", e.target.value)}
+              placeholder="Text revealed when tapped..."
+              className="w-full px-2 py-1 text-sm border rounded bg-background min-h-[60px] resize-y"
+              data-testid={`textarea-bento-reveal-${index}-${i}`}
+            />
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground">Accent color</label>
+              <input
+                type="color"
+                value={item.accentColor ?? "#7c6af7"}
+                onChange={e => updateItem(i, "accentColor", e.target.value)}
+                className="w-8 h-6 cursor-pointer border rounded"
+                data-testid={`input-bento-color-${index}-${i}`}
+              />
+              <span className="text-xs text-muted-foreground font-mono">{item.accentColor ?? "#7c6af7"}</span>
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addItem}
+          className="w-full text-xs text-muted-foreground border border-dashed rounded-md py-2 hover:border-foreground/50 hover:text-foreground transition-colors"
+          data-testid={`button-bento-add-item-${index}`}
+        >
+          + Add card
+        </button>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Completion text (shown after all cards are tapped)</label>
+        <textarea
+          value={parsed.completionText}
+          onChange={e => update({ ...parsed, completionText: e.target.value })}
+          placeholder="Message shown once every card has been tapped..."
+          className="w-full px-3 py-2 text-sm border rounded-md bg-background min-h-[60px] resize-y"
+          data-testid={`input-bento-completion-${index}`}
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="text-xs text-muted-foreground">Completion text color</label>
+        <input
+          type="color"
+          value={parsed.completionColor}
+          onChange={e => update({ ...parsed, completionColor: e.target.value })}
+          className="w-8 h-6 cursor-pointer border rounded"
+          data-testid={`input-bento-completion-color-${index}`}
+        />
+        <span className="text-xs text-muted-foreground font-mono">{parsed.completionColor}</span>
+      </div>
+    </div>
+  );
+}
+
 const SELECTION_REVEAL_DEFAULT = JSON.stringify({
   selectionHeadline: "What have you been involved with?",
   selectionSubtext: "Select everything that applies to you.",
@@ -4078,6 +4218,16 @@ const SELECTION_REVEAL_DEFAULT = JSON.stringify({
       ]
     }
   ]
+}, null, 2);
+
+const BENTO_REVEAL_DEFAULT = JSON.stringify({
+  headline: "Tap each card to explore.",
+  items: [
+    { imageUrl: "", label: "Card One", revealText: "What this stands for.", accentColor: "#7c6af7" },
+    { imageUrl: "", label: "Card Two", revealText: "What this stands for.", accentColor: "#c8a84b" },
+  ],
+  completionText: "Message shown once all cards are tapped.",
+  completionColor: "#2d6b3a",
 }, null, 2);
 
 const IMAGE_CAROUSEL_DEFAULT = JSON.stringify({
@@ -6910,6 +7060,7 @@ function TrackAContentManagementView() {
     if (type === "workbook_session") return JSON.stringify({ heading: "Your open work", subheading: "Work through what you can." });
     if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
     if (type === "selection_reveal") return SELECTION_REVEAL_DEFAULT;
+    if (type === "bento_reveal") return BENTO_REVEAL_DEFAULT;
     return "";
   };
 
@@ -7771,6 +7922,12 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
+                            ) : slide.type === "bento_reveal" ? (
+                              <BentoRevealSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -8396,6 +8553,7 @@ function getDefaultSlideContent(type: string): string {
   if (type === "workbook_session") return JSON.stringify({ sectionIds: [], heading: "Your open work", subheading: "Work through what you can." });
   if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
   if (type === "selection_reveal") return SELECTION_REVEAL_DEFAULT;
+  if (type === "bento_reveal") return BENTO_REVEAL_DEFAULT;
   return "";
 }
 
@@ -9122,6 +9280,12 @@ function PrelimContentManagementView() {
                               </div>
                             ) : slide.type === "selection_reveal" ? (
                               <SelectionRevealSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "bento_reveal" ? (
+                              <BentoRevealSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
@@ -10007,6 +10171,12 @@ function HealingAdminView() {
                               </div>
                             ) : slide.type === "selection_reveal" ? (
                               <SelectionRevealSlideEditor
+                                content={slide.content}
+                                onChange={(val) => updateSlide(index, "content", val)}
+                                index={index}
+                              />
+                            ) : slide.type === "bento_reveal" ? (
+                              <BentoRevealSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}

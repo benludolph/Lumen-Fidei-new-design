@@ -88,6 +88,7 @@ export function LessonFlow({
   const [practiceChunkSelections, setPracticeChunkSelections] = useState<Record<number, number>>({});
   const [sessionVars, setSessionVars] = useState<Record<string, unknown>>({});
   const [selectionRevealHasSelection, setSelectionRevealHasSelection] = useState(false);
+  const [bentoAllTapped, setBentoAllTapped] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -146,6 +147,20 @@ export function LessonFlow({
   // Reset selection_reveal gate when the slide changes
   useEffect(() => {
     setSelectionRevealHasSelection(false);
+  }, [currentSlide]);
+
+  // Track bento_reveal tap state so we can gate the main Continue button
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setBentoAllTapped((e as CustomEvent).detail?.allTapped ?? false);
+    };
+    window.addEventListener("lf:bento-all-tapped", handler);
+    return () => window.removeEventListener("lf:bento-all-tapped", handler);
+  }, []);
+
+  // Reset bento gate when the slide changes
+  useEffect(() => {
+    setBentoAllTapped(false);
   }, [currentSlide]);
 
   const handleContentScroll = useCallback(() => {
@@ -561,7 +576,10 @@ export function LessonFlow({
   // selection_reveal: main Continue is blocked until the user picks at least one chip
   const selectionRevealBlocked = effectiveSlideData.type === "selection_reveal" && !selectionRevealHasSelection;
 
-  const navBlocked = pathSelectorBlocked || selectionRevealBlocked || (!previewMode && (
+  // bento_reveal: main Continue is blocked until every card has been tapped
+  const bentoBlocked = effectiveSlideData.type === "bento_reveal" && !bentoAllTapped;
+
+  const navBlocked = pathSelectorBlocked || selectionRevealBlocked || bentoBlocked || (!previewMode && (
     (currentSlideData.type === "timer" && !timerDone) ||
     (effectiveSlideData.type === "scripture_practice" && !timerDone) ||
     (effectiveSlideData.type === "scene" && !timerDone) ||
