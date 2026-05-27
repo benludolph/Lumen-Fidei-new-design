@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CarouselItem {
   imageUrl: string;
-  description: string;
+  title?: string;
+  description?: string;
 }
 
 interface ImageCarouselContent {
@@ -17,21 +18,42 @@ function parse(content: string): ImageCarouselContent {
       return {
         items: p.items
           .filter((it: unknown) => it && typeof it === "object")
-          .map((it: { imageUrl?: unknown; description?: unknown }) => ({
+          .map((it: { imageUrl?: unknown; title?: unknown; description?: unknown }) => ({
             imageUrl: typeof it.imageUrl === "string" ? it.imageUrl : "",
-            description: typeof it.description === "string" ? it.description : "",
+            title: typeof it.title === "string" ? it.title : undefined,
+            description: typeof it.description === "string" ? it.description : undefined,
           })),
       };
     }
-    // Legacy fallback: old shape had images[] + headline/body — render as items with no description
+    // Legacy fallback: old shape { images[], headline, body }
     if (Array.isArray(p.images)) {
       return {
-        items: (p.images as string[]).map((url) => ({ imageUrl: url, description: p.body ?? "" })),
+        items: (p.images as string[]).map((url) => ({
+          imageUrl: url,
+          title: typeof p.headline === "string" ? p.headline : undefined,
+          description: typeof p.body === "string" ? p.body : undefined,
+        })),
       };
     }
   } catch {}
   return { items: [] };
 }
+
+const NAV_BTN: React.CSSProperties = {
+  flexShrink: 0,
+  width: 36,
+  height: 36,
+  borderRadius: 6,
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.10)",
+  boxShadow: "0px 1px 1px rgba(0,0,0,0.05)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  color: "rgba(255,255,255,0.80)",
+  transition: "background 0.15s",
+};
 
 export function ImageCarouselSlide({
   content,
@@ -49,10 +71,14 @@ export function ImageCarouselSlide({
   const count = items.length;
   const current = items[index] ?? null;
 
-  // Single item — mark interacted immediately
   useEffect(() => {
     if (count <= 1) onInteracted?.();
   }, []);
+
+  // Clamp index when items shrink (e.g. admin preview)
+  useEffect(() => {
+    if (count > 0 && index >= count) setIndex(count - 1);
+  }, [count]);
 
   function go(dir: 1 | -1) {
     if (animating || count < 2) return;
@@ -70,12 +96,10 @@ export function ImageCarouselSlide({
 
   if (count === 0) return null;
 
-  const slideStyle: React.CSSProperties = {
+  const imgStyle: React.CSSProperties = {
     transition: animating ? "opacity 0.18s ease, transform 0.22s ease" : "none",
     opacity: animating ? 0 : 1,
-    transform: animating
-      ? `translateX(${direction * 24}px)`
-      : "translateX(0)",
+    transform: animating ? `translateX(${direction * 20}px)` : "translateX(0)",
   };
 
   return (
@@ -86,11 +110,10 @@ export function ImageCarouselSlide({
         flexDirection: "column",
         width: "100%",
         alignItems: "center",
-        gap: 0,
         userSelect: "none",
       }}
     >
-      {/* ── Image + arrows row ─────────────────────────────── */}
+      {/* ── Image + arrows ───────────────────────────────────── */}
       <div
         style={{
           display: "flex",
@@ -108,71 +131,101 @@ export function ImageCarouselSlide({
           onClick={() => go(-1)}
           disabled={count < 2}
           style={{
-            flexShrink: 0,
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.07)",
-            border: "0.5px solid rgba(255,255,255,0.14)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            ...NAV_BTN,
             cursor: count < 2 ? "default" : "pointer",
-            color: count < 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
-            transition: "background 0.15s, color 0.15s",
+            color: count < 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.80)",
           }}
           onMouseEnter={(e) => {
             if (count < 2) return;
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.13)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.12)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
           }}
         >
           <ChevronLeft size={18} />
         </button>
 
-        {/* Image */}
+        {/* Image card */}
         <div
           style={{
             flex: 1,
-            maxWidth: 300,
+            maxWidth: 280,
             position: "relative",
+            borderRadius: 6,
+            border: "0.5px solid rgba(255,255,255,0.6)",
+            aspectRatio: "268/279",
             overflow: "hidden",
-            borderRadius: 10,
-            aspectRatio: "3/4",
             background: "rgba(255,255,255,0.04)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            padding: "0 8px 12px 8px",
           }}
         >
-          {current?.imageUrl ? (
-            <img
-              key={index}
-              src={current.imageUrl}
-              alt=""
-              draggable={false}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center top",
-                display: "block",
-                borderRadius: 10,
-                ...slideStyle,
-              }}
-            />
-          ) : (
+          {/* Background image */}
+          {current?.imageUrl && (
             <div
+              aria-hidden="true"
               style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "rgba(255,255,255,0.2)",
-                fontSize: 13,
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
               }}
             >
-              No image
+              <img
+                key={index}
+                src={current.imageUrl}
+                alt=""
+                draggable={false}
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  objectPosition: "center top",
+                  ...imgStyle,
+                }}
+              />
+              {/* Gradient scrim so badge is readable */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.45) 100%)",
+                }}
+              />
+            </div>
+          )}
+
+          {/* Title badge */}
+          {current?.title && (
+            <div
+              data-testid="carousel-item-title"
+              style={{
+                position: "relative",
+                background: "rgba(255,255,255,0.10)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 6,
+                padding: "6px 16px",
+                ...imgStyle,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Afacad', sans-serif",
+                  fontWeight: 500,
+                  fontSize: 14,
+                  color: "#ffffff",
+                  letterSpacing: "1.4px",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  lineHeight: 1.2,
+                }}
+              >
+                {current.title}
+              </span>
             </div>
           )}
         </div>
@@ -184,32 +237,23 @@ export function ImageCarouselSlide({
           onClick={() => go(1)}
           disabled={count < 2}
           style={{
-            flexShrink: 0,
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.07)",
-            border: "0.5px solid rgba(255,255,255,0.14)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            ...NAV_BTN,
             cursor: count < 2 ? "default" : "pointer",
-            color: count < 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
-            transition: "background 0.15s, color 0.15s",
+            color: count < 2 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.80)",
           }}
           onMouseEnter={(e) => {
             if (count < 2) return;
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.13)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.12)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)";
+            (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.06)";
           }}
         >
           <ChevronRight size={18} />
         </button>
       </div>
 
-      {/* ── Dot indicators ─────────────────────────────────── */}
+      {/* ── Dot indicators ──────────────────────────────────── */}
       {count > 1 && (
         <div
           style={{
@@ -252,7 +296,7 @@ export function ImageCarouselSlide({
         </div>
       )}
 
-      {/* ── Per-item description ────────────────────────────── */}
+      {/* ── Per-item description ─────────────────────────────── */}
       {current?.description && (
         <p
           key={index}
@@ -263,11 +307,11 @@ export function ImageCarouselSlide({
             color: "rgba(255,255,255,0.72)",
             lineHeight: 1.65,
             margin: 0,
-            marginTop: 20,
+            marginTop: 16,
             padding: "0 4px",
             textAlign: "center",
             maxWidth: 380,
-            ...slideStyle,
+            ...imgStyle,
           }}
         >
           {current.description}
@@ -285,7 +329,7 @@ export function ImageCarouselSlide({
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             margin: 0,
-            marginTop: 10,
+            marginTop: 8,
           }}
         >
           {index + 1} of {count}

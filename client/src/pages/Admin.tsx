@@ -3732,20 +3732,21 @@ function CarouselImageUpload({ index, editorIndex, currentUrl, onUploaded, onRem
 }
 
 function ImageCarouselSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  type CarouselItem = { imageUrl: string; description: string };
+  type CarouselItem = { imageUrl: string; title: string; description: string };
   let parsed: { items: CarouselItem[] } = { items: [] };
   try {
     const p = JSON.parse(content || "{}");
     if (Array.isArray(p.items)) {
       parsed = {
-        items: p.items.map((it: { imageUrl?: string; description?: string }) => ({
+        items: p.items.map((it: { imageUrl?: string; title?: string; description?: string }) => ({
           imageUrl: it.imageUrl ?? "",
+          title: it.title ?? "",
           description: it.description ?? "",
         })),
       };
     } else if (Array.isArray(p.images)) {
       // migrate legacy shape
-      parsed = { items: (p.images as string[]).map((url) => ({ imageUrl: url, description: p.body ?? "" })) };
+      parsed = { items: (p.images as string[]).map((url) => ({ imageUrl: url, title: p.headline ?? "", description: p.body ?? "" })) };
     }
   } catch {}
 
@@ -3756,7 +3757,7 @@ function ImageCarouselSlideEditor({ content, onChange, index }: { content: strin
     update({ items });
   };
   const removeItem = (i: number) => update({ items: parsed.items.filter((_, idx) => idx !== i) });
-  const addItem = () => update({ items: [...parsed.items, { imageUrl: "", description: "" }] });
+  const addItem = () => update({ items: [...parsed.items, { imageUrl: "", title: "", description: "" }] });
 
   return (
     <div className="space-y-4" data-testid={`carousel-editor-${index}`}>
@@ -3780,6 +3781,14 @@ function ImageCarouselSlideEditor({ content, onChange, index }: { content: strin
             currentUrl={item.imageUrl}
             onUploaded={(u) => setItem(i, "imageUrl", u)}
             onRemove={() => setItem(i, "imageUrl", "")}
+          />
+          <input
+            type="text"
+            value={item.title}
+            onChange={(e) => setItem(i, "title", e.target.value)}
+            placeholder="Title badge (e.g. The Third Eye)"
+            className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            data-testid={`input-carousel-title-${index}-${i}`}
           />
           <textarea
             value={item.description}
@@ -4234,9 +4243,9 @@ const BENTO_REVEAL_DEFAULT = JSON.stringify({
 
 const IMAGE_CAROUSEL_DEFAULT = JSON.stringify({
   items: [
-    { imageUrl: "", description: "Add a description for this image." },
-    { imageUrl: "", description: "Add a description for this image." },
-    { imageUrl: "", description: "Add a description for this image." },
+    { imageUrl: "", title: "Item Title", description: "Add a description for this image." },
+    { imageUrl: "", title: "Item Title", description: "Add a description for this image." },
+    { imageUrl: "", title: "Item Title", description: "Add a description for this image." },
   ],
 }, null, 2);
 
