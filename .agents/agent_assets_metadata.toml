@@ -305,3 +305,9 @@ id = "qGrXhYPmsygDsCG9qdFmA"
 uri = "file://attached_assets/catholic-prayer-content_1779223470845.md"
 type = "text"
 title = "Catholic Freedom Workbook — Deliverance Prayer & Categories"
+
+[[outputs]]
+id = "7DTud-ZJQ40A93aGW1ZOg"
+uri = "file://public/downloads/personal-deliverance-prayer.txt"
+type = "text"
+title = "Personal Deliverance Prayer"
