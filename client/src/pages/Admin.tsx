@@ -5980,6 +5980,70 @@ function MergeSlideRow({ slide, idx }: { slide: { type: string; content: string 
   );
 }
 
+function KnowledgeCheckPreview({ content }: { content: string }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  let data: { question?: string; options?: string[]; correctIndex?: number; explanation?: string } = {};
+  try { data = JSON.parse(content); } catch {}
+  const options = Array.isArray(data.options) ? data.options : [];
+  const correctIndex = typeof data.correctIndex === "number" ? data.correctIndex : 0;
+  if (options.length === 0) {
+    return <p className="text-sm text-muted-foreground italic">{data.question || "(No question configured)"}</p>;
+  }
+  const isCorrect = selected !== null ? selected === correctIndex : null;
+  return (
+    <div className="space-y-3 mt-1" data-testid="kc-preview-panel">
+      {data.question && <p className="text-sm font-medium leading-snug">{data.question}</p>}
+      <div className="space-y-1.5">
+        {options.map((opt, idx) => {
+          const isSelected = selected === idx;
+          const isCorrectOpt = idx === correctIndex;
+          let cls = "border border-input bg-background hover:bg-accent/50 cursor-pointer";
+          if (selected !== null) {
+            if (isSelected && isCorrect) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-950/20 cursor-default";
+            else if (isSelected && !isCorrect) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-950/20 cursor-default";
+            else if (isCorrectOpt) cls = "border border-green-500/50 bg-green-50/50 dark:bg-green-950/10 opacity-70 cursor-default";
+            else cls = "border border-input opacity-40 cursor-default";
+          }
+          return (
+            <button
+              key={idx}
+              type="button"
+              disabled={selected !== null}
+              onClick={() => setSelected(idx)}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center gap-2 ${cls}`}
+              data-testid={`kc-preview-option-${idx}`}
+            >
+              <span className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold border border-current text-muted-foreground">
+                {String.fromCharCode(65 + idx)}
+              </span>
+              <span className="flex-1">{opt}</span>
+              {selected !== null && isSelected && isCorrect && <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />}
+              {selected !== null && isSelected && !isCorrect && <X className="w-4 h-4 text-red-500 shrink-0" />}
+              {selected !== null && !isSelected && isCorrectOpt && <CheckCircle2 className="w-4 h-4 text-green-500/60 shrink-0" />}
+            </button>
+          );
+        })}
+      </div>
+      {selected !== null && (
+        <div className="flex items-center justify-between gap-2">
+          <p className={`text-xs font-medium ${isCorrect ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`} data-testid="kc-preview-feedback">
+            {isCorrect ? "✓ Correct!" : `✗ Incorrect — Correct: ${options[correctIndex]}`}
+            {!isCorrect && data.explanation ? ` · ${data.explanation}` : ""}
+          </p>
+          <button
+            type="button"
+            className="text-xs text-muted-foreground hover:text-foreground underline shrink-0"
+            onClick={() => setSelected(null)}
+            data-testid="kc-preview-reset"
+          >
+            Reset
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MergeDayRow({ day, expanded, onToggle }: {
   day: ModulePreview['days'][number];
   expanded: boolean;
@@ -7450,6 +7514,8 @@ function TrackAContentManagementView() {
                                 ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
+                                : slide.type === "knowledge_check"
+                                ? (() => { try { const p = JSON.parse(slide.content); return `Q: ${p.question || "(empty)"} — ${Array.isArray(p.options) ? p.options.length : 0} option${Array.isArray(p.options) && p.options.length !== 1 ? "s" : ""}`; } catch { return slide.content || "(empty)"; } })()
                                 : slide.content ? (slide.content.length > 100 ? slide.content.substring(0, 100) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
@@ -7786,29 +7852,28 @@ function TrackAContentManagementView() {
                       <div className="mb-1">
                         <SlideTypeBadge type={slide.type} />
                       </div>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid={`text-slide-content-view-${index}`}>
-                        {slide.type === "quiz" ? (() => {
-                          try {
-                            const d = JSON.parse(slide.content);
-                            return `${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""} — ${d.questions?.map((q: any, i: number) => `Q${i+1}: ${q.question || "(empty)"}`).join(", ")}`;
-                          } catch { return slide.content || "(empty)"; }
-                        })() : slide.type === "knowledge_check" ? (() => {
-                          try {
-                            const d = JSON.parse(slide.content);
-                            return `Q: ${d.question || "(empty)"} — ${d.options?.length || 0} options`;
-                          } catch { return slide.content || "(empty)"; }
-                        })() : slide.type === "knowledge_quiz" ? (() => {
-                          try {
-                            const d = JSON.parse(slide.content);
-                            return `"${d.intro?.title || "(no title)"}" — ${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""}`;
-                          } catch { return slide.content || "(empty)"; }
-                        })() : slide.type === "timer" ? (() => {
-                          try {
-                            const d = JSON.parse(slide.content);
-                            return `${d.duration || 60}s timer${d.audioUrl ? " 🔊" : ""}`;
-                          } catch { return slide.content || "(empty)"; }
-                        })() : (slide.content || "(empty)")}
-                      </p>
+                      {slide.type === "knowledge_check" ? (
+                        <KnowledgeCheckPreview content={slide.content} />
+                      ) : (
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid={`text-slide-content-view-${index}`}>
+                          {slide.type === "quiz" ? (() => {
+                            try {
+                              const d = JSON.parse(slide.content);
+                              return `${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""} — ${d.questions?.map((q: any, i: number) => `Q${i+1}: ${q.question || "(empty)"}`).join(", ")}`;
+                            } catch { return slide.content || "(empty)"; }
+                          })() : slide.type === "knowledge_quiz" ? (() => {
+                            try {
+                              const d = JSON.parse(slide.content);
+                              return `"${d.intro?.title || "(no title)"}" — ${d.questions?.length || 0} question${d.questions?.length !== 1 ? "s" : ""}`;
+                            } catch { return slide.content || "(empty)"; }
+                          })() : slide.type === "timer" ? (() => {
+                            try {
+                              const d = JSON.parse(slide.content);
+                              return `${d.duration || 60}s timer${d.audioUrl ? " 🔊" : ""}`;
+                            } catch { return slide.content || "(empty)"; }
+                          })() : (slide.content || "(empty)")}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -9844,6 +9909,8 @@ function HealingAdminView() {
                                 ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
                                 : slide.type === "prayer_link"
                                 ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
+                                : slide.type === "knowledge_check"
+                                ? (() => { try { const p = JSON.parse(slide.content); return `Q: ${p.question || "(empty)"} — ${Array.isArray(p.options) ? p.options.length : 0} option${Array.isArray(p.options) && p.options.length !== 1 ? "s" : ""}`; } catch { return slide.content || "(empty)"; } })()
                                 : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
                             </span>
                           )}
