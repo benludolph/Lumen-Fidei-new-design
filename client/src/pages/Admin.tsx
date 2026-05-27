@@ -3885,6 +3885,14 @@ function SelectionRevealSlideEditor({ content, onChange, index }: { content: str
               className="w-full px-2 py-1 text-sm border rounded bg-background"
               data-testid={`input-sr-subtitle-${index}-${i}`}
             />
+            <input
+              type="text"
+              value={opt.imageUrl ?? ""}
+              onChange={e => updateOption(i, "imageUrl", e.target.value)}
+              placeholder="Image URL (optional — shown above body on reveal card)"
+              className="w-full px-2 py-1 text-sm border rounded bg-background"
+              data-testid={`input-sr-imageurl-${index}-${i}`}
+            />
             <textarea
               value={opt.body ?? ""}
               onChange={e => updateOption(i, "body", e.target.value)}
@@ -3937,10 +3945,120 @@ const SELECTION_REVEAL_DEFAULT = JSON.stringify({
       id: "divination",
       label: "Divination",
       subtitle: "Astrology, tarot, fortune-telling",
+      imageUrl: "",
       body: "Divination attempts to obtain hidden knowledge or control over the future apart from God's providence. Such practices can foster superstition, fear, and spiritual dependence on predictions rather than God.",
-      examples: ["Astrology and horoscopes", "Tarot cards", "Palm reading", "Numerology", "Fortune-telling"],
+      examples: ["Astrology and horoscopes", "Tarot cards", "Palm reading", "Numerology", "Fortune-telling", "I Ching"],
       verses: [
-        { reference: "Deuteronomy 18:10–12", text: "Let no one be found among you who practices divination or sorcery, interprets omens, engages in witchcraft, or casts spells…" }
+        { reference: "Deuteronomy 18:10–12", text: "Let no one be found among you who practices divination or sorcery, interprets omens, engages in witchcraft, or casts spells…" },
+        { reference: "Leviticus 19:26", text: "Do not practice divination or seek omens." }
+      ]
+    },
+    {
+      id: "spirit_communication",
+      label: "Spirit Communication",
+      subtitle: "Mediums, séances, Ouija boards",
+      imageUrl: "",
+      body: "Attempting to contact the dead or spirits bypasses God and opens a person to deception by malevolent spiritual forces. What presents itself as a departed loved one may be a demonic spirit imitating them. This practice builds reliance on spiritual powers other than God and can create deep spiritual bondage.",
+      examples: ["Visiting mediums or psychics", "Séances", "Ouija boards", "Channeling or automatic writing", "Attempting to speak with deceased relatives", "Consulting spirit guides"],
+      verses: [
+        { reference: "Leviticus 19:31", text: "Do not turn to mediums or seek out spiritists, for you will be defiled by them." },
+        { reference: "Isaiah 8:19", text: "Why consult the dead on behalf of the living? Consult God's instruction and the testimony of warning." }
+      ]
+    },
+    {
+      id: "magic_sorcery",
+      label: "Magic & Sorcery",
+      subtitle: "Spells, hexes, curses, witchcraft",
+      imageUrl: "",
+      body: "Magic seeks to impose one's will on people, circumstances, or the spiritual world through rituals, words, or objects — apart from God. Even when motivated by good intentions, sorcery treats spiritual power as a tool to be wielded, which is contrary to trusting God. Cursing others or casting spells creates real spiritual harm.",
+      examples: ["Casting spells or hexes", "Performing rituals for luck or protection", "Using potions or magical objects", "Binding or cursing another person", "Practicing Wicca or ceremonial magic", "Calling on spiritual powers outside of God"],
+      verses: [
+        { reference: "Galatians 5:20–21", text: "The acts of the flesh are obvious: …witchcraft… those who live like this will not inherit the kingdom of God." },
+        { reference: "Micah 5:12", text: "I will destroy your witchcraft and you will no longer cast spells." }
+      ]
+    },
+    {
+      id: "satanic_practices",
+      label: "Satanic Practices",
+      subtitle: "Worship, pacts, dark rituals",
+      imageUrl: "",
+      body: "Any deliberate engagement with Satan or demonic entities — whether through worship, pacts, rituals, or fascination — is a direct rejection of God. Even what begins as experimentation or curiosity can form genuine spiritual ties that must be broken. God's mercy covers even this when sincerely renounced.",
+      examples: ["Worshipping Satan or demons", "Making pacts or vows with demonic powers", "Participating in black masses", "Dedicating oneself or others to the devil", "Fascination with or devotion to dark spiritual entities"],
+      verses: [
+        { reference: "Matthew 4:10", text: "Worship the Lord your God, and serve him only." },
+        { reference: "1 Corinthians 10:20–21", text: "The sacrifices of pagans are offered to demons, not to God, and I do not want you to be participants with demons." }
+      ]
+    },
+    {
+      id: "occult_objects",
+      label: "Occult Objects",
+      subtitle: "Amulets, talismans, occult symbols",
+      imageUrl: "",
+      body: "Objects used to attract spiritual power, protection, or luck outside of God carry spiritual significance. Keeping them — even unknowingly — can maintain a spiritual foothold. The Church calls us to renounce and destroy such items, as early believers in Ephesus publicly burned their sorcery books.",
+      examples: ["Amulets or charms for protection or luck", "Talismans or fetishes", "Crystals used for spiritual power", "Ouija boards or tarot decks kept in the home", "Occult books or grimoires", "Jewelry with occult symbols"],
+      verses: [
+        { reference: "Acts 19:19", text: "A number who had practiced sorcery brought their scrolls together and burned them publicly." },
+        { reference: "Deuteronomy 7:26", text: "Do not bring a detestable thing into your house or you, like it, will be set apart for destruction." }
+      ]
+    },
+    {
+      id: "esoteric_systems",
+      label: "Esoteric Systems",
+      subtitle: "Freemasonry, Kabbalah, secret orders",
+      imageUrl: "",
+      body: "Esoteric systems claim to offer hidden spiritual knowledge and paths to enlightenment through initiation, ritual, and secret wisdom. These systems often incorporate spiritual oaths and invoke powers outside of Christ. The Catholic Church has consistently warned against Freemasonry and similar organizations.",
+      examples: ["Freemasonry or Eastern Star", "Occult Kabbalah", "Rosicrucianism", "Theosophy", "Anthroposophy", "Other secret initiatory orders"],
+      verses: [
+        { reference: "Colossians 2:8", text: "See to it that no one takes you captive through hollow and deceptive philosophy, which depends on human tradition and the elemental spiritual forces of this world rather than on Christ." },
+        { reference: "Ephesians 5:11", text: "Have nothing to do with the fruitless deeds of darkness, but rather expose them." }
+      ]
+    },
+    {
+      id: "new_age",
+      label: "New Age",
+      subtitle: "Crystal healing, chakras, energy work, Reiki",
+      imageUrl: "",
+      body: "New Age spirituality blends Eastern mysticism and Western occultism into a framework that replaces God with impersonal spiritual energy or the self. While it often presents itself as harmless wellness, practices like Reiki, chakra alignment, or consulting spirit guides direct spiritual attention away from the God of Scripture.",
+      examples: ["Crystal healing or energy crystals", "Chakra balancing or alignment", "Reiki or therapeutic touch", "Visiting New Age healers or practitioners", "Spiritual manifesting or vision boards", "Using spirit guides", "Engaging with 'the universe' as a spiritual force"],
+      verses: [
+        { reference: "Colossians 2:9", text: "For in Christ all the fullness of the Deity lives in bodily form, and you have been brought to fullness in him." },
+        { reference: "Isaiah 8:20", text: "Consult God's instruction and the testimony of warning. If anyone does not speak according to this word, they have no light of dawn." }
+      ]
+    },
+    {
+      id: "altered_consciousness",
+      label: "Altered Consciousness",
+      subtitle: "Drugs for spiritual access, trance states",
+      imageUrl: "",
+      body: "Using substances or techniques to lower mental boundaries and access spiritual experience can open a person to demonic influence. What presents itself as enlightenment or spiritual encounter may be deception. Sober discernment is a biblical virtue precisely because spiritual dangers are real.",
+      examples: ["Using hallucinogens for spiritual insight (ayahuasca, psilocybin, peyote)", "Induced trance states for spirit contact", "Shamanic journeying", "Breathwork used to enter altered spiritual states", "Hypnosis for past-life regression"],
+      verses: [
+        { reference: "1 Peter 5:8", text: "Be sober-minded; be watchful. Your adversary the devil prowls around like a roaring lion, seeking someone to devour." },
+        { reference: "Galatians 5:20–21", text: "The acts of the flesh include …sorcery… drunkenness… those who live like this will not inherit the kingdom of God." }
+      ]
+    },
+    {
+      id: "folk_magic",
+      label: "Folk Magic",
+      subtitle: "Curanderismo, Hoodoo, folk practices",
+      imageUrl: "",
+      body: "Folk magic traditions pass through cultures and family lines, often mixing Christian language or saints with magical practices. Even when framed as healing or protection, these practices invoke spiritual powers outside of God. They can be deeply embedded in family history, requiring intentional renunciation.",
+      examples: ["Curanderismo or folk healing rituals", "Hoodoo or root work", "Voodoo or Vodou practices", "Santería", "Brujería", "Family-based superstitious rituals", "Prayers invoking spirits mixed with Catholic forms"],
+      verses: [
+        { reference: "Leviticus 19:26", text: "Do not practice divination or seek omens." },
+        { reference: "1 Samuel 15:23", text: "Rebellion is like the sin of divination, and arrogance like the evil of idolatry." }
+      ]
+    },
+    {
+      id: "occult_religions",
+      label: "Occult Religions",
+      subtitle: "Wicca, Neo-Paganism, religious Satanism",
+      imageUrl: "",
+      body: "Formal religious systems built on nature worship, paganism, or the occult claim to offer spirituality outside of Christ. Wicca and Neo-Paganism invoke deities, practice ritual magic, and honor cycles of nature as divine. These are not simply cultural — they are spiritual systems with real effects that require renunciation.",
+      examples: ["Wicca or Witchcraft as a religion", "Neo-Paganism or Druidry", "Religious Satanism (LaVeyan or theistic)", "Norse or Hellenic reconstruction as spiritual practice", "Goddess worship", "Earth-based spiritual systems as primary religion"],
+      verses: [
+        { reference: "Exodus 20:3", text: "You shall have no other gods before me." },
+        { reference: "1 Corinthians 10:21", text: "You cannot drink the cup of the Lord and the cup of demons too." }
       ]
     }
   ]

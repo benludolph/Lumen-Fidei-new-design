@@ -10,6 +10,7 @@ interface RevealOption {
   id: string;
   label: string;
   subtitle?: string;
+  imageUrl?: string;
   body?: string;
   examples?: string[];
   verses?: Verse[];
@@ -29,6 +30,7 @@ function parse(content: string): SelectionRevealContent {
           id: o.id ?? String(i),
           label: typeof o.label === "string" ? o.label : "",
           subtitle: typeof o.subtitle === "string" ? o.subtitle : undefined,
+          imageUrl: typeof o.imageUrl === "string" && o.imageUrl ? o.imageUrl : undefined,
           body: typeof o.body === "string" ? o.body : undefined,
           examples: Array.isArray(o.examples) ? o.examples.filter((e: unknown) => typeof e === "string") : undefined,
           verses: Array.isArray(o.verses)
@@ -115,7 +117,7 @@ export function SelectionRevealSlide({
             {selectionHeadline}
           </h2>
           {selectionSubtext && (
-            <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
+            <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.5)", lineHeight: 1.4 }}>
               {selectionSubtext}
             </p>
           )}
@@ -185,7 +187,7 @@ export function SelectionRevealSlide({
                   {opt.subtitle && (
                     <span
                       style={{
-                        fontSize: 12,
+                        fontSize: 14,
                         color: "rgba(255,255,255,0.4)",
                         lineHeight: 1.3,
                       }}
@@ -261,6 +263,26 @@ export function SelectionRevealSlide({
 
       {/* Card content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "0 24px" }}>
+
+        {/* Option image */}
+        {card.imageUrl && (
+          <div
+            style={{
+              width: "100%",
+              borderRadius: 12,
+              overflow: "hidden",
+              aspectRatio: "16/9",
+              background: "rgba(255,255,255,0.05)",
+            }}
+          >
+            <img
+              src={card.imageUrl}
+              alt={card.label}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        )}
+
         {/* Category label */}
         <div>
           <span
@@ -318,11 +340,12 @@ export function SelectionRevealSlide({
             >
               Examples
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {card.examples.map((ex, i) => (
                 <p
                   key={i}
-                  style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}
+                  className="type-body-xl"
+                  style={{ margin: 0, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}
                 >
                   • {ex}
                 </p>
@@ -343,12 +366,12 @@ export function SelectionRevealSlide({
                 }}
               >
                 <p
+                  className="type-body-xl"
                   style={{
                     margin: "0 0 4px",
-                    fontSize: 13,
                     fontStyle: "italic",
                     color: "rgba(255,255,255,0.65)",
-                    lineHeight: 1.5,
+                    lineHeight: 1.6,
                   }}
                 >
                   {v.text}
