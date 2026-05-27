@@ -789,6 +789,9 @@ export function LessonFlow({
                 // advancing the lesson slide directly.
                 if (effectiveSlideData.type === "selection_reveal") {
                   window.dispatchEvent(new CustomEvent("lf:sr-continue"));
+                  // Reset scroll immediately — currentSlide won't change during
+                  // phase/card transitions so the normal scroll-reset effect won't fire.
+                  if (scrollContentRef.current) scrollContentRef.current.scrollTop = 0;
                   return;
                 }
                 handleNext();
