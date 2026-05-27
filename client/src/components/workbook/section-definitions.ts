@@ -351,7 +351,7 @@ export const SECTIONS: SectionDefinition[] = [
   },
   {
     id: 24,
-    categoryId: 1,
+    categoryId: 4,
     name: "Soul ties & unhealthy bonds",
     type: "list_builder",
     description: `A soul tie is an ungodly spiritual bond formed when two souls become joined in a way that gives one person an unhealthy hold over another. These bonds differ from ordinary forgiveness work (Section 2) and sexual sin (Section 4)—they are persistent attachments where a person still has a grip on you long after the relationship ended or the harm was done. They can form through sexual union, trauma, emotional dependency, spiritual abuse, grief, occult ritual, or any relationship where control, idolatry, or fear created a bond stronger than it should have been. The sign is the "pull"—the way a person still occupies space in your mind, emotions, or decisions even when you know they shouldn't.`,
