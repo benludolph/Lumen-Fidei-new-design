@@ -3255,12 +3255,6 @@ export async function registerRoutes(
 
     let { id, entryData, position } = parsed.data;
 
-    // Section 16: enforce single-entry semantics — reuse the existing row if no id given
-    if (sectionId === 16 && !id) {
-      const existing = await storage.getWorkbookEntries(req.user!.id, 16);
-      if (existing.length > 0) id = existing[0].id;
-    }
-
     // Section 17: upsert by junior_spirit_ref — find existing entry for this spirit
     if (sectionId === 17 && !id) {
       const ref = typeof entryData.junior_spirit_ref === "string" ? entryData.junior_spirit_ref : null;
