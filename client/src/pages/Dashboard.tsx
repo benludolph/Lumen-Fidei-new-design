@@ -147,6 +147,7 @@ export default function Dashboard() {
   const [completedModule, setCompletedModule] = useState<{ type: "prelim" | "day"; id: number; behavior?: ScrollBehavior } | null>(null);
   const [showWeekCinematic, setShowWeekCinematic] = useState<{ fromWeek: number; toWeek: number } | null>(null);
   const [cinematicKey, setCinematicKey] = useState(0);
+  const [pendingDaySelect, setPendingDaySelect] = useState<{ day: number; period: "morning" | "evening" } | null>(null);
   
   const [fontSize, setFontSize] = useState<FontSizeKey>(() => {
     const saved = localStorage.getItem('lumenFidei_fontSize');
@@ -313,10 +314,8 @@ export default function Dashboard() {
   };
 
   const handleDaySelect = (day: number, period?: "morning" | "evening") => {
-    setSelectedDay(day);
-    setSelectedPeriod(period || "morning");
-    setViewMode("detail");
-    // Show week transition cinematic when the user opens the first day of a new week
+    const resolvedPeriod = period || "morning";
+    // Show week transition cinematic BEFORE opening the first day of a new week
     const WEEK_FIRST_DAYS: Record<number, { fromWeek: number; toWeek: number }> = {
       7:  { fromWeek: 1, toWeek: 2 },
       13: { fromWeek: 2, toWeek: 3 },
@@ -324,10 +323,25 @@ export default function Dashboard() {
       25: { fromWeek: 4, toWeek: 5 },
     };
     const weekTransition = WEEK_FIRST_DAYS[day];
-    if (weekTransition) {
-      if (isPrivileged || !localStorage.getItem(`lf_week_cinematic_seen_${weekTransition.toWeek}`)) {
-        setShowWeekCinematic(weekTransition);
-      }
+    if (weekTransition && (isPrivileged || !localStorage.getItem(`lf_week_cinematic_seen_${weekTransition.toWeek}`))) {
+      // Store the intended navigation and show the cinematic over the grid first
+      setPendingDaySelect({ day, period: resolvedPeriod });
+      setShowWeekCinematic(weekTransition);
+      return;
+    }
+    // No cinematic — navigate directly
+    setSelectedDay(day);
+    setSelectedPeriod(resolvedPeriod);
+    setViewMode("detail");
+  };
+
+  const handleCinematicClose = () => {
+    setShowWeekCinematic(null);
+    if (pendingDaySelect) {
+      setSelectedDay(pendingDaySelect.day);
+      setSelectedPeriod(pendingDaySelect.period);
+      setViewMode("detail");
+      setPendingDaySelect(null);
     }
   };
 
@@ -410,7 +424,7 @@ export default function Dashboard() {
             fromWeek={showWeekCinematic.fromWeek}
             toWeek={showWeekCinematic.toWeek}
             isPrivileged={isPrivileged}
-            onClose={() => setShowWeekCinematic(null)}
+            onClose={handleCinematicClose}
             onReplay={handleCinematicReplay}
           />
         )}
