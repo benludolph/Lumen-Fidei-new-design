@@ -3210,7 +3210,7 @@ function PrayerLinkSlide({
   };
   const PRAYER_SUBTITLES: Record<PrayerId, string> = {
     prayer_1: "Pray once, with intention, after working through the Workbook",
-    prayer_2: "3-day binding prayer for generational and ancestral sins",
+    prayer_2: "Binding prayer for generational and ancestral sins",
     prayer_3: "Ongoing daily prayer — your living armor",
   };
 
@@ -3225,14 +3225,14 @@ function PrayerLinkSlide({
 
   const streakCount = streak?.count ?? 0;
   const isStarted = streakCount > 0;
-  const isComplete = prayerId === "prayer_1" ? isStarted : prayerId === "prayer_2" ? streakCount >= 3 : false;
+  const isComplete = prayerId === "prayer_1" || prayerId === "prayer_2" ? isStarted : false;
 
   const handleDone = () => {
     setSheetOpen(false);
     onInteracted?.();
   };
 
-  const buttonLabel = isComplete ? "Pray Again" : isStarted && prayerId !== "prayer_1" ? "Continue" : "Begin Prayer";
+  const buttonLabel = isComplete ? "Pray Again" : "Begin Prayer";
   const borderColor = isComplete ? "rgba(100,210,130,0.2)" : isStarted ? "rgba(240,120,48,0.2)" : "rgba(255,255,255,0.1)";
   const bgColor = isComplete ? "rgba(100,210,130,0.04)" : isStarted ? "rgba(240,120,48,0.04)" : "rgba(255,255,255,0.03)";
   const btnBg = isComplete ? "rgba(100,210,130,0.1)" : isStarted ? "rgba(240,120,48,0.1)" : "rgba(255,255,255,0.08)";
@@ -3289,29 +3289,11 @@ function PrayerLinkSlide({
               fontSize: "0.78rem",
               color: "rgba(255,255,255,0.35)",
               margin: 0,
-              marginBottom: isStarted && prayerId === "prayer_2" ? "8px" : 0,
+              marginBottom: 0,
             }}
           >
             {subtitle}
           </p>
-          {prayerId === "prayer_2" && isStarted && (
-            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    width: "7px",
-                    height: "7px",
-                    borderRadius: "50%",
-                    background: i < streakCount ? "#F07830" : "rgba(255,255,255,0.1)",
-                  }}
-                />
-              ))}
-              <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.65rem", color: "rgba(240,120,48,0.7)", marginLeft: "4px" }}>
-                Day {streakCount} of 3
-              </span>
-            </div>
-          )}
           {prayerId === "prayer_3" && streakCount > 0 && (
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", color: "rgba(240,120,48,0.7)", margin: 0 }}>
               {streakCount} day{streakCount === 1 ? "" : "s"} streak
