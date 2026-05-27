@@ -8,7 +8,6 @@ import monstranceImg from "@assets/Logo_LumenFidei_1775672709011.webp";
 interface LessonCompletionScreenProps {
   dayNumber: number;
   theme: string;
-  completionMessage?: string | null;
   onContinue: () => void;
   onBack?: () => void;
 }
@@ -16,7 +15,6 @@ interface LessonCompletionScreenProps {
 export function LessonCompletionScreen({
   dayNumber,
   theme,
-  completionMessage,
   onContinue,
   onBack,
 }: LessonCompletionScreenProps) {

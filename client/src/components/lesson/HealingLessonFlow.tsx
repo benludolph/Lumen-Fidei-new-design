@@ -190,7 +190,6 @@ export function HealingLessonFlow({
       <LessonCompletionScreen
         dayNumber={moduleNumber}
         theme={content.centralTheme}
-        completionMessage={content.completionMessage}
         onContinue={onComplete}
         onBack={() => setFlowState("slides")}
       />,

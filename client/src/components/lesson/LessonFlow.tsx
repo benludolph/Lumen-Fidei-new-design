@@ -467,7 +467,6 @@ export function LessonFlow({
       <LessonCompletionScreen
         dayNumber={dayNumber}
         theme={content.centralTheme}
-        completionMessage={content.completionMessage}
         onContinue={handleContinue}
         onBack={() => setFlowState("slides")}
       />,

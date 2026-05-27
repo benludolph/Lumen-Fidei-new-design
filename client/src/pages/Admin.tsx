@@ -6655,7 +6655,6 @@ function TrackAContentManagementView() {
   });
   const [dayImageUrl, setDayImageUrl] = useState<string | null>(null);
   const [daySubtitle, setDaySubtitle] = useState("");
-  const [completionMessage, setCompletionMessage] = useState("");
   const [editingModule, setEditingModule] = useState<TrackAModuleData | null>(null);
   const [editModuleDialogOpen, setEditModuleDialogOpen] = useState(false);
   const [moduleTitle, setModuleTitle] = useState("");
@@ -6917,7 +6916,6 @@ function TrackAContentManagementView() {
         subtitle: content.subtitle ?? null,
         slides: content.slides ?? [],
         imageUrl: content.imageUrl ?? null,
-        completionMessage: content.completionMessage ?? null,
       });
       return res.json();
     },
@@ -6956,7 +6954,6 @@ function TrackAContentManagementView() {
       setSlides(content.slides ? [...content.slides] : []);
       setDayImageUrl(content.imageUrl || null);
       setDaySubtitle(content.subtitle || "");
-      setCompletionMessage(content.completionMessage || "");
       setDayOpeningPrayerText(content.openingPrayerText || "");
       setDayOpeningPrayerAudio(content.openingPrayerAudio || null);
       setDayClosingPrayerText(content.closingPrayerText || "");
@@ -6966,7 +6963,6 @@ function TrackAContentManagementView() {
       setSlides([]);
       setDayImageUrl(null);
       setDaySubtitle("");
-      setCompletionMessage("");
       setDayOpeningPrayerText("");
       setDayOpeningPrayerAudio(null);
       setDayClosingPrayerText("");
@@ -7026,7 +7022,6 @@ function TrackAContentManagementView() {
       subtitle: daySubtitle || null,
       slides,
       imageUrl: dayImageUrl,
-      completionMessage: completionMessage || null,
       openingPrayerText: dayOpeningPrayerText || null,
       openingPrayerAudio: dayOpeningPrayerAudio || null,
       closingPrayerText: dayClosingPrayerText || null,
@@ -7523,16 +7518,6 @@ function TrackAContentManagementView() {
                     data-testid="input-day-subtitle"
                   />
                   <p className="text-xs text-muted-foreground">Secondary text shown below the title on the participant's day card. Leave blank to hide.</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Completion Message</label>
-                  <Input
-                    value={completionMessage}
-                    onChange={(e) => setCompletionMessage(e.target.value)}
-                    placeholder="e.g., Well done, faithful servant."
-                    data-testid="input-completion-message"
-                  />
-                  <p className="text-xs text-muted-foreground">Custom message shown on the success screen when the lesson is finished. Leave blank for default.</p>
                 </div>
               </div>
             </CardContent>
@@ -8573,14 +8558,12 @@ type LessonWorkbookAdminModule = {
   dayNumber: number;
   title: string;
   slides: TrackASlide[] | null;
-  completionMessage: string | null;
 };
 
 function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
   const { toast } = useToast();
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState("");
-  const [completionMessage, setCompletionMessage] = useState("");
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
   const [addSlideType, setAddSlideType] = useState<string>("text");
@@ -8594,11 +8577,9 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
   useEffect(() => {
     if (currentModule) {
       setTitle(currentModule.title);
-      setCompletionMessage(currentModule.completionMessage || "");
       setSlides(currentModule.slides ? [...currentModule.slides] : []);
     } else {
       setTitle("");
-      setCompletionMessage("");
       setSlides([]);
     }
     setEditMode(false);
@@ -8611,7 +8592,6 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
         dayNumber: selectedDay,
         title: title || "Workbook Module",
         slides,
-        completionMessage: completionMessage || null,
       });
       return res.json();
     },
@@ -8718,16 +8698,6 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Freedom Workbook — Chapter 1"
               data-testid="input-workbook-title"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Completion Message (optional)</label>
-            <Input
-              value={completionMessage}
-              onChange={e => setCompletionMessage(e.target.value)}
-              placeholder="e.g. Module complete!"
-              data-testid="input-workbook-completion-message"
             />
           </div>
 
@@ -9714,7 +9684,6 @@ function HealingAdminView() {
   const [editMode, setEditMode] = useState(false);
   const [modTitle, setModTitle] = useState("");
   const [modSubtitle, setModSubtitle] = useState("");
-  const [completionMessage, setCompletionMessage] = useState("");
   const [modImageUrl, setModImageUrl] = useState<string | null>(null);
   const [slides, setSlides] = useState<TrackASlide[]>([]);
   const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
@@ -9778,7 +9747,6 @@ function HealingAdminView() {
       setSelectedModule(newNum);
       setModTitle(`Module ${newNum}`);
       setModSubtitle("");
-      setCompletionMessage("");
       setModImageUrl(null);
       setSlides([]);
       setEditMode(true);
@@ -9790,10 +9758,10 @@ function HealingAdminView() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data: { moduleNumber: number; title: string; subtitle: string | null; imageUrl: string | null; slides: TrackASlide[]; completionMessage: string | null }) => {
+    mutationFn: async (data: { moduleNumber: number; title: string; subtitle: string | null; imageUrl: string | null; slides: TrackASlide[] }) => {
       const existingSortOrder = modules?.find((m) => m.moduleNumber === data.moduleNumber)?.sortOrder ?? data.moduleNumber;
       await apiRequest("POST", '/api/admin/healing/modules', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, sortOrder: existingSortOrder });
-      await apiRequest("POST", '/api/admin/healing/content', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, slides: data.slides, completionMessage: data.completionMessage });
+      await apiRequest("POST", '/api/admin/healing/content', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, slides: data.slides });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
@@ -9833,7 +9801,6 @@ function HealingAdminView() {
     const cont = contentMap.get(moduleNumber);
     setModTitle(mod?.title ?? `Module ${moduleNumber}`);
     setModSubtitle(mod?.subtitle ?? "");
-    setCompletionMessage(cont?.completionMessage ?? "");
     setModImageUrl(mod?.imageUrl ?? cont?.imageUrl ?? null);
     setSlides(cont?.slides ? [...cont.slides] : []);
     setExpandedSlide(null);
@@ -9847,7 +9814,6 @@ function HealingAdminView() {
       subtitle: modSubtitle || null,
       imageUrl: modImageUrl,
       slides,
-      completionMessage: completionMessage || null,
     });
   };
 
@@ -10026,10 +9992,6 @@ function HealingAdminView() {
                 <Input value={modSubtitle} onChange={e => setModSubtitle(e.target.value)} placeholder="Brief description (optional)" data-testid="input-healing-module-subtitle" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Completion Message</label>
-                <Input value={completionMessage} onChange={e => setCompletionMessage(e.target.value)} placeholder="Message shown after marking complete (optional)" data-testid="input-healing-completion-message" />
-              </div>
-              <div className="space-y-2">
                 <label className="text-sm font-medium">Card Background Image</label>
                 <p className="text-xs text-muted-foreground">Image displayed on the module card in the healing dashboard.</p>
                 <ModuleImageUpload currentUrl={modImageUrl} onUploaded={setModImageUrl} />
@@ -10040,7 +10002,6 @@ function HealingAdminView() {
               <div className="flex-1 min-w-0">
                 <p className="font-medium">{modTitle}</p>
                 {modSubtitle && <p className="text-sm text-muted-foreground">{modSubtitle}</p>}
-                {completionMessage && <p className="text-xs text-muted-foreground mt-1">Completion: "{completionMessage}"</p>}
                 {modImageUrl && (
                   <div className="mt-3">
                     <img src={modImageUrl} alt="" className="h-20 w-auto rounded object-cover border border-border" />
