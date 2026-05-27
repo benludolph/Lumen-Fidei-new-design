@@ -3944,121 +3944,137 @@ const SELECTION_REVEAL_DEFAULT = JSON.stringify({
     {
       id: "divination",
       label: "Divination",
-      subtitle: "Astrology, tarot, fortune-telling",
+      subtitle: "Astrology, tarot, fortune-telling, omens, psychic readings",
       imageUrl: "",
-      body: "Divination attempts to obtain hidden knowledge or control over the future apart from God's providence. Such practices can foster superstition, fear, and spiritual dependence on predictions rather than God.",
-      examples: ["Astrology and horoscopes", "Tarot cards", "Palm reading", "Numerology", "Fortune-telling", "I Ching"],
+      body: "Divination is opposed by Catholic teaching because it attempts to obtain hidden knowledge or control over the future apart from God's providence. The Church teaches that Christians should place their trust in God rather than seek certainty through omens, astrology, psychics, or fortune-telling. Such practices can foster superstition, fear, and spiritual dependence on predictions and signs rather than God.\n\nA person may become preoccupied with controlling the future rather than living in faith and prudence. The Church also warns that repeated involvement can distort moral judgment and openness to God's will.",
+      examples: ["Astrology and horoscopes", "Tarot cards", "Palm reading", "Numerology", "Rune casting", "Pendulum divination", "Tea leaf reading", "Crystal ball gazing", "I Ching divination", "Fortune-telling", "Scrying (mirrors, water, crystals)", "Dowsing rods used for spiritual guidance"],
       verses: [
-        { reference: "Deuteronomy 18:10–12", text: "Let no one be found among you who practices divination or sorcery, interprets omens, engages in witchcraft, or casts spells…" },
-        { reference: "Leviticus 19:26", text: "Do not practice divination or seek omens." }
+        { reference: "Deuteronomy 18:10–12", text: "Let no one be found among you… who practices divination or sorcery, interprets omens, engages in witchcraft, or casts spells…" },
+        { reference: "Leviticus 19:26", text: "Do not practice divination or seek omens." },
+        { reference: "Isaiah 47:13–14", text: "Condemns astrologers and stargazers who claim to predict the future." },
+        { reference: "Jeremiah 10:2", text: "Do not learn the ways of the nations or be terrified by signs in the heavens…" }
       ]
     },
     {
       id: "spirit_communication",
       label: "Spirit Communication",
-      subtitle: "Mediums, séances, Ouija boards",
+      subtitle: "Séances, mediums, necromancy, Ouija boards",
       imageUrl: "",
-      body: "Attempting to contact the dead or spirits bypasses God and opens a person to deception by malevolent spiritual forces. What presents itself as a departed loved one may be a demonic spirit imitating them. This practice builds reliance on spiritual powers other than God and can create deep spiritual bondage.",
-      examples: ["Visiting mediums or psychics", "Séances", "Ouija boards", "Channeling or automatic writing", "Attempting to speak with deceased relatives", "Consulting spirit guides"],
+      body: "Practices such as séances, mediumship, and attempts to contact the dead are rejected because Catholics are taught to seek spiritual guidance from God alone. The Church warns that attempting communication with spirits can open a person to deception and confusion, since not all spiritual phenomena come from God. The faithful are encouraged instead to pray for the dead and entrust them to God's mercy.\n\nPractices involving mediums or spirit contact may produce emotional distress, obsession with the dead, fear, or spiritual instability. They may also hinder healthy grieving and reliance on prayer and the sacraments.",
+      examples: ["Séances", "Mediumship", "Necromancy", "Channeling spirits", "Ouija boards", "Automatic writing", "EVP (electronic voice phenomena) spirit communication", "Ghost summoning rituals", "Spirit guides", "Ancestor invocation rituals"],
       verses: [
-        { reference: "Leviticus 19:31", text: "Do not turn to mediums or seek out spiritists, for you will be defiled by them." },
-        { reference: "Isaiah 8:19", text: "Why consult the dead on behalf of the living? Consult God's instruction and the testimony of warning." }
+        { reference: "Leviticus 19:31", text: "Do not turn to mediums or seek out spiritists…" },
+        { reference: "Leviticus 20:6", text: "God warns against consulting mediums and spirits." },
+        { reference: "Deuteronomy 18:11", text: "Specifically forbids consulting the dead." },
+        { reference: "1 Samuel 28", text: "Saul consults the medium of Endor and is judged for it." }
       ]
     },
     {
       id: "magic_sorcery",
       label: "Magic & Sorcery",
-      subtitle: "Spells, hexes, curses, witchcraft",
+      subtitle: "Spell casting, witchcraft, curses, ritual magic",
       imageUrl: "",
-      body: "Magic seeks to impose one's will on people, circumstances, or the spiritual world through rituals, words, or objects — apart from God. Even when motivated by good intentions, sorcery treats spiritual power as a tool to be wielded, which is contrary to trusting God. Cursing others or casting spells creates real spiritual harm.",
-      examples: ["Casting spells or hexes", "Performing rituals for luck or protection", "Using potions or magical objects", "Binding or cursing another person", "Practicing Wicca or ceremonial magic", "Calling on spiritual powers outside of God"],
+      body: "Magic and sorcery are condemned because they attempt to manipulate supernatural powers for personal gain, control, revenge, or hidden knowledge. Catholic teaching holds that supernatural power belongs to God alone and should never be treated as a tool to command or exploit. Even when presented as harmless or beneficial, magical practices can cultivate pride, manipulation, and spiritual disorder.\n\nMagic and sorcery can cultivate a desire for power, control, revenge, or manipulation over others. These practices damage humility and encourage reliance on hidden powers. Spiritually, they may darken conscience, increase fear or obsession, and weaken a person's relationship with God and others.",
+      examples: ["Spell casting", "Witchcraft", "Sorcery", "Hexes and curses", "Love spells", "Ritual magic", "Candle magic", "Chaos magic", "Sigil magic", "Enchantments", "Invocation rituals", "Ceremonial magic"],
       verses: [
-        { reference: "Galatians 5:20–21", text: "The acts of the flesh are obvious: …witchcraft… those who live like this will not inherit the kingdom of God." },
-        { reference: "Micah 5:12", text: "I will destroy your witchcraft and you will no longer cast spells." }
+        { reference: "Exodus 22:18", text: "Do not allow a sorceress to live." },
+        { reference: "Galatians 5:19–21", text: "Sorcery (pharmakeia) listed among works of the flesh." },
+        { reference: "Micah 5:12", text: "I will destroy your witchcraft…" },
+        { reference: "Acts 8:9–24", text: "Simon Magus rebuked for practicing magic." },
+        { reference: "Acts 19:19", text: "Converts publicly burn magic books." }
       ]
     },
     {
       id: "satanic_practices",
       label: "Satanic Practices",
-      subtitle: "Worship, pacts, dark rituals",
+      subtitle: "Demon invocation, satanic rituals, pacts",
       imageUrl: "",
-      body: "Any deliberate engagement with Satan or demonic entities — whether through worship, pacts, rituals, or fascination — is a direct rejection of God. Even what begins as experimentation or curiosity can form genuine spiritual ties that must be broken. God's mercy covers even this when sincerely renounced.",
-      examples: ["Worshipping Satan or demons", "Making pacts or vows with demonic powers", "Participating in black masses", "Dedicating oneself or others to the devil", "Fascination with or devotion to dark spiritual entities"],
+      body: "Practices involving demons or Satan are considered gravely sinful because they directly oppose worship and obedience to God. Catholic teaching views demons as fallen angels who seek to deceive and separate people from God. Any ritual, invocation, or pact involving demonic forces is understood as spiritually dangerous and incompatible with Christian faith.\n\nDemonic involvement is especially harmful because it intentionally opens a person to pure evil. Effects of these acts include deep fear, despair, hatred, spiritual bondage, and moral corruption. In severe cases, extraordinary demonic influence may result.",
+      examples: ["Demon summoning", "Satanic rituals", "Black masses", "Blood pacts", "Demonic invocation", "Occult initiation rites", "Luciferian practices", "Possession rituals"],
       verses: [
-        { reference: "Matthew 4:10", text: "Worship the Lord your God, and serve him only." },
-        { reference: "1 Corinthians 10:20–21", text: "The sacrifices of pagans are offered to demons, not to God, and I do not want you to be participants with demons." }
+        { reference: "1 Corinthians 10:20–21", text: "What pagans sacrifice they offer to demons and not to God." },
+        { reference: "Ephesians 6:11–12", text: "Spiritual warfare against 'powers' and 'forces of evil.'" },
+        { reference: "James 4:7", text: "Resist the devil, and he will flee from you." },
+        { reference: "1 Peter 5:8", text: "Your adversary the devil prowls around like a roaring lion…" }
       ]
     },
     {
       id: "occult_objects",
-      label: "Occult Objects",
-      subtitle: "Amulets, talismans, occult symbols",
+      label: "Occult Objects & Talismans",
+      subtitle: "Amulets, charms, magical objects",
       imageUrl: "",
-      body: "Objects used to attract spiritual power, protection, or luck outside of God carry spiritual significance. Keeping them — even unknowingly — can maintain a spiritual foothold. The Church calls us to renounce and destroy such items, as early believers in Ephesus publicly burned their sorcery books.",
-      examples: ["Amulets or charms for protection or luck", "Talismans or fetishes", "Crystals used for spiritual power", "Ouija boards or tarot decks kept in the home", "Occult books or grimoires", "Jewelry with occult symbols"],
+      body: "The use of charms, talismans, certain oils, and magical objects when they are believed to possess supernatural power is contrary to Christian faith. Catholicism distinguishes sacramentals—such as rosaries or medals blessed for prayer—from objects treated as magical instruments. Trusting in objects as sources of luck, protection, or power can become a form of superstition or idolatry.\n\nReliance on occult objects can foster superstition and psychological dependence on items believed to guarantee luck, protection, or power. The Church teaches that this displaces trust in God's providence and can lead to fear when the object is absent or believed \"cursed.\" Such dependence may also reinforce irrational thinking and spiritual insecurity.",
+      examples: ["Amulets", "Talismans", "Lucky charms", "Cursed objects", "Magical symbols", "Spell jars", "Protective occult jewelry", "Ritual daggers and tools", "Spirit boards", "Fetishes used for magical purposes"],
       verses: [
-        { reference: "Acts 19:19", text: "A number who had practiced sorcery brought their scrolls together and burned them publicly." },
-        { reference: "Deuteronomy 7:26", text: "Do not bring a detestable thing into your house or you, like it, will be set apart for destruction." }
+        { reference: "Deuteronomy 7:25–26", text: "Israel warned not to keep cursed objects." },
+        { reference: "Acts 19:19", text: "Magic-related items/books destroyed after conversion." },
+        { reference: "Isaiah 2:6", text: "Condemns superstitious practices adopted from pagan cultures." }
       ]
     },
     {
       id: "esoteric_systems",
       label: "Esoteric Systems",
-      subtitle: "Freemasonry, Kabbalah, secret orders",
+      subtitle: "Hidden spiritual knowledge, occult initiation systems",
       imageUrl: "",
-      body: "Esoteric systems claim to offer hidden spiritual knowledge and paths to enlightenment through initiation, ritual, and secret wisdom. These systems often incorporate spiritual oaths and invoke powers outside of Christ. The Catholic Church has consistently warned against Freemasonry and similar organizations.",
-      examples: ["Freemasonry or Eastern Star", "Occult Kabbalah", "Rosicrucianism", "Theosophy", "Anthroposophy", "Other secret initiatory orders"],
+      body: "Systems claiming hidden spiritual knowledge for an elite group are viewed critically because Catholicism teaches that God's essential revelation is openly given through Christ and the Church. The Church cautions against spiritual pride, secret doctrines, or teachings that replace divine revelation with hidden enlightenment. Salvation is not achieved through secret knowledge but through grace, faith, and communion with God.\n\nThese systems may encourage spiritual pride and elitism. This can isolate a person from an authentic Christian community and distort understanding of truth. The pursuit of secret enlightenment may also lead to confusion, relativism, or loss of faith.",
+      examples: ["Hermeticism", "Gnosticism", "Alchemy (spiritual/esoteric forms)", "Kabbalah", "Rosicrucianism", "Theosophy", "Freemasonry", "Secret initiation societies"],
       verses: [
-        { reference: "Colossians 2:8", text: "See to it that no one takes you captive through hollow and deceptive philosophy, which depends on human tradition and the elemental spiritual forces of this world rather than on Christ." },
-        { reference: "Ephesians 5:11", text: "Have nothing to do with the fruitless deeds of darkness, but rather expose them." }
+        { reference: "Colossians 2:8", text: "See to it that no one takes you captive through hollow and deceptive philosophy…" },
+        { reference: "1 Timothy 6:20", text: "Warning against 'false knowledge.'" },
+        { reference: "Genesis 3:4–5", text: "The serpent tempts humanity with hidden godlike knowledge." }
       ]
     },
     {
       id: "new_age",
-      label: "New Age",
-      subtitle: "Crystal healing, chakras, energy work, Reiki",
+      label: "New Age & Energy Practices",
+      subtitle: "Channeling, crystals, spiritual energy manipulation",
       imageUrl: "",
-      body: "New Age spirituality blends Eastern mysticism and Western occultism into a framework that replaces God with impersonal spiritual energy or the self. While it often presents itself as harmless wellness, practices like Reiki, chakra alignment, or consulting spirit guides direct spiritual attention away from the God of Scripture.",
-      examples: ["Crystal healing or energy crystals", "Chakra balancing or alignment", "Reiki or therapeutic touch", "Visiting New Age healers or practitioners", "Spiritual manifesting or vision boards", "Using spirit guides", "Engaging with 'the universe' as a spiritual force"],
+      body: "Many New Age and energy-based practices are considered problematic when they invoke impersonal spiritual forces, channel entities, or promote incompatible spiritual worldviews. Catholic teaching emphasizes a personal relationship with God rather than manipulation of cosmic energies or self-deification. The concern is especially strong when these practices replace prayer, sacraments, or dependence on God.\n\nNew Age practices can blur the distinction between God, humanity, and creation, encouraging self-centered spirituality or relativism. Individuals may become spiritually confused by mixing incompatible beliefs. The Church is especially concerned when these practices replace prayer, moral conversion, and dependence on God.",
+      examples: ["Channeling ascended masters", "Aura reading", "Chakra manipulation", "Reiki", "Crystal healing", "Energy healing invoking spiritual forces", "Astral projection", "Third-eye awakening", "Manifestation rituals with occult intent"],
       verses: [
-        { reference: "Colossians 2:9", text: "For in Christ all the fullness of the Deity lives in bodily form, and you have been brought to fullness in him." },
-        { reference: "Isaiah 8:20", text: "Consult God's instruction and the testimony of warning. If anyone does not speak according to this word, they have no light of dawn." }
+        { reference: "Isaiah 8:19", text: "Should not a people inquire of their God? Why consult the dead on behalf of the living?" },
+        { reference: "Jeremiah 17:5", text: "Warning against placing ultimate trust in human/spiritual systems apart from God." },
+        { reference: "Colossians 2:18", text: "Warning against false spirituality and mystical speculation." }
       ]
     },
     {
       id: "altered_consciousness",
       label: "Altered Consciousness",
-      subtitle: "Drugs for spiritual access, trance states",
+      subtitle: "Trance rituals, possession ceremonies, occult ecstatic states",
       imageUrl: "",
-      body: "Using substances or techniques to lower mental boundaries and access spiritual experience can open a person to demonic influence. What presents itself as enlightenment or spiritual encounter may be deception. Sober discernment is a biblical virtue precisely because spiritual dangers are real.",
-      examples: ["Using hallucinogens for spiritual insight (ayahuasca, psilocybin, peyote)", "Induced trance states for spirit contact", "Shamanic journeying", "Breathwork used to enter altered spiritual states", "Hypnosis for past-life regression"],
+      body: "The Church warns against trance states, occult ecstatic practices, or techniques aimed at surrendering consciousness to unknown spiritual influences. Catholic spirituality values self-control, discernment, and prayer rooted in God's grace. Practices designed to bypass reason or invite uncontrolled spiritual experiences may expose individuals to psychological or spiritual harm.\n\nOccult trance practices may impair discernment, emotional balance, and self-control. Catholic spirituality emphasizes sobriety and conscious cooperation with grace, whereas techniques aimed at surrendering the mind to unknown influences may create vulnerability to psychological distress or deceptive spiritual experiences. Some individuals may also develop escapist habits or detachment from reality.",
+      examples: ["Trance rituals", "Shamanic journeying", "Spirit possession ceremonies", "Drug-assisted occult rituals", "Automatic trance states", "Certain forms of ecstatic ritual practice"],
       verses: [
-        { reference: "1 Peter 5:8", text: "Be sober-minded; be watchful. Your adversary the devil prowls around like a roaring lion, seeking someone to devour." },
-        { reference: "Galatians 5:20–21", text: "The acts of the flesh include …sorcery… drunkenness… those who live like this will not inherit the kingdom of God." }
+        { reference: "1 Peter 5:8", text: "Be sober-minded; be watchful." },
+        { reference: "Ephesians 5:18", text: "Do not get drunk on wine… instead be filled with the Spirit." },
+        { reference: "2 Timothy 1:7", text: "God gives 'a spirit not of fear but of power and love and self-control.'" }
       ]
     },
     {
       id: "folk_magic",
-      label: "Folk Magic",
-      subtitle: "Curanderismo, Hoodoo, folk practices",
+      label: "Folk Magic & Superstition",
+      subtitle: "Curses, evil eye rituals, lucky charms",
       imageUrl: "",
-      body: "Folk magic traditions pass through cultures and family lines, often mixing Christian language or saints with magical practices. Even when framed as healing or protection, these practices invoke spiritual powers outside of God. They can be deeply embedded in family history, requiring intentional renunciation.",
-      examples: ["Curanderismo or folk healing rituals", "Hoodoo or root work", "Voodoo or Vodou practices", "Santería", "Brujería", "Family-based superstitious rituals", "Prayers invoking spirits mixed with Catholic forms"],
+      body: "Folk magic and superstition are discouraged because they place trust in rituals, omens, or objects rather than in God's providence. Even culturally accepted practices can become spiritually harmful when they encourage fear, manipulation, or belief in magical causation. Catholic teaching calls believers to live by faith and trust in God rather than superstition.\n\nSuperstitious practices can create chronic fear, anxiety, and compulsive behavior, especially when a person believes everyday events are controlled by curses, omens, or magical forces. Catholic teaching holds that superstition undermines freedom and trust in divine providence. It may also perpetuate manipulation within families or cultures through fear-based beliefs.",
+      examples: ["Folk curses", "Evil eye rituals", "Superstitious charms", "Magical blessings outside religion", "Voodoo spellwork", "Hoodoo practices", "Brujería", "Santería elements involving magic/divination", "Lucky rituals believed to manipulate fate"],
       verses: [
-        { reference: "Leviticus 19:26", text: "Do not practice divination or seek omens." },
-        { reference: "1 Samuel 15:23", text: "Rebellion is like the sin of divination, and arrogance like the evil of idolatry." }
+        { reference: "Leviticus 19:26", text: "Prohibits omens and superstitious divination." },
+        { reference: "Isaiah 44:9–20", text: "Ridicules trust in magical or man-made spiritual objects." },
+        { reference: "Matthew 6:33", text: "Trust God first rather than superstitious practices." }
       ]
     },
     {
       id: "occult_religions",
-      label: "Occult Religions",
-      subtitle: "Wicca, Neo-Paganism, religious Satanism",
+      label: "Occult Religious Systems",
+      subtitle: "Religions centered on magic, invocation, occult worship",
       imageUrl: "",
-      body: "Formal religious systems built on nature worship, paganism, or the occult claim to offer spirituality outside of Christ. Wicca and Neo-Paganism invoke deities, practice ritual magic, and honor cycles of nature as divine. These are not simply cultural — they are spiritual systems with real effects that require renunciation.",
-      examples: ["Wicca or Witchcraft as a religion", "Neo-Paganism or Druidry", "Religious Satanism (LaVeyan or theistic)", "Norse or Hellenic reconstruction as spiritual practice", "Goddess worship", "Earth-based spiritual systems as primary religion"],
+      body: "Religious systems centered on magic, occult power, or the worship of spiritual beings apart from God conflict with Catholic belief in the one God revealed through Jesus Christ. The Church teaches that worship belongs to God alone and rejects religious practices involving occult rituals, magical invocation, or alternative spiritual authorities. Participation in such systems is seen as incompatible with Christian discipleship.\n\nParticipation in occult-centered religions can gradually reshape a person's worldview away from Christian teaching and sacramental life. The Church teaches that such systems may normalize practices contrary to Christian morality and worship. Spiritually, this can lead to alienation from God, confusion about truth, and difficulty maintaining a coherent Christian faith and identity.",
+      examples: ["Wicca", "Satanism", "Luciferianism", "Certain forms of pagan ritualism", "Thelema", "Esoteric occult orders", "Neo-pagan magical traditions"],
       verses: [
-        { reference: "Exodus 20:3", text: "You shall have no other gods before me." },
-        { reference: "1 Corinthians 10:21", text: "You cannot drink the cup of the Lord and the cup of demons too." }
+        { reference: "Exodus 20:3–5", text: "You shall have no other gods before me." },
+        { reference: "Deuteronomy 12:29–31", text: "Israel forbidden from adopting pagan worship practices." },
+        { reference: "Revelation 21:8", text: "Sorcerers included among those judged by God." },
+        { reference: "1 Corinthians 10:14", text: "Flee from idolatry." }
       ]
     }
   ]
