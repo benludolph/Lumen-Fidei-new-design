@@ -186,18 +186,18 @@ export default function Dashboard() {
     }
   };
   
+  const isPrivileged = user?.role === "admin" || user?.role === "superuser";
+
   const { data: prelimModulesData, isLoading: prelimLoading } = useQuery<PrelimModuleWithStatus[]>({
     queryKey: ["/api/prelim-modules"],
     enabled: !!user && (user.role === 'participant' || user.role === 'superuser'),
   });
-  const allPrelimsComplete = !!(prelimModulesData?.length && prelimModulesData.every(m => m.completed));
+  const allPrelimsComplete = isPrivileged || !!(prelimModulesData?.length && prelimModulesData.every(m => m.completed));
 
   const { data: cohortData, isLoading: cohortLoading } = useCohortStartDate();
-  const currentDay = cohortData?.currentDay || 0;
+  const currentDay = isPrivileged ? 30 : (cohortData?.currentDay || 0);
   
   const isTrackA = user?.track === 'A';
-  
-  const isPrivileged = user?.role === "admin" || user?.role === "superuser";
 
   const { data: answers } = useUserAnswers(user?.id);
   const { data: prayerCompletions } = useUserPrayerCompletions();
