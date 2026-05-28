@@ -3052,6 +3052,60 @@ export async function registerRoutes(
     }
   });
 
+  // POST /api/admin/bulk-update-timer-durations — set duration and/or reflectionDuration on ALL scripture_practice slides
+  app.post('/api/admin/bulk-update-timer-durations', requireRole('admin'), async (req, res) => {
+    try {
+      const { duration, reflectionDuration } = req.body as { duration?: number; reflectionDuration?: number };
+      if (duration === undefined && reflectionDuration === undefined) {
+        return res.status(400).json({ error: 'Provide at least one of: duration, reflectionDuration' });
+      }
+
+      let totalUpdated = 0;
+      const log: string[] = [];
+
+      const patchSlides = (slides: { type: string; content: string }[]): { updated: number; slides: { type: string; content: string }[] } => {
+        let updated = 0;
+        const newSlides = slides.map(slide => {
+          if (slide.type !== 'scripture_practice' && slide.type !== 'timer') return slide;
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(slide.content); } catch {}
+          if (duration !== undefined) parsed.duration = duration;
+          if (reflectionDuration !== undefined) parsed.reflectionDuration = reflectionDuration;
+          updated++;
+          return { ...slide, content: JSON.stringify(parsed) };
+        });
+        return { updated, slides: newSlides };
+      };
+
+      const trackARows = await db.select().from(trackAContent);
+      for (const row of trackARows) {
+        const slides = (row.slides ?? []) as { type: string; content: string }[];
+        const { updated, slides: newSlides } = patchSlides(slides);
+        if (updated > 0) {
+          await db.update(trackAContent).set({ slides: newSlides }).where(eq(trackAContent.id, row.id));
+          log.push(`Day ${row.dayNumber}: updated ${updated} slide(s)`);
+          totalUpdated += updated;
+        }
+      }
+
+      const prelimRows = await db.select().from(prelimModules);
+      for (const row of prelimRows) {
+        const slides = (row.slides ?? []) as { type: string; content: string }[];
+        const { updated, slides: newSlides } = patchSlides(slides);
+        if (updated > 0) {
+          await db.update(prelimModules).set({ slides: newSlides }).where(eq(prelimModules.id, row.id));
+          log.push(`Prelim module ${row.position}: updated ${updated} slide(s)`);
+          totalUpdated += updated;
+        }
+      }
+
+      res.json({ success: true, totalUpdated, log });
+    } catch (err: unknown) {
+      console.error('Bulk timer update error:', err);
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
   // === Workbook Modules ===
 
   // GET /api/workbook-modules — all modules with completion + unlock status for the current user

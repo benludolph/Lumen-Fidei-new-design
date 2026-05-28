@@ -1247,8 +1247,113 @@ function CohortSettingsView() {
 
       <BackupRestoreCard />
 
+      <BulkTimerDurationCard />
+
       <MigrateTimerCard />
     </div>
+  );
+}
+
+function BulkTimerDurationCard() {
+  const { toast } = useToast();
+  const [readOnceSecs, setReadOnceSecs] = useState('');
+  const [reflectSecs, setReflectSecs] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [result, setResult] = useState<{ totalUpdated: number; log: string[] } | null>(null);
+
+  const handleApply = async () => {
+    const duration = readOnceSecs !== '' ? Number(readOnceSecs) : undefined;
+    const reflectionDuration = reflectSecs !== '' ? Number(reflectSecs) : undefined;
+    if (duration === undefined && reflectionDuration === undefined) {
+      toast({ title: 'Enter at least one duration', variant: 'destructive' });
+      return;
+    }
+    if ((duration !== undefined && (isNaN(duration) || duration < 1)) ||
+        (reflectionDuration !== undefined && (isNaN(reflectionDuration) || reflectionDuration < 1))) {
+      toast({ title: 'Durations must be positive numbers', variant: 'destructive' });
+      return;
+    }
+    setIsRunning(true);
+    setResult(null);
+    try {
+      const res = await fetch('/api/admin/bulk-update-timer-durations', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ duration, reflectionDuration }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Update failed');
+      setResult(data);
+      toast({
+        title: 'Timers updated',
+        description: `Updated ${data.totalUpdated} scripture practice slide(s) across all days.`,
+      });
+    } catch (err: unknown) {
+      toast({ title: 'Update failed', description: String(err), variant: 'destructive' });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">Set All Scripture Practice Timers</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Apply a new duration to every Scripture Practice slide across all 30 days and prelim modules at once. Leave a field blank to leave that timer unchanged.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Read Once (seconds)</label>
+            <Input
+              type="number"
+              min={1}
+              placeholder="e.g. 180"
+              value={readOnceSecs}
+              onChange={e => setReadOnceSecs(e.target.value)}
+              data-testid="input-bulk-timer-read-once"
+            />
+            {readOnceSecs !== '' && (
+              <p className="text-xs text-muted-foreground">
+                = {Math.floor(Number(readOnceSecs) / 60)}m {Number(readOnceSecs) % 60}s
+              </p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Reflect (seconds)</label>
+            <Input
+              type="number"
+              min={1}
+              placeholder="e.g. 120"
+              value={reflectSecs}
+              onChange={e => setReflectSecs(e.target.value)}
+              data-testid="input-bulk-timer-reflect"
+            />
+            {reflectSecs !== '' && (
+              <p className="text-xs text-muted-foreground">
+                = {Math.floor(Number(reflectSecs) / 60)}m {Number(reflectSecs) % 60}s
+              </p>
+            )}
+          </div>
+        </div>
+        {result && (
+          <div className="p-3 rounded-md bg-green-50 border border-green-200 text-sm text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200 space-y-1">
+            <p className="font-medium">Updated {result.totalUpdated} slide(s)</p>
+            {result.log.map((line, i) => <p key={i} className="text-xs opacity-80">{line}</p>)}
+          </div>
+        )}
+        <Button
+          onClick={handleApply}
+          disabled={isRunning || (readOnceSecs === '' && reflectSecs === '')}
+          data-testid="button-bulk-timer-apply"
+        >
+          {isRunning ? 'Applying...' : 'Apply to All Days'}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
