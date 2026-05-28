@@ -1256,7 +1256,9 @@ export async function registerRoutes(
     if (req.user!.role === 'participant') {
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
       const currentDay = computeCurrentProgramDay(cohortStartDateStr);
-      if (input.dayNumber > currentDay || currentDay === 0) {
+      // Allow Day 0 even before cohort starts (it's the pre-program intro module).
+      // Days 1-30 are still blocked when currentDay === 0 because dayNumber > 0.
+      if (input.dayNumber > currentDay) {
         return res.status(403).json({ message: "Cannot complete prayers for this day" });
       }
     }
