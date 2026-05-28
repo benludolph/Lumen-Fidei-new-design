@@ -494,8 +494,11 @@ export async function registerRoutes(
     
     if (req.user!.role === 'participant') {
       // Check prelim completion gate
-      const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      const allPrelimsComplete = completions.length >= 2;
+      const [completions, prelimMods] = await Promise.all([
+        storage.getUserPrelimCompletions(req.user!.id),
+        storage.getPrelimModules(),
+      ]);
+      const allPrelimsComplete = completions.length >= prelimMods.length;
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
@@ -555,8 +558,11 @@ export async function registerRoutes(
 
     if (req.user!.role === 'participant') {
       // Check prelim completion gate (Day 0 also requires all prelims done)
-      const completions = await storage.getUserPrelimCompletions(req.user!.id);
-      const allPrelimsComplete = completions.length >= 2;
+      const [completions, prelimMods] = await Promise.all([
+        storage.getUserPrelimCompletions(req.user!.id),
+        storage.getPrelimModules(),
+      ]);
+      const allPrelimsComplete = completions.length >= prelimMods.length;
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }

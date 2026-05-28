@@ -231,8 +231,21 @@ export default function Dashboard() {
   const completePrelimMutation = useMutation({
     mutationFn: (position: number) =>
       apiRequest("POST", `/api/prelim-modules/${position}/complete`),
+    onMutate: async (position: number) => {
+      await queryClient.cancelQueries({ queryKey: ["/api/prelim-modules"] });
+      const prev = queryClient.getQueryData<PrelimModuleWithStatus[]>(["/api/prelim-modules"]);
+      queryClient.setQueryData<PrelimModuleWithStatus[]>(["/api/prelim-modules"], (old) =>
+        old ? old.map(m => m.position === position ? { ...m, completed: true } : m) : old
+      );
+      return { prev };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prelim-modules"] });
+    },
+    onError: (_err: unknown, _position: number, context: { prev: PrelimModuleWithStatus[] | undefined } | undefined) => {
+      if (context?.prev !== undefined) {
+        queryClient.setQueryData(["/api/prelim-modules"], context.prev);
+      }
     },
   });
 
