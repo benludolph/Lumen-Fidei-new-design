@@ -1389,7 +1389,11 @@ export async function registerRoutes(
     const startDateStr = await storage.getCohortSetting("cohort_start_date");
     const currentDay = computeCurrentProgramDay(startDateStr);
     
-    res.json({ startDate: startDateStr, currentDay });
+    // Admins and superusers always see all 30 days unlocked
+    const role = req.user!.role;
+    const effectiveCurrentDay = (role === 'admin' || role === 'superuser') ? 30 : currentDay;
+    
+    res.json({ startDate: startDateStr, currentDay: effectiveCurrentDay });
   });
 
   // === Cohort Settings (Admin) ===
