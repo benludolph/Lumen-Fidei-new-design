@@ -229,7 +229,7 @@ export function BeforeAfterSlide({
                     key={i}
                     style={{
                       fontFamily: "'Afacad', system-ui, sans-serif",
-                      fontSize: "15px",
+                      fontSize: "clamp(1rem, 3.5vw, 1.15rem)",
                       fontWeight: 400,
                       color: "rgba(255,255,255,0.70)",
                       lineHeight: 1.5,

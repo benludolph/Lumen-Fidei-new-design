@@ -144,7 +144,7 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
           <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.35)", margin: 0 }}>
-            WEEK {toWeek} BEGINS
+            {fromWeek === 0 ? "THE PROGRAM BEGINS" : `WEEK ${toWeek} BEGINS`}
           </p>
           {isPrivileged && (
             <button
@@ -189,35 +189,39 @@ export function WeekTransitionCinematic({ fromWeek, toWeek, isPrivileged, onClos
           </div>
         ))}
 
-        {/* From week card — just completed, slightly dimmed */}
-        <div
-          ref={fromCardRef}
-          style={{
-            borderRadius: 12,
-            overflow: "hidden",
-            border: "1px solid rgba(255,255,255,0.35)",
-            opacity: 0.72,
-          }}
-        >
-          <CinematicWeekCard week={from} isCompleted lockPhase="idle" />
-        </div>
-
-        {/* Animated connector line — fromWeek → toWeek */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 52 }}>
-          <div style={{ width: 1, height: "100%", background: "rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
+        {/* From week card — just completed, slightly dimmed (skip for the very first entry) */}
+        {fromWeek > 0 && (
+          <>
             <div
+              ref={fromCardRef}
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: connectorFilled ? "100%" : "0%",
-                background: "rgba(255,255,255,0.7)",
-                transition: connectorFilled ? "height 1.15s ease-in-out" : "none",
+                borderRadius: 12,
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.35)",
+                opacity: 0.72,
               }}
-            />
-          </div>
-        </div>
+            >
+              <CinematicWeekCard week={from} isCompleted lockPhase="idle" />
+            </div>
+
+            {/* Animated connector line — fromWeek → toWeek */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", height: 52 }}>
+              <div style={{ width: 1, height: "100%", background: "rgba(255,255,255,0.1)", position: "relative", overflow: "hidden" }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: connectorFilled ? "100%" : "0%",
+                    background: "rgba(255,255,255,0.7)",
+                    transition: connectorFilled ? "height 1.15s ease-in-out" : "none",
+                  }}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* To week card — the card shell stays still; only its inner content slides */}
         <div

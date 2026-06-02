@@ -330,6 +330,7 @@ export default function Dashboard() {
     const resolvedPeriod = period || "morning";
     // Show week transition cinematic BEFORE opening the first day of a new week
     const WEEK_FIRST_DAYS: Record<number, { fromWeek: number; toWeek: number }> = {
+      1:  { fromWeek: 0, toWeek: 1 },
       7:  { fromWeek: 1, toWeek: 2 },
       13: { fromWeek: 2, toWeek: 3 },
       19: { fromWeek: 3, toWeek: 4 },
