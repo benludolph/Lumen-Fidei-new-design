@@ -3231,7 +3231,7 @@ export async function registerRoutes(
     res.json(mod);
   });
 
-  // === Freedom Workbook ===
+  // === Deliverance Workbook ===
 
   // GET /api/workbook/summary — aggregated section counts + attestations
   app.get("/api/workbook/summary", requireAuth, async (req, res) => {

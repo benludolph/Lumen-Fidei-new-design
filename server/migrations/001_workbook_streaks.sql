@@ -1,5 +1,5 @@
 -- Migration: Add workbook_streaks table
--- Task #97: Freedom Workbook — Prayers & Daily Renewal
+-- Task #97: Deliverance Workbook — Prayers & Daily Renewal
 -- Run once against the production database.
 
 CREATE TABLE IF NOT EXISTS workbook_streaks (

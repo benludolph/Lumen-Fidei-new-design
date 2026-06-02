@@ -172,7 +172,7 @@ export interface IStorage {
   upsertGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number, variables: Record<string, string | string[]>): Promise<GuidedPrayerResponse>;
   getGuidedPrayerResponsesByUserId(userId: number): Promise<GuidedPrayerResponse[]>;
 
-  // Freedom Workbook
+  // Deliverance Workbook
   getWorkbookEntries(userId: number, sectionId: number): Promise<WorkbookEntry[]>;
   upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, unknown>, position?: number, id?: number): Promise<WorkbookEntry>;
   deleteWorkbookEntry(id: number, userId: number): Promise<void>;
@@ -1158,7 +1158,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(guidedPrayerResponses.dayNumber, guidedPrayerResponses.slideIndex);
   }
 
-  // Freedom Workbook
+  // Deliverance Workbook
   async getWorkbookEntries(userId: number, sectionId: number): Promise<WorkbookEntry[]> {
     return db.select().from(workbookEntries)
       .where(and(eq(workbookEntries.userId, userId), eq(workbookEntries.sectionId, sectionId)))

@@ -289,9 +289,9 @@ export const insertGuidedPrayerResponseSchema = createInsertSchema(guidedPrayerR
 export type GuidedPrayerResponse = typeof guidedPrayerResponses.$inferSelect;
 export type InsertGuidedPrayerResponse = z.infer<typeof insertGuidedPrayerResponseSchema>;
 
-// === FREEDOM WORKBOOK TABLES ===
+// === DELIVERANCE WORKBOOK TABLES ===
 
-// Per-user, per-section list entries for the Freedom Workbook
+// Per-user, per-section list entries for the Deliverance Workbook
 export const workbookEntries = pgTable("workbook_entries", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
