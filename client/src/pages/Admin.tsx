@@ -8801,7 +8801,7 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
             <Input
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Freedom Workbook — Chapter 1"
+              placeholder="e.g. Deliverance Workbook — Chapter 1"
               data-testid="input-workbook-title"
             />
           </div>
