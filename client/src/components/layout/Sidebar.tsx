@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import lumenIcon from "@/assets/images/lumen-icon.png";
 import { useQuery } from "@tanstack/react-query";
 import { 
   BookOpen, 
@@ -64,10 +65,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   return (
     <>
       <div className="flex items-center gap-3 mb-10 px-2">
-        <div>
-          <h1 className="font-serif font-bold text-lg leading-tight text-black uppercase tracking-[0.05em]">Lumen Fidei</h1>
-          <p className="text-xs text-muted-foreground">30-Day Spiritual Journey</p>
-        </div>
+        <img src={lumenIcon} alt="Lumen Fidei" className="h-10 w-auto object-contain" />
       </div>
 
       <div className="space-y-1 flex-1">
@@ -156,7 +154,7 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border flex items-center justify-between px-4 z-30">
       <div className="flex items-center gap-3">
-        <h1 className="font-serif font-bold text-base text-black uppercase tracking-[0.05em]">Lumen Fidei</h1>
+        <img src={lumenIcon} alt="Lumen Fidei" className="h-8 w-auto object-contain" />
       </div>
       <div className="flex items-center gap-2">
         {unreadCount > 0 && (
