@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import lumenIcon from "@/assets/images/lumen-icon.png";
+import monstranceIcon from "@assets/Logo_1780595489069.png";
+import wordmarkImg from "@assets/lumen_fidei_1780595498710.png";
 import { useQuery } from "@tanstack/react-query";
 import { 
   BookOpen, 
@@ -64,8 +65,9 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-10 px-2">
-        <img src={lumenIcon} alt="Lumen Fidei" className="h-10 w-auto object-contain" />
+      <div className="flex flex-col items-center mb-10 px-2 rounded-xl bg-black py-3 gap-1">
+        <img src={monstranceIcon} alt="Lumen Fidei" className="h-12 w-auto object-contain" />
+        <img src={wordmarkImg} alt="Lumen Fidei" className="h-5 w-auto object-contain" />
       </div>
 
       <div className="space-y-1 flex-1">
@@ -153,8 +155,9 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border flex items-center justify-between px-4 z-30">
-      <div className="flex items-center gap-3">
-        <img src={lumenIcon} alt="Lumen Fidei" className="h-8 w-auto object-contain" />
+      <div className="flex items-center gap-2 rounded-lg bg-black px-3 py-1.5">
+        <img src={monstranceIcon} alt="Lumen Fidei" className="h-7 w-auto object-contain" />
+        <img src={wordmarkImg} alt="Lumen Fidei" className="h-4 w-auto object-contain" />
       </div>
       <div className="flex items-center gap-2">
         {unreadCount > 0 && (
