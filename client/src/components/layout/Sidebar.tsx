@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import lumenIcon from "@/assets/images/lumen-icon.png";
+import lumenIcon from "@/assets/images/logo.png";
 import { useQuery } from "@tanstack/react-query";
 import { 
   BookOpen, 
