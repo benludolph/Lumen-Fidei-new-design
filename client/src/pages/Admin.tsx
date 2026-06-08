@@ -3554,19 +3554,19 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
         text: parsed.text || "",
         mediaType: parsed.mediaType === "music" ? "music" : "video",
         title: parsed.title || "",
-        aspectRatio: parsed.aspectRatio || "16/9",
+        aspectRatio: parsed.aspectRatio || "default",
         objectFit: parsed.objectFit || "cover",
       };
     } else {
-      data = { url: content || "", text: "", mediaType: "video", title: "", aspectRatio: "16/9", objectFit: "cover" };
+      data = { url: content || "", text: "", mediaType: "video", title: "", aspectRatio: "default", objectFit: "cover" };
     }
   } catch {
-    data = { url: content || "", text: "", mediaType: "video", title: "", aspectRatio: "16/9", objectFit: "cover" };
+    data = { url: content || "", text: "", mediaType: "video", title: "", aspectRatio: "default", objectFit: "cover" };
   }
 
   const updateData = (next: typeof data) => {
     const isMusic = next.mediaType === "music";
-    const hasExtras = next.text || isMusic || next.title || next.aspectRatio !== "16/9" || next.objectFit !== "cover";
+    const hasExtras = next.text || isMusic || next.title || next.aspectRatio !== "default" || next.objectFit !== "cover";
     if (!hasExtras) {
       onChange(next.url);
     } else {
@@ -3574,7 +3574,7 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
       if (next.text) obj.text = next.text;
       if (isMusic) obj.mediaType = "music";
       if (next.title) obj.title = next.title;
-      if (next.aspectRatio !== "16/9") obj.aspectRatio = next.aspectRatio;
+      if (next.aspectRatio !== "default") obj.aspectRatio = next.aspectRatio;
       if (next.objectFit !== "cover") obj.objectFit = next.objectFit;
       onChange(JSON.stringify(obj));
     }
@@ -3660,6 +3660,7 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
               className="px-2 py-1.5 text-xs border rounded-md bg-background"
               data-testid={`select-media-aspect-${index}`}
             >
+              <option value="default">Default (35vh max)</option>
               <option value="16/9">16:9 (landscape)</option>
               <option value="4/3">4:3 (standard)</option>
               <option value="3/2">3:2 (photo)</option>

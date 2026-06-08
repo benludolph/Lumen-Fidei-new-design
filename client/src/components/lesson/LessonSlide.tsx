@@ -347,7 +347,7 @@ function MusicCard({ url, title }: { url: string; title?: string }) {
   );
 }
 
-function ZoomableImage({ src, testId, aspectRatio = "16/9", objectFit = "cover" }: { src: string; testId?: string; aspectRatio?: string; objectFit?: string }) {
+function ZoomableImage({ src, testId, aspectRatio, objectFit }: { src: string; testId?: string; aspectRatio?: string; objectFit?: string }) {
   const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
@@ -357,15 +357,27 @@ function ZoomableImage({ src, testId, aspectRatio = "16/9", objectFit = "cover" 
     return () => document.removeEventListener("keydown", handler);
   }, [zoomed]);
 
+  const hasAspectRatio = aspectRatio && aspectRatio !== "default";
   const isAuto = aspectRatio === "auto";
+  const fit = objectFit || "cover";
 
   return (
     <>
-      <div style={{ position: "relative", width: "100%", borderRadius: "10px", overflow: "hidden", aspectRatio: isAuto ? undefined : aspectRatio, maxHeight: isAuto ? "55vh" : undefined }} className="group">
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          borderRadius: "10px",
+          overflow: "hidden",
+          aspectRatio: hasAspectRatio && !isAuto ? aspectRatio : undefined,
+          maxHeight: isAuto ? "55vh" : hasAspectRatio ? undefined : "35vh",
+        }}
+        className="group"
+      >
         <img
           src={src}
           alt=""
-          style={{ width: "100%", height: "100%", objectFit: objectFit as any, display: "block" }}
+          style={{ width: "100%", height: "100%", maxHeight: hasAspectRatio ? undefined : "35vh", objectFit: fit as any, display: "block" }}
           data-testid={testId ?? "media-image"}
         />
         <button
@@ -499,7 +511,9 @@ function MediaContent({ text, mediaType, title, aspectRatio, objectFit }: { text
     );
   }
 
-  const imgProps = { aspectRatio, objectFit };
+  const imgProps: { aspectRatio?: string; objectFit?: string } = {};
+  if (aspectRatio && aspectRatio !== "default") imgProps.aspectRatio = aspectRatio;
+  if (objectFit && objectFit !== "cover") imgProps.objectFit = objectFit;
 
   if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
     return <ZoomableImage src={trimmed} {...imgProps} />;
