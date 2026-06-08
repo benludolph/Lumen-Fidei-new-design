@@ -661,155 +661,53 @@ function MultiSelectList({ content, onInteracted }: { content: string; onInterac
   );
 }
 
-interface CardOption {
-  id: string;
-  title: string;
-  description?: string;
-  scripture?: string;
-  value: string;
-}
-
-interface CardSelectData {
-  intro?: string;
-  options: CardOption[];
-}
-
-function parseCardSelect(content: string): CardSelectData | null {
-  try {
-    const parsed = JSON.parse(content);
-    if (
-      parsed &&
-      Array.isArray(parsed.options) &&
-      parsed.options.length > 0 &&
-      typeof parsed.options[0].title === "string"
-    ) {
-      return parsed as CardSelectData;
-    }
-  } catch {}
-  return null;
-}
-
-function SingleSelectList({ content, contextKey, onInteracted }: { content: string; contextKey?: string; onInteracted?: () => void }) {
-  const cardData = parseCardSelect(content);
-  const legacy = !cardData ? parseOptions(content) : { heading: "", options: [] as string[] };
-
-  const [selected, setSelected] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+function SingleSelectList({ content, onInteracted }: { content: string; onInteracted?: () => void }) {
+  const { heading, options } = parseOptions(content);
+  const [selected, setSelected] = useState<number | null>(null);
   const interactedRef = useRef(false);
 
   useEffect(() => {
-    if (!cardData && legacy.options.length === 0) onInteracted?.();
+    if (options.length === 0) onInteracted?.();
   }, []);
 
-  const handleCardSelect = async (value: string) => {
-    setSelected(value);
-    if (!interactedRef.current) {
-      interactedRef.current = true;
-      onInteracted?.();
-    }
-    if (contextKey) {
-      setSaving(true);
-      try {
-        await fetch(`/api/chat-flow-responses/${encodeURIComponent(contextKey)}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ variableName: "selection", answer: value }),
-        });
-      } catch {}
-      setSaving(false);
-    }
-  };
-
-  if (!cardData) {
-    const { heading, options } = legacy;
-
-    if (options.length === 0) {
-      return <p className="type-body-xl whitespace-pre-wrap text-[var(--white-80)]">{content}</p>;
-    }
-
-    return (
-      <div className="space-y-5">
-        {heading && <p className="type-display-lg font-bold text-white">{heading}</p>}
-        <div className="space-y-2">
-          {options.map((option, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => {
-                setSelected(String(idx));
-                if (!interactedRef.current) {
-                  interactedRef.current = true;
-                  onInteracted?.();
-                }
-              }}
-              className={cn(
-                "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors border",
-                selected === String(idx)
-                  ? "bg-[var(--white-6)] border-[var(--white-10)] text-white"
-                  : "bg-transparent border-transparent text-[var(--white-70)] hover:bg-[var(--white-4)]"
-              )}
-              data-testid={`radio-option-${idx}`}
-            >
-              {selected === String(idx) ? (
-                <CheckCircle2 className="w-5 h-5 text-[#00b57a] shrink-0 mt-0.5" />
-              ) : (
-                <Circle className="w-5 h-5 shrink-0 mt-0.5 text-[var(--white-30)]" />
-              )}
-              <span className="type-body-xl leading-[1.4]">{option}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+  if (options.length === 0) {
+    return <p className="type-body-xl whitespace-pre-wrap text-[var(--white-80)]">{content}</p>;
   }
 
   return (
     <div className="space-y-5">
-      {cardData.intro && (
-        <HtmlContent content={cardData.intro} className="type-body-xl leading-[1.4] text-[var(--white-80)]" />
+      {heading && (
+        <p className="type-display-lg font-bold text-white">{heading}</p>
       )}
-      <div className="space-y-3">
-        {cardData.options.map((option) => {
-          const isSelected = selected === option.value;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => handleCardSelect(option.value)}
-              className={cn(
-                "w-full text-left p-4 rounded-xl border transition-all",
-                isSelected
-                  ? "bg-[rgba(0,181,122,0.08)] border-[#00b57a] shadow-[0_0_0_1px_#00b57a]"
-                  : "bg-[var(--white-3)] border-[var(--white-8)] hover:bg-[var(--white-6)] hover:border-[var(--white-15)]"
-              )}
-              data-testid={`card-option-${option.id}`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0">
-                  {isSelected ? (
-                    <CheckCircle2 className="w-5 h-5 text-[#00b57a]" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-[var(--white-30)]" />
-                  )}
-                </div>
-                <div className="space-y-1 flex-1 min-w-0">
-                  <p className={cn("type-body-xl font-semibold leading-[1.3]", isSelected ? "text-white" : "text-[var(--white-80)]")}>
-                    {option.title}
-                  </p>
-                  {option.description && (
-                    <p className="type-body-lg leading-[1.4] text-[var(--white-55)]">{option.description}</p>
-                  )}
-                  {option.scripture && (
-                    <p className="type-body-md italic leading-[1.5] text-[var(--white-40)] pt-1 border-t border-[var(--white-8)] mt-2">{option.scripture}</p>
-                  )}
-                </div>
-              </div>
-            </button>
-          );
-        })}
+      <div className="space-y-2">
+        {options.map((option, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => {
+              setSelected(idx);
+              if (!interactedRef.current) {
+                interactedRef.current = true;
+                onInteracted?.();
+              }
+            }}
+            className={cn(
+              "flex items-start gap-3 w-full text-left p-3 rounded-lg transition-colors border",
+              selected === idx
+                ? "bg-[var(--white-6)] border-[var(--white-10)] text-white"
+                : "bg-transparent border-transparent text-[var(--white-70)] hover:bg-[var(--white-4)]"
+            )}
+            data-testid={`radio-option-${idx}`}
+          >
+            {selected === idx ? (
+              <CheckCircle2 className="w-5 h-5 text-[#00b57a] shrink-0 mt-0.5" />
+            ) : (
+              <Circle className="w-5 h-5 shrink-0 mt-0.5 text-[var(--white-30)]" />
+            )}
+            <span className="type-body-xl leading-[1.4]">{option}</span>
+          </button>
+        ))}
       </div>
-      {saving && <p className="text-xs text-[var(--white-30)] text-center animate-pulse">Saving…</p>}
     </div>
   );
 }
@@ -1493,8 +1391,6 @@ interface LessonSlideProps {
   guidedPrayerSlideIndex?: number;
   // selection_reveal specific
   onSelectionRevealComplete?: () => void;
-  // single_select specific
-  singleSelectContextKey?: string;
 }
 
 export function LessonSlide({
@@ -1532,7 +1428,6 @@ export function LessonSlide({
   onSaveSessionVar,
   guidedPrayerSlideIndex,
   onSelectionRevealComplete,
-  singleSelectContextKey,
 }: LessonSlideProps) {
 
   function resolveVars(template: string, vars: Record<string, unknown>): string {
@@ -1630,7 +1525,7 @@ export function LessonSlide({
         ) : type === "multi_select" ? (
           <MultiSelectList content={content} onInteracted={onInteracted} />
         ) : type === "single_select" ? (
-          <SingleSelectList content={content} contextKey={singleSelectContextKey} onInteracted={onInteracted} />
+          <SingleSelectList content={content} onInteracted={onInteracted} />
         ) : type === "media" ? (
           <MediaSlide content={content} />
         ) : type === "text_input" ? (

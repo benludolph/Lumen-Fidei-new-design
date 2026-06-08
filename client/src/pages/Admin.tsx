@@ -3544,121 +3544,6 @@ interface QuizEditorData {
   results: Record<string, { title: string; description: string }>;
 }
 
-function SingleSelectSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  let data: { intro: string; options: { id: string; title: string; description: string; scripture: string; value: string }[] };
-  try {
-    const parsed = JSON.parse(content);
-    if (parsed && Array.isArray(parsed.options) && parsed.options.length > 0 && typeof parsed.options[0].title === "string") {
-      data = {
-        intro: parsed.intro || "",
-        options: parsed.options.map((o: Record<string, string>) => ({
-          id: o.id || String(Math.random()),
-          title: o.title || "",
-          description: o.description || "",
-          scripture: o.scripture || "",
-          value: o.value || "",
-        })),
-      };
-    } else {
-      data = { intro: content, options: [] };
-    }
-  } catch {
-    data = { intro: content, options: [] };
-  }
-
-  const update = (next: typeof data) => onChange(JSON.stringify(next));
-
-  const addOption = () => {
-    update({ ...data, options: [...data.options, { id: `opt${Date.now()}`, title: "", description: "", scripture: "", value: "" }] });
-  };
-
-  const removeOption = (i: number) => {
-    update({ ...data, options: data.options.filter((_, j) => j !== i) });
-  };
-
-  const updateOption = (i: number, field: string, val: string) => {
-    const opts = [...data.options];
-    opts[i] = { ...opts[i], [field]: val };
-    update({ ...data, options: opts });
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Intro / Instruction Text</label>
-        <RichTextEditor value={data.intro} onChange={(val) => update({ ...data, intro: val })} />
-      </div>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-muted-foreground">Options ({data.options.length})</label>
-          <Button type="button" size="sm" variant="outline" onClick={addOption} data-testid={`button-add-card-option-${index}`}>
-            <Plus className="w-3 h-3 mr-1" /> Add Option
-          </Button>
-        </div>
-        {data.options.length === 0 && (
-          <p className="text-xs text-muted-foreground/60 text-center py-2">No options yet — click "Add Option" above.</p>
-        )}
-        {data.options.map((opt, i) => (
-          <div key={opt.id} className="rounded-md border border-input p-3 space-y-2 bg-muted/20">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-muted-foreground">Option {i + 1}</span>
-              <Button type="button" size="icon" variant="ghost" onClick={() => removeOption(i)} data-testid={`button-remove-card-option-${index}-${i}`}>
-                <Trash2 className="w-3 h-3 text-destructive" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-[11px] text-muted-foreground/70">Title *</label>
-                <input
-                  type="text"
-                  value={opt.title}
-                  onChange={(e) => updateOption(i, "title", e.target.value)}
-                  placeholder="e.g. Rejection"
-                  className="w-full rounded border border-input bg-background px-2 py-1 text-sm"
-                  data-testid={`input-card-title-${index}-${i}`}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11px] text-muted-foreground/70">Stored Value *</label>
-                <input
-                  type="text"
-                  value={opt.value}
-                  onChange={(e) => updateOption(i, "value", e.target.value)}
-                  placeholder="e.g. rejection"
-                  className="w-full rounded border border-input bg-background px-2 py-1 text-sm"
-                  data-testid={`input-card-value-${index}-${i}`}
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] text-muted-foreground/70">Description</label>
-              <textarea
-                value={opt.description}
-                onChange={(e) => updateOption(i, "description", e.target.value)}
-                rows={2}
-                placeholder="Short description of this option..."
-                className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm resize-none"
-                data-testid={`textarea-card-desc-${index}-${i}`}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] text-muted-foreground/70">Scripture / Remedy (optional)</label>
-              <textarea
-                value={opt.scripture}
-                onChange={(e) => updateOption(i, "scripture", e.target.value)}
-                rows={2}
-                placeholder="Optional scripture reference or remedy text..."
-                className="w-full rounded border border-input bg-background px-2 py-1.5 text-sm resize-none"
-                data-testid={`textarea-card-scripture-${index}-${i}`}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function MediaSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
   let data: { url: string; text: string; mediaType: "video" | "music"; title: string; aspectRatio: string; objectFit: string };
   try {
@@ -8176,12 +8061,6 @@ function TrackAContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : slide.type === "single_select" ? (
-                              <SingleSelectSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -9529,12 +9408,6 @@ function PrelimContentManagementView() {
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
                               />
-                            ) : slide.type === "single_select" ? (
-                              <SingleSelectSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                              />
                             ) : (
                               <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Content</label>
@@ -10413,12 +10286,6 @@ function HealingAdminView() {
                               />
                             ) : slide.type === "bento_reveal" ? (
                               <BentoRevealSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                              />
-                            ) : slide.type === "single_select" ? (
-                              <SingleSelectSlideEditor
                                 content={slide.content}
                                 onChange={(val) => updateSlide(index, "content", val)}
                                 index={index}
