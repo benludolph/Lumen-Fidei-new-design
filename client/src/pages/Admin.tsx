@@ -3545,7 +3545,7 @@ interface QuizEditorData {
 }
 
 function MediaSlideEditor({ content, onChange, index }: { content: string; onChange: (val: string) => void; index: number }) {
-  let data: { url: string; text: string; mediaType: "video" | "music"; title: string };
+  let data: { url: string; text: string; mediaType: "video" | "music"; title: string; aspectRatio: string; objectFit: string };
   try {
     const parsed = JSON.parse(content || "{}");
     if (parsed && typeof parsed.url === "string") {
@@ -3554,17 +3554,19 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
         text: parsed.text || "",
         mediaType: parsed.mediaType === "music" ? "music" : "video",
         title: parsed.title || "",
+        aspectRatio: parsed.aspectRatio || "16/9",
+        objectFit: parsed.objectFit || "cover",
       };
     } else {
-      data = { url: content || "", text: "", mediaType: "video", title: "" };
+      data = { url: content || "", text: "", mediaType: "video", title: "", aspectRatio: "16/9", objectFit: "cover" };
     }
   } catch {
-    data = { url: content || "", text: "", mediaType: "video", title: "" };
+    data = { url: content || "", text: "", mediaType: "video", title: "", aspectRatio: "16/9", objectFit: "cover" };
   }
 
   const updateData = (next: typeof data) => {
     const isMusic = next.mediaType === "music";
-    const hasExtras = next.text || isMusic || next.title;
+    const hasExtras = next.text || isMusic || next.title || next.aspectRatio !== "16/9" || next.objectFit !== "cover";
     if (!hasExtras) {
       onChange(next.url);
     } else {
@@ -3572,6 +3574,8 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
       if (next.text) obj.text = next.text;
       if (isMusic) obj.mediaType = "music";
       if (next.title) obj.title = next.title;
+      if (next.aspectRatio !== "16/9") obj.aspectRatio = next.aspectRatio;
+      if (next.objectFit !== "cover") obj.objectFit = next.objectFit;
       onChange(JSON.stringify(obj));
     }
   };
@@ -3644,6 +3648,37 @@ function MediaSlideEditor({ content, onChange, index }: { content: string; onCha
           currentUrl={isImage ? mediaUrl : null}
           onUploaded={(url) => updateData({ ...data, url })}
         />
+      )}
+
+      {data.mediaType !== "music" && isImage && (
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Image Layout</label>
+          <div className="flex gap-2">
+            <select
+              value={data.aspectRatio}
+              onChange={(e) => updateData({ ...data, aspectRatio: e.target.value })}
+              className="px-2 py-1.5 text-xs border rounded-md bg-background"
+              data-testid={`select-media-aspect-${index}`}
+            >
+              <option value="16/9">16:9 (landscape)</option>
+              <option value="4/3">4:3 (standard)</option>
+              <option value="3/2">3:2 (photo)</option>
+              <option value="1/1">1:1 (square)</option>
+              <option value="9/16">9:16 (vertical)</option>
+              <option value="3/4">3:4 (portrait)</option>
+              <option value="auto">Auto (natural)</option>
+            </select>
+            <select
+              value={data.objectFit}
+              onChange={(e) => updateData({ ...data, objectFit: e.target.value })}
+              className="px-2 py-1.5 text-xs border rounded-md bg-background"
+              data-testid={`select-media-fit-${index}`}
+            >
+              <option value="cover">Cover (crop to fill)</option>
+              <option value="contain">Contain (show full)</option>
+            </select>
+          </div>
+        </div>
       )}
 
       <div className="space-y-1">

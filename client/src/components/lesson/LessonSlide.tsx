@@ -347,7 +347,7 @@ function MusicCard({ url, title }: { url: string; title?: string }) {
   );
 }
 
-function ZoomableImage({ src, testId }: { src: string; testId?: string }) {
+function ZoomableImage({ src, testId, aspectRatio = "16/9", objectFit = "cover" }: { src: string; testId?: string; aspectRatio?: string; objectFit?: string }) {
   const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
@@ -357,13 +357,15 @@ function ZoomableImage({ src, testId }: { src: string; testId?: string }) {
     return () => document.removeEventListener("keydown", handler);
   }, [zoomed]);
 
+  const isAuto = aspectRatio === "auto";
+
   return (
     <>
-      <div style={{ position: "relative", width: "100%", maxHeight: "35vh", borderRadius: "10px", overflow: "hidden" }} className="group">
+      <div style={{ position: "relative", width: "100%", borderRadius: "10px", overflow: "hidden", aspectRatio: isAuto ? undefined : aspectRatio, maxHeight: isAuto ? "55vh" : undefined }} className="group">
         <img
           src={src}
           alt=""
-          style={{ width: "100%", height: "100%", maxHeight: "35vh", objectFit: "cover", display: "block" }}
+          style={{ width: "100%", height: "100%", objectFit: objectFit as any, display: "block" }}
           data-testid={testId ?? "media-image"}
         />
         <button
@@ -460,7 +462,7 @@ function ZoomableImage({ src, testId }: { src: string; testId?: string }) {
   );
 }
 
-function MediaContent({ text, mediaType, title }: { text: string; mediaType?: string; title?: string }) {
+function MediaContent({ text, mediaType, title, aspectRatio, objectFit }: { text: string; mediaType?: string; title?: string; aspectRatio?: string; objectFit?: string }) {
   if (!text) return null;
 
   const trimmed = text.trim();
@@ -497,13 +499,15 @@ function MediaContent({ text, mediaType, title }: { text: string; mediaType?: st
     );
   }
 
+  const imgProps = { aspectRatio, objectFit };
+
   if (trimmed.startsWith("/api/images/") || /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
-    return <ZoomableImage src={trimmed} />;
+    return <ZoomableImage src={trimmed} {...imgProps} />;
   }
 
   if (trimmed.startsWith("http")) {
     if (/\.(jpg|jpeg|png|gif|svg|webp)$/i.test(trimmed)) {
-      return <ZoomableImage src={trimmed} />;
+      return <ZoomableImage src={trimmed} {...imgProps} />;
     }
     return (
       <a
@@ -520,7 +524,7 @@ function MediaContent({ text, mediaType, title }: { text: string; mediaType?: st
   return <p className="type-body-xl whitespace-pre-wrap text-[var(--white-80)]">{text}</p>;
 }
 
-function parseMediaContent(content: string): { url: string; text: string; mediaType?: string; title?: string } {
+function parseMediaContent(content: string): { url: string; text: string; mediaType?: string; title?: string; aspectRatio?: string; objectFit?: string } {
   try {
     const parsed = JSON.parse(content);
     if (parsed && typeof parsed.url === "string") {
@@ -529,6 +533,8 @@ function parseMediaContent(content: string): { url: string; text: string; mediaT
         text: parsed.text || "",
         mediaType: parsed.mediaType || undefined,
         title: parsed.title || undefined,
+        aspectRatio: parsed.aspectRatio || undefined,
+        objectFit: parsed.objectFit || undefined,
       };
     }
   } catch {}
@@ -536,11 +542,11 @@ function parseMediaContent(content: string): { url: string; text: string; mediaT
 }
 
 function MediaSlide({ content }: { content: string }) {
-  const { url, text, mediaType, title } = useMemo(() => parseMediaContent(content), [content]);
+  const { url, text, mediaType, title, aspectRatio, objectFit } = useMemo(() => parseMediaContent(content), [content]);
 
   return (
     <div className="space-y-6" data-testid="slide-media">
-      <MediaContent text={url} mediaType={mediaType} title={title} />
+      <MediaContent text={url} mediaType={mediaType} title={title} aspectRatio={aspectRatio} objectFit={objectFit} />
       {text && (
         isHtmlContent(text) ? (
           <HtmlContent content={text} className="slide-text-content space-y-5" />

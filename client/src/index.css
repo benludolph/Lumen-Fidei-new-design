@@ -627,6 +627,15 @@
   background: rgba(255,255,255,0.02);
 }
 
+/* Inline images inside text slides */
+.slide-text-content img {
+  display: block;
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.75rem auto;
+  object-fit: cover;
+}
+
 .lesson-slide-in-right {
   animation: lessonSlideInRight 0.35s ease-out;
 }

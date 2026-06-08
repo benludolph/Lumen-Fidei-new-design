@@ -6,6 +6,7 @@ import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
+import { Image } from '@tiptap/extension-image'
 import { useEffect } from 'react'
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
@@ -23,6 +24,7 @@ import {
   AlignRight,
   Table as TableIcon,
   Trash2,
+  Image as ImageIcon,
 } from 'lucide-react'
 
 interface RichTextEditorProps {
@@ -159,6 +161,24 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <Button
         type="button"
         size="sm"
+        variant='ghost'
+        onClick={() => {
+          const url = window.prompt('Enter image URL')
+          if (url) {
+            editor.chain().focus().setImage({ src: url }).run()
+          }
+        }}
+        data-testid="button-image"
+        className="px-2"
+      >
+        <ImageIcon className="h-4 w-4" />
+      </Button>
+
+      <div className="w-px bg-border mx-1" />
+
+      <Button
+        type="button"
+        size="sm"
         variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
         data-testid="button-align-left"
@@ -204,6 +224,10 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
       TableRow,
       TableHeader,
       TableCell,
+      Image.configure({
+        inline: true,
+        allowBase64: true,
+      }),
     ],
     content: value,
     editorProps: {
