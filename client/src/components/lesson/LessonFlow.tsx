@@ -556,6 +556,11 @@ export function LessonFlow({
       sessionVars={sessionVars}
       onSaveSessionVar={effectiveSlideData.type === "confession_finder" ? handleSaveSessionVar : undefined}
       onSelectionRevealComplete={effectiveSlideData.type === "selection_reveal" ? handleNext : undefined}
+      singleSelectContextKey={effectiveSlideData.type === "single_select"
+        ? (dayNumber < 0
+            ? `single-select-prelim${Math.abs(dayNumber)}-slide${currentSlide}`
+            : `single-select-day${dayNumber}-slide${currentSlide}`)
+        : undefined}
     />
   );
 
