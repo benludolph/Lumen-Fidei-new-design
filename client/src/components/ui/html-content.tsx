@@ -66,7 +66,7 @@ export function HtmlContent({ content, className, "data-testid": testId }: HtmlC
 
   if (isHtml) {
     const sanitized = DOMPurify.sanitize(content, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'caption', 'img'],
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'a', 'span', 'mark', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'caption', 'img'],
       ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style', 'colspan', 'rowspan', 'src', 'alt', 'width', 'height']
     });
 
