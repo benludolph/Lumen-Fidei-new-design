@@ -338,6 +338,28 @@ export default function WorkbookPage() {
               </p>
             </div>
 
+            {/* How It Works Video */}
+            <div style={{ marginBottom: "32px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                <p className="type-caption-md" style={{ color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                  How It Works
+                </p>
+              </div>
+              <div className="aspect-video rounded-lg overflow-hidden shadow-lg" style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube-nocookie.com/embed/tz64CQS2l2o?rel=0&modestbranding=1"
+                  title="How to Use the Deliverance Workbook"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                  style={{ minHeight: "360px" }}
+                />
+              </div>
+            </div>
+
             {isLoading ? (
               <div
                 style={{
