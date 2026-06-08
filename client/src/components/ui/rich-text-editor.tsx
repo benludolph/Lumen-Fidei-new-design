@@ -2,6 +2,10 @@ import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextAlign from '@tiptap/extension-text-align'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
 import { useEffect } from 'react'
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
@@ -17,6 +21,8 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Table as TableIcon,
+  Trash2,
 } from 'lucide-react'
 
 interface RichTextEditorProps {
@@ -127,6 +133,32 @@ function MenuBar({ editor }: { editor: Editor | null }) {
       <Button
         type="button"
         size="sm"
+        variant={editor.isActive('table') ? 'secondary' : 'ghost'}
+        onClick={() => {
+          editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+        }}
+        data-testid="button-table"
+        className="px-2"
+      >
+        <TableIcon className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant='ghost'
+        onClick={() => editor.chain().focus().deleteTable().run()}
+        data-testid="button-delete-table"
+        className="px-2"
+        disabled={!editor.isActive('table')}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+
+      <div className="w-px bg-border mx-1" />
+
+      <Button
+        type="button"
+        size="sm"
         variant={editor.isActive({ textAlign: 'left' }) ? 'secondary' : 'ghost'}
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
         data-testid="button-align-left"
@@ -166,6 +198,12 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Table.configure({
+        resizable: false,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     editorProps: {

@@ -594,6 +594,39 @@
   color: #00d490;
 }
 
+/* Table rendering inside slides */
+.slide-text-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.slide-text-content thead {
+  background: rgba(255,255,255,0.05);
+}
+.slide-text-content th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  white-space: nowrap;
+}
+.slide-text-content td {
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.75);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.slide-text-content tr:last-child td {
+  border-bottom: none;
+}
+.slide-text-content tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
 .lesson-slide-in-right {
   animation: lessonSlideInRight 0.35s ease-out;
 }
