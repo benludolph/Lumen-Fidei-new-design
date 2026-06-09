@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { HealingLayout } from "@/components/layout/HealingLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { CheckCircle2, Lock, Download, Play } from "lucide-react";
+import { CheckCircle2, Lock, Download, Play, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { HealingModule, HealingContent, HealingCompletion } from "@shared/schema";
 
@@ -235,41 +235,87 @@ export default function HealingDashboard() {
             })}
           </div>
 
-          {allComplete && (
-            <div
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "16px",
-                padding: "32px", background: "var(--white-5)", borderRadius: "12px",
-                border: "1px solid var(--white-8)", textAlign: "center",
-              }}
-            >
-              <CheckCircle2 className="w-10 h-10" style={{ color: "var(--brand)" }} />
-              <div>
-                <p className="type-caption-lg" style={{ color: "white", margin: "0 0 4px" }}>
-                  Program Complete!
-                </p>
-                <p className="type-body-md" style={{ color: "var(--white-50)", margin: 0 }}>
-                  You have completed all 20 modules of Healing of Our Hearts.
-                </p>
-              </div>
-              <button
-                data-testid="button-download-certificate"
-                onClick={handleDownloadCertificate}
-                disabled={isCertLoading}
+          {(() => {
+            const incompleteModules = sortedModules.filter(m => !completedModuleNumbers.has(m.moduleNumber));
+            return (
+              <div
                 style={{
-                  display: "flex", alignItems: "center", gap: "8px",
-                  padding: "12px 24px", background: "var(--brand, #8B7355)",
-                  border: "none", borderRadius: "8px", color: "white",
-                  cursor: isCertLoading ? "not-allowed" : "pointer",
-                  opacity: isCertLoading ? 0.7 : 1,
-                  fontSize: "14px", fontWeight: 600,
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: "16px",
+                  padding: "32px", background: allComplete ? "var(--white-8)" : "var(--white-5)",
+                  borderRadius: "12px",
+                  border: allComplete ? "1px solid rgba(var(--brand-rgb, 180,150,100), 0.4)" : "1px solid var(--white-8)",
+                  textAlign: "center",
                 }}
               >
-                <Download className="w-4 h-4" />
-                {isCertLoading ? "Generating..." : "Download Certificate"}
-              </button>
-            </div>
-          )}
+                {allComplete ? (
+                  <CheckCircle2 className="w-10 h-10" style={{ color: "var(--brand)" }} />
+                ) : (
+                  <div style={{ position: "relative", display: "inline-flex" }}>
+                    <Award className="w-10 h-10" style={{ color: "var(--white-20)" }} />
+                    <Lock className="w-4 h-4" style={{
+                      color: "var(--white-40)", position: "absolute",
+                      bottom: -2, right: -4,
+                    }} />
+                  </div>
+                )}
+                <div>
+                  <p className="type-caption-lg" style={{ color: allComplete ? "white" : "var(--white-50)", margin: "0 0 4px" }}>
+                    {allComplete ? "Program Complete!" : "Certificate of Completion"}
+                  </p>
+                  <p className="type-body-md" style={{ color: "var(--white-50)", margin: 0 }}>
+                    {allComplete
+                      ? "You have completed all modules of Healing of Our Hearts."
+                      : `Complete all ${sortedModules.length} modules to unlock your certificate.`}
+                  </p>
+                </div>
+
+                {!allComplete && incompleteModules.length > 0 && (
+                  <div style={{
+                    width: "100%", maxWidth: "360px",
+                    background: "var(--white-5)", borderRadius: "8px",
+                    padding: "12px 16px", textAlign: "left",
+                  }}>
+                    <p className="type-body-xs" style={{ color: "var(--white-40)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Still needed ({incompleteModules.length} remaining)
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {incompleteModules.map(m => {
+                        const title = m.title ?? MODULE_TITLES[m.moduleNumber] ?? `Module ${m.moduleNumber}`;
+                        return (
+                          <div key={m.moduleNumber} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{
+                              width: "16px", height: "16px", borderRadius: "50%",
+                              border: "1.5px solid var(--white-20)", flexShrink: 0,
+                            }} />
+                            <span className="type-body-sm" style={{ color: "var(--white-60)" }}>{title}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  data-testid="button-download-certificate"
+                  onClick={handleDownloadCertificate}
+                  disabled={!allComplete || isCertLoading}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "8px",
+                    padding: "12px 24px",
+                    background: allComplete ? "var(--brand, #8B7355)" : "var(--white-8)",
+                    border: allComplete ? "none" : "1px solid var(--white-12)",
+                    borderRadius: "8px", color: allComplete ? "white" : "var(--white-30)",
+                    cursor: allComplete && !isCertLoading ? "pointer" : "not-allowed",
+                    opacity: isCertLoading ? 0.7 : 1,
+                    fontSize: "14px", fontWeight: 600,
+                  }}
+                >
+                  {allComplete ? <Download className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                  {isCertLoading ? "Generating..." : allComplete ? "Download Certificate" : "Locked"}
+                </button>
+              </div>
+            );
+          })()}
         </div>
       </PageContainer>
     </HealingLayout>
