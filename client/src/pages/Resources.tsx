@@ -200,9 +200,14 @@ function FreedomWorkbookCard() {
 function AdorationFinderCard() {
   const [hovered, setHovered] = useState(false);
   return (
-    <Link href="/resources/tools/adoration-finder">
+    <a
+      href="https://adoremovement.com/adore"
+      target="_blank"
+      rel="noopener noreferrer"
+      data-testid="card-tool-adoration-finder"
+      style={{ textDecoration: "none" }}
+    >
       <div
-        data-testid="card-tool-adoration-finder"
         className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
         style={{ backgroundColor: "#0F1011", border: "0.5px solid var(--white-5)", borderRadius: "6px" }}
         onMouseEnter={() => setHovered(true)}
@@ -229,11 +234,11 @@ function AdorationFinderCard() {
             </p>
           </div>
           <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
-            <ArrowRight style={{ width: "14px", height: "14px" }} />
+            <ExternalLink style={{ width: "14px", height: "14px" }} />
           </div>
         </div>
       </div>
-    </Link>
+    </a>
   );
 }
 

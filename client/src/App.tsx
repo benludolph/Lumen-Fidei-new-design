@@ -23,7 +23,6 @@ import PreviewLesson from "@/pages/PreviewLesson";
 import PrayerToolkit from "@/pages/PrayerToolkit";
 import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
 import ConfessionFinderResource from "@/pages/ConfessionFinderResource";
-import AdorationFinderResource from "@/pages/AdorationFinderResource";
 import FreedomWorkbookResource from "@/pages/FreedomWorkbookResource";
 import WorkbookPage from "@/pages/WorkbookPage";
 import HealingDashboard from "@/pages/HealingDashboard";
@@ -146,9 +145,6 @@ function Router() {
         <ProtectedRoute component={ConfessionFinderResource} />
       </Route>
 
-      <Route path="/resources/tools/adoration-finder">
-        <ProtectedRoute component={AdorationFinderResource} />
-      </Route>
 
       <Route path="/workbook">
         <ProtectedRoute component={WorkbookPage} allowedRoles={['participant', 'superuser']} />
