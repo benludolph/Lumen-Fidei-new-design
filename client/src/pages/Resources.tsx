@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ExternalLink,
   BookOpen,
+  Sun,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { PracticeResource } from "@shared/schema";
@@ -45,8 +46,11 @@ import penitentHoverImg from "@assets/Penitent_hover_1773947410450.webp";
 import forgivenessImg from "@assets/Forgiveness_1778525053441.webp";
 import forgivenessHoverImg from "@assets/Forgiveness_hover_1778525053441.webp";
 
-import workbookBentoImg from "@assets/Workbook_(2)_1779735230240.webp";
-import workbookBentoHoverImg from "@assets/Workbook_hover_(1)_1779735230240.webp";
+import workbookBentoImg from "@assets/Workbook_(3)_1781118881271.webp";
+import workbookBentoHoverImg from "@assets/Workbook_hover_(2)_1781118881270.webp";
+
+import adorationImg from "@assets/Adoration_1781118881270.webp";
+import adorationHoverImg from "@assets/Adoration_hover_1781118881271.webp";
 
 const IMAGE_MAP: Array<{ match: string; img: string }> = [
   { match: "retaliation", img: retaliationImg },
@@ -182,6 +186,46 @@ function FreedomWorkbookCard() {
             </p>
             <p className="type-body-xs" style={{ color: "#8a8f98" }}>
               5-category spiritual inventory
+            </p>
+          </div>
+          <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
+            <ArrowRight style={{ width: "14px", height: "14px" }} />
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function AdorationFinderCard() {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link href="/resources/tools/adoration-finder">
+      <div
+        data-testid="card-tool-adoration-finder"
+        className="resource-card-hover relative flex flex-col justify-between overflow-hidden cursor-pointer pt-3 px-3 pb-[14px] h-[126px]"
+        style={{ backgroundColor: "#0F1011", border: "0.5px solid var(--white-5)", borderRadius: "6px" }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${adorationImg})`, backgroundSize: "cover", backgroundPosition: "center right", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${adorationHoverImg})`, backgroundSize: "cover", backgroundPosition: "center right", opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease-out", pointerEvents: "none", zIndex: 1 }} />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.15)", pointerEvents: "none", zIndex: 2 }} />
+        <div className="flex items-start relative z-[3]">
+          <div
+            className="w-6 h-6 rounded flex items-center justify-center shrink-0"
+            style={{ background: "var(--white-5)", boxShadow: "0px 1px 2px 0px rgba(0,0,0,0.1)" }}
+          >
+            <Sun style={{ width: "13px", height: "13px", color: "white", strokeWidth: 1.8 }} />
+          </div>
+        </div>
+        <div className="flex items-end justify-between w-full relative z-[3]">
+          <div className="flex-1 min-w-0">
+            <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: "#f7f8f8", letterSpacing: "-0.1402px" }}>
+              Adoration Finder
+            </p>
+            <p className="type-body-xs" style={{ color: "#8a8f98" }}>
+              Find Adoration times nearby
             </p>
           </div>
           <div className="ml-2 shrink-0" style={{ color: "var(--white-35)" }}>
@@ -516,6 +560,7 @@ export default function Resources() {
               <SectionDivider label="TOOLS" />
               <div className="resource-grid-equal gap-2 w-full">
                 <ConfessionFinderCard />
+                <AdorationFinderCard />
                 <FreedomWorkbookCard />
               </div>
             </div>
