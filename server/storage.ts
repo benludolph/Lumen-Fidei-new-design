@@ -1325,12 +1325,12 @@ export class DatabaseStorage implements IStorage {
     if (existing) {
       const [updated] = await db
         .update(lessonWorkbookModules)
-        .set(data)
+        .set(data as any)
         .where(eq(lessonWorkbookModules.id, existing.id))
         .returning();
       return updated;
     }
-    const [created] = await db.insert(lessonWorkbookModules).values(data).returning();
+    const [created] = await db.insert(lessonWorkbookModules).values(data as any).returning();
     return created;
   }
 

@@ -1429,8 +1429,8 @@ export async function registerRoutes(
   });
 
   app.get('/api/admin/module-overlays/:contextKey', requireRole('admin'), async (req, res) => {
-    const overlay = await storage.getModuleOverlay(req.params.contextKey);
-    res.json(overlay ?? { contextKey: req.params.contextKey, enabled: false, imageUrl: "", text: "Reflection Unlocked", subtext: "", label: "" });
+    const overlay = await storage.getModuleOverlay(req.params.contextKey as string);
+    res.json(overlay ?? { contextKey: req.params.contextKey as string, enabled: false, imageUrl: "", text: "Reflection Unlocked", subtext: "", label: "" });
   });
 
   app.post('/api/admin/module-overlays/:contextKey', requireRole('admin'), async (req, res) => {
@@ -1444,7 +1444,7 @@ export async function registerRoutes(
     try {
       const { enabled, imageUrl, text, subtext, label } = schema.parse(req.body);
       const overlay = await storage.upsertModuleOverlay({
-        contextKey: req.params.contextKey,
+        contextKey: req.params.contextKey as string,
         enabled,
         imageUrl,
         text,
@@ -2012,14 +2012,14 @@ export async function registerRoutes(
   });
 
   app.post('/api/admin/track-a/snapshots/:id/restore', requireRole('admin'), async (req, res) => {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
     await storage.restoreTrackASnapshot(id);
     res.json({ ok: true });
   });
 
   app.delete('/api/admin/track-a/snapshots/:id', requireRole('admin'), async (req, res) => {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
     await storage.deleteTrackASnapshot(id);
     res.json({ ok: true });
@@ -2028,7 +2028,7 @@ export async function registerRoutes(
   // Toggle a snapshot's published-variant status and label.
   // Body: { isPublished: boolean, variantLabel?: string | null }
   app.patch('/api/admin/track-a/snapshots/:id/publication', requireRole('admin'), async (req, res) => {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid snapshot id' });
     const isPublished = !!req.body?.isPublished;
     const variantLabel = typeof req.body?.variantLabel === 'string' ? req.body.variantLabel : null;
@@ -2231,17 +2231,17 @@ export async function registerRoutes(
 
         for (const row of data.daily_content) {
           const { id: _id, ...rest } = row;
-          await tx.insert(dailyContent).values(rest);
+          await tx.insert(dailyContent).values(rest as any);
         }
 
         for (const row of data.module_overlays) {
           const { updatedAt: _ua, ...rest } = row;
-          await tx.insert(moduleOverlays).values(rest);
+          await tx.insert(moduleOverlays).values(rest as any);
         }
 
         for (const row of data.practice_resources) {
           const { id: _id, ...rest } = row;
-          await tx.insert(practiceResources).values(rest);
+          await tx.insert(practiceResources).values(rest as any);
         }
 
         for (const row of data.cohort_settings) {

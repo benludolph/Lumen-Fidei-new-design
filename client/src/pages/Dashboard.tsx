@@ -550,7 +550,7 @@ export default function Dashboard() {
           <div className="flex flex-col items-center justify-center h-[60vh] text-center gap-4">
             <AlertCircle className="w-12 h-12 text-muted-foreground" />
             <p className="text-muted-foreground">No content available for this day.</p>
-            <Button variant="outline" onClick={handleBackToGrid}>Back to Overview</Button>
+            <Button variant="outline" onClick={() => handleBackToGrid()}>Back to Overview</Button>
           </div>
         )
       ) : (

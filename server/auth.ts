@@ -29,10 +29,12 @@ declare global {
       name: string;
       email: string;
       password: string;
-      role: "participant" | "mentor" | "admin";
+      role: "participant" | "mentor" | "admin" | "superuser";
       track: "A" | "B" | "C" | null;
       mentorId: number | null;
       startDate: Date | null;
+      profilePhotoUrl: string | null;
+      contentVariantSnapshotId: number | null;
     }
   }
 }

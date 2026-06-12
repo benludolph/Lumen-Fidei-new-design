@@ -727,6 +727,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
         const reflStep: NStep = {
           id: `__refl_${Date.now()}`,
           messages: [reflection],
+          messageAudios: [null],
           dynamicReflectionTemplate: null,
           inputType: "none",
           options: [],
@@ -902,7 +903,7 @@ export function ChatFlowSlide({ content, contextKey, totalSlides, slideIndex, me
         .map(v => currentStep.options.find(o => o.value === v)?.label || v)
         .filter(Boolean);
       advanceToNext(selectedOptions.join(","), labels.join(", "));
-    } else if (step.inputType === "none") {
+    } else {
       handleMessageOnlyContinue();
     }
   }, [flowComplete, onComplete, inputReady, currentStep, textInput, selectedOptions, otherText, handleMessageOnlyContinue, advanceToNext]);

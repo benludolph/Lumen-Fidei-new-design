@@ -444,7 +444,6 @@ export type ContentBackup = {
 // Type exports
 export type LoginRequest = z.infer<typeof api.auth.login.input>;
 export type User = typeof users.$inferSelect;
-export type { SafeUser };
 export type SendMessageRequest = z.infer<typeof api.chat.send.input>;
 export type CreateUserRequest = z.infer<typeof api.users.create.input>;
 export type UpdateUserRequest = z.infer<typeof api.users.update.input>;

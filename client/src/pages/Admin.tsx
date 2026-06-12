@@ -2915,7 +2915,7 @@ function importSimplifiedStep(s: any, i: number): ChatFlowStepEditor {
   const messages: string[] = Array.isArray(s.messages) ? s.messages.map(String) : [String(s.message || "")];
   const inp = "input" in s ? s.input : null; // simplified uses `input`
 
-  let inputType: ChatFlowStepEditor["inputType"] = undefined;
+  let inputType: ChatFlowStepEditor["inputType"] = "";
   let options: ChatFlowOptionEditor[] = [];
   let variableName = "";
   let required = false;
@@ -8898,12 +8898,38 @@ function LessonWorkbookAdminSection({ selectedDay }: { selectedDay: number }) {
                         idPrefix="wbmod"
                       />
                     ) : slide.type === "prayer_link" ? (
-                      <PrayerLinkSlideEditor
-                        content={slide.content || "{}"}
-                        onChange={(val) => updateSlide(index, "content", val)}
-                        index={index}
-                        idPrefix="wbmod"
-                      />
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground">Prayer</label>
+                          <select
+                            value={(() => { try { return JSON.parse(slide.content || "{}").prayerId || "prayer_1"; } catch { return "prayer_1"; } })()}
+                            onChange={(e) => {
+                              try { const p = JSON.parse(slide.content || "{}"); p.prayerId = e.target.value; updateSlide(index, "content", JSON.stringify(p)); }
+                              catch { updateSlide(index, "content", JSON.stringify({ prayerId: e.target.value, label: "" })); }
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            data-testid={`select-prayer-id-wbmod-${index}`}
+                          >
+                            <option value="prayer_1">Personal Deliverance Prayer</option>
+                            <option value="prayer_2">Generational Renunciation Prayer</option>
+                            <option value="prayer_3">Daily Prayer</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
+                          <input
+                            type="text"
+                            value={(() => { try { return JSON.parse(slide.content || "{}").label || ""; } catch { return ""; } })()}
+                            onChange={(e) => {
+                              try { const p = JSON.parse(slide.content || "{}"); p.label = e.target.value; updateSlide(index, "content", JSON.stringify(p)); }
+                              catch { updateSlide(index, "content", JSON.stringify({ prayerId: "prayer_1", label: e.target.value })); }
+                            }}
+                            placeholder="Override the default prayer name..."
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            data-testid={`input-prayer-label-wbmod-${index}`}
+                          />
+                        </div>
+                      </div>
                     ) : slide.type === "timer" ? (
                       <TimerSlideEditor
                         content={slide.content || "{}"}
