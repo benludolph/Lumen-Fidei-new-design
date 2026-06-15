@@ -57,13 +57,18 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
 
 // WARNING: Never cache this client — access tokens expire.
 // Always call getCredentials() fresh to ensure the token is current.
-async function getResendClient(): Promise<{ client: Resend; fromEmail: string }> {
+async function getResendClient(): Promise<{
+  client: Resend;
+  fromEmail: string;
+  replyToEmail: string;
+}> {
   const { apiKey, fromEmail } = await getCredentials();
-  return { client: new Resend(apiKey), fromEmail };
+  const replyToEmail = process.env.RESEND_REPLY_TO_EMAIL || fromEmail;
+  return { client: new Resend(apiKey), fromEmail, replyToEmail };
 }
 
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
-  const { client, fromEmail } = await getResendClient();
+  const { client, fromEmail, replyToEmail } = await getResendClient();
 
   const html = `
     <!DOCTYPE html>
@@ -94,8 +99,9 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string): Prom
   `;
 
   const result = await client.emails.send({
-    from: `Lumen Fidei <${fromEmail}>`,
+    from: fromEmail,
     to,
+    replyTo: replyToEmail,
     subject: "Reset your Lumen Fidei password",
     html,
   });
