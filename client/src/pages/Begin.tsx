@@ -120,9 +120,9 @@ export default function Begin() {
             <div className="lf-begin-video-card">
               <div className="lf-begin-video-ratio">
                 <iframe
-                  src="https://player.vimeo.com/video/1176422917?badge=0&autopause=0&player_id=0&app_id=58479"
+                  src="https://www.youtube.com/embed/OVjEuvftRBw"
                   allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                  title="Lumen Fidei Introduction"
+                  title="The Battle is Real"
                   data-testid="iframe-intro-video"
                 />
               </div>
