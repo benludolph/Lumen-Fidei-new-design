@@ -30,6 +30,7 @@ import HealingLesson from "@/pages/HealingLesson";
 import HealingJournal from "@/pages/HealingJournal";
 import ProfilePage from "@/pages/ProfilePage";
 import ProgramOverview from "@/pages/ProgramOverview";
+import SmsPrivacy from "@/pages/SmsPrivacy";
 
 // Standard Protected Route Wrapper — role-based
 function ProtectedRoute({ 
@@ -189,6 +190,8 @@ function Router() {
       <Route path="/program-overview">
         <ProtectedRoute component={ProgramOverview} allowedRoles={['participant', 'superuser']} />
       </Route>
+
+      <Route path="/sms-privacy" component={SmsPrivacy} />
 
       <Route path="/preview/track-a/:day">
         <ProtectedRoute component={PreviewLesson} allowedRoles={['admin']} />
