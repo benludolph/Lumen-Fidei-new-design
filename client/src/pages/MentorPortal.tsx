@@ -244,11 +244,25 @@ function MenteeCard({
             {name}
           </p>
           <p
+            data-testid={`text-email-${email}`}
             style={{
               fontFamily: "'Afacad', sans-serif",
               fontSize: "0.75rem",
-              color: "var(--white-35)",
-              margin: "3px 0 0",
+              color: "var(--white-40)",
+              margin: "2px 0 0",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {email}
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.72rem",
+              color: "var(--white-28)",
+              margin: "1px 0 0",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",

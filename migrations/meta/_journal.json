@@ -50,6 +50,20 @@
       "when": 1779211200000,
       "tag": "0006_workbook_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1750258800000,
+      "tag": "0007_lesson_workbook_modules",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1750263000000,
+      "tag": "0008_user_profiles_bio",
+      "breakpoints": true
     }
   ]
 }
