@@ -142,7 +142,7 @@ function MenteeCard({
         paddingRight: "14px",
         display: "flex",
         flexDirection: "column",
-        gap: "27px",
+        gap: "10px",
         cursor: "pointer",
       }}
     >
