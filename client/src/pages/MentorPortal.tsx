@@ -130,185 +130,98 @@ function MenteeCard({
   return (
     <div
       data-testid={`card-mentee-${email}`}
-      className="day-card-hover"
+      className="day-card-hover relative overflow-hidden w-full flex flex-col justify-between pt-3 px-3 pb-[14px] min-h-[126px]"
       style={{
-        position: "relative",
+        background: "var(--surface-base)",
+        border: "0.5px solid var(--white-5)",
         borderRadius: "6px",
-        overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.12)",
-        padding: "15.63px 14.625px 15.625px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        cursor: "pointer",
-        minHeight: "140px",
+        cursor: "default",
       }}
     >
-      {/* Full-bleed background — bleeds slightly outside for seamless edge coverage */}
+      {/* Background image — same pattern as DayCard */}
       <img
-        alt=""
         src="/card-user-bg.webp"
-        style={{
-          position: "absolute",
-          left: 0,
-          top: "-1.81%",
-          width: "100%",
-          height: "103.63%",
-          objectFit: "cover",
-          pointerEvents: "none",
-        }}
+        alt=""
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
       />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
 
-      {/* Unread dot — top-right corner */}
+      {/* Unread dot — absolute top-right */}
       {hasUnread && (
         <div
           data-testid={`badge-unread-${email}`}
           title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
           style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            minWidth: "18px",
-            height: "18px",
-            borderRadius: "999px",
-            background: "#ef4444",
-            border: "1.5px solid rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.6rem",
-            fontWeight: 700,
-            color: "white",
-            padding: "0 4px",
-            zIndex: 2,
+            position: "absolute", top: "10px", right: "10px",
+            minWidth: "18px", height: "18px", borderRadius: "999px",
+            background: "#ef4444", border: "1.5px solid rgba(0,0,0,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "'Afacad', sans-serif", fontSize: "0.6rem", fontWeight: 700,
+            color: "white", padding: "0 4px", zIndex: 2,
           }}
         >
           {unreadCount > 9 ? "9+" : unreadCount}
         </div>
       )}
 
-      {/* Track badge — sits at card top with consistent padding */}
+      {/* Track badge — top slot, same position as state icon in DayCard */}
       <div
         style={{
-          position: "relative",
-          zIndex: 1,
-          alignSelf: "flex-start",
-          background: "#0f3338",
-          borderRadius: "999px",
-          padding: "5.55px 9px",
+          position: "relative", zIndex: 1, alignSelf: "flex-start",
+          background: "#0f3338", borderRadius: "999px", padding: "2px 9px",
         }}
       >
-        <span
-          style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "10px",
-            fontWeight: 600,
-            color: "#02b8cc",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-            lineHeight: "15px",
-          }}
-        >
+        <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", fontWeight: 600, color: "#02b8cc", letterSpacing: "1px", textTransform: "uppercase" as const }}>
           Track {track}
         </span>
       </div>
 
-      {/* Bottom content: name + buttons */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-        }}
-      >
-        {/* Name */}
+      {/* Bottom slot — name + action buttons, same position as text block in DayCard */}
+      <div className="relative z-[1] flex flex-col gap-2">
         <p
-          style={{
-            fontFamily: "'IvyOra Display', serif",
-            fontSize: "18px",
-            fontWeight: 500,
-            color: "white",
-            letterSpacing: "-0.14px",
-            lineHeight: "22.5px",
-            margin: 0,
-            overflow: "hidden",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-          }}
+          className="type-display-sm"
+          style={{ letterSpacing: "-0.14px", color: "white", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}
         >
           {name}
         </p>
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-          {/* Message */}
+        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
           <button
             data-testid={`button-message-${email}`}
             onClick={onMessage}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              height: "34px",
-              padding: "0 14.6px",
+              display: "flex", alignItems: "center", gap: "5px",
+              height: "26px", padding: "0 10px",
               background: hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)",
               border: `1px solid ${hasUnread ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
-              borderRadius: "6px",
+              borderRadius: "5px",
               boxShadow: "0px 0px 2px 0px black, 0px 1px 2.5px 0px rgba(0,0,0,0.53)",
               color: hasUnread ? "#f87171" : "white",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "14.8px",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.15s, color 0.15s",
-              whiteSpace: "nowrap",
+              fontFamily: "'Afacad', sans-serif", fontSize: "12px", fontWeight: 600,
+              cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap" as const,
             }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.background = hasUnread ? "rgba(239,68,68,0.22)" : "rgba(255,255,255,0.1)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.background = hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)";
-            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = hasUnread ? "rgba(239,68,68,0.22)" : "rgba(255,255,255,0.1)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)"; }}
           >
-            <MessageSquare size={13} />
+            <MessageSquare size={11} />
             {hasUnread ? `${unreadCount} New` : "Message"}
           </button>
 
-          {/* Progress */}
           <button
             data-testid={`button-view-progress-${email}`}
             onClick={onViewProgress}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              height: "34px",
-              padding: "0 14px",
-              background: "none",
-              border: "none",
+              display: "flex", alignItems: "center", gap: "4px",
+              height: "26px", padding: "0 8px",
+              background: "none", border: "none",
               color: "rgba(255,255,255,0.5)",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "14.8px",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "color 0.15s",
-              whiteSpace: "nowrap",
+              fontFamily: "'Afacad', sans-serif", fontSize: "12px", fontWeight: 600,
+              cursor: "pointer", transition: "color 0.15s", whiteSpace: "nowrap" as const,
             }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)";
-            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)"; }}
           >
-            Progress
-            <ArrowRight size={13} />
+            Progress <ArrowRight size={11} />
           </button>
         </div>
       </div>
