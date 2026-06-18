@@ -130,19 +130,20 @@ function MenteeCard({
   return (
     <div
       data-testid={`card-mentee-${email}`}
+      className="day-card-hover"
       style={{
         position: "relative",
         borderRadius: "6px",
         overflow: "hidden",
         border: "1px solid rgba(255,255,255,0.05)",
-        paddingTop: "14px",
+        paddingTop: "8px",
         paddingBottom: "15px",
         paddingLeft: "14px",
         paddingRight: "14px",
         display: "flex",
         flexDirection: "column",
         gap: "27px",
-        cursor: "default",
+        cursor: "pointer",
       }}
     >
       {/* Full-bleed background */}
