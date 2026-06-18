@@ -199,7 +199,7 @@ function MentorProfileEditor({ user }: { user: { id: number; name: string; profi
           style={{
             fontFamily: "'IvyOra Display', serif",
             fontSize: "1.5rem",
-            fontWeight: 600,
+            fontWeight: 500,
             color: "rgba(255,255,255,0.9)",
             marginBottom: "4px",
           }}
