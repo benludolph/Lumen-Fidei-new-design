@@ -168,7 +168,7 @@ function MenteeCard({
       <span
         style={{
           position: "relative", zIndex: 1,
-          display: "inline-flex", alignItems: "center",
+          display: "inline-flex", alignItems: "center", alignSelf: "flex-start",
           background: "#0f3338", borderRadius: "999px",
           padding: "4px 9px",
           fontFamily: "'Afacad', sans-serif", fontSize: "10px", fontWeight: 600,
