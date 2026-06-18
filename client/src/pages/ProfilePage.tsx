@@ -197,7 +197,7 @@ function MentorProfileEditor({ user }: { user: { id: number; name: string; profi
       <div style={{ marginBottom: "32px" }}>
         <h2
           style={{
-            fontFamily: "'Cormorant Garamond', serif",
+            fontFamily: "'IvyOra Display', serif",
             fontSize: "1.5rem",
             fontWeight: 600,
             color: "rgba(255,255,255,0.9)",

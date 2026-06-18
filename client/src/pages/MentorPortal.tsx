@@ -136,7 +136,7 @@ function MenteeCard({
         borderRadius: "6px",
         overflow: "hidden",
         border: "1px solid rgba(255,255,255,0.05)",
-        paddingTop: "8px",
+        paddingTop: "0",
         paddingBottom: "15px",
         paddingLeft: "14px",
         paddingRight: "14px",
