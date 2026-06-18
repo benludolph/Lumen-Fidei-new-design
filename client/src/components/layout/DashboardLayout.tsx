@@ -104,7 +104,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Navbar inner row */}
         <PageContainer variant="full" className="flex items-center justify-between h-full">
           {/* Logo */}
-          <Link href="/dashboard">
+          <Link href={user?.role === 'mentor' ? '/mentor' : '/dashboard'}>
             <div className="flex items-center cursor-pointer select-none">
               <img
                 src={logoImg}
@@ -116,12 +116,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Desktop nav links + profile */}
           <div className="hidden sm:flex items-center gap-1">
-            <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
-            <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
-            <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
-            {/* Collection hidden — not yet released */}
-            {(user?.role === 'participant' || user?.role === 'superuser') && (
-              <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
+            {user?.role === 'mentor' ? (
+              <>
+                <NavLink href="/mentor" active={location === "/mentor" || location.startsWith("/mentor/mentee")}>Dashboard</NavLink>
+                <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
+                <NavLink href="/mentor/program" active={location === "/mentor/program"}>Program</NavLink>
+              </>
+            ) : (
+              <>
+                <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
+                <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
+                <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
+                {(user?.role === 'participant' || user?.role === 'superuser') && (
+                  <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
+                )}
+              </>
             )}
 
             {/* Profile / sign-out button */}
@@ -294,20 +303,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Drawer nav links */}
         <nav className="flex flex-col flex-1" style={{ padding: "12px 0" }}>
-          <DrawerLink href="/dashboard" active={location === "/dashboard"} onClick={closeDrawer}>
-            Dashboard
-          </DrawerLink>
-          <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>
-            Messages
-          </DrawerLink>
-          <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>
-            Resources
-          </DrawerLink>
-          {/* Collection hidden — not yet released */}
-          {(user?.role === 'participant' || user?.role === 'superuser') && (
-            <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>
-              Journal
-            </DrawerLink>
+          {user?.role === 'mentor' ? (
+            <>
+              <DrawerLink href="/mentor" active={location === "/mentor" || location.startsWith("/mentor/mentee")} onClick={closeDrawer}>Dashboard</DrawerLink>
+              <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>Messages</DrawerLink>
+              <DrawerLink href="/mentor/program" active={location === "/mentor/program"} onClick={closeDrawer}>Program</DrawerLink>
+            </>
+          ) : (
+            <>
+              <DrawerLink href="/dashboard" active={location === "/dashboard"} onClick={closeDrawer}>Dashboard</DrawerLink>
+              <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>Messages</DrawerLink>
+              <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>Resources</DrawerLink>
+              {(user?.role === 'participant' || user?.role === 'superuser') && (
+                <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>Journal</DrawerLink>
+              )}
+            </>
           )}
         </nav>
 

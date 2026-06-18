@@ -1,180 +1,286 @@
-import { useState, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers } from "@/hooks/use-users";
-import { Shell } from "@/components/layout/Shell";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { PageContainer } from "@/components/layout/PageContainer";
 import { useLocation } from "wouter";
-import { MessageSquare, ArrowRight, Camera, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { MessageSquare, ArrowRight, Users } from "lucide-react";
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+const TRACK_LABELS: Record<string, string> = {
+  A: "Track A",
+  B: "Track B",
+  C: "Track C",
+};
 
 export default function MentorPortal() {
   const { user } = useAuth();
   const { data: allUsers } = useUsers("participant");
   const [_, setLocation] = useLocation();
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  if (!user || (user.role !== 'mentor' && user.role !== 'admin')) return null;
+  if (!user || (user.role !== "mentor" && user.role !== "admin")) return null;
 
-  const myMentees = allUsers?.filter(u => u.mentorId === user.id) || [];
-
-  const currentPhotoUrl = previewUrl || user.profilePhotoUrl || null;
-
-  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/mentor/upload-photo", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ message: "Upload failed" }));
-        throw new Error(err.message || "Upload failed");
-      }
-
-      const data = await res.json();
-      setPreviewUrl(data.url);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({ title: "Photo updated", description: "Your profile photo has been saved." });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message || "Please try again.", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
+  const myMentees = allUsers?.filter((u) => u.mentorId === user.id) || [];
 
   return (
-    <Shell>
-      <div className="mb-8">
-        <h1 className="type-display-lg font-serif font-bold text-primary mb-2">Mentorship Portal</h1>
-        <p className="text-muted-foreground">Oversee your mentees' spiritual progress</p>
+    <DashboardLayout>
+      <PageContainer variant="full">
+        <div style={{ paddingTop: "48px", paddingBottom: "64px" }}>
+
+          {/* Page header */}
+          <div style={{ marginBottom: "36px" }}>
+            <h1
+              style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
+                fontWeight: 600,
+                color: "white",
+                marginBottom: "6px",
+                lineHeight: 1.15,
+              }}
+            >
+              My Mentees
+            </h1>
+            <p
+              style={{
+                color: "var(--white-40)",
+                fontSize: "0.875rem",
+                fontFamily: "'Afacad', sans-serif",
+              }}
+            >
+              {myMentees.length > 0
+                ? `${myMentees.length} participant${myMentees.length !== 1 ? "s" : ""} assigned to you`
+                : "No participants assigned yet"}
+            </p>
+          </div>
+
+          {/* Mentee grid */}
+          {myMentees.length === 0 ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "100px 0",
+                color: "var(--white-20)",
+                fontFamily: "'Afacad', sans-serif",
+                gap: "12px",
+              }}
+            >
+              <Users size={36} style={{ opacity: 0.3 }} />
+              <p style={{ fontSize: "0.9rem" }}>No mentees assigned yet.</p>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              {myMentees.map((mentee) => (
+                <MenteeCard
+                  key={mentee.id}
+                  name={mentee.name}
+                  email={mentee.email}
+                  track={mentee.track || "B"}
+                  onMessage={() => setLocation(`/messages?user=${mentee.id}`)}
+                  onViewProgress={() => setLocation(`/mentor/mentee/${mentee.id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </PageContainer>
+    </DashboardLayout>
+  );
+}
+
+function MenteeCard({
+  name,
+  email,
+  track,
+  onMessage,
+  onViewProgress,
+}: {
+  name: string;
+  email: string;
+  track: string;
+  onMessage: () => void;
+  onViewProgress: () => void;
+}) {
+  return (
+    <div
+      data-testid={`card-mentee-${email}`}
+      style={{
+        background: "var(--surface-raised)",
+        border: "0.5px solid var(--white-8)",
+        borderRadius: "12px",
+        padding: "20px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        transition: "border-color 0.15s, background 0.15s",
+        cursor: "default",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--white-15)";
+        (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.06)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--white-8)";
+        (e.currentTarget as HTMLDivElement).style.background = "var(--surface-raised)";
+      }}
+    >
+      {/* Top row: avatar + info + track badge */}
+      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        {/* Avatar */}
+        <div
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            background: "var(--brand-subtle)",
+            border: "1px solid var(--brand-border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.875rem",
+            fontWeight: 700,
+            color: "var(--brand)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {getInitials(name)}
+        </div>
+
+        {/* Name + email */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.95rem",
+              fontWeight: 600,
+              color: "white",
+              margin: 0,
+              lineHeight: 1.25,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {name}
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.78rem",
+              color: "var(--white-40)",
+              margin: "2px 0 0",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {email}
+          </p>
+        </div>
+
+        {/* Track badge */}
+        <div
+          style={{
+            padding: "2px 8px",
+            borderRadius: "999px",
+            background: "rgba(255,255,255,0.06)",
+            border: "0.5px solid var(--white-12)",
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.7rem",
+            fontWeight: 600,
+            color: "var(--white-50)",
+            letterSpacing: "0.04em",
+            flexShrink: 0,
+          }}
+        >
+          {TRACK_LABELS[track] ?? `Track ${track}`}
+        </div>
       </div>
 
-      {/* Profile Photo Section */}
-      <Card className="mb-8 border-primary/10">
-        <CardHeader>
-          <CardTitle className="text-base">Your Profile Photo</CardTitle>
-          <CardDescription>This photo appears next to your messages and in participant lessons.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-6">
-            <div className="relative group">
-              <Avatar className="h-20 w-20 border-2 border-secondary">
-                {currentPhotoUrl && <AvatarImage src={currentPhotoUrl} alt={user.name} />}
-                <AvatarFallback className="bg-primary/5 text-primary text-2xl">
-                  {user.name.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <button
-                data-testid="button-upload-photo"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                style={{ border: "none" }}
-              >
-                {isUploading ? (
-                  <Loader2 className="w-5 h-5 text-white animate-spin" />
-                ) : (
-                  <Camera className="w-5 h-5 text-white" />
-                )}
-              </button>
-            </div>
-            <div>
-              <p className="font-medium mb-1">{user.name}</p>
-              <p className="text-sm text-muted-foreground mb-3">
-                {currentPhotoUrl ? "Photo uploaded" : "No photo uploaded yet"}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                data-testid="button-change-photo"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Uploading…
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-4 h-4 mr-2" />
-                    {currentPhotoUrl ? "Change Photo" : "Upload Photo"}
-                  </>
-                )}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={handlePhotoSelect}
-                data-testid="input-photo-file"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Action buttons */}
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          data-testid={`button-message-${email}`}
+          onClick={onMessage}
+          style={{
+            flex: 1,
+            height: "34px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            background: "rgba(255,255,255,0.05)",
+            border: "0.5px solid var(--white-10)",
+            borderRadius: "6px",
+            color: "var(--white-60)",
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "background 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.09)";
+            (e.currentTarget as HTMLButtonElement).style.color = "white";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--white-60)";
+          }}
+        >
+          <MessageSquare size={13} />
+          Message
+        </button>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {myMentees.length === 0 ? (
-          <div className="col-span-full text-center py-20 text-muted-foreground">
-             <p>No mentees assigned yet.</p>
-          </div>
-        ) : (
-          myMentees.map((mentee) => (
-            <Card key={mentee.id} className="hover:shadow-lg transition-all duration-300 group border-primary/10">
-              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <Avatar className="h-12 w-12 border-2 border-secondary">
-                  <AvatarFallback className="bg-primary/5 text-primary text-lg">
-                    {mentee.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 overflow-hidden">
-                  <CardTitle className="truncate">{mentee.name}</CardTitle>
-                  <CardDescription className="truncate">{mentee.email}</CardDescription>
-                </div>
-                <Badge variant="secondary" className="font-mono">Track {mentee.track}</Badge>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="flex items-center justify-between mt-4 gap-2">
-                  <Button 
-                    className="flex-1 gap-2" 
-                    variant="outline"
-                    onClick={() => setLocation(`/messages?user=${mentee.id}`)}
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Message
-                  </Button>
-                  <Button 
-                    className="flex-1 gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                    onClick={() => setLocation(`/mentor/mentee/${mentee.id}`)}
-                  >
-                    View Progress
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+        <button
+          data-testid={`button-view-progress-${email}`}
+          onClick={onViewProgress}
+          style={{
+            flex: 1,
+            height: "34px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
+            background: "var(--brand-subtle)",
+            border: "0.5px solid var(--brand-border)",
+            borderRadius: "6px",
+            color: "var(--brand)",
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-hover)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-subtle)";
+          }}
+        >
+          View Progress
+          <ArrowRight size={13} />
+        </button>
       </div>
-    </Shell>
+    </div>
   );
 }
