@@ -164,17 +164,20 @@ function MenteeCard({
         </div>
       )}
 
-      {/* Track badge — top slot, same position as state icon in DayCard */}
-      <div
+      {/* Track badge — inline-flex so padding is visually equal top/bottom */}
+      <span
         style={{
-          position: "relative", zIndex: 1, alignSelf: "flex-start",
-          background: "#0f3338", borderRadius: "999px", padding: "5.55px 9px",
+          position: "relative", zIndex: 1,
+          display: "inline-flex", alignItems: "center",
+          background: "#0f3338", borderRadius: "999px",
+          padding: "4px 9px",
+          fontFamily: "'Afacad', sans-serif", fontSize: "10px", fontWeight: 600,
+          color: "#02b8cc", letterSpacing: "1px", textTransform: "uppercase",
+          lineHeight: 1,
         }}
       >
-        <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", fontWeight: 600, color: "#02b8cc", letterSpacing: "1px", textTransform: "uppercase" as const }}>
-          Track {track}
-        </span>
-      </div>
+        Track {track}
+      </span>
 
       {/* Bottom slot — name + action buttons, same position as text block in DayCard */}
       <div className="relative z-[1] flex flex-col gap-2">
