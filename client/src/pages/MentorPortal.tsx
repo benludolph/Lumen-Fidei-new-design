@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { MessageSquare, ArrowRight, Users } from "lucide-react";
+import { MessageSquare, ArrowRight, Users, Flame, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,7 @@ type ActivitySummaryItem = {
   menteeId: number;
   lastAnswerDate: string | null;
   unreadCount: number;
+  completedDays: number;
 };
 
 function useActivitySummary() {
@@ -19,6 +20,25 @@ function useActivitySummary() {
     queryKey: ["/api/mentor/activity-summary"],
     staleTime: 60_000,
   });
+}
+
+function getDayLabel(completedDays: number): string {
+  const currentDay = Math.min(completedDays + 1, 30);
+  const week = Math.ceil(currentDay / 6);
+  const dayInWeek = ((currentDay - 1) % 6) + 1;
+  return `Week ${week} Day ${dayInWeek}`;
+}
+
+function formatLastActive(date: string | null): string {
+  if (!date) return "No activity yet";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "No activity yet";
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "Active today";
+  if (diff === 1) return "Active yesterday";
+  if (diff < 7) return `Active ${diff} days ago`;
+  return `Active ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
 }
 
 export default function MentorPortal() {
@@ -37,7 +57,6 @@ export default function MentorPortal() {
       <div style={{ paddingTop: "56px", paddingBottom: "80px" }}>
         <PageContainer variant="content">
 
-          {/* Page header */}
           <div style={{ marginBottom: "36px" }}>
             <h1
               style={{
@@ -65,7 +84,6 @@ export default function MentorPortal() {
             </p>
           </div>
 
-          {/* Mentee grid */}
           {myMentees.length === 0 ? (
             <div
               style={{
@@ -99,6 +117,8 @@ export default function MentorPortal() {
                     email={mentee.email}
                     track={mentee.track || "B"}
                     unreadCount={act?.unreadCount ?? 0}
+                    completedDays={act?.completedDays ?? 0}
+                    lastAnswerDate={act?.lastAnswerDate ?? null}
                     onMessage={() => setLocation(`/messages?user=${mentee.id}`)}
                     onViewProgress={() => setLocation(`/mentor/mentee/${mentee.id}`)}
                   />
@@ -117,6 +137,8 @@ function MenteeCard({
   email,
   track,
   unreadCount,
+  completedDays,
+  lastAnswerDate,
   onMessage,
   onViewProgress,
 }: {
@@ -124,29 +146,36 @@ function MenteeCard({
   email: string;
   track: string;
   unreadCount: number;
+  completedDays: number;
+  lastAnswerDate: string | null;
   onMessage: () => void;
   onViewProgress: () => void;
 }) {
   const hasUnread = unreadCount > 0;
+  const progressPercent = Math.min(Math.round((completedDays / 30) * 100), 100);
+  const dayLabel = getDayLabel(completedDays);
+  const lastActiveLabel = formatLastActive(lastAnswerDate);
 
   return (
     <div
       data-testid={`card-mentee-${email}`}
-      className="day-card-hover relative overflow-hidden w-full flex flex-col gap-4 pt-3 px-3 pb-[14px]"
+      className="day-card-hover relative overflow-hidden w-full flex flex-col"
       style={{
         background: "var(--surface-base)",
-        border: "0.5px solid var(--white-5)",
+        border: "1px solid rgba(255,255,255,0.05)",
         borderRadius: "6px",
         cursor: "default",
+        padding: "14px",
+        gap: "27px",
       }}
     >
       {/* Background image */}
       <img
         src="/card-user-bg.webp"
         alt=""
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none", borderRadius: "6px" }}
       />
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(267.99deg, rgba(15,16,17,0) 63.9%, rgb(15,16,17) 93.353%)", pointerEvents: "none", borderRadius: "6px" }} />
 
       {/* Unread dot — absolute top-right */}
       {hasUnread && (
@@ -166,28 +195,110 @@ function MenteeCard({
         </div>
       )}
 
-      {/* Track badge */}
-      <Badge variant="track" style={{ position: "relative", zIndex: 1, alignSelf: "flex-start" }}>
+      {/* Track badge with flame icon */}
+      <Badge
+        variant="track"
+        className="gap-1"
+        style={{ position: "relative", zIndex: 1, alignSelf: "flex-start" }}
+      >
+        <Flame size={12} />
         Track {track}
       </Badge>
 
-      {/* Name + buttons */}
-      <div className="relative z-[1] flex flex-col gap-3">
+      {/* Main content block */}
+      <div className="relative z-[1] flex flex-col" style={{ gap: "24px" }}>
+
+        {/* Name */}
         <p
-          className="type-display-sm"
-          style={{ letterSpacing: "-0.14px", color: "white", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}
+          style={{
+            fontFamily: "'IvyOra Display', serif",
+            fontSize: "18px",
+            fontWeight: 500,
+            color: "white",
+            letterSpacing: "-0.14px",
+            lineHeight: "22.5px",
+            margin: 0,
+            overflow: "hidden",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+          }}
         >
           {name}
         </p>
 
-        <div className="flex items-center gap-2">
+        {/* Progress meter */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontWeight: 500,
+                fontSize: "12px",
+                color: "white",
+                letterSpacing: "0.12px",
+                lineHeight: "14px",
+              }}
+            >
+              {dayLabel}
+            </span>
+            <span
+              style={{
+                fontFamily: "'Afacad', sans-serif",
+                fontWeight: 500,
+                fontSize: "12px",
+                color: "white",
+                letterSpacing: "0.12px",
+                lineHeight: "14px",
+              }}
+            >
+              {progressPercent}%
+            </span>
+          </div>
+          {/* Meter bar */}
+          <div style={{ position: "relative", height: "6px", borderRadius: "4px", background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+            <div
+              style={{
+                position: "absolute",
+                top: 0, bottom: 0, left: 0,
+                width: `${progressPercent}%`,
+                background: "white",
+                borderRadius: "4px",
+                transition: "width 0.3s ease",
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Separator */}
+        <div style={{ height: "1px", background: "rgba(255,255,255,0.1)", width: "100%" }} />
+
+        {/* Last active */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <CalendarDays size={16} style={{ color: "rgba(255,255,255,0.4)", flexShrink: 0 }} />
+          <span
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontWeight: 600,
+              fontSize: "14.8px",
+              color: "rgba(255,255,255,0.4)",
+              lineHeight: "22px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {lastActiveLabel}
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
           <Button
             data-testid={`button-message-${email}`}
             variant={hasUnread ? "glass-danger" : "glass"}
             size="sm"
             onClick={onMessage}
           >
-            <MessageSquare size={12} />
+            <MessageSquare size={13} />
             {hasUnread ? `${unreadCount} New` : "Message"}
           </Button>
 
@@ -197,7 +308,7 @@ function MenteeCard({
             size="sm"
             onClick={onViewProgress}
           >
-            Progress <ArrowRight size={12} />
+            Progress <ArrowRight size={13} />
           </Button>
         </div>
       </div>

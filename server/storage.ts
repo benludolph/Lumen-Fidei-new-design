@@ -196,7 +196,7 @@ export interface IStorage {
   }): Promise<UserProfile>;
 
   // Mentor Activity
-  getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number }[]>;
+  getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number; completedDays: number }[]>;
 
   // Lesson Workbook Modules
   getAllLessonWorkbookModules(): Promise<LessonWorkbookModule[]>;
@@ -1311,7 +1311,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number }[]> {
+  async getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number; completedDays: number }[]> {
     const mentees = await db.select({ id: users.id })
       .from(users)
       .where(eq(users.mentorId, mentorId));
@@ -1339,13 +1339,23 @@ export class DatabaseStorage implements IStorage {
       ))
       .groupBy(messages.senderId);
 
+    const completionRows = await db.select({
+      userId: prayerCompletions.userId,
+      cnt: sql<string>`COUNT(DISTINCT ${prayerCompletions.dayNumber})`,
+    })
+      .from(prayerCompletions)
+      .where(inArray(prayerCompletions.userId, menteeIds))
+      .groupBy(prayerCompletions.userId);
+
     const latestAnswerMap = new Map(latestAnswers.map(a => [a.userId, a.lastDate ? new Date(a.lastDate) : null]));
     const unreadCountMap = new Map(unreadRows.map(r => [r.senderId, Number(r.cnt)]));
+    const completedDaysMap = new Map(completionRows.map(r => [r.userId, Number(r.cnt)]));
 
     return menteeIds.map(menteeId => ({
       menteeId,
       lastAnswerDate: latestAnswerMap.get(menteeId) ?? null,
       unreadCount: unreadCountMap.get(menteeId) ?? 0,
+      completedDays: completedDaysMap.get(menteeId) ?? 0,
     }));
   }
 
