@@ -192,7 +192,11 @@ export interface IStorage {
     childrenNames: string[];
     chronicIssues: string[];
     chronicIdentityLabels: string[];
+    bio?: string | null;
   }): Promise<UserProfile>;
+
+  // Mentor Activity
+  getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number }[]>;
 
   // Lesson Workbook Modules
   getAllLessonWorkbookModules(): Promise<LessonWorkbookModule[]>;
@@ -1294,6 +1298,7 @@ export class DatabaseStorage implements IStorage {
     childrenNames: string[];
     chronicIssues: string[];
     chronicIdentityLabels: string[];
+    bio?: string | null;
   }): Promise<UserProfile> {
     const [result] = await db
       .insert(userProfiles)
@@ -1304,6 +1309,44 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return result;
+  }
+
+  async getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number }[]> {
+    const mentees = await db.select({ id: users.id })
+      .from(users)
+      .where(eq(users.mentorId, mentorId));
+
+    if (mentees.length === 0) return [];
+    const menteeIds = mentees.map(m => m.id);
+
+    const latestAnswers = await db.select({
+      userId: userAnswers.userId,
+      lastDate: sql<string>`MAX(${userAnswers.createdAt})`,
+    })
+      .from(userAnswers)
+      .where(inArray(userAnswers.userId, menteeIds))
+      .groupBy(userAnswers.userId);
+
+    const unreadRows = await db.select({
+      senderId: messages.senderId,
+      cnt: sql<string>`COUNT(*)`,
+    })
+      .from(messages)
+      .where(and(
+        eq(messages.receiverId, mentorId),
+        eq(messages.isRead, false),
+        inArray(messages.senderId, menteeIds)
+      ))
+      .groupBy(messages.senderId);
+
+    const latestAnswerMap = new Map(latestAnswers.map(a => [a.userId, a.lastDate ? new Date(a.lastDate) : null]));
+    const unreadCountMap = new Map(unreadRows.map(r => [r.senderId, Number(r.cnt)]));
+
+    return menteeIds.map(menteeId => ({
+      menteeId,
+      lastAnswerDate: latestAnswerMap.get(menteeId) ?? null,
+      unreadCount: unreadCountMap.get(menteeId) ?? 0,
+    }));
   }
 
   async getAllLessonWorkbookModules(): Promise<LessonWorkbookModule[]> {

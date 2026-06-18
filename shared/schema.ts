@@ -362,6 +362,7 @@ export const userProfiles = pgTable("user_profiles", {
   childrenNames: text("children_names").array().notNull(),
   chronicIssues: text("chronic_issues").array().notNull(),
   chronicIdentityLabels: text("chronic_identity_labels").array().notNull(),
+  bio: text("bio"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

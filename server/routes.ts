@@ -3513,6 +3513,7 @@ export async function registerRoutes(
       childrenNames: z.array(z.string().max(200)).max(50),
       chronicIssues: z.array(z.string().max(500)).max(100),
       chronicIdentityLabels: z.array(z.string().max(300)).max(100),
+      bio: z.string().max(2000).optional().nullable(),
     });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
@@ -3520,6 +3521,23 @@ export async function registerRoutes(
     }
     const profile = await storage.upsertUserProfile(req.user!.id, parsed.data);
     res.json(profile);
+  });
+
+  // PATCH /api/user/name — lets the current user update their own display name
+  app.patch("/api/user/name", requireAuth, writeLimiter, async (req, res) => {
+    const schema = z.object({ name: z.string().min(1).max(200).trim() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors[0].message });
+    }
+    const updated = await storage.updateUser(req.user!.id, { name: parsed.data.name });
+    res.json(sanitizeUser(updated));
+  });
+
+  // GET /api/mentor/activity-summary — returns last-active date + unread count per mentee for the current mentor
+  app.get("/api/mentor/activity-summary", requireRole("mentor", "admin"), async (req, res) => {
+    const summary = await storage.getMenteeActivitySummary(req.user!.id);
+    res.json(summary);
   });
 
   // Seed Data

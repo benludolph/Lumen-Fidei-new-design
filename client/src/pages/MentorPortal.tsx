@@ -3,7 +3,9 @@ import { useUsers } from "@/hooks/use-users";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, ArrowRight, Users } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 function getInitials(name: string) {
   return name
@@ -20,14 +22,32 @@ const TRACK_LABELS: Record<string, string> = {
   C: "Track C",
 };
 
+type ActivitySummaryItem = {
+  menteeId: number;
+  lastAnswerDate: string | null;
+  unreadCount: number;
+};
+
+function useActivitySummary() {
+  return useQuery<ActivitySummaryItem[]>({
+    queryKey: ["/api/mentor/activity-summary"],
+    staleTime: 60_000,
+  });
+}
+
 export default function MentorPortal() {
   const { user } = useAuth();
   const { data: allUsers } = useUsers("participant");
+  const { data: activity } = useActivitySummary();
   const [_, setLocation] = useLocation();
 
   if (!user || (user.role !== "mentor" && user.role !== "admin")) return null;
 
   const myMentees = allUsers?.filter((u) => u.mentorId === user.id) || [];
+
+  const activityMap = new Map(
+    (activity ?? []).map((a) => [a.menteeId, a])
+  );
 
   return (
     <DashboardLayout>
@@ -86,16 +106,21 @@ export default function MentorPortal() {
                 gap: "16px",
               }}
             >
-              {myMentees.map((mentee) => (
-                <MenteeCard
-                  key={mentee.id}
-                  name={mentee.name}
-                  email={mentee.email}
-                  track={mentee.track || "B"}
-                  onMessage={() => setLocation(`/messages?user=${mentee.id}`)}
-                  onViewProgress={() => setLocation(`/mentor/mentee/${mentee.id}`)}
-                />
-              ))}
+              {myMentees.map((mentee) => {
+                const act = activityMap.get(mentee.id);
+                return (
+                  <MenteeCard
+                    key={mentee.id}
+                    name={mentee.name}
+                    email={mentee.email}
+                    track={mentee.track || "B"}
+                    lastAnswerDate={act?.lastAnswerDate ?? null}
+                    unreadCount={act?.unreadCount ?? 0}
+                    onMessage={() => setLocation(`/messages?user=${mentee.id}`)}
+                    onViewProgress={() => setLocation(`/mentor/mentee/${mentee.id}`)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
@@ -108,15 +133,23 @@ function MenteeCard({
   name,
   email,
   track,
+  lastAnswerDate,
+  unreadCount,
   onMessage,
   onViewProgress,
 }: {
   name: string;
   email: string;
   track: string;
+  lastAnswerDate: string | null;
+  unreadCount: number;
   onMessage: () => void;
   onViewProgress: () => void;
 }) {
+  const lastActiveText = lastAnswerDate
+    ? `Active ${formatDistanceToNow(new Date(lastAnswerDate), { addSuffix: true })}`
+    : "No activity yet";
+
   return (
     <div
       data-testid={`card-mentee-${email}`}
@@ -142,29 +175,58 @@ function MenteeCard({
     >
       {/* Top row: avatar + info + track badge */}
       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-        {/* Avatar */}
-        <div
-          style={{
-            width: "44px",
-            height: "44px",
-            borderRadius: "50%",
-            background: "var(--brand-subtle)",
-            border: "1px solid var(--brand-border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.875rem",
-            fontWeight: 700,
-            color: "var(--brand)",
-            letterSpacing: "0.02em",
-          }}
-        >
-          {getInitials(name)}
+        {/* Avatar with unread dot */}
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <div
+            style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              background: "var(--brand-subtle)",
+              border: "1px solid var(--brand-border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              color: "var(--brand)",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {getInitials(name)}
+          </div>
+
+          {/* Unread message dot */}
+          {unreadCount > 0 && (
+            <div
+              data-testid={`badge-unread-${email}`}
+              title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
+              style={{
+                position: "absolute",
+                top: "-2px",
+                right: "-2px",
+                width: "16px",
+                height: "16px",
+                borderRadius: "50%",
+                background: "#ef4444",
+                border: "2px solid var(--surface-raised)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontFamily: "'Afacad', sans-serif",
+                fontSize: "0.55rem",
+                fontWeight: 700,
+                color: "white",
+                lineHeight: 1,
+              }}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </div>
+          )}
         </div>
 
-        {/* Name + email */}
+        {/* Name + email + last active */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <p
             style={{
@@ -184,15 +246,15 @@ function MenteeCard({
           <p
             style={{
               fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.78rem",
-              color: "var(--white-40)",
-              margin: "2px 0 0",
+              fontSize: "0.75rem",
+              color: "var(--white-35)",
+              margin: "3px 0 0",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
           >
-            {email}
+            {lastActiveText}
           </p>
         </div>
 
@@ -227,10 +289,10 @@ function MenteeCard({
             alignItems: "center",
             justifyContent: "center",
             gap: "6px",
-            background: "rgba(255,255,255,0.05)",
-            border: "0.5px solid var(--white-10)",
+            background: unreadCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
+            border: unreadCount > 0 ? "0.5px solid rgba(239,68,68,0.3)" : "0.5px solid var(--white-10)",
             borderRadius: "6px",
-            color: "var(--white-60)",
+            color: unreadCount > 0 ? "#f87171" : "var(--white-60)",
             fontFamily: "'Afacad', sans-serif",
             fontSize: "0.82rem",
             fontWeight: 600,
@@ -242,12 +304,12 @@ function MenteeCard({
             (e.currentTarget as HTMLButtonElement).style.color = "white";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-            (e.currentTarget as HTMLButtonElement).style.color = "var(--white-60)";
+            (e.currentTarget as HTMLButtonElement).style.background = unreadCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)";
+            (e.currentTarget as HTMLButtonElement).style.color = unreadCount > 0 ? "#f87171" : "var(--white-60)";
           }}
         >
           <MessageSquare size={13} />
-          Message
+          {unreadCount > 0 ? `${unreadCount} New` : "Message"}
         </button>
 
         <button
