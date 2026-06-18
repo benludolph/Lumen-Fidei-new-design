@@ -51,19 +51,20 @@ export default function MentorPortal() {
 
   return (
     <DashboardLayout>
-      <PageContainer variant="full">
-        <div style={{ paddingTop: "48px", paddingBottom: "64px" }}>
+      <div style={{ paddingTop: "56px", paddingBottom: "80px" }}>
+        <PageContainer variant="content">
 
           {/* Page header */}
           <div style={{ marginBottom: "36px" }}>
             <h1
               style={{
-                fontFamily: "'Cormorant Garamond', serif",
-                fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
-                fontWeight: 600,
+                fontFamily: "'IvyOra Display', serif",
+                fontSize: "clamp(1.9rem, 3.5vw, 2.5rem)",
+                fontWeight: 500,
                 color: "white",
                 marginBottom: "6px",
-                lineHeight: 1.15,
+                lineHeight: 1.1,
+                letterSpacing: "-0.01em",
               }}
             >
               My Mentees
@@ -81,7 +82,7 @@ export default function MentorPortal() {
             </p>
           </div>
 
-          {/* Mentee grid */}
+          {/* Mentee list */}
           {myMentees.length === 0 ? (
             <div
               style={{
@@ -99,13 +100,7 @@ export default function MentorPortal() {
               <p style={{ fontSize: "0.9rem" }}>No mentees assigned yet.</p>
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: "16px",
-              }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {myMentees.map((mentee) => {
                 const act = activityMap.get(mentee.id);
                 return (
@@ -123,8 +118,8 @@ export default function MentorPortal() {
               })}
             </div>
           )}
-        </div>
-      </PageContainer>
+        </PageContainer>
+      </div>
     </DashboardLayout>
   );
 }
@@ -157,12 +152,11 @@ function MenteeCard({
         background: "var(--surface-raised)",
         border: "0.5px solid var(--white-8)",
         borderRadius: "12px",
-        padding: "20px",
+        padding: "18px 20px",
         display: "flex",
-        flexDirection: "column",
+        alignItems: "center",
         gap: "16px",
         transition: "border-color 0.15s, background 0.15s",
-        cursor: "default",
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.borderColor = "var(--white-15)";
@@ -173,145 +167,141 @@ function MenteeCard({
         (e.currentTarget as HTMLDivElement).style.background = "var(--surface-raised)";
       }}
     >
-      {/* Top row: avatar + info + track badge */}
-      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-        {/* Avatar with unread dot */}
-        <div style={{ position: "relative", flexShrink: 0 }}>
+      {/* Avatar with unread dot */}
+      <div style={{ position: "relative", flexShrink: 0 }}>
+        <div
+          style={{
+            width: "46px",
+            height: "46px",
+            borderRadius: "50%",
+            background: "var(--brand-subtle)",
+            border: "1px solid var(--brand-border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.9rem",
+            fontWeight: 700,
+            color: "var(--brand)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {getInitials(name)}
+        </div>
+
+        {unreadCount > 0 && (
           <div
+            data-testid={`badge-unread-${email}`}
+            title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
             style={{
-              width: "44px",
-              height: "44px",
-              borderRadius: "50%",
-              background: "var(--brand-subtle)",
-              border: "1px solid var(--brand-border)",
+              position: "absolute",
+              top: "-2px",
+              right: "-2px",
+              minWidth: "16px",
+              height: "16px",
+              borderRadius: "999px",
+              background: "#ef4444",
+              border: "2px solid var(--surface-raised)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.875rem",
+              fontSize: "0.55rem",
               fontWeight: 700,
-              color: "var(--brand)",
-              letterSpacing: "0.02em",
-            }}
-          >
-            {getInitials(name)}
-          </div>
-
-          {/* Unread message dot */}
-          {unreadCount > 0 && (
-            <div
-              data-testid={`badge-unread-${email}`}
-              title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
-              style={{
-                position: "absolute",
-                top: "-2px",
-                right: "-2px",
-                width: "16px",
-                height: "16px",
-                borderRadius: "50%",
-                background: "#ef4444",
-                border: "2px solid var(--surface-raised)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "'Afacad', sans-serif",
-                fontSize: "0.55rem",
-                fontWeight: 700,
-                color: "white",
-                lineHeight: 1,
-              }}
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </div>
-          )}
-        </div>
-
-        {/* Name + email + last active */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.95rem",
-              fontWeight: 600,
               color: "white",
-              margin: 0,
-              lineHeight: 1.25,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              padding: "0 3px",
             }}
           >
-            {name}
-          </p>
-          <p
-            data-testid={`text-email-${email}`}
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.75rem",
-              color: "var(--white-40)",
-              margin: "2px 0 0",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {email}
-          </p>
-          <p
-            style={{
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.72rem",
-              color: "var(--white-28)",
-              margin: "1px 0 0",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {lastActiveText}
-          </p>
-        </div>
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </div>
+        )}
+      </div>
 
-        {/* Track badge */}
-        <div
+      {/* Name + email + last active */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p
           style={{
-            padding: "2px 8px",
-            borderRadius: "999px",
-            background: "rgba(255,255,255,0.06)",
-            border: "0.5px solid var(--white-12)",
             fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.7rem",
+            fontSize: "1rem",
             fontWeight: 600,
-            color: "var(--white-50)",
-            letterSpacing: "0.04em",
-            flexShrink: 0,
+            color: "white",
+            margin: 0,
+            lineHeight: 1.2,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
-          {TRACK_LABELS[track] ?? `Track ${track}`}
-        </div>
+          {name}
+        </p>
+        <p
+          data-testid={`text-email-${email}`}
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.78rem",
+            color: "var(--white-45)",
+            margin: "2px 0 0",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {email}
+        </p>
+        <p
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "0.72rem",
+            color: "var(--white-28)",
+            margin: "1px 0 0",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {lastActiveText}
+        </p>
+      </div>
+
+      {/* Track badge */}
+      <div
+        style={{
+          padding: "2px 9px",
+          borderRadius: "999px",
+          background: "rgba(255,255,255,0.05)",
+          border: "0.5px solid var(--white-10)",
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.7rem",
+          fontWeight: 600,
+          color: "var(--white-45)",
+          letterSpacing: "0.04em",
+          flexShrink: 0,
+        }}
+      >
+        {TRACK_LABELS[track] ?? `Track ${track}`}
       </div>
 
       {/* Action buttons */}
-      <div style={{ display: "flex", gap: "8px" }}>
+      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
         <button
           data-testid={`button-message-${email}`}
           onClick={onMessage}
           style={{
-            flex: 1,
             height: "34px",
+            padding: "0 14px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
             gap: "6px",
             background: unreadCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
             border: unreadCount > 0 ? "0.5px solid rgba(239,68,68,0.3)" : "0.5px solid var(--white-10)",
             borderRadius: "6px",
-            color: unreadCount > 0 ? "#f87171" : "var(--white-60)",
+            color: unreadCount > 0 ? "#f87171" : "var(--white-55)",
             fontFamily: "'Afacad', sans-serif",
             fontSize: "0.82rem",
             fontWeight: 600,
             cursor: "pointer",
             transition: "background 0.15s, color 0.15s",
+            whiteSpace: "nowrap",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.09)";
@@ -319,7 +309,7 @@ function MenteeCard({
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background = unreadCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)";
-            (e.currentTarget as HTMLButtonElement).style.color = unreadCount > 0 ? "#f87171" : "var(--white-60)";
+            (e.currentTarget as HTMLButtonElement).style.color = unreadCount > 0 ? "#f87171" : "var(--white-55)";
           }}
         >
           <MessageSquare size={13} />
@@ -330,11 +320,10 @@ function MenteeCard({
           data-testid={`button-view-progress-${email}`}
           onClick={onViewProgress}
           style={{
-            flex: 1,
             height: "34px",
+            padding: "0 14px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
             gap: "6px",
             background: "var(--brand-subtle)",
             border: "0.5px solid var(--brand-border)",
@@ -345,6 +334,7 @@ function MenteeCard({
             fontWeight: 600,
             cursor: "pointer",
             transition: "background 0.15s",
+            whiteSpace: "nowrap",
           }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-hover)";
@@ -353,7 +343,7 @@ function MenteeCard({
             (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-subtle)";
           }}
         >
-          View Progress
+          Progress
           <ArrowRight size={13} />
         </button>
       </div>

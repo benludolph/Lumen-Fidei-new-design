@@ -109,11 +109,7 @@ function DayCompletionGrid({
                 opacity: locked ? 0.45 : 1,
               }}
             >
-              {locked ? (
-                <Lock size={9} style={{ opacity: 0.5 }} />
-              ) : (
-                day
-              )}
+              {locked ? <Lock size={9} style={{ opacity: 0.5 }} /> : day}
             </div>
           );
         })}
@@ -158,30 +154,24 @@ export default function MenteeDetails() {
     return calendarDaysToProgramDay(elapsed);
   })();
 
-  const completedDays = new Set<number>(
-    (prayerCompletions ?? []).map((c) => c.dayNumber)
-  );
-  const answeredDays = new Set<number>(
-    (answers ?? []).map((a) => a.dayNumber)
-  );
+  const completedDays = new Set<number>((prayerCompletions ?? []).map((c) => c.dayNumber));
+  const answeredDays = new Set<number>((answers ?? []).map((a) => a.dayNumber));
 
   if (!mentee) {
     return (
       <DashboardLayout>
-        <PageContainer variant="full">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh" }}>
-            <div
-              style={{
-                width: "24px",
-                height: "24px",
-                border: "2px solid var(--white-15)",
-                borderTopColor: "var(--white-60)",
-                borderRadius: "50%",
-                animation: "spin 0.8s linear infinite",
-              }}
-            />
-          </div>
-        </PageContainer>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh" }}>
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              border: "2px solid var(--white-15)",
+              borderTopColor: "var(--white-60)",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
+        </div>
       </DashboardLayout>
     );
   }
@@ -190,8 +180,8 @@ export default function MenteeDetails() {
 
   return (
     <DashboardLayout>
-      <PageContainer variant="full">
-        <div style={{ paddingTop: "40px", paddingBottom: "64px" }}>
+      <div style={{ paddingTop: "40px", paddingBottom: "80px" }}>
+        <PageContainer variant="content">
 
           {/* Back link */}
           <Link href="/mentor">
@@ -207,7 +197,7 @@ export default function MenteeDetails() {
                 cursor: "pointer",
                 fontFamily: "'Afacad', sans-serif",
                 fontSize: "0.82rem",
-                padding: "0 0 20px",
+                padding: "0 0 24px",
                 transition: "color 0.15s",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--white-80)"; }}
@@ -242,17 +232,18 @@ export default function MenteeDetails() {
             <div>
               <h1
                 style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: "clamp(1.5rem, 2.5vw, 2rem)",
-                  fontWeight: 600,
+                  fontFamily: "'IvyOra Display', serif",
+                  fontSize: "clamp(1.5rem, 3vw, 2rem)",
+                  fontWeight: 500,
                   color: "white",
                   margin: 0,
-                  lineHeight: 1.2,
+                  lineHeight: 1.15,
+                  letterSpacing: "-0.01em",
                 }}
               >
                 {mentee.name}
               </h1>
-              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.82rem", color: "var(--white-40)", margin: "3px 0 0" }}>
+              <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.82rem", color: "var(--white-40)", margin: "4px 0 0" }}>
                 {mentee.email} · Track {mentee.track ?? "B"}
               </p>
             </div>
@@ -322,7 +313,7 @@ export default function MenteeDetails() {
                       borderBottom: "0.5px solid var(--white-6)",
                     }}
                   >
-                    <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: "1rem", fontWeight: 600, color: "white" }}>
+                    <span style={{ fontFamily: "'IvyOra Display', serif", fontSize: "1rem", fontWeight: 500, color: "white" }}>
                       Day {answer.dayNumber}
                     </span>
                     <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", color: "var(--white-30)" }}>
@@ -345,8 +336,8 @@ export default function MenteeDetails() {
               ))}
             </div>
           )}
-        </div>
-      </PageContainer>
+        </PageContainer>
+      </div>
     </DashboardLayout>
   );
 }

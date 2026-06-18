@@ -201,7 +201,7 @@ function Router() {
       <Route path="/sms-optin" component={SmsOptin} />
 
       <Route path="/preview/track-a/:day">
-        <ProtectedRoute component={PreviewLesson} allowedRoles={['admin']} />
+        <ProtectedRoute component={PreviewLesson} allowedRoles={['admin', 'mentor']} />
       </Route>
 
       {/* Healing Track — Track C participants and admins only */}
