@@ -168,7 +168,7 @@ function MenteeCard({
       <div
         style={{
           position: "relative", zIndex: 1, alignSelf: "flex-start",
-          background: "#0f3338", borderRadius: "999px", padding: "2px 9px",
+          background: "#0f3338", borderRadius: "999px", padding: "5.55px 9px",
         }}
       >
         <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "10px", fontWeight: 600, color: "#02b8cc", letterSpacing: "1px", textTransform: "uppercase" as const }}>
