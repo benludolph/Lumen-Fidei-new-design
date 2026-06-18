@@ -135,29 +135,27 @@ function MenteeCard({
         position: "relative",
         borderRadius: "6px",
         overflow: "hidden",
-        border: "1px solid rgba(255,255,255,0.05)",
-        paddingTop: "0",
-        paddingBottom: "15px",
-        paddingLeft: "14px",
-        paddingRight: "14px",
+        border: "1px solid rgba(255,255,255,0.12)",
+        padding: "15.63px 14.625px 15.625px",
         display: "flex",
         flexDirection: "column",
-        gap: "27px",
+        justifyContent: "space-between",
         cursor: "pointer",
+        minHeight: "140px",
       }}
     >
-      {/* Full-bleed background */}
+      {/* Full-bleed background — bleeds slightly outside for seamless edge coverage */}
       <img
         alt=""
         src="/card-user-bg.webp"
         style={{
           position: "absolute",
-          inset: 0,
+          left: 0,
+          top: "-1.81%",
           width: "100%",
-          height: "100%",
+          height: "103.63%",
           objectFit: "cover",
           pointerEvents: "none",
-          borderRadius: "6px",
         }}
       />
 
@@ -190,7 +188,7 @@ function MenteeCard({
         </div>
       )}
 
-      {/* Track badge */}
+      {/* Track badge — sits at card top with consistent padding */}
       <div
         style={{
           position: "relative",
@@ -198,7 +196,7 @@ function MenteeCard({
           alignSelf: "flex-start",
           background: "#0f3338",
           borderRadius: "999px",
-          padding: "2px 9px",
+          padding: "5.55px 9px",
         }}
       >
         <span
@@ -209,6 +207,7 @@ function MenteeCard({
             color: "#02b8cc",
             letterSpacing: "1px",
             textTransform: "uppercase",
+            lineHeight: "15px",
           }}
         >
           Track {track}
