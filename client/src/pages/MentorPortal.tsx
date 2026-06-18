@@ -5,22 +5,6 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, ArrowRight, Users } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-const TRACK_LABELS: Record<string, string> = {
-  A: "Track A",
-  B: "Track B",
-  C: "Track C",
-};
 
 type ActivitySummaryItem = {
   menteeId: number;
@@ -44,10 +28,7 @@ export default function MentorPortal() {
   if (!user || (user.role !== "mentor" && user.role !== "admin")) return null;
 
   const myMentees = allUsers?.filter((u) => u.mentorId === user.id) || [];
-
-  const activityMap = new Map(
-    (activity ?? []).map((a) => [a.menteeId, a])
-  );
+  const activityMap = new Map((activity ?? []).map((a) => [a.menteeId, a]));
 
   return (
     <DashboardLayout>
@@ -82,7 +63,7 @@ export default function MentorPortal() {
             </p>
           </div>
 
-          {/* Mentee list */}
+          {/* Mentee grid */}
           {myMentees.length === 0 ? (
             <div
               style={{
@@ -100,7 +81,13 @@ export default function MentorPortal() {
               <p style={{ fontSize: "0.9rem" }}>No mentees assigned yet.</p>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "12px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: "12px",
+              }}
+            >
               {myMentees.map((mentee) => {
                 const act = activityMap.get(mentee.id);
                 return (
@@ -109,7 +96,6 @@ export default function MentorPortal() {
                     name={mentee.name}
                     email={mentee.email}
                     track={mentee.track || "B"}
-                    lastAnswerDate={act?.lastAnswerDate ?? null}
                     unreadCount={act?.unreadCount ?? 0}
                     onMessage={() => setLocation(`/messages?user=${mentee.id}`)}
                     onViewProgress={() => setLocation(`/mentor/mentee/${mentee.id}`)}
@@ -128,7 +114,6 @@ function MenteeCard({
   name,
   email,
   track,
-  lastAnswerDate,
   unreadCount,
   onMessage,
   onViewProgress,
@@ -136,216 +121,196 @@ function MenteeCard({
   name: string;
   email: string;
   track: string;
-  lastAnswerDate: string | null;
   unreadCount: number;
   onMessage: () => void;
   onViewProgress: () => void;
 }) {
-  const lastActiveText = lastAnswerDate
-    ? `Active ${formatDistanceToNow(new Date(lastAnswerDate), { addSuffix: true })}`
-    : "No activity yet";
+  const hasUnread = unreadCount > 0;
 
   return (
     <div
       data-testid={`card-mentee-${email}`}
       style={{
-        background: "var(--surface-raised)",
-        border: "0.5px solid var(--white-8)",
-        borderRadius: "12px",
-        padding: "18px 20px",
+        position: "relative",
+        borderRadius: "6px",
+        overflow: "hidden",
+        border: "1px solid rgba(255,255,255,0.05)",
+        paddingTop: "14px",
+        paddingBottom: "15px",
+        paddingLeft: "14px",
+        paddingRight: "14px",
         display: "flex",
-        alignItems: "center",
-        gap: "16px",
-        transition: "border-color 0.15s, background 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--white-15)";
-        (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.06)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "var(--white-8)";
-        (e.currentTarget as HTMLDivElement).style.background = "var(--surface-raised)";
+        flexDirection: "column",
+        gap: "27px",
+        cursor: "default",
       }}
     >
-      {/* Avatar with unread dot */}
-      <div style={{ position: "relative", flexShrink: 0 }}>
+      {/* Full-bleed background */}
+      <img
+        alt=""
+        src="/card-user-bg.webp"
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          pointerEvents: "none",
+          borderRadius: "6px",
+        }}
+      />
+
+      {/* Unread dot — top-right corner */}
+      {hasUnread && (
         <div
+          data-testid={`badge-unread-${email}`}
+          title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
           style={{
-            width: "46px",
-            height: "46px",
-            borderRadius: "50%",
-            background: "var(--brand-subtle)",
-            border: "1px solid var(--brand-border)",
+            position: "absolute",
+            top: "10px",
+            right: "10px",
+            minWidth: "18px",
+            height: "18px",
+            borderRadius: "999px",
+            background: "#ef4444",
+            border: "1.5px solid rgba(0,0,0,0.4)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.9rem",
+            fontSize: "0.6rem",
             fontWeight: 700,
-            color: "var(--brand)",
-            letterSpacing: "0.02em",
-          }}
-        >
-          {getInitials(name)}
-        </div>
-
-        {unreadCount > 0 && (
-          <div
-            data-testid={`badge-unread-${email}`}
-            title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
-            style={{
-              position: "absolute",
-              top: "-2px",
-              right: "-2px",
-              minWidth: "16px",
-              height: "16px",
-              borderRadius: "999px",
-              background: "#ef4444",
-              border: "2px solid var(--surface-raised)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "'Afacad', sans-serif",
-              fontSize: "0.55rem",
-              fontWeight: 700,
-              color: "white",
-              padding: "0 3px",
-            }}
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </div>
-        )}
-      </div>
-
-      {/* Name + email + last active */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "1rem",
-            fontWeight: 600,
             color: "white",
-            margin: 0,
-            lineHeight: 1.2,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+            padding: "0 4px",
+            zIndex: 2,
           }}
         >
-          {name}
-        </p>
-        <p
-          data-testid={`text-email-${email}`}
-          style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.78rem",
-            color: "var(--white-45)",
-            margin: "2px 0 0",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {email}
-        </p>
-        <p
-          style={{
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.72rem",
-            color: "var(--white-28)",
-            margin: "1px 0 0",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {lastActiveText}
-        </p>
-      </div>
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </div>
+      )}
 
       {/* Track badge */}
       <div
         style={{
-          padding: "2px 9px",
+          position: "relative",
+          zIndex: 1,
+          alignSelf: "flex-start",
+          background: "#0f3338",
           borderRadius: "999px",
-          background: "rgba(255,255,255,0.05)",
-          border: "0.5px solid var(--white-10)",
-          fontFamily: "'Afacad', sans-serif",
-          fontSize: "0.7rem",
-          fontWeight: 600,
-          color: "var(--white-45)",
-          letterSpacing: "0.04em",
-          flexShrink: 0,
+          padding: "2px 9px",
         }}
       >
-        {TRACK_LABELS[track] ?? `Track ${track}`}
+        <span
+          style={{
+            fontFamily: "'Afacad', sans-serif",
+            fontSize: "10px",
+            fontWeight: 600,
+            color: "#02b8cc",
+            letterSpacing: "1px",
+            textTransform: "uppercase",
+          }}
+        >
+          Track {track}
+        </span>
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-        <button
-          data-testid={`button-message-${email}`}
-          onClick={onMessage}
+      {/* Bottom content: name + buttons */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+        }}
+      >
+        {/* Name */}
+        <p
           style={{
-            height: "34px",
-            padding: "0 14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            background: unreadCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)",
-            border: unreadCount > 0 ? "0.5px solid rgba(239,68,68,0.3)" : "0.5px solid var(--white-10)",
-            borderRadius: "6px",
-            color: unreadCount > 0 ? "#f87171" : "var(--white-55)",
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "background 0.15s, color 0.15s",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.09)";
-            (e.currentTarget as HTMLButtonElement).style.color = "white";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = unreadCount > 0 ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.05)";
-            (e.currentTarget as HTMLButtonElement).style.color = unreadCount > 0 ? "#f87171" : "var(--white-55)";
+            fontFamily: "'IvyOra Display', serif",
+            fontSize: "18px",
+            fontWeight: 500,
+            color: "white",
+            letterSpacing: "-0.14px",
+            lineHeight: "22.5px",
+            margin: 0,
+            overflow: "hidden",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
           }}
         >
-          <MessageSquare size={13} />
-          {unreadCount > 0 ? `${unreadCount} New` : "Message"}
-        </button>
+          {name}
+        </p>
 
-        <button
-          data-testid={`button-view-progress-${email}`}
-          onClick={onViewProgress}
-          style={{
-            height: "34px",
-            padding: "0 14px",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            background: "var(--brand-subtle)",
-            border: "0.5px solid var(--brand-border)",
-            borderRadius: "6px",
-            color: "var(--brand)",
-            fontFamily: "'Afacad', sans-serif",
-            fontSize: "0.82rem",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "background 0.15s",
-            whiteSpace: "nowrap",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-hover)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-subtle)";
-          }}
-        >
-          Progress
-          <ArrowRight size={13} />
-        </button>
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          {/* Message */}
+          <button
+            data-testid={`button-message-${email}`}
+            onClick={onMessage}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              height: "34px",
+              padding: "0 14.6px",
+              background: hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)",
+              border: `1px solid ${hasUnread ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
+              borderRadius: "6px",
+              boxShadow: "0px 0px 2px 0px black, 0px 1px 2.5px 0px rgba(0,0,0,0.53)",
+              color: hasUnread ? "#f87171" : "white",
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "14.8px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.15s, color 0.15s",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLButtonElement;
+              el.style.background = hasUnread ? "rgba(239,68,68,0.22)" : "rgba(255,255,255,0.1)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLButtonElement;
+              el.style.background = hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)";
+            }}
+          >
+            <MessageSquare size={13} />
+            {hasUnread ? `${unreadCount} New` : "Message"}
+          </button>
+
+          {/* Progress */}
+          <button
+            data-testid={`button-view-progress-${email}`}
+            onClick={onViewProgress}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              height: "34px",
+              padding: "0 14px",
+              background: "none",
+              border: "none",
+              color: "rgba(255,255,255,0.5)",
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "14.8px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "color 0.15s",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)";
+            }}
+          >
+            Progress
+            <ArrowRight size={13} />
+          </button>
+        </div>
       </div>
     </div>
   );
