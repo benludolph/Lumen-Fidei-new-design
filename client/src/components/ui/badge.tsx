@@ -15,8 +15,9 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow-xs",
-
         outline: " border [border-color:var(--badge-outline)] shadow-xs",
+        track:
+          "border-transparent bg-[#0f3338] text-[#02b8cc] rounded-full uppercase tracking-[1px] pointer-events-none",
       },
     },
     defaultVariants: {

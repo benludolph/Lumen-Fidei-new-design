@@ -5,6 +5,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, ArrowRight, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 type ActivitySummaryItem = {
   menteeId: number;
@@ -164,20 +165,13 @@ function MenteeCard({
         </div>
       )}
 
-      {/* Track badge — inline-flex so padding is visually equal top/bottom */}
-      <span
-        style={{
-          position: "relative", zIndex: 1,
-          display: "inline-flex", alignItems: "center", alignSelf: "flex-start",
-          background: "#0f3338", borderRadius: "999px",
-          padding: "4px 9px",
-          fontFamily: "'Afacad', sans-serif", fontSize: "10px", fontWeight: 600,
-          color: "#02b8cc", letterSpacing: "1px", textTransform: "uppercase",
-          lineHeight: 1,
-        }}
+      {/* Track badge — uses shared Badge variant="track" from ui/badge */}
+      <Badge
+        variant="track"
+        style={{ position: "relative", zIndex: 1, alignSelf: "flex-start" }}
       >
         Track {track}
-      </span>
+      </Badge>
 
       {/* Bottom slot — name + action buttons, same position as text block in DayCard */}
       <div className="relative z-[1] flex flex-col gap-2">
