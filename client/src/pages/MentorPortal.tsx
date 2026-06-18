@@ -199,6 +199,8 @@ function MenteeCard({
           background: "#0f3338",
           borderRadius: "999px",
           padding: "2px 9px",
+          display: "flex",
+          alignItems: "center",
         }}
       >
         <span
@@ -209,6 +211,7 @@ function MenteeCard({
             color: "#02b8cc",
             letterSpacing: "1px",
             textTransform: "uppercase",
+            lineHeight: "1",
           }}
         >
           Track {track}
