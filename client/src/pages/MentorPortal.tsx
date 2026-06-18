@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, ArrowRight, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 type ActivitySummaryItem = {
   menteeId: number;
@@ -131,7 +132,7 @@ function MenteeCard({
   return (
     <div
       data-testid={`card-mentee-${email}`}
-      className="day-card-hover relative overflow-hidden w-full flex flex-col justify-between pt-3 px-3 pb-[14px] min-h-[126px]"
+      className="day-card-hover relative overflow-hidden w-full flex flex-col gap-4 pt-3 px-3 pb-[14px]"
       style={{
         background: "var(--surface-base)",
         border: "0.5px solid var(--white-5)",
@@ -139,7 +140,7 @@ function MenteeCard({
         cursor: "default",
       }}
     >
-      {/* Background image — same pattern as DayCard */}
+      {/* Background image */}
       <img
         src="/card-user-bg.webp"
         alt=""
@@ -165,16 +166,13 @@ function MenteeCard({
         </div>
       )}
 
-      {/* Track badge — uses shared Badge variant="track" from ui/badge */}
-      <Badge
-        variant="track"
-        style={{ position: "relative", zIndex: 1, alignSelf: "flex-start" }}
-      >
+      {/* Track badge */}
+      <Badge variant="track" style={{ position: "relative", zIndex: 1, alignSelf: "flex-start" }}>
         Track {track}
       </Badge>
 
-      {/* Bottom slot — name + action buttons, same position as text block in DayCard */}
-      <div className="relative z-[1] flex flex-col gap-2">
+      {/* Name + buttons */}
+      <div className="relative z-[1] flex flex-col gap-3">
         <p
           className="type-display-sm"
           style={{ letterSpacing: "-0.14px", color: "white", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}
@@ -182,44 +180,25 @@ function MenteeCard({
           {name}
         </p>
 
-        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-          <button
+        <div className="flex items-center gap-2">
+          <Button
             data-testid={`button-message-${email}`}
+            variant={hasUnread ? "glass-danger" : "glass"}
+            size="sm"
             onClick={onMessage}
-            style={{
-              display: "flex", alignItems: "center", gap: "5px",
-              height: "26px", padding: "0 10px",
-              background: hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)",
-              border: `1px solid ${hasUnread ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.1)"}`,
-              borderRadius: "5px",
-              boxShadow: "0px 0px 2px 0px black, 0px 1px 2.5px 0px rgba(0,0,0,0.53)",
-              color: hasUnread ? "#f87171" : "white",
-              fontFamily: "'Afacad', sans-serif", fontSize: "12px", fontWeight: 600,
-              cursor: "pointer", transition: "background 0.15s", whiteSpace: "nowrap" as const,
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = hasUnread ? "rgba(239,68,68,0.22)" : "rgba(255,255,255,0.1)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = hasUnread ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.05)"; }}
           >
-            <MessageSquare size={11} />
+            <MessageSquare size={12} />
             {hasUnread ? `${unreadCount} New` : "Message"}
-          </button>
+          </Button>
 
-          <button
+          <Button
             data-testid={`button-view-progress-${email}`}
+            variant="ghost-dim"
+            size="sm"
             onClick={onViewProgress}
-            style={{
-              display: "flex", alignItems: "center", gap: "4px",
-              height: "26px", padding: "0 8px",
-              background: "none", border: "none",
-              color: "rgba(255,255,255,0.5)",
-              fontFamily: "'Afacad', sans-serif", fontSize: "12px", fontWeight: 600,
-              cursor: "pointer", transition: "color 0.15s", whiteSpace: "nowrap" as const,
-            }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)"; }}
           >
-            Progress <ArrowRight size={11} />
-          </button>
+            Progress <ArrowRight size={12} />
+          </Button>
         </div>
       </div>
     </div>
