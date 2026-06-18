@@ -39,13 +39,13 @@ export default function PreviewLesson() {
     staleTime: 60_000,
   });
 
-  if (!user || user.role !== "admin") return null;
+  if (!user || (user.role !== "admin" && user.role !== "mentor")) return null;
 
   const handleExit = () => {
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      setLocation("/admin");
+      setLocation(user.role === "mentor" ? "/mentor/program" : "/admin");
     }
   };
 

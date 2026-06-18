@@ -100,7 +100,7 @@ export default function MentorPortal() {
               <p style={{ fontSize: "0.9rem" }}>No mentees assigned yet.</p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "12px" }}>
               {myMentees.map((mentee) => {
                 const act = activityMap.get(mentee.id);
                 return (
