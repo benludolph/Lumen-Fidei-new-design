@@ -1293,6 +1293,32 @@ export async function registerRoutes(
     res.json({ message: "Completion removed" });
   });
 
+  // === Lesson Progress ===
+
+  app.get("/api/lesson-progress/:dayNumber", requireAuth, async (req, res) => {
+    const dayNumber = parseInt(req.params.dayNumber, 10);
+    if (isNaN(dayNumber)) return res.sendStatus(400);
+    const progress = await storage.getLessonProgress(req.user!.id, dayNumber);
+    res.json(progress ?? null);
+  });
+
+  app.put("/api/lesson-progress/:dayNumber", requireAuth, writeLimiter, async (req, res) => {
+    const dayNumber = parseInt(req.params.dayNumber, 10);
+    if (isNaN(dayNumber)) return res.sendStatus(400);
+    const schema = z.object({ slideIndex: z.number().int().min(0) });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    await storage.upsertLessonProgress(req.user!.id, dayNumber, parsed.data.slideIndex);
+    res.json({ ok: true });
+  });
+
+  app.delete("/api/lesson-progress/:dayNumber", requireAuth, async (req, res) => {
+    const dayNumber = parseInt(req.params.dayNumber, 10);
+    if (isNaN(dayNumber)) return res.sendStatus(400);
+    await storage.deleteLessonProgress(req.user!.id, dayNumber);
+    res.json({ ok: true });
+  });
+
   // === Admin Routes ===
 
   app.post(api.admin.createContent.path, async (req, res) => {

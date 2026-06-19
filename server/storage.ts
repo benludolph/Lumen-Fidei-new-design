@@ -4,7 +4,7 @@ import {
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
   workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
-  lessonWorkbookModules, lessonWorkbookCompletions, wrapPrayers,
+  lessonWorkbookModules, lessonWorkbookCompletions, wrapPrayers, lessonProgress,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -210,6 +210,11 @@ export interface IStorage {
   // Wrap Prayers (opening/closing prayer defaults)
   getWrapPrayers(): Promise<WrapPrayer[]>;
   upsertWrapPrayer(kind: "opening" | "closing", prayerText: string, audioUrl: string | null): Promise<WrapPrayer>;
+
+  // Lesson Progress
+  getLessonProgress(userId: number, dayNumber: number): Promise<{ slideIndex: number } | null>;
+  upsertLessonProgress(userId: number, dayNumber: number, slideIndex: number): Promise<void>;
+  deleteLessonProgress(userId: number, dayNumber: number): Promise<void>;
 
   // session store
   sessionStore: any;
@@ -1427,6 +1432,28 @@ export class DatabaseStorage implements IStorage {
       RETURNING id, kind, prayer_text AS "prayerText", audio_url AS "audioUrl"
     `);
     return result.rows[0] as WrapPrayer;
+  }
+
+  // Lesson Progress
+  async getLessonProgress(userId: number, dayNumber: number): Promise<{ slideIndex: number } | null> {
+    const [row] = await db.select({ slideIndex: lessonProgress.slideIndex })
+      .from(lessonProgress)
+      .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.dayNumber, dayNumber)));
+    return row ?? null;
+  }
+
+  async upsertLessonProgress(userId: number, dayNumber: number, slideIndex: number): Promise<void> {
+    await db.insert(lessonProgress)
+      .values({ userId, dayNumber, slideIndex, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: [lessonProgress.userId, lessonProgress.dayNumber],
+        set: { slideIndex, updatedAt: new Date() },
+      });
+  }
+
+  async deleteLessonProgress(userId: number, dayNumber: number): Promise<void> {
+    await db.delete(lessonProgress)
+      .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.dayNumber, dayNumber)));
   }
 }
 

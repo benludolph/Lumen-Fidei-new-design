@@ -89,6 +89,8 @@ export function LessonFlow({
   const [sessionVars, setSessionVars] = useState<Record<string, unknown>>({});
   const [selectionRevealHasSelection, setSelectionRevealHasSelection] = useState(false);
   const [bentoAllTapped, setBentoAllTapped] = useState(false);
+  const [savedSlideIndex, setSavedSlideIndex] = useState<number | null>(null);
+  const [resumeBannerDismissed, setResumeBannerDismissed] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -162,6 +164,32 @@ export function LessonFlow({
   useEffect(() => {
     setBentoAllTapped(false);
   }, [currentSlide]);
+
+  // Fetch saved progress on mount so we can offer a resume prompt
+  useEffect(() => {
+    if (previewMode || dayNumber < 0) return;
+    fetch(`/api/lesson-progress/${dayNumber}`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { slideIndex: number } | null) => {
+        if (data && data.slideIndex > 0) setSavedSlideIndex(data.slideIndex);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save current slide index as user progresses (debounced, skip slide 0)
+  useEffect(() => {
+    if (previewMode || flowState !== "slides" || dayNumber < 0 || currentSlide <= 0) return;
+    const timer = setTimeout(() => {
+      fetch(`/api/lesson-progress/${dayNumber}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ slideIndex: currentSlide }),
+      }).catch(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [currentSlide, flowState, dayNumber, previewMode]);
 
   const handleContentScroll = useCallback(() => {
     const el = scrollContentRef.current;
@@ -353,6 +381,13 @@ export function LessonFlow({
   }, []);
 
   const handleFinalComplete = useCallback(() => {
+    // Clear saved progress when lesson finishes
+    if (!previewMode && dayNumber >= 0) {
+      fetch(`/api/lesson-progress/${dayNumber}`, {
+        method: "DELETE",
+        credentials: "include",
+      }).catch(() => {});
+    }
     if (notebookUnlockCategory) {
       const seenKey = `lf_nb_unlock_shown_${notebookUnlockCategory.slug}`;
       if (!localStorage.getItem(seenKey)) {
@@ -362,7 +397,7 @@ export function LessonFlow({
       }
     }
     onComplete();
-  }, [notebookUnlockCategory, onComplete]);
+  }, [notebookUnlockCategory, onComplete, previewMode, dayNumber]);
 
   const handleContinue = useCallback(() => {
     const alreadySeen = localStorage.getItem(`overlay-seen-${overlayContextKey}`) === "true";
@@ -787,6 +822,48 @@ export function LessonFlow({
           )}
         </div>
       </div>
+
+      {/* ── Resume banner — shown when returning to a partially-completed lesson ── */}
+      {savedSlideIndex !== null && savedSlideIndex > 0 && !resumeBannerDismissed && currentSlide === 0 && (
+        <div
+          className="relative z-10 shrink-0 flex flex-col items-center px-4 pt-3"
+          style={{ background: "var(--surface-ground)" }}
+        >
+          <div
+            className="max-w-[780px] w-full flex items-center justify-between gap-3 rounded-lg px-4 py-3"
+            style={{ background: "var(--surface-float)", border: "1px solid var(--white-10)" }}
+          >
+            <p className="type-body-sm flex-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+              You left off on slide {savedSlideIndex + 1} — pick up where you left off?
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  setResumeBannerDismissed(true);
+                  setSavedSlideIndex(null);
+                  fetch(`/api/lesson-progress/${dayNumber}`, { method: "DELETE", credentials: "include" }).catch(() => {});
+                }}
+                className="type-caption-lg transition-opacity hover:opacity-80 px-2 py-1"
+                style={{ color: "rgba(255,255,255,0.45)" }}
+                data-testid="button-lesson-start-over"
+              >
+                Start over
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentSlide(savedSlideIndex);
+                  setResumeBannerDismissed(true);
+                }}
+                className="type-caption-lg transition-opacity hover:opacity-80 px-3 py-1.5 rounded"
+                style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)", color: "#fff" }}
+                data-testid="button-resume-lesson"
+              >
+                Resume
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Footer: black bar with right-aligned CONTINUE button ── */}
       {!hideFooter && (

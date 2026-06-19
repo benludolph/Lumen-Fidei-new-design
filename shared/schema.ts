@@ -476,6 +476,19 @@ export type InsertLessonWorkbookCompletion = z.infer<typeof insertLessonWorkbook
 
 export type LessonWorkbookModuleWithStatus = LessonWorkbookModule & { completed: boolean; unlocked: boolean };
 
+// Lesson Progress — persists in-progress slide position for Track A lessons
+export const lessonProgress = pgTable("lesson_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dayNumber: integer("day_number").notNull(),
+  slideIndex: integer("slide_index").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("lesson_progress_user_day_unique").on(table.userId, table.dayNumber),
+]);
+
+export type LessonProgress = typeof lessonProgress.$inferSelect;
+
 // === BASE SCHEMAS ===
 
 export const insertUserSchema = createInsertSchema(users, {
