@@ -1,5 +1,5 @@
-import step1Img from "@assets/Preferred_Contact_1781625581414.jpeg";
-import step2Img from "@assets/Confirm_1781625581414.jpeg";
+import step1Img from "@assets/Optin_1_1781894152881.png";
+import step2Img from "@assets/Optin_2_1781894161621.png";
 
 export default function SmsOptin() {
   return (
@@ -16,9 +16,9 @@ export default function SmsOptin() {
           <p>
             This page documents the opt-in process for SMS messages sent by the
             Archdiocese of Chicago Spiritual Healing Ministry. Consent is collected on
-            the ministry's official online intake form. A person reaches these screens
-            only after choosing to provide their contact information and selecting a
-            text-message contact method.
+            the ministry's official online intake form, which carries the Archdiocese of
+            Chicago name and crest. A person reaches these screens only after choosing to
+            provide their contact information and selecting a text-message contact method.
           </p>
 
           <p>
@@ -31,21 +31,22 @@ export default function SmsOptin() {
           <div className="space-y-3 pt-4">
             <p className="font-semibold text-foreground">Step 1</p>
             <p className="text-muted-foreground">
-              The person selects a text-message contact method
+              The person enters their phone number and chooses a contact method
             </p>
             <p>
-              On the intake form, under <strong>Preferred Contact Method</strong>, the
-              person actively selects “SMS text message” (or “Both Email & SMS text
-              message”).
+              On the official Archdiocese of Chicago intake form, the person provides
+              their phone number and reaches the <strong>Preferred Contact Method</strong>{" "}
+              options. The Archdiocese of Chicago name and crest appear on the form.
             </p>
             <img
               src={step1Img}
-              alt="Intake form Preferred Contact Method options with SMS text message selected"
+              alt="Archdiocese of Chicago intake form showing phone number field and Preferred Contact Method options, with the Archdiocese of Chicago name and crest"
               className="w-full rounded-lg border border-border"
               data-testid="img-sms-optin-step1"
             />
             <p className="text-xs text-muted-foreground">
-              Intake form Preferred Contact Method options with SMS text message selected
+              Archdiocese of Chicago intake form showing phone number field and Preferred
+              Contact Method options, with the Archdiocese of Chicago name and crest
             </p>
           </div>
 
@@ -53,40 +54,51 @@ export default function SmsOptin() {
           <div className="space-y-3 pt-4">
             <p className="font-semibold text-foreground">Step 2</p>
             <p className="text-muted-foreground">
-              The consent agreement and checkbox appear
+              The person selects SMS, and the consent agreement and checkbox appear
             </p>
             <p>
-              Only after a text method is chosen, the consent language appears and the
-              person must check the box to agree. The agreement names the sender, states
-              the message types, frequency, and rates, and explains STOP and HELP.
+              After selecting "SMS text message," the consent language appears and the
+              person must check the box to agree. The agreement names the sender
+              (Archdiocese of Chicago Healing Ministry), the message types, frequency and
+              rates, and STOP/HELP — shown alongside the Archdiocese of Chicago name and
+              crest.
             </p>
             <img
               src={step2Img}
-              alt="SMS consent agreement text and checkbox shown after selecting SMS"
+              alt="Archdiocese of Chicago intake form with SMS selected, showing the full SMS consent agreement, the consent checkbox, and the Archdiocese of Chicago name and crest"
               className="w-full rounded-lg border border-border"
               data-testid="img-sms-optin-step2"
             />
             <p className="text-xs text-muted-foreground">
-              SMS consent agreement text and checkbox shown after selecting SMS, naming
-              the Archdiocese of Chicago Healing Ministry
+              Archdiocese of Chicago intake form with SMS selected, showing the full SMS
+              consent agreement, the consent checkbox, and the Archdiocese of Chicago name
+              and crest
             </p>
           </div>
 
           {/* Full consent language */}
           <div className="space-y-3 pt-6 border-t border-border">
             <p className="font-semibold text-foreground">Consent language, in full</p>
-            <p className="text-muted-foreground">
-              The agreement each recipient accepts
-            </p>
+            <p className="text-muted-foreground">The agreement each recipient accepts</p>
             <blockquote className="border-l-4 border-muted pl-4 italic text-muted-foreground">
-              “I agree to receive SMS text messages from the Archdiocese of Chicago
+              "I agree to receive SMS text messages from the Archdiocese of Chicago
               Healing Ministry at the phone number I provided. These text messages may
               include appointment reminders and scheduling updates related to my ministry
               request. Message frequency varies. Msg & data rates may apply. Reply STOP
               to opt out or HELP for help. I understand that SMS consent is not required
-              to receive ministry services. I may choose email instead.”
+              to receive ministry services. I may choose email instead."
             </blockquote>
           </div>
+
+          {/* Footer */}
+          <p className="pt-4 text-sm text-muted-foreground border-t border-border">
+            Maintained by the Archdiocese of Chicago Spiritual Healing Ministry. For how
+            mobile information is handled, see our{" "}
+            <a href="/sms-privacy" className="underline hover:text-foreground transition-colors">
+              SMS Messaging Terms &amp; Privacy
+            </a>{" "}
+            page.
+          </p>
         </div>
       </div>
     </div>
