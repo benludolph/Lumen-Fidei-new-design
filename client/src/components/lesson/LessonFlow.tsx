@@ -91,6 +91,8 @@ export function LessonFlow({
   const [bentoAllTapped, setBentoAllTapped] = useState(false);
   const [savedSlideIndex, setSavedSlideIndex] = useState<number | null>(null);
   const [resumeBannerDismissed, setResumeBannerDismissed] = useState(false);
+  // Ref version so handleLoadingComplete can read it synchronously after the fetch resolves
+  const savedProgressRef = useRef<number>(0);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -165,13 +167,17 @@ export function LessonFlow({
     setBentoAllTapped(false);
   }, [currentSlide]);
 
-  // Fetch saved progress on mount so we can offer a resume prompt
+  // Fetch saved progress on mount — write to both ref (for sync read in handleLoadingComplete)
+  // and state (for the resume banner fallback if fetch resolves after loading completes)
   useEffect(() => {
     if (previewMode || dayNumber < 0) return;
     fetch(`/api/lesson-progress/${dayNumber}`, { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then((data: { slideIndex: number } | null) => {
-        if (data && data.slideIndex > 0) setSavedSlideIndex(data.slideIndex);
+        if (data && data.slideIndex > 0) {
+          savedProgressRef.current = data.slideIndex;
+          setSavedSlideIndex(data.slideIndex);
+        }
       })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,7 +269,13 @@ export function LessonFlow({
   }, []);
 
   const handleLoadingComplete = useCallback(() => {
-    if (openingPrayer && (openingPrayer.text || openingPrayer.audioUrl)) {
+    const resumeSlide = savedProgressRef.current;
+    if (resumeSlide > 0) {
+      // Skip opening prayer entirely — jump straight to where they left off
+      setCurrentSlide(resumeSlide);
+      setResumeBannerDismissed(true);
+      setFlowState("slides");
+    } else if (openingPrayer && (openingPrayer.text || openingPrayer.audioUrl)) {
       setFlowState("opening_prayer");
     } else {
       setFlowState("slides");
