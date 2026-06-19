@@ -65,7 +65,7 @@ export default function Messages() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [location, setLocation] = useLocation();
-  const searchParams = new URLSearchParams(location.split("?")[1]);
+  const searchParams = new URLSearchParams(window.location.search);
   const initialUserId = searchParams.get("user") || searchParams.get("mentorId");
 
   const hasNavigatedBackRef = useRef(false);
