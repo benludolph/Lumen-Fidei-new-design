@@ -1,0 +1,34 @@
+Purpose of this page
+
+How recipients consent to text messages
+This page documents the complete opt-in process for SMS messages sent by the Archdiocese of Chicago Spiritual Healing Ministry. Consent is collected on the ministry's official online intake form, which displays the Archdiocese of Chicago name and crest at the top and bottom of every page.
+
+A person provides their phone number on the form, selects “SMS text message” as their preferred contact method, reads the consent agreement, and checks the consent box to agree. Text messages are limited to appointment reminders and scheduling updates related to the person's own ministry request. SMS consent is never required to receive ministry services — every recipient may choose email instead.
+
+The complete opt-in experience
+
+Full intake form, with SMS selected and consent shown
+The full page below shows the entire opt-in experience end to end: the Archdiocese of Chicago branding, the official form title, all fields including the phone number field, the SMS selection, the full consent agreement, and the consent checkbox.
+
+Complete form — full pageComplete Archdiocese of Chicago Spiritual Healing Ministry official intake form, showing the Archdiocese name and crest at top and bottom, the form title, all fields, the phone number field, SMS text message selected, the full SMS consent agreement, and the consent checkbox
+Detail view
+
+The consent step, up close
+For legibility, the same consent step is shown in detail below.
+
+Step 1
+The person enters their phone number and chooses a contact method
+The person provides their phone number and reaches the Preferred Contact Method options, with the Archdiocese of Chicago name and crest on the form.
+
+Intake form phone number field and Preferred Contact Method options with Archdiocese of Chicago branding
+Step 2
+The person selects SMS, and the consent agreement and checkbox appear
+After selecting “SMS text message,” the consent language appears and the person must check the box to agree. The agreement names the Archdiocese of Chicago Healing Ministry, the message types, frequency and rates, and STOP/HELP.
+
+Intake form with SMS selected, showing the full SMS consent agreement, checkbox, and Archdiocese of Chicago branding
+Consent language, in full
+
+The agreement each recipient accepts
+“I agree to receive SMS text messages from the Archdiocese of Chicago Healing Ministry at the phone number I provided. These text messages may include appointment reminders and scheduling updates related to my ministry request. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out or HELP for help. I understand that SMS consent is not required to receive ministry services. I may choose email instead.”
+
+Maintained by the Archdiocese of Chicago Spiritual Healing Ministry. For how mobile information is handled, see our SMS Messaging Terms & Privacy page.
