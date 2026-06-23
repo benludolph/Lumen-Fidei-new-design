@@ -113,6 +113,7 @@ export default function Messages() {
     setSelectedContactId(userId);
     setShowNewChatDialog(false);
     setSearchQuery("");
+    if (window.location.search) setLocation("/messages");
   };
 
   const handleBackToContacts = () => {
@@ -324,6 +325,7 @@ export default function Messages() {
                     onClick={() => {
                       hasNavigatedBackRef.current = false;
                       setSelectedContactId(contact.id);
+                      if (window.location.search) setLocation("/messages");
                     }}
                     data-testid={`contact-${contact.id}`}
                     style={{
