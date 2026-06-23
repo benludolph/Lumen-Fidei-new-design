@@ -190,7 +190,7 @@ function Router() {
       </Route>
 
       <Route path="/toolkit">
-        <ProtectedRoute component={PrayerToolkit} allowedRoles={['participant', 'superuser']} />
+        <ProtectedRoute component={PrayerToolkit} allowedRoles={['participant', 'superuser', 'mentor']} />
       </Route>
 
       <Route path="/program-overview">
