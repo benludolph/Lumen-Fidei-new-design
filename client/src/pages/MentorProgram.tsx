@@ -36,7 +36,7 @@ export default function MentorProgram() {
           allPrelimsComplete={true}
           onPrelimSelect={noop}
           onWorkbookSelect={noop}
-          week4Ready={false}
+          week4Ready={true}
         />
       </div>
     </DashboardLayout>
