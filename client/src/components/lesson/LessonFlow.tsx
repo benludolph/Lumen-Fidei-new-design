@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, X, ChevronDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, X, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TrackAContent } from "@shared/schema";
 import { LessonLoadingScreen } from "./LessonLoadingScreen";
@@ -91,6 +91,7 @@ export function LessonFlow({
   const [bentoAllTapped, setBentoAllTapped] = useState(false);
   const [savedSlideIndex, setSavedSlideIndex] = useState<number | null>(null);
   const [resumeBannerDismissed, setResumeBannerDismissed] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem("lf_click_sound") !== "off");
   // Ref version so handleLoadingComplete can read it synchronously after the fetch resolves
   const savedProgressRef = useRef<number>(0);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -286,7 +287,7 @@ export function LessonFlow({
     cancelAutoAdvance();
     // If currently on path_selector with a staged injected slide, show the injected slide
     if (!isShowingInjected && pendingInjectedSlide && slides[currentSlide]?.type === "path_selector") {
-      playClickContinue();
+      if (soundEnabled) playClickContinue();
       setIsShowingInjected(true);
       setDirection("forward");
       setAnimKey((prev) => prev + 1);
@@ -299,7 +300,7 @@ export function LessonFlow({
       if (currentSlide >= slides.length - 1) {
         setFlowState("complete");
       } else {
-        playClickContinue();
+        if (soundEnabled) playClickContinue();
         const nextSlide = currentSlide + 1;
         setDirection("forward");
         setCurrentSlide(nextSlide);
@@ -324,7 +325,7 @@ export function LessonFlow({
     if (currentSlide >= slides.length - 1) {
       setFlowState("complete");
     } else {
-      playClickContinue();
+      if (soundEnabled) playClickContinue();
       const nextSlide = currentSlide + 1;
       setDirection("forward");
       setCurrentSlide(nextSlide);
@@ -732,8 +733,33 @@ export function LessonFlow({
           </span>
         </div>
 
-        {/* Right: Exit button */}
-        <div className="flex items-center justify-center" style={{ width: "42px", height: "42px" }}>
+        {/* Right: Sound toggle + Exit button */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              localStorage.setItem("lf_click_sound", next ? "on" : "off");
+            }}
+            className="flex items-center justify-center transition-opacity hover:opacity-80"
+            title={soundEnabled ? "Mute slide sounds" : "Unmute slide sounds"}
+            style={{
+              width: "34px",
+              height: "34px",
+              background: "var(--surface-float)",
+              backdropFilter: "blur(11px)",
+              WebkitBackdropFilter: "blur(11px)",
+              borderRadius: "17px",
+              border: "none",
+              cursor: "pointer",
+            }}
+            data-testid="button-lesson-sound-toggle"
+          >
+            {soundEnabled
+              ? <Volume2 className="w-3.5 h-3.5 text-white" />
+              : <VolumeX className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.4)" }} />
+            }
+          </button>
           <button
             onClick={onExit}
             className="flex items-center justify-center transition-opacity hover:opacity-80"
