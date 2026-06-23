@@ -194,7 +194,7 @@ function Router() {
       </Route>
 
       <Route path="/program-overview">
-        <ProtectedRoute component={ProgramOverview} allowedRoles={['participant', 'superuser']} />
+        <ProtectedRoute component={ProgramOverview} allowedRoles={['participant', 'superuser', 'mentor']} />
       </Route>
 
       <Route path="/sms-privacy" component={SmsPrivacy} />
