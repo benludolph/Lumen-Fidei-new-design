@@ -26,6 +26,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     queryKey: ["/api/user"],
   });
 
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread/count"],
+    refetchInterval: 30000,
+    enabled: !!user,
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
   const logoutMutation = useMutation({
     mutationFn: () => apiRequest("POST", "/api/logout"),
     onSuccess: () => {
@@ -119,13 +126,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {user?.role === 'mentor' ? (
               <>
                 <NavLink href="/mentor" active={location === "/mentor" || location.startsWith("/mentor/mentee")}>Dashboard</NavLink>
-                <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
+                <NavLink href="/messages" active={location === "/messages"} badge={unreadCount}>Messages</NavLink>
                 <NavLink href="/mentor/program" active={location === "/mentor/program"}>Program</NavLink>
               </>
             ) : (
               <>
                 <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
-                <NavLink href="/messages" active={location === "/messages"}>Messages</NavLink>
+                <NavLink href="/messages" active={location === "/messages"} badge={unreadCount}>Messages</NavLink>
                 <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
                 {(user?.role === 'participant' || user?.role === 'superuser') && (
                   <NavLink href="/journal" active={location === "/journal"}>Journal</NavLink>
@@ -306,13 +313,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {user?.role === 'mentor' ? (
             <>
               <DrawerLink href="/mentor" active={location === "/mentor" || location.startsWith("/mentor/mentee")} onClick={closeDrawer}>Dashboard</DrawerLink>
-              <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>Messages</DrawerLink>
+              <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer} badge={unreadCount}>Messages</DrawerLink>
               <DrawerLink href="/mentor/program" active={location === "/mentor/program"} onClick={closeDrawer}>Program</DrawerLink>
             </>
           ) : (
             <>
               <DrawerLink href="/dashboard" active={location === "/dashboard"} onClick={closeDrawer}>Dashboard</DrawerLink>
-              <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer}>Messages</DrawerLink>
+              <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer} badge={unreadCount}>Messages</DrawerLink>
               <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>Resources</DrawerLink>
               {(user?.role === 'participant' || user?.role === 'superuser') && (
                 <DrawerLink href="/journal" active={location === "/journal"} onClick={closeDrawer}>Journal</DrawerLink>
@@ -648,16 +655,18 @@ function WorkbookFAB() {
 function NavLink({
   href,
   active,
+  badge,
   children,
 }: {
   href: string;
   active: boolean;
+  badge?: number;
   children: React.ReactNode;
 }) {
   return (
     <Link href={href}>
       <span
-        className={cn("flex items-center cursor-pointer type-body-md", active ? "text-white" : "text-[var(--white-70)] hover:text-white")}
+        className={cn("flex items-center gap-1.5 cursor-pointer type-body-md", active ? "text-white" : "text-[var(--white-70)] hover:text-white")}
         style={{
           height: "32px",
           padding: "0 12px",
@@ -665,6 +674,27 @@ function NavLink({
         }}
       >
         {children}
+        {badge !== undefined && badge > 0 && (
+          <span
+            data-testid="badge-unread-messages-nav"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: "18px",
+              height: "18px",
+              padding: "0 5px",
+              borderRadius: "9px",
+              background: "var(--brand)",
+              color: "white",
+              fontSize: "11px",
+              fontWeight: 600,
+              lineHeight: 1,
+            }}
+          >
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
       </span>
     </Link>
   );
@@ -674,11 +704,13 @@ function DrawerLink({
   href,
   active,
   onClick,
+  badge,
   children,
 }: {
   href: string;
   active: boolean;
   onClick: () => void;
+  badge?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -687,7 +719,7 @@ function DrawerLink({
         data-testid={`drawer-link-${String(children).toLowerCase()}`}
         onClick={onClick}
         className={cn(
-          "flex items-center cursor-pointer transition-colors type-body-lg",
+          "flex items-center gap-2 cursor-pointer transition-colors type-body-lg",
           active ? "text-white font-medium" : "text-[var(--white-60)] hover:text-white font-normal"
         )}
         style={{
@@ -697,6 +729,27 @@ function DrawerLink({
         }}
       >
         {children}
+        {badge !== undefined && badge > 0 && (
+          <span
+            data-testid="badge-unread-messages-drawer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: "20px",
+              height: "20px",
+              padding: "0 6px",
+              borderRadius: "10px",
+              background: "var(--brand)",
+              color: "white",
+              fontSize: "12px",
+              fontWeight: 600,
+              lineHeight: 1,
+            }}
+          >
+            {badge > 99 ? "99+" : badge}
+          </span>
+        )}
       </span>
     </Link>
   );
