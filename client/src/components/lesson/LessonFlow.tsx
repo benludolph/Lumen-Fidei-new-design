@@ -35,6 +35,7 @@ interface LessonFlowProps {
   mentorId?: number | null;
   onExit: () => void;
   onComplete: () => void;
+  onLessonFinished?: () => void;
   previewMode?: boolean;
   openingPrayer?: PrayerData | null;
   closingPrayer?: PrayerData | null;
@@ -50,6 +51,7 @@ export function LessonFlow({
   mentorId,
   onExit,
   onComplete,
+  onLessonFinished,
   previewMode = false,
   openingPrayer,
   closingPrayer,
@@ -392,6 +394,13 @@ export function LessonFlow({
   const handleSaveSessionVar = useCallback((key: string, value: unknown) => {
     setSessionVars((prev) => ({ ...prev, [key]: value }));
   }, []);
+
+  // Fire completion recording as soon as the completion screen appears — don't wait for the button press
+  useEffect(() => {
+    if (flowState === "complete" && !previewMode) {
+      onLessonFinished?.();
+    }
+  }, [flowState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFinalComplete = useCallback(() => {
     // Clear saved progress when lesson finishes

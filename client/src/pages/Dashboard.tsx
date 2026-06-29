@@ -533,13 +533,12 @@ export default function Dashboard() {
             existingAnswer={answers?.find(a => a.dayNumber === selectedDay)?.content}
             mentorId={user?.mentorId}
             onExit={handleBackToGrid}
-            onComplete={() => {
-              const capturedDay = selectedDay;
-              if (!isPeriodCompleted(capturedDay, "morning")) {
-                markComplete.mutate({ dayNumber: capturedDay, period: "morning" });
+            onLessonFinished={() => {
+              if (!isPeriodCompleted(selectedDay, "morning")) {
+                markComplete.mutate({ dayNumber: selectedDay, period: "morning" });
               }
-              handleBackToGrid(selectedDay);
             }}
+            onComplete={() => handleBackToGrid(selectedDay)}
             previewMode={user?.role === 'superuser'}
             openingPrayer={prayerWrapData?.opening ?? null}
             closingPrayer={prayerWrapData?.closing ?? null}
