@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -263,6 +263,22 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
     },
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: async () => {
+      const action = user.isActive === false ? "reactivate" : "deactivate";
+      const res = await apiRequest("POST", `/api/admin/users/${user.id}/${action}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      const wasActive = user.isActive !== false;
+      toast({ title: wasActive ? "Account deactivated" : "Account reactivated", description: wasActive ? `${user.name} can no longer log in. All data is preserved.` : `${user.name} can now log in again.` });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: () => {
+      toast({ title: "Action failed", variant: "destructive" });
+    },
+  });
+
   const handleAssignMentor = (mentorId: string) => {
      updateUser({ id: user.id, mentorId: Number(mentorId) });
   };
@@ -289,7 +305,12 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
   return (
     <TableRow>
       <TableCell className="font-medium">
-        <div>{user.name}</div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={user.isActive === false ? "text-muted-foreground line-through" : ""}>{user.name}</span>
+          {user.isActive === false && (
+            <Badge variant="secondary" className="text-xs">Deactivated</Badge>
+          )}
+        </div>
         <div className="text-xs text-muted-foreground">{user.email}</div>
       </TableCell>
       <TableCell>
@@ -415,6 +436,23 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
               </div>
             </DialogContent>
           </Dialog>
+
+          {user.role !== 'admin' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title={user.isActive === false ? "Reactivate account" : "Deactivate account"}
+              data-testid={`button-toggle-active-${user.id}`}
+              onClick={() => toggleActiveMutation.mutate()}
+              disabled={toggleActiveMutation.isPending}
+            >
+              {user.isActive === false ? (
+                <UserCheck className="w-4 h-4 text-green-600" />
+              ) : (
+                <UserX className="w-4 h-4 text-amber-500" />
+              )}
+            </Button>
+          )}
 
           {user.role !== 'admin' && (
             <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>

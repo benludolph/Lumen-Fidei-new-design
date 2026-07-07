@@ -463,6 +463,25 @@ export async function registerRoutes(
     res.json(sanitizeUser(updated));
   });
 
+  app.post('/api/admin/users/:id/deactivate', requireRole('admin'), async (req, res) => {
+    const userId = Number(req.params.id);
+    if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
+    const target = await storage.getUser(userId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+    if (target.role === 'admin') return res.status(403).json({ message: "Cannot deactivate an admin account" });
+    const updated = await storage.updateUser(userId, { isActive: false });
+    res.json(sanitizeUser(updated));
+  });
+
+  app.post('/api/admin/users/:id/reactivate', requireRole('admin'), async (req, res) => {
+    const userId = Number(req.params.id);
+    if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
+    const target = await storage.getUser(userId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+    const updated = await storage.updateUser(userId, { isActive: true });
+    res.json(sanitizeUser(updated));
+  });
+
   // === Content ===
   
   app.get(api.content.list.path, requireAuth, async (req, res) => {

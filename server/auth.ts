@@ -112,6 +112,9 @@ export async function setupAuth(app: Express) {
         if (!isValid) {
           return done(null, false, { message: "Incorrect password." });
         }
+        if (!user.isActive) {
+          return done(null, false, { message: "This account has been deactivated. Please contact your program administrator." });
+        }
         return done(null, user);
       } catch (err) {
         return done(err);
@@ -126,6 +129,9 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
+      if (user && !user.isActive) {
+        return done(null, false);
+      }
       done(null, user);
     } catch (err) {
       done(err);
