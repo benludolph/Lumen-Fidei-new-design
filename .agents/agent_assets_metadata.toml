@@ -311,3 +311,9 @@ id = "7DTud-ZJQ40A93aGW1ZOg"
 uri = "file://public/downloads/personal-deliverance-prayer.txt"
 type = "text"
 title = "Personal Deliverance Prayer"
+
+[[outputs]]
+id = "51ySx-OZZi1PlTyT7_hKy"
+uri = "file://attached_assets/deliverance-workbook-full-context.txt"
+type = "text"
+title = "Deliverance Workbook — Full Context"
