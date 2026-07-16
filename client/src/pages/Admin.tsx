@@ -47,13 +47,31 @@ export default function Admin() {
   const { user } = useAuth();
   const { data: users, isLoading } = useUsers();
   const [searchTerm, setSearchTerm] = useState("");
+  const [cohortFilter, setCohortFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   if (!user || user.role !== 'admin') return null;
 
-  const filteredUsers = users?.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Build unique cohort labels from user start dates (e.g. "June 2026")
+  const cohortOptions = Array.from(
+    new Set(
+      (users ?? [])
+        .filter(u => u.startDate)
+        .map(u => format(new Date(u.startDate!), "MMMM yyyy"))
+    )
+  ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+  const filteredUsers = users?.filter(u => {
+    const matchesSearch =
+      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCohort =
+      cohortFilter === "all" ||
+      (u.startDate && format(new Date(u.startDate), "MMMM yyyy") === cohortFilter) ||
+      (cohortFilter === "no-cohort" && !u.startDate);
+    const matchesRole = roleFilter === "all" || u.role === roleFilter;
+    return matchesSearch && matchesCohort && matchesRole;
+  });
 
   return (
     <Shell>
@@ -94,7 +112,7 @@ export default function Admin() {
           <TabsContent value="users">
             <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Search className="w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search users..."
@@ -103,6 +121,44 @@ export default function Admin() {
                     className="max-w-sm"
                     data-testid="input-search-users"
                   />
+                  <Select value={cohortFilter} onValueChange={setCohortFilter}>
+                    <SelectTrigger className="w-[160px] h-9" data-testid="select-cohort-filter">
+                      <SelectValue placeholder="All cohorts" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All cohorts</SelectItem>
+                      {cohortOptions.map(label => (
+                        <SelectItem key={label} value={label}>{label}</SelectItem>
+                      ))}
+                      <SelectItem value="no-cohort">No start date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="w-[140px] h-9" data-testid="select-role-filter">
+                      <SelectValue placeholder="All roles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All roles</SelectItem>
+                      <SelectItem value="participant">Participant</SelectItem>
+                      <SelectItem value="mentor">Mentor</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="superuser">Superuser</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(cohortFilter !== "all" || roleFilter !== "all" || searchTerm) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 px-2 text-muted-foreground"
+                      data-testid="button-clear-filters"
+                      onClick={() => { setCohortFilter("all"); setRoleFilter("all"); setSearchTerm(""); }}
+                    >
+                      <X className="w-4 h-4 mr-1" /> Clear
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {filteredUsers?.length ?? 0} of {users?.length ?? 0} users
+                  </span>
                 </div>
               </CardHeader>
               <CardContent>
