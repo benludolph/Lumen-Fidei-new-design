@@ -3788,6 +3788,22 @@ async function ensureSchemaColumns() {
         UNIQUE(user_id, module_number)
       )
     `);
+
+    // Create cohorts table if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS cohorts (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        start_date TIMESTAMP NOT NULL,
+        end_date TIMESTAMP,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    // Add cohort_id column to users if it doesn't exist
+    await checkCol("users", "cohort_id", "INTEGER REFERENCES cohorts(id) ON DELETE SET NULL");
+
   } catch (e) {
     console.warn("Schema migration warning (non-fatal):", e);
   }

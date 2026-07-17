@@ -76,8 +76,8 @@ export default function Admin() {
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCohort =
       cohortFilter === "all" ||
-      (cohortFilter === "no-cohort" && !(u as any).cohortId) ||
-      (cohortFilter !== "no-cohort" && (u as any).cohortId === Number(cohortFilter));
+      (cohortFilter === "no-cohort" && !u.cohortId) ||
+      (cohortFilter !== "no-cohort" && u.cohortId === Number(cohortFilter));
     const matchesRole = roleFilter === "all" || u.role === roleFilter;
     return matchesSearch && matchesCohort && matchesRole;
   });
