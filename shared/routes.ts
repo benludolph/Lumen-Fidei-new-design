@@ -359,6 +359,21 @@ export const api = {
         403: errorSchemas.forbidden,
       },
     },
+    getActiveCohort: {
+      method: 'GET' as const,
+      path: '/api/admin/cohorts/active',
+      responses: {
+        200: z.object({
+          id: z.number(),
+          name: z.string(),
+          startDate: z.string(),
+          endDate: z.string().nullable(),
+          status: z.enum(["active", "archived"]),
+          createdAt: z.string(),
+        }).nullable(),
+        403: errorSchemas.forbidden,
+      },
+    },
     exportUsers: {
       method: 'GET' as const,
       path: '/api/admin/export/users',

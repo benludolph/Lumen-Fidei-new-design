@@ -434,10 +434,17 @@ export async function registerRoutes(
       
       // Hash the password before storing
       const hashedPassword = await hashPassword(input.password);
+      // Auto-assign to active cohort for participants and mentors
+      let cohortId: number | null = null;
+      if (input.role === 'participant' || input.role === 'mentor') {
+        const activeCohort = await storage.getActiveCohort();
+        if (activeCohort) cohortId = activeCohort.id;
+      }
       const user = await storage.createUser({
         ...input,
         email: normalizedEmail,
-        password: hashedPassword
+        password: hashedPassword,
+        ...(cohortId !== null ? { cohortId } : {}),
       });
       res.status(201).json(sanitizeUser(user));
     } catch (err) {
@@ -1376,6 +1383,20 @@ export async function registerRoutes(
     })));
   });
 
+  // === Active cohort ===
+  app.get(api.admin.getActiveCohort.path, requireRole('admin'), async (req, res) => {
+    const cohort = await storage.getActiveCohort();
+    if (!cohort) return res.json(null);
+    res.json({
+      id: cohort.id,
+      name: cohort.name,
+      startDate: cohort.startDate.toISOString(),
+      endDate: cohort.endDate ? cohort.endDate.toISOString() : null,
+      status: cohort.status,
+      createdAt: cohort.createdAt.toISOString(),
+    });
+  });
+
   app.get(api.admin.progress.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
@@ -1389,15 +1410,24 @@ export async function registerRoutes(
     let cohortStartDateStr: string | null;
     let participantUsers: typeof allUsers;
 
+    const cohortList = await storage.listCohorts();
+
     if (cohortIdParam) {
       // Filter to users in the specified cohort; use that cohort's startDate
-      const cohortList = await storage.listCohorts();
       const selectedCohort = cohortList.find(c => c.id === cohortIdParam);
       cohortStartDateStr = selectedCohort ? selectedCohort.startDate.toISOString().split('T')[0] : null;
       participantUsers = allUsers.filter(u => u.role === 'participant' && u.cohortId === cohortIdParam);
     } else {
-      cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      participantUsers = allUsers.filter(u => u.role === 'participant');
+      // Default to active cohort
+      const activeCohort = cohortList.find(c => c.status === "active");
+      if (activeCohort) {
+        cohortStartDateStr = activeCohort.startDate.toISOString().split('T')[0];
+        participantUsers = allUsers.filter(u => u.role === 'participant' && u.cohortId === activeCohort.id);
+      } else {
+        // Fallback for databases without cohort records
+        cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+        participantUsers = allUsers.filter(u => u.role === 'participant');
+      }
     }
 
     const cohortCurrentDay = computeCurrentProgramDay(cohortStartDateStr);
@@ -4959,8 +4989,10 @@ As you move into Week 2, continue these daily practices. They are building a fou
       const startDate = await storage.getCohortSetting("cohort_start_date");
       if (startDate) {
         const initialCohort = await storage.createCohort("Initial Cohort", new Date(startDate));
-        await db.update(usersTable).set({ cohortId: initialCohort.id });
-        console.log(`Created Initial Cohort (id=${initialCohort.id}) and assigned all users to it.`);
+        await db.update(usersTable)
+          .set({ cohortId: initialCohort.id })
+          .where(sql`${usersTable.role} IN ('participant', 'mentor')`);
+        console.log(`Created Initial Cohort (id=${initialCohort.id}) and assigned participants/mentors to it.`);
       }
     }
 }
