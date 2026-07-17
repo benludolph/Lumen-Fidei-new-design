@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -43,6 +43,15 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
+type CohortRecord = {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string | null;
+  status: "active" | "archived";
+  createdAt: string;
+};
+
 export default function Admin() {
   const { user } = useAuth();
   const { data: users, isLoading } = useUsers();
@@ -50,16 +59,16 @@ export default function Admin() {
   const [cohortFilter, setCohortFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  if (!user || user.role !== 'admin') return null;
+  const { data: cohortList } = useQuery<CohortRecord[]>({
+    queryKey: [api.admin.listCohorts.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.listCohorts.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch cohorts");
+      return res.json();
+    },
+  });
 
-  // Build unique cohort labels from user start dates (e.g. "June 2026")
-  const cohortOptions = Array.from(
-    new Set(
-      (users ?? [])
-        .filter(u => u.startDate)
-        .map(u => format(new Date(u.startDate!), "MMMM yyyy"))
-    )
-  ).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  if (!user || user.role !== 'admin') return null;
 
   const filteredUsers = users?.filter(u => {
     const matchesSearch =
@@ -67,8 +76,8 @@ export default function Admin() {
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCohort =
       cohortFilter === "all" ||
-      (u.startDate && format(new Date(u.startDate), "MMMM yyyy") === cohortFilter) ||
-      (cohortFilter === "no-cohort" && !u.startDate);
+      (cohortFilter === "no-cohort" && !(u as any).cohortId) ||
+      (cohortFilter !== "no-cohort" && (u as any).cohortId === Number(cohortFilter));
     const matchesRole = roleFilter === "all" || u.role === roleFilter;
     return matchesSearch && matchesCohort && matchesRole;
   });
@@ -127,10 +136,13 @@ export default function Admin() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All cohorts</SelectItem>
-                      {cohortOptions.map(label => (
-                        <SelectItem key={label} value={label}>{label}</SelectItem>
+                      {(cohortList ?? []).map(c => (
+                        <SelectItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                          {c.status === "archived" ? " (past)" : ""}
+                        </SelectItem>
                       ))}
-                      <SelectItem value="no-cohort">No start date</SelectItem>
+                      <SelectItem value="no-cohort">No cohort assigned</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -922,11 +934,30 @@ type ProgressData = {
 
 function ProgressView() {
   const GRADUATION_THRESHOLD = 0.8; // 80% completion required to pass
+  const [selectedCohortId, setSelectedCohortId] = useState<string>("active");
+
+  const { data: cohortList } = useQuery<CohortRecord[]>({
+    queryKey: [api.admin.listCohorts.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.listCohorts.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch cohorts");
+      return res.json();
+    },
+  });
+
+  const activeCohort = cohortList?.find(c => c.status === "active");
+  const resolvedCohortId = selectedCohortId === "active"
+    ? (activeCohort ? String(activeCohort.id) : null)
+    : selectedCohortId;
+
+  const progressUrl = resolvedCohortId
+    ? `${api.admin.progress.path}?cohortId=${resolvedCohortId}`
+    : api.admin.progress.path;
 
   const { data: progressData, isLoading } = useQuery<ProgressData[]>({
-    queryKey: [api.admin.progress.path],
+    queryKey: [api.admin.progress.path, resolvedCohortId],
     queryFn: async () => {
-      const res = await fetch(api.admin.progress.path, { credentials: "include" });
+      const res = await fetch(progressUrl, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch progress");
       return res.json();
     },
@@ -940,6 +971,7 @@ function ProgressView() {
     );
   }
 
+  const selectedCohort = cohortList?.find(c => String(c.id) === resolvedCohortId);
   const cohortCurrentDay = progressData?.[0]?.currentDay || 0;
   const cohortComplete = cohortCurrentDay >= 30;
   
@@ -990,11 +1022,37 @@ function ProgressView() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Participant Progress</CardTitle>
-            {cohortComplete && (
-              <Badge variant="default" className="bg-green-600">Cohort Complete - Day 30</Badge>
-            )}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-lg">Participant Progress</CardTitle>
+              {selectedCohort && (
+                <Badge variant="outline" className="font-normal">
+                  {selectedCohort.name}
+                  {selectedCohort.status === "archived" ? " (archived)" : ""}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {cohortComplete && (
+                <Badge variant="default" className="bg-green-600">Cohort Complete - Day 30</Badge>
+              )}
+              {cohortList && cohortList.length > 0 && (
+                <Select value={selectedCohortId} onValueChange={setSelectedCohortId}>
+                  <SelectTrigger className="w-[160px] h-8 text-sm" data-testid="select-progress-cohort">
+                    <SelectValue placeholder="Select cohort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Current cohort</SelectItem>
+                    {cohortList.map(c => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.name}
+                        {c.status === "archived" ? " (past)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -1112,6 +1170,7 @@ function CohortSettingsView() {
   const { toast } = useToast();
   const [startDate, setStartDate] = useState("");
   const [newCohortDate, setNewCohortDate] = useState("");
+  const [newCohortName, setNewCohortName] = useState("");
   const [clearCompletions, setClearCompletions] = useState(true);
   const [showNewCohortDialog, setShowNewCohortDialog] = useState(false);
   
@@ -1120,6 +1179,15 @@ function CohortSettingsView() {
     queryFn: async () => {
       const res = await fetch(api.admin.cohortSettings.get.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch cohort settings");
+      return res.json();
+    },
+  });
+
+  const { data: cohortList } = useQuery<CohortRecord[]>({
+    queryKey: [api.admin.listCohorts.path],
+    queryFn: async () => {
+      const res = await fetch(api.admin.listCohorts.path, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch cohorts");
       return res.json();
     },
   });
@@ -1148,20 +1216,22 @@ function CohortSettingsView() {
   });
 
   const startNewCohortMutation = useMutation({
-    mutationFn: async (data: { startDate: string; clearCompletions: boolean }) => {
+    mutationFn: async (data: { name: string; startDate: string; clearCompletions: boolean }) => {
       const res = await apiRequest("POST", "/api/admin/cohort/start-new", data);
       return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [api.admin.cohortSettings.get.path] });
       queryClient.invalidateQueries({ queryKey: [api.admin.progress.path] });
+      queryClient.invalidateQueries({ queryKey: [api.admin.listCohorts.path] });
       queryClient.invalidateQueries({ queryKey: ["/api/prayer-completions"] });
       toast({ 
         title: "New cohort started", 
-        description: data.clearCompletions ? `Cleared ${data.completionsCleared} prayer completions` : undefined
+        description: data.completionsCleared > 0 ? `Cleared ${data.completionsCleared} prayer completions` : undefined
       });
       setShowNewCohortDialog(false);
       setNewCohortDate("");
+      setNewCohortName("");
     },
     onError: () => {
       toast({ title: "Failed to start new cohort", variant: "destructive" });
@@ -1175,14 +1245,17 @@ function CohortSettingsView() {
   };
 
   const handleStartNewCohort = () => {
-    if (newCohortDate) {
-      startNewCohortMutation.mutate({ startDate: newCohortDate, clearCompletions });
+    if (newCohortDate && newCohortName.trim()) {
+      startNewCohortMutation.mutate({ name: newCohortName.trim(), startDate: newCohortDate, clearCompletions });
     }
   };
 
   const currentStartDate = cohortData?.startDate 
     ? format(new Date(cohortData.startDate), "yyyy-MM-dd")
     : "";
+
+  const activeCohort = cohortList?.find(c => c.status === "active");
+  const archivedCohorts = cohortList?.filter(c => c.status === "archived") ?? [];
 
   const cohortCurrentDay = progressData?.[0]?.currentDay || 0;
   const cohortComplete = cohortCurrentDay >= 30;
@@ -1205,22 +1278,22 @@ function CohortSettingsView() {
                 {currentStartDate ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-4 bg-muted rounded-md">
+                      <p className="text-sm text-muted-foreground">Name</p>
+                      <p className="font-medium">{activeCohort?.name ?? "Unnamed"}</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-md">
                       <p className="text-sm text-muted-foreground">Start Date</p>
                       <p className="font-medium">{format(new Date(cohortData!.startDate!), "MMMM d, yyyy")}</p>
                     </div>
                     <div className="p-4 bg-muted rounded-md">
                       <p className="text-sm text-muted-foreground">Current Day</p>
-                      <p className="font-medium">{cohortCurrentDay}/30</p>
-                    </div>
-                    <div className="p-4 bg-muted rounded-md">
-                      <p className="text-sm text-muted-foreground">Status</p>
-                      <p className="font-medium">
+                      <p className="font-medium">{cohortCurrentDay}/30{" "}
                         {cohortComplete ? (
-                          <Badge variant="default" className="bg-green-600">Completed</Badge>
+                          <Badge variant="default" className="bg-green-600 ml-1">Completed</Badge>
                         ) : cohortCurrentDay === 0 ? (
-                          <Badge variant="secondary">Not Started</Badge>
+                          <Badge variant="secondary" className="ml-1">Not Started</Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-blue-600">In Progress</Badge>
+                          <Badge variant="secondary" className="text-blue-600 ml-1">In Progress</Badge>
                         )}
                       </p>
                     </div>
@@ -1235,6 +1308,37 @@ function CohortSettingsView() {
           </div>
         </CardContent>
       </Card>
+
+      {archivedCohorts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Archive className="w-5 h-5" />
+              Past Cohorts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {archivedCohorts.map(c => (
+                  <TableRow key={c.id} data-testid={`row-past-cohort-${c.id}`}>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>{format(new Date(c.startDate), "MMM d, yyyy")}</TableCell>
+                    <TableCell>{c.endDate ? format(new Date(c.endDate), "MMM d, yyyy") : "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -1275,7 +1379,7 @@ function CohortSettingsView() {
             <div className="mb-4">
               <h3 className="font-medium mb-2">Start New Cohort</h3>
               <p className="text-sm text-muted-foreground">
-                End the current cohort and start a fresh one. This will set a new start date and optionally 
+                End the current cohort and start a fresh one. This will archive the current cohort and optionally 
                 clear all prayer completion records.
               </p>
             </div>
@@ -1293,9 +1397,19 @@ function CohortSettingsView() {
                 <div className="space-y-4">
                   <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-md border border-amber-200 dark:border-amber-800">
                     <p className="text-sm text-amber-800 dark:text-amber-200">
-                      This will start a new 30-day program for all participants. Current progress data 
+                      This will archive the current cohort and start a new 30-day program. Current progress data 
                       can optionally be cleared.
                     </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Cohort Name</label>
+                    <Input 
+                      placeholder="e.g. Summer 2026"
+                      value={newCohortName}
+                      onChange={(e) => setNewCohortName(e.target.value)}
+                      data-testid="input-new-cohort-name"
+                    />
                   </div>
                   
                   <div className="space-y-2">
@@ -1324,7 +1438,7 @@ function CohortSettingsView() {
                   
                   <Button 
                     onClick={handleStartNewCohort}
-                    disabled={!newCohortDate || startNewCohortMutation.isPending}
+                    disabled={!newCohortDate || !newCohortName.trim() || startNewCohortMutation.isPending}
                     className="w-full"
                     data-testid="button-confirm-new-cohort"
                   >

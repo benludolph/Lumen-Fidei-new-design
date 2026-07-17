@@ -5,6 +5,20 @@ import { z } from "zod";
 
 // === TABLE DEFINITIONS ===
 
+// Named cohort records — one per program run
+export const cohorts = pgTable("cohorts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // e.g. "June 2026"
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"), // null = currently active
+  status: text("status", { enum: ["active", "archived"] }).notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCohortSchema = createInsertSchema(cohorts).omit({ id: true, createdAt: true });
+export type Cohort = typeof cohorts.$inferSelect;
+export type InsertCohort = z.infer<typeof insertCohortSchema>;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -17,6 +31,7 @@ export const users = pgTable("users", {
   profilePhotoUrl: text("profile_photo_url"), // Optional profile photo URL
   contentVariantSnapshotId: integer("content_variant_snapshot_id").references((): any => trackASnapshots.id, { onDelete: "set null" }), // FK to track_a_snapshots; if set, user sees Track A + prelim content from that snapshot instead of live tables
   isActive: boolean("is_active").default(true).notNull(),
+  cohortId: integer("cohort_id"), // FK to cohorts.id — which cohort this user belongs to
 });
 
 export const dailyContent = pgTable("daily_content", {

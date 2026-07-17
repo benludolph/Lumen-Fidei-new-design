@@ -5,6 +5,7 @@ import {
   healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
   workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
   lessonWorkbookModules, lessonWorkbookCompletions, wrapPrayers, lessonProgress,
+  cohorts,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -13,6 +14,7 @@ import {
   type PrayerCompletion, type InsertPrayerCompletion,
   type PracticeResource, type InsertPracticeResource,
   type CohortSetting,
+  type Cohort,
   type TrackAContent, type InsertTrackAContent,
   type TrackAModule, type InsertTrackAModule,
   type PrelimModule, type InsertPrelimModule,
@@ -215,6 +217,12 @@ export interface IStorage {
   getLessonProgress(userId: number, dayNumber: number): Promise<{ slideIndex: number } | null>;
   upsertLessonProgress(userId: number, dayNumber: number, slideIndex: number): Promise<void>;
   deleteLessonProgress(userId: number, dayNumber: number): Promise<void>;
+
+  // Cohorts
+  listCohorts(): Promise<Cohort[]>;
+  getActiveCohort(): Promise<Cohort | null>;
+  createCohort(name: string, startDate: Date): Promise<Cohort>;
+  archiveCohort(id: number, endDate: Date): Promise<void>;
 
   // session store
   sessionStore: any;
@@ -1454,6 +1462,25 @@ export class DatabaseStorage implements IStorage {
   async deleteLessonProgress(userId: number, dayNumber: number): Promise<void> {
     await db.delete(lessonProgress)
       .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.dayNumber, dayNumber)));
+  }
+
+  // Cohorts
+  async listCohorts(): Promise<Cohort[]> {
+    return await db.select().from(cohorts).orderBy(desc(cohorts.startDate));
+  }
+
+  async getActiveCohort(): Promise<Cohort | null> {
+    const [cohort] = await db.select().from(cohorts).where(eq(cohorts.status, "active")).orderBy(desc(cohorts.startDate)).limit(1);
+    return cohort ?? null;
+  }
+
+  async createCohort(name: string, startDate: Date): Promise<Cohort> {
+    const [cohort] = await db.insert(cohorts).values({ name, startDate, status: "active" }).returning();
+    return cohort;
+  }
+
+  async archiveCohort(id: number, endDate: Date): Promise<void> {
+    await db.update(cohorts).set({ status: "archived", endDate }).where(eq(cohorts.id, id));
   }
 }
 

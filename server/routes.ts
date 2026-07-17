@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
+import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -1363,19 +1363,47 @@ export async function registerRoutes(
     res.json({ message: "User deleted" });
   });
 
+  // === Cohorts list ===
+  app.get(api.admin.listCohorts.path, requireRole('admin'), async (req, res) => {
+    const list = await storage.listCohorts();
+    res.json(list.map(c => ({
+      id: c.id,
+      name: c.name,
+      startDate: c.startDate.toISOString(),
+      endDate: c.endDate ? c.endDate.toISOString() : null,
+      status: c.status,
+      createdAt: c.createdAt.toISOString(),
+    })));
+  });
+
   app.get(api.admin.progress.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
       return res.status(403).json({ message: "Admin access required" });
     }
+
+    const cohortIdParam = req.query.cohortId ? Number(req.query.cohortId) : null;
     
-    const users = await storage.getAllUsers();
+    const allUsers = await storage.getAllUsers();
     const completions = await storage.getAllPrayerCompletions();
-    
-    const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+
+    let cohortStartDateStr: string | null;
+    let participantUsers: typeof allUsers;
+
+    if (cohortIdParam) {
+      // Filter to users in the specified cohort; use that cohort's startDate
+      const cohortList = await storage.listCohorts();
+      const selectedCohort = cohortList.find(c => c.id === cohortIdParam);
+      cohortStartDateStr = selectedCohort ? selectedCohort.startDate.toISOString().split('T')[0] : null;
+      participantUsers = allUsers.filter(u => u.role === 'participant' && u.cohortId === cohortIdParam);
+    } else {
+      cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
+      participantUsers = allUsers.filter(u => u.role === 'participant');
+    }
+
     const cohortCurrentDay = computeCurrentProgramDay(cohortStartDateStr);
     
-    const progressData = users
-      .filter(u => u.role === 'participant')
+    const users = allUsers; // keep alias for mentor lookup below
+    const progressData = participantUsers
       .map(u => {
         const currentDay = cohortCurrentDay;
         
@@ -1554,12 +1582,25 @@ export async function registerRoutes(
       if (input.clearCompletions) {
         completionsCleared = await storage.clearAllPrayerCompletions();
       }
+
+      // Archive current active cohort if one exists
+      const activeCohort = await storage.getActiveCohort();
+      if (activeCohort) {
+        await storage.archiveCohort(activeCohort.id, new Date());
+      }
+
+      // Create new cohort record
+      const newCohort = await storage.createCohort(input.name, new Date(input.startDate));
+
+      // Assign all non-admin users with no cohortId to this new cohort (new users joining)
+      // (existing users keep their old cohortId pointing to the archived cohort)
       
       await storage.setCohortSetting("cohort_start_date", input.startDate);
       
       res.json({ 
         message: "New cohort started successfully",
         startDate: input.startDate,
+        cohortId: newCohort.id,
         completionsCleared,
       });
     } catch (err) {
@@ -4910,4 +4951,16 @@ As you move into Week 2, continue these daily practices. They are building a fou
     }
 
     console.log("Seeding complete.");
+
+    // Startup migration: if no cohort records exist but cohort_start_date is set,
+    // create an "Initial Cohort" and assign all existing users to it
+    const existingCohorts = await storage.listCohorts();
+    if (existingCohorts.length === 0) {
+      const startDate = await storage.getCohortSetting("cohort_start_date");
+      if (startDate) {
+        const initialCohort = await storage.createCohort("Initial Cohort", new Date(startDate));
+        await db.update(usersTable).set({ cohortId: initialCohort.id });
+        console.log(`Created Initial Cohort (id=${initialCohort.id}) and assigned all users to it.`);
+      }
+    }
 }

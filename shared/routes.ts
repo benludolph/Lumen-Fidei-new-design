@@ -330,6 +330,7 @@ export const api = {
       method: 'POST' as const,
       path: '/api/admin/cohort/start-new',
       input: z.object({ 
+        name: z.string().min(1),
         startDate: z.string(),
         clearCompletions: z.boolean().optional()
       }),
@@ -340,6 +341,21 @@ export const api = {
           completionsCleared: z.number()
         }),
         400: errorSchemas.validation,
+        403: errorSchemas.forbidden,
+      },
+    },
+    listCohorts: {
+      method: 'GET' as const,
+      path: '/api/admin/cohorts',
+      responses: {
+        200: z.array(z.object({
+          id: z.number(),
+          name: z.string(),
+          startDate: z.string(),
+          endDate: z.string().nullable(),
+          status: z.enum(["active", "archived"]),
+          createdAt: z.string(),
+        })),
         403: errorSchemas.forbidden,
       },
     },
