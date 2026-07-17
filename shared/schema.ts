@@ -611,4 +611,4 @@ export type MessageResponse = Message & { senderName?: string }; // Enriched wit
 export type TrackRequirementResponse = TrackRequirement;
 
 // Workbook
-export const WORKBOOK_MAX_SECTION_ID = 24;
+export const WORKBOOK_MAX_SECTION_ID = 25;

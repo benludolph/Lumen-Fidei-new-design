@@ -241,7 +241,7 @@ export const SECTIONS: SectionDefinition[] = [
     name: "Generational Sins & Family Patterns",
     type: "list_builder",
     description: `Scripture speaks of sin and its consequences passing down through family lines (Exodus 20:5), and most families carry recognizable patterns—divorce, addiction, abuse, occult involvement, suicide, rage, poverty, infidelity—that repeat generation after generation as if on a track. You are not guilty of your ancestors' sins, but you can renounce their effects and refuse to pass them on. Naming the pattern breaks the silent assumption that "this is just how our family is."`,
-    actionItem: `Map the patterns you can see running through your family line on both sides. Write down the recurring sins and afflictions across the generations you know of. Examples: Alcoholism on my father's side for three generations. Repeated divorce and abandonment. A history of occult involvement or "the gift" being passed down. Suicide, depression, or a pattern of early death. Generational poverty or rage.`,
+    actionItem: `Map both sides of your family, going back at least four generations, even where you don't know names. Patterns pass down vertically (grandfather → father) and sideways (aunt to aunt, cousin to cousin). If you were adopted, include what you know of your biological family AND your adoptive family — both lines affect you. Don't worry about what you don't know; name what you can and trust God with the rest. Examples: Alcoholism on my father's side for three generations. Repeated divorce and abandonment. A history of occult involvement or "the gift" being passed down. Suicide, depression, or a pattern of early death. Generational poverty or rage.`,
     fields: [
       { key: "pattern_or_sin", label: "Pattern or sin", placeholder: "e.g. alcoholism, rage, abandonment", required: true, type: "textarea" },
     ],
@@ -347,6 +347,37 @@ export const SECTIONS: SectionDefinition[] = [
     actionItem: `Name the patterns, curses, or bondages you most want to ensure are not passed to your children and descendants, and write a blessing you want to speak over them instead. Examples: "The addiction in our family stops with me." "No more divorce and abandonment in this line." "I renounce the occult inheritance on behalf of my children." Then: "I bless my children with faith, freedom, and the love of God. I declare they will know they are wanted and treasured."`,
     fields: [
       { key: "concern", label: "Concern", placeholder: "Describe briefly", required: true, type: "textarea" },
+    ],
+  },
+  {
+    id: 25,
+    categoryId: 3,
+    name: "The Family Dead",
+    type: "list_builder",
+    description: `Some members of a family line die in ways that leave a wound behind them — suicide, violence, accident, war. Others die and are never truly mourned: children lost to miscarriage or abortion who were never named, relatives who died alone in institutions, those who never received a Christian burial or any prayer at all. The Church has always prayed for the dead. In this section you identify the members of your family line — known or unknown, named or unnamed — who need to be prayed for, mourned, and released into God's mercy. This is not about blame; it is about love reaching back through time.`,
+    actionItem: `Go through your family line on both sides, as far back as you know. List by name (or by relationship, if the name is unknown) family members who: took their own lives or attempted to; were murdered or died tragically (accidents, war); died untimely or young; died alone, unloved, or in institutions; were never given a Christian burial or never mourned; and every child lost to miscarriage or abortion in your family line — including your own. If a child was never named, you may give them a name here.`,
+    fields: [
+      { key: "name", label: "Name or relationship", placeholder: "e.g. my grandfather's brother, or a specific name", required: true, type: "text" },
+      {
+        key: "circumstance",
+        label: "Circumstance",
+        placeholder: "Select",
+        required: true,
+        type: "enum",
+        enumOptions: [
+          { label: "Suicide or attempted suicide", value: "Suicide or attempted suicide" },
+          { label: "Murdered or violent death", value: "Murdered or violent death" },
+          { label: "Tragic accident or war", value: "Tragic accident or war" },
+          { label: "Untimely or early death", value: "Untimely or early death" },
+          { label: "Died alone, unloved, or in an institution", value: "Died alone, unloved, or in an institution" },
+          { label: "Never mourned or no Christian burial", value: "Never mourned or no Christian burial" },
+          { label: "Miscarried child", value: "Miscarried child" },
+          { label: "Aborted child", value: "Aborted child" },
+          { label: "Other", value: "Other" },
+        ],
+      },
+      { key: "notes", label: "Notes (optional)", placeholder: "Any additional context", type: "textarea" },
+      { key: "named_now", label: "Name given now (optional — for unnamed children)", placeholder: "If this child was never named, what name do you give them?", type: "text" },
     ],
   },
   {

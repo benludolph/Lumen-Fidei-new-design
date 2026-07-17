@@ -145,6 +145,17 @@ const EMPTY_INJECT_STYLE: React.CSSProperties = {
   border: "0.5px dashed rgba(255,255,255,0.1)",
 };
 
+const ENTRY_STYLE: React.CSSProperties = {
+  display: "block",
+  padding: "9px 14px",
+  marginBottom: "6px",
+  borderRadius: "6px",
+  background: "rgba(232,200,138,0.05)",
+  border: "0.5px solid rgba(232,200,138,0.15)",
+  color: "rgba(255,255,255,0.84)",
+  lineHeight: 1.65,
+};
+
 // ─── Page node renderer ───────────────────────────────────────────────────────
 
 function renderNodes(
@@ -202,10 +213,12 @@ function renderNodes(
       if (cb.profileField) {
         shouldRender = isProfileFieldNonEmpty(profile, cb.profileField);
       } else if (cb.sectionId != null && cb.sectionField) {
-        const entries = allEntries[cb.sectionId] ?? [];
+        let entries = allEntries[cb.sectionId] ?? [];
+        if (cb.sectionFilter) entries = filterEntries(entries, cb.sectionFilter);
         shouldRender = entries.some((e) => {
-          const val = String((e.entryData as Record<string, unknown>)?.[cb.sectionField!] ?? "").trim();
-          return val.length > 0;
+          const val = (e.entryData as Record<string, unknown>)?.[cb.sectionField!];
+          if (typeof val === "boolean") return val === true;
+          return String(val ?? "").trim().length > 0;
         });
       }
 
@@ -304,6 +317,79 @@ function renderNodes(
         );
       }
 
+      // ── Block formats: per-entry sentence renderers ──
+      const BLOCK_FORMATS = [
+        "items_each",
+        "renounce_each",
+        "renounce_lodge_each",
+        "renounce_simple_each",
+        "renounce_spirit_each",
+        "forgive_each",
+        "family_dead_each",
+        "let_end_each",
+        "ancestor_each",
+      ];
+
+      if (BLOCK_FORMATS.includes(inj.format)) {
+        const entries = filterEntries(allEntries[inj.sectionId!] ?? [], inj.filter);
+        if (!entries.length) return null;
+
+        const renderEntry = (e: WorkbookEntry, ii: number) => {
+          const d = e.entryData as Record<string, string>;
+          let sentence = "";
+
+          if (inj.format === "items_each") {
+            sentence = d[inj.field!] ?? "";
+          } else if (inj.format === "renounce_each") {
+            const val = d[inj.field!] ?? "";
+            sentence = `In the name of Jesus Christ, and by the power of His Blood, I renounce ${val} in our family line.`;
+          } else if (inj.format === "renounce_lodge_each") {
+            const val = d[inj.field!] ?? "";
+            sentence = `I renounce ${val} and every oath, degree, penalty, and curse connected to it.`;
+          } else if (inj.format === "renounce_simple_each") {
+            const val = d[inj.field!] ?? "";
+            sentence = `I renounce ${val}.`;
+          } else if (inj.format === "renounce_spirit_each") {
+            const val = d[inj.field!] ?? "";
+            sentence = `In the name of Jesus Christ, I renounce ${val}. I reject your worship, your benefits, and your curses. I will not serve you.`;
+          } else if (inj.format === "forgive_each") {
+            const person = d.person ?? "";
+            const what = d.what?.trim() ? ` for ${d.what.trim()}` : "";
+            sentence = `I forgive ${person}${what}.`;
+          } else if (inj.format === "let_end_each") {
+            const val = d[inj.field!] ?? "";
+            sentence = `Let ${val} end with me.`;
+          } else if (inj.format === "ancestor_each") {
+            const name = d.name_or_description ?? "";
+            const groups = d.groups_or_sins_involved?.trim();
+            sentence = groups ? `${name} — ${groups}` : name;
+          } else if (inj.format === "family_dead_each") {
+            const name = d.name?.trim() || "this member of our family";
+            const circumstance = d.circumstance ?? "";
+            const isChild = circumstance === "Miscarried child" || circumstance === "Aborted child";
+            if (isChild) {
+              const childName = d.named_now?.trim() || "known to You by name";
+              sentence = `I entrust this child, ${childName}, to Your mercy. I acknowledge this child as part of our family. I mourn this child now. Receive this child into Your arms.`;
+            } else {
+              sentence = `I entrust ${name} to Your mercy, Lord. I mourn ${name} now. Forgive ${name}'s sins, heal what was broken, and receive ${name} into Your peace.`;
+            }
+          }
+
+          if (!sentence.trim()) return null;
+          return (
+            <span key={ii} style={{ ...ENTRY_STYLE, marginBottom: "8px" }}>
+              {sentence}
+            </span>
+          );
+        };
+
+        return (
+          <span key={key} style={{ display: "block", margin: "4px 0" }}>
+            {entries.map((e, ii) => renderEntry(e, ii))}
+          </span>
+        );
+      }
+
       // ── Inline format ──
       const value = evaluateInjectToString(inj, allEntries, profile);
       if (!value) {
@@ -366,9 +452,25 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
     );
   }
 
-  const currentPage = template.pages[pageIndex];
+  // Compute which pages should actually render (respecting skip rules)
+  const visiblePages = template.pages.filter((page) => {
+    if (page.skipIfSectionsEmpty) {
+      const hasAny = page.skipIfSectionsEmpty.some(
+        (sid) => (allEntries[sid] ?? []).length > 0,
+      );
+      if (!hasAny) return false;
+    }
+    if (page.skipIfFilteredSectionEmpty) {
+      const { sectionId, filter } = page.skipIfFilteredSectionEmpty;
+      const filtered = filterEntries(allEntries[sectionId] ?? [], filter);
+      if (!filtered.length) return false;
+    }
+    return true;
+  });
+
+  const currentPage = visiblePages[pageIndex] ?? visiblePages[0];
   const isFirst = pageIndex === 0;
-  const isLast = pageIndex === template.pages.length - 1;
+  const isLast = pageIndex === visiblePages.length - 1;
 
   return (
     <div
@@ -458,7 +560,7 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
             marginBottom: "28px",
           }}
         >
-          {template.pages.map((_, i) => (
+          {visiblePages.map((_, i) => (
             <div
               key={i}
               style={{
@@ -483,7 +585,7 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
               marginLeft: "6px",
             }}
           >
-            {pageIndex + 1} / {template.pages.length}
+            {pageIndex + 1} / {visiblePages.length}
           </span>
         </div>
 
@@ -596,7 +698,7 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
               <button
                 type="button"
                 onClick={() =>
-                  setPageIndex((p) => Math.min(template.pages.length - 1, p + 1))
+                  setPageIndex((p) => Math.min(visiblePages.length - 1, p + 1))
                 }
                 data-testid="button-prayer-next"
                 style={{

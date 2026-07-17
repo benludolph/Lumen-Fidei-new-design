@@ -20,7 +20,16 @@ export type InjectFormat =
   | "spirits_with_every_prefix"
   | "infirmities_each"
   | "lies_with_truths"
-  | "text";
+  | "text"
+  | "items_each"
+  | "renounce_each"
+  | "renounce_lodge_each"
+  | "renounce_simple_each"
+  | "renounce_spirit_each"
+  | "forgive_each"
+  | "family_dead_each"
+  | "let_end_each"
+  | "ancestor_each";
 
 export type InjectFilter =
   | "skip_empties"
@@ -57,6 +66,8 @@ export type ConditionalBlockNode = {
   /** Render inner nodes only when this section has at least one non-empty value for the given field */
   sectionId?: number;
   sectionField?: string;
+  /** Apply this filter before checking for non-empty entries */
+  sectionFilter?: InjectFilter;
   nodes: Array<TextNode | InjectNode | InPrayerTextareaNode>;
 };
 export type PrayerNode = TextNode | InjectNode | InPrayerTextareaNode | ConditionalBlockNode;
@@ -64,6 +75,15 @@ export type PrayerNode = TextNode | InjectNode | InPrayerTextareaNode | Conditio
 export type PrayerPage = {
   title: string;
   nodes: PrayerNode[];
+  /**
+   * Skip this entire page if ALL of the listed sections have zero entries.
+   * (Show the page if at least one listed section has at least one entry.)
+   */
+  skipIfSectionsEmpty?: number[];
+  /**
+   * Skip this entire page if the filtered entries from the given section are empty.
+   */
+  skipIfFilteredSectionEmpty?: { sectionId: number; filter: InjectFilter };
 };
 
 export type PrayerTemplate = {
@@ -122,10 +142,12 @@ const CS = (
   sectionId: number,
   sectionField: string,
   nodes: Array<TextNode | InjectNode | InPrayerTextareaNode>,
+  sectionFilter?: InjectFilter,
 ): ConditionalBlockNode => ({
   type: "conditional_block",
   sectionId,
   sectionField,
+  ...(sectionFilter ? { sectionFilter } : {}),
   nodes,
 });
 
@@ -422,251 +444,161 @@ export const PRAYER_2: PrayerTemplate = {
   title: "Generational Renunciation Prayer",
   subtitle: "Generational Renunciation Prayer",
   pages: [
-    // Page 1 — Opening
+    // Page 1 — Opening (always)
     {
-      title: "Opening",
+      title: "Standing for My Family Line",
       nodes: [
         T(
-          "Father in heaven, I come before You in the Most Holy Name of Jesus Christ, Your Son. I confess that Jesus Christ is my Lord, my Savior, and my Deliverer. My loyalty belongs to You alone, Father, Son, and Holy Spirit.\n\nI renounce Satan, all his works, and all his empty promises. I renounce every false god, false worship, false blessing, false protection, false allegiance, and false source of power that has touched me, my family, or my generational bloodline.\n\nI ask in the Most Holy Name of Jesus that every evil spirit affecting me, my family, my home, my descendants, or my generational line be bound and cast out by the power of His Most Precious Blood.\n\nIf any evil has entered this family line through sin, curses, malefices, occult practices, false worship, secret societies, oaths, rituals, ceremonies, objects, blood covenants, or agreements with evil, I ask You, Lord Jesus, to break it, cast it out, and cleanse us by Your Precious Blood.\n\nI repent of my own sins. I forgive my ancestors and all others whose sins may have affected this family line. I ask You to have mercy on them, forgive them, bless them, and free this family from every evil consequence of sin.",
+          "Father in heaven, I come before You in the Most Holy Name of Jesus Christ, Your Son. I confess that Jesus Christ is my Lord, my Savior, and my Deliverer.\n\nI stand before You as a representative of my family — both my father's line and my mother's line, the generations that came before me and the generations that will come after me. I do not stand here to judge my ancestors, but to intercede for them, to forgive them, and to renounce on behalf of this family every agreement with evil that was ever made in our line.\n\nI renounce Satan, all his works, and all his empty promises — for myself and on behalf of my family line. Everything I renounce in this prayer, I renounce completely: every oath, pact, ritual, curse, and claim attached to it, known or unknown, remembered or forgotten. Let this intention stand over every word I pray.\n\nLord Jesus, cover me and my whole family line with Your Precious Blood.",
         ),
       ],
     },
 
-    // Page 2 — False religions, false worship, and false spiritual systems
+    // Page 2 — Generational Sins (skip if Section 15 empty)
     {
-      title: "False religions, false worship, and false spiritual systems",
+      title: "Generational Sins and Family Patterns",
+      skipIfSectionsEmpty: [15],
       nodes: [
-        T(
-          "Father, in the Name of Jesus Christ, I renounce all blessings, curses, rituals, prayers, initiations, ceremonies, protections, spiritual benefits, and spiritual claims connected to false worship, false religion, and every spiritual system opposed to Jesus Christ, especially ",
-        ),
-        I(12, "practice", "items_comma"),
-        T(
-          ".\n\nI renounce every false spiritual practice, especially ",
-        ),
-        I(12, "practice", "items_comma"),
-        T(
-          ".\n\nI reject every false deity, spirit, guide, ancestral spirit, familiar spirit, unholy power, or false spiritual authority connected to these practices, especially ",
-        ),
-        I(19, "name", "names_comma"),
-        T(
-          ".\n\nI no longer want their benefits, and I will not be bound by their curses. I reject every false covering, every false protection, every false blessing, and every false claim over me, my family, or my descendants.\n\nJesus Christ alone is Lord. I belong to Him.",
-        ),
+        T("Father, I bring before You the sinful patterns that have run through our family line:\n\n"),
+        I(15, "pattern_or_sin", "renounce_each"),
+        T("\n\nI willingly forgive my ancestors and all whose sins introduced these patterns, and I ask You to forgive them, bless them, and free this family from every consequence of their sins. Let these patterns end in our line now."),
       ],
     },
 
-    // Page 3 — Lodges, secret societies, oaths, and ritual groups
+    // Page 3 — Ancestors, Lodges (skip if Sections 16 & 17 both empty)
     {
-      title: "Lodges, secret societies, oaths, and ritual groups",
+      title: "Ancestors of Concern, Lodges, and Oath-Bound Groups",
+      skipIfSectionsEmpty: [16, 17],
       nodes: [
-        T(
-          "Father, in the Name of Jesus Christ, I renounce every lodge, secret society, occult order, hidden brotherhood or sisterhood, oath-bound group, ritual organization, or society opposed to the worship of the true God, especially ",
-        ),
-        I(17, "group", "items_comma"),
-        T(
-          ".\n\nI renounce every title, rank, office, degree, initiation, sign, symbol, password, secret word, handshake, garment, apron, jewel, ring, oath, penalty, curse, ceremony, obligation, hidden teaching, false brotherhood, false covering, and false protection connected to these groups.\n\nI renounce especially ",
-        ),
-        I(17, "titles_or_roles", "items_comma", "skip_empties"),
-        T(" and "),
-        I(17, "oaths_or_rituals", "items_comma", "skip_empties"),
-        T(
-          ".\n\nIn the Name of Jesus Christ, I break every oath, vow, pact, curse, ritual bond, and spiritual claim connected to them. I reject every spirit of secrecy, pride, fear, control, deception, false power, false light, and false worship that has worked through them.\n\nI revoke every consent given by me or by my ancestors to be deceived, bound, marked, covered, protected, initiated, empowered, or claimed by any spirit opposed to Jesus Christ.",
-        ),
+        CS(16, "name_or_description", [
+          T("Father, I bring before You the specific members of our line whose choices opened doors:\n\n"),
+          I(16, "name_or_description", "ancestor_each"),
+          T("\n\n"),
+        ]),
+        CS(17, "group", [
+          T("On behalf of my family, I renounce every lodge, secret society, and oath-bound group our line was joined to, especially:\n\n"),
+          I(17, "group", "renounce_lodge_each"),
+          T("\n\n"),
+        ]),
+        T("I revoke every consent given by my ancestors to be bound, marked, or claimed by any spirit opposed to Jesus Christ. I forgive them, and I ask Your mercy on them."),
       ],
     },
 
-    // Page 4 — Agreement sins and ancestral participation
+    // Page 4 — False Religion, Named Spirits (skip if Sections 12 & 19 both empty)
     {
-      title: "Agreement sins and ancestral participation",
+      title: "False Religion, Named Spirits, and Unholy Allegiances",
+      skipIfSectionsEmpty: [12, 19],
       nodes: [
-        T(
-          "Father, I repent of every sin by which I have agreed with evil, and I ask Your mercy for the sins by which my ancestors may have agreed with evil.\n\nI bring before You especially ",
-        ),
-        I(18, "agreement", "items_comma"),
-        T(", including the participation of "),
-        I(16, "name_or_description", "names_comma"),
-        T(" in "),
-        I(16, "groups_or_sins_involved", "items_comma", "skip_empties"),
-        T(
-          ".\n\nI ask forgiveness for every oath, allegiance, worship, covenant, ritual, ceremony, pact, vow, participation, or agreement contrary to You. You alone are God, and You alone deserve my allegiance.\n\nIn the Most Holy Name of Jesus, I renounce every unholy oath, vow, pledge, covenant, initiation, ritual bond, curse, pact, seal, agreement, and spiritual claim connected to these things.\n\nI separate myself, my family, and my descendants from every false allegiance and every unholy spirit connected to them.",
-        ),
+        CS(12, "practice", [
+          T("Father, I renounce every false worship and spiritual practice in my life and in our family line, especially:\n\n"),
+          I(12, "practice", "renounce_simple_each"),
+          T("\n\n"),
+        ]),
+        CS(19, "name", [
+          T("I renounce every false deity, familiar spirit, and being to whom devotion or allegiance was given, by me or by my ancestors:\n\n"),
+          I(19, "name", "renounce_spirit_each"),
+          T("\n\n"),
+        ]),
+        T("Jesus Christ alone is Lord. This family belongs to Him."),
       ],
     },
 
-    // Page 5 — Named spirits, false deities, and unholy allegiances
+    // Page 5 — Agreement Sins (skip if Section 18 empty)
     {
-      title: "Named spirits, false deities, and unholy allegiances",
+      title: "Agreement Sins",
+      skipIfSectionsEmpty: [18],
       nodes: [
-        T(
-          "In the Most Holy Name of Jesus, I completely reject and renounce every oath, allegiance, worship, covenant, ritual, prayer, offering, pact, and participation made by me or by my ancestors with any false deity, unholy spirit, familiar spirit, ancestral spirit, lodge spirit, occult spirit, spirit of false religion, or spirit of false worship.\n\nI renounce especially ",
-        ),
-        I(19, "name", "names_comma"),
-        T(
-          ".\n\nI reject you. I renounce you. I break every agreement with you. I reject every worship, oath, pact, covenant, ritual, offering, prayer, initiation, protection, blessing, and curse connected to you.\n\nOn the authority of Jesus Christ, and not my own, I command every spirit named here, and every spirit hidden behind these names, to release me and my family. Go where Jesus Christ commands you to go.\n\nI will not serve you. I will not belong to you. I will not receive your benefits, and I will not be bound by your curses.\n\nJesus Christ alone is Lord.",
-        ),
+        T("Father, I repent of the sins I did not commit directly but agreed with, encouraged, or failed to oppose, especially:\n\n"),
+        I(18, "agreement", "items_each"),
+        T("\n\nI withdraw my consent from every one of them, and I ask forgiveness for every similar agreement made in our family line."),
       ],
     },
 
-    // Page 6 — Objects, symbols, books, jewelry, and ritual items
+    // Page 6 — Curses, Spells, Blood Contracts (skip if Section 21 empty)
     {
-      title: "Objects, symbols, books, jewelry, and ritual items",
+      title: "Curses, Spells, and Blood Contracts",
+      skipIfSectionsEmpty: [21],
       nodes: [
-        T(
-          "Father, I bring before You every object, symbol, book, image, charm, amulet, talisman, ring, garment, tool, document, statue, card, candle, oil, stone, crystal, ritual item, occult item, lodge item, false religious item, inherited object, or household object connected to evil, false worship, occult practice, oaths, curses, rituals, spells, divination, witchcraft, or unholy covenants.\n\nI specifically renounce and reject ",
-        ),
-        I(20, "object", "items_comma"),
-        T(
-          ".\n\nIn the Name of Jesus Christ, I renounce every oath, vow, pact, curse, ritual, attachment, spiritual claim, and evil influence connected to these objects.\n\nI reject every spirit attached to them, working through them, or claiming access because of them.\n\nBy the Precious Blood of Jesus, I ask Almighty God to sever every evil connection between these objects and me, my family, my home, and my descendants.\n\nI ask You, Lord Jesus, to make these objects powerless, to sever every evil spirit from them, and to show me what must be removed, destroyed, discarded, or brought to a priest for guidance.\n\nIn the Name of Jesus Christ, I command every evil spirit connected to these objects to leave me, my family, my home, and everything entrusted to me, and to go where the Lord Jesus Christ commands.",
-        ),
+        T("Father, in the Name of Jesus and by the power of His Precious Blood, I renounce and break:\n\n"),
+        I(21, "description", "items_each"),
+        T("\n\nI take the Sword of the Spirit, which is the Word of God, and I break every curse upon this family line, and I cancel the assignment of every familiar spirit that has operated in our family. Let the Blood of Jesus speak louder than every other blood, every other oath, and every other claim."),
       ],
     },
 
-    // Page 7 — Generational bloodline, curses, and family evils
+    // Page 7 — Objects (skip if Section 20 empty)
     {
-      title: "Generational bloodline, curses, and family evils",
+      title: "Objects of Concern",
+      skipIfSectionsEmpty: [20],
       nodes: [
-        T(
-          "Lord Jesus Christ, I ask in Your Most Holy Name to remove any evil spirits that may be affecting me, my family, or my generational bloodline.\n\nIf any curse, malefice, spell, pact, oath, vow, ritual, occult practice, false worship, or agreement with evil has been introduced by a member of this family, by me, by my ancestors, or from outside the family, I ask You to cast it out and cleanse us with Your Most Precious Blood.\n\nI willingly forgive my ancestors and any others who are at fault, and I ask You to absolve them of this sin and bless them.\n\nI repent of any evil that I have done to introduce evil into our generational line, and I ask Your forgiveness.\n\nI particularly ask You to cleanse our generational bloodline of ",
-        ),
-        I(15, "pattern_or_sin", "items_comma"),
-        T(
-          ", including all curses, illnesses, sicknesses, addictions, financial curses, divorce, abuse, violence, abandonment, occult involvement, false worship, sexual sin, hatred, despair, suicide, mental torment, fear, rejection, poverty, unbelief, and every other evil handed down through the generational line.\n\nMay Your Precious Blood wash over us and cleanse us all. May these evils end now through Your infinite mercy and through the power of Your Holy Cross.",
-        ),
+        T("Father, I renounce every object connected to evil, false worship, or occult practice in my home or inherited through our line, especially:\n\n"),
+        I(20, "object", "items_each"),
+        T("\n\nSever every evil connection between these objects and my family, make them powerless, and show me what must be removed, destroyed, or brought to a priest."),
       ],
     },
 
-    // Page 8 — Curses, spells, hexes, vexes, triggers, trances, and bondages
+    // Page 8 — The Family Dead (skip if Section 25 empty)
     {
-      title: "Curses, spells, hexes, vexes, triggers, trances, and bondages",
+      title: "The Family Dead",
+      skipIfSectionsEmpty: [25],
       nodes: [
-        T(
-          "Father, in the Name of Jesus and by the power of His Precious Blood, I ask You to bind and break every curse, pact, spell, seal, hex, vex, trigger, trance, vow, demonic blessing, evil prayer, ritual bond, malefice, enchantment, occult assignment, ancestral curse, spoken curse, written curse, blood curse, death curse, sickness curse, poverty curse, family curse, marriage curse, infertility curse, mental torment, spiritual blindness, and every other demonic bondage sent against me, my family, my descendants, my home, my work, my possessions, or any object connected to us.\n\nI renounce especially ",
-        ),
-        I(21, "description", "items_comma", "where_kind_curse"),
-        T(
-          ".\n\nI ask You to bind them all, break them all, cast them out, and make them powerless through the Precious Blood of Jesus.\n\nIf any curse, spell, malefice, enchantment, or evil work remains in place against me or my family, I ask You, Lord Jesus, to break it now by the power of Your Holy Cross.",
-        ),
+        T("Father of mercy, I now bring before You the members of our family line who died in sorrow, in violence, or without prayer — the ones who were never fully mourned.\n\n"),
+        I(25, "name", "family_dead_each"),
+        T("\n\nWhat was never grieved in our family, I grieve now. What was never prayed for, I pray for now. Eternal rest grant unto them, O Lord, and let perpetual light shine upon them. May their souls, and the souls of all the departed of our family line, through the mercy of God, rest in peace.\n\nI release every one of them into Your hands, and I ask that no grief, fear, or affliction connected to their deaths continue down our family line."),
       ],
     },
 
-    // Page 9 — Forgiveness of those who cursed or harmed the family
+    // Page 9 — Forgiving Those Who Harmed the Family (skip if no family-flagged Section 2 entries)
     {
-      title: "Forgiveness of those who cursed or harmed the family",
+      title: "Forgiving Those Who Harmed the Family",
+      skipIfFilteredSectionEmpty: { sectionId: 2, filter: "where_is_family_harm" },
       nodes: [
-        T(
-          "If any evil entered my family line through curses, spells, malefices, rituals, enchantments, hatred, jealousy, abuse, betrayal, or evil acts done by others, I ask for the grace to forgive them.\n\nI choose forgiveness as an act of obedience, not emotion.\n\nI forgive ",
-        ),
-        I(2, "person", "names_comma", "where_is_family_harm"),
-        T(
-          " for the effects of their sins against me and my family. I forgive them for any damage they caused, knowingly or unknowingly.\n\nI release judgment against them, and I place them into Your hands, Lord Jesus.\n\nI ask You to break every curse, spell, malefice, enchantment, or evil work that remains in place against us.",
-        ),
+        T("As an act of obedience, not emotion, I choose to forgive those whose sins wounded not only me but my whole family:\n\n"),
+        I(2, "person", "forgive_each", "where_is_family_harm"),
+        T("\n\nI release judgment against them and place them into Your hands."),
       ],
     },
 
-    // Page 10 — Blocking evil from passing to future generations
+    // Page 10 — Infirmities (skip if Section 22 empty)
     {
-      title: "Blocking evil from passing to future generations",
+      title: "Infirmities",
+      skipIfSectionsEmpty: [22],
       nodes: [
-        T(
-          "Father, I ask You in the Name of Jesus to block every unholy spirit, curse, malefice, family wound, addiction, sickness, false vow, occult bond, blood covenant, oath, evil pattern, and demonic influence from passing to my children, my descendants, and future generations.\n\nI especially ask You to block ",
-        ),
-        I(23, "concern", "items_comma"),
-        T(
-          ".\n\nLet these evils end here. Let the Precious Blood of Jesus stand between my family and every evil inheritance. Let the Cross of Christ block every spirit that seeks to pass from one generation to another.\n\nLord Jesus, bless my family line. Heal what has been wounded. Cleanse what has been defiled. Restore what has been damaged. Deliver what has been bound.",
-        ),
+        T("Father, I bring before You the infirmities carried in my body and in our family line:\n\n"),
+        I(22, "infirmity", "items_each"),
+        T("\n\nIf any of these is connected to sin, curses, or the patterns of our line, break that connection now by the Precious Blood of Jesus."),
+        CS(22, "for_healing", [
+          T(" And according to Your holy will, I ask You to heal:\n\n"),
+          I(22, "infirmity", "items_each", "where_for_healing"),
+        ], "where_for_healing"),
       ],
     },
 
-    // Page 11 — Named spirits and dominant family spirits
+    // Page 11 — Comprehensive Binding (always)
     {
-      title: "Named spirits and dominant family spirits",
+      title: "Comprehensive Binding and Blocking",
       nodes: [
-        T(
-          "In the Name of Jesus Christ and by His Precious Blood, I bind and renounce every unholy spirit affecting me or my family, separately and individually.\n\nI renounce especially ",
-        ),
-        I(19, "name", "names_comma"),
-        T(" and every spirit connected to "),
-        S14("patterns_comma"),
-        T(
-          ".\n\nI renounce every spirit of Death, Infirmity, Divination, Rebellion, Lying, Rage, Manipulation, Domination, Control, Fear, Rejection, Lust, Shame, Addiction, Violence, Hatred, Confusion, Despair, Unbelief, Poverty, Suicide, Abuse, Occult Bondage, False Worship, and every other spirit opposed to Jesus Christ.\n\nI break every claim, agreement, attachment, assignment, foothold, and influence connected to these spirits.\n\nIn the Name of Jesus Christ, I command every spirit I have renounced to leave me and my family now. Leave every place where you have afflicted, tempted, tormented, deceived, accused, oppressed, influenced, or harmed us.\n\nGo where the Lord Jesus Christ commands you to go, and do not return.",
-        ),
+        T("Father, in the Name of Jesus Christ and by the power of His Precious Blood, I now bring before You everything I have renounced in this prayer, together with everything hidden, forgotten, or unknown in our family line.\n\nI ask You to bind and break every curse, pact, spell, hex, seal, oath, vow, ritual bond, blood covenant, malefice, assignment, ancestral curse, and every other demonic bondage operating in our family line — and to cast out every evil spirit that has claimed access to this family through any of it.\n\nI ask You to block every one of these evils from passing to my children, my descendants, and all future generations, especially:\n\n"),
+        CS(23, "concern", [
+          I(23, "concern", "let_end_each"),
+          T("\n\n"),
+        ]),
+        T("Let the Precious Blood of Jesus stand between my family and every evil inheritance. Let these evils end now, in this generation, through Your infinite mercy and the power of the Holy Cross."),
       ],
     },
 
-    // Page 12 — Blood contracts, blood covenants, and ritual bonds
+    // Page 12 — Blessing (always)
     {
-      title: "Blood contracts, blood covenants, and ritual bonds",
+      title: "Blessing over the Line",
       nodes: [
-        T(
-          "In the Name of Jesus Christ and by His Precious Blood, I renounce and break every unholy blood contract, blood covenant, blood oath, blood ritual, pact, vow, pledge, exchange, offering, sacrifice, or bond made between me, my ancestors, or any other person, spirit, group, organization, false deity, or occult power, whether known or unknown, remembered or forgotten, intentional or unintentional.\n\nI renounce especially ",
-        ),
-        I(21, "description", "items_comma", "where_kind_blood_contract"),
-        T(
-          ".\n\nI reject every spirit that claimed access through blood, ritual, oath, sacrifice, sexual sin, violence, abuse, self-harm, occult practice, or false worship.\n\nBy the Precious Blood of Jesus, I ask Almighty God to break every unholy blood bond and every evil claim connected to these things.\n\nLet the Blood of Jesus speak louder than every other blood, every other oath, every other ritual, and every other claim.",
-        ),
+        T("Father, I now ask for blessings where there have been curses, and healing where there has been sickness — physical, psychological, or spiritual — throughout our whole family line.\n\nBless my ancestors, living and dead, according to Your mercy. Bless my children and descendants; let them inherit faith where there was unbelief, peace where there was violence, fidelity where there was abandonment, and life where there was death.\n\nHoly Spirit, fill every place in our family line that has been emptied of evil. Blessed Virgin Mary, spread your mantle over this family. Saint Michael the Archangel, defend us. Holy angels of God, surround our homes and our children.\n\nLord Jesus Christ, reign in this family — in our past, our present, and our future. Thank You for Your mercy and Your kindness toward me and all my family. Amen."),
       ],
     },
 
-    // Page 13 — Infirmity, sickness, and physical affliction
+    // Page 13 — Mass Hand-off (always)
     {
-      title: "Infirmity, sickness, and physical affliction",
+      title: "Bringing This to the Mass",
       nodes: [
-        T(
-          "Father, in the Holy Name of Jesus Christ, I bring before You every infirmity, sickness, weakness, affliction, pain, disorder, torment, and bodily burden that has affected me or my family.\n\nI bring before You especially ",
-        ),
-        I(22, "infirmity", "items_comma"),
-        T(
-          ".\n\nIf any infirmity is connected to sin, trauma, occult involvement, curses, family patterns, evil spirits, unholy objects, false vows, or unholy agreements, I ask You to break that connection now by the Precious Blood of Jesus.\n\nI speak now to every spirit of infirmity affecting me or my family. In the Name of Jesus Christ, I command you to leave and take with you every root, sickness, oppression, torment, and affliction connected to you.\n\n",
-        ),
-        I(22, "infirmity", "infirmities_each"),
-        T(
-          "\n\nFather, I now ask in Jesus' Name that You release Your healing power into my body and into the bodies of my family members. Fully restore everything the thief has stolen, killed, or destroyed.\n\nPlease heal ",
-        ),
-        I(22, "infirmity", "items_comma", "where_for_healing"),
-        T(", according to Your holy will."),
-      ],
-    },
-
-    // Page 14 — Holy Spirit-prompted additions (in-prayer input)
-    {
-      title: "Holy Spirit-prompted additions",
-      nodes: [
-        T(
-          "Father, I also bring before You every sin, oath, vow, curse, agreement, spirit, object, ritual, bond, attachment, and evil influence that I have not named because I do not know it, remember it, or understand it.\n\n",
-        ),
-        TA("If anything specific comes to mind right now, name it here."),
-        T(
-          "\n\nI ask the Holy Spirit to bring to light anything else that must be confessed, renounced, removed, destroyed, healed, or brought to prayer.\n\nIn the Name of Jesus Christ, I renounce every hidden, forgotten, unlisted, unknown, disguised, or inherited agreement with evil, and I place it all under the Precious Blood of Jesus.\n\nI ask You, Lord Jesus, to break every evil thing that remains hidden and to bring into the light whatever still needs to be healed, confessed, renounced, or removed.",
-        ),
-      ],
-    },
-
-    // Page 15 — Final command to spirits
-    {
-      title: "Final command to spirits",
-      nodes: [
-        T(
-          "In the Name of Jesus Christ, and by the power of His Precious Blood, I speak to every unholy spirit in or around me or my family, named or unnamed, known or unknown, hidden or exposed.\n\nI break every remaining claim you have made. I break every legal right, attachment, agreement, foothold, assignment, and influence you have claimed through sin, curses, oaths, vows, rituals, objects, false worship, blood covenants, occult practices, sickness, trauma, generational sin, or any other evil.\n\nI command you now in the Name of Jesus Christ to leave me, my family, my home, my body, my mind, my soul, my memory, my imagination, my possessions, my work, and everything entrusted to me.\n\nGo where Jesus Christ commands you to go. Do not return. Do not retaliate. Do not transfer. Do not hide. Do not call upon any other spirit to replace you.\n\nLeave now in the Holy Name of Jesus Christ.",
-        ),
-      ],
-    },
-
-    // Page 16 — Protection over family, property, pursuits, and occupations
-    {
-      title: "Protection over family, property, pursuits, and occupations",
-      nodes: [
-        T(
-          "In the Name of Jesus Christ, I ask protection over my family, my home, my property, my body, my mind, my relationships, my work, my vocation, my ministry, my finances, my health, my prayer, my sleep, and all that belongs to me.\n\nI ask that every attack of the enemy against us, our belongings, our pursuits, and our occupations be made ineffective by the Precious Blood of Jesus.\n\nI declare my family, my home, my property, my work, my vocation, and everything entrusted to me to be under the lordship and protection of Jesus Christ.\n\nBlessed Virgin Mary, spread your mantle over us.\n\nSaint Michael the Archangel, defend us in battle.\n\nHoly angels of God, surround us and keep far from us every evil spirit.",
-        ),
-      ],
-    },
-
-    // Page 17 — Cleansing, healing, filling, and closing
-    {
-      title: "Cleansing, healing, filling, and closing",
-      nodes: [
-        T(
-          "Father, I ask You now in the Name of Jesus to release Your healing power into me and my family. Restore everything the thief has stolen, killed, or destroyed.\n\nCleanse us with the Precious Blood of Jesus. Cleanse my spirit, my soul, my mind, my heart, my memory, my imagination, my emotions, my body, my family line, my home, and every part of my life that has been affected by these sins, curses, spirits, and bondages.\n\nHoly Spirit, fill every empty place. Fill every cleansed place. Fill every wounded place. Fill every place that has been touched by evil with faith, hope, charity, purity, humility, peace, obedience, courage, and holy wisdom.\n\nRestore the grace of baptism in me. Strengthen me in Confession, the Eucharist, prayer, forgiveness, repentance, and daily conversion.\n\nLord Jesus Christ, reign in my heart. Reign in my home. Reign in my family. Reign in my memories. Reign in my body. Reign in my future.\n\nFather, thank You for Your mercy, Your forgiveness, Your protection, and Your love.\n\nI pray all of this in the Holy Name of Jesus, through the power of God the Father, and of the Son, and of the Holy Spirit.\n\nAmen.",
-        ),
+        T("This prayer is completed at the altar. Bring these intentions — especially the members of your family line you named among the Family Dead — to Mass, and offer them silently with the bread and wine at the Offertory. If you are able, request a Mass to be offered for the deceased of your family line; any parish can arrange this. Generational healing may need to be prayed more than once — return to this prayer, and to the Mass, as often as the Lord leads you."),
       ],
     },
   ],

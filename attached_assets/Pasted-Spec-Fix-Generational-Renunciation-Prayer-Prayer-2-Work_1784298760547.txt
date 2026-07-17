@@ -1,0 +1,244 @@
+Spec: Fix Generational Renunciation Prayer (Prayer 2) + Workbook Changes
+
+For implementation in the Lumen Fidei app. Two parts: (A) workbook schema changes, (B) the new Prayer 2 template with dynamic insertion + skip rules.
+
+Design goals (based on Healing the Whole Person / Christian Healing Ministries generational model):
+
+
+Add the representative stance (pray-er stands in for the whole family line, both sides, past and future).
+Add a Family Dead section — the biggest current gap (suicides, tragic deaths, miscarried/aborted children, the unmourned, those without Christian burial). The prayer must pray FOR these people, not only renounce effects.
+Order the prayer to the Mass — end with a hand-off directing the participant to offer these intentions at Mass (this supplies the priest, since none is present in-program).
+Compress: boilerplate once at open and close; each middle section = 3–5 sentences around the entries; skip empty sections. Target 10–15 min read-aloud vs. current ~40.
+De-dup with Prayer 1: everything personal stays in Prayer 1. Prayer 2 = ancestral/inherited/family only.
+
+
+
+PART A — Workbook Changes
+
+A1. NEW Section 25 — "The Family Dead" [Category: Generational Lines]
+
+Description (participant-facing):
+"Some members of a family line die in ways that leave a wound behind them — suicide, violence, accident, war. Others die and are never truly mourned: children lost to miscarriage or abortion who were never named, relatives who died alone in institutions, those who never received a Christian burial or any prayer at all. The Church has always prayed for the dead. In this section you identify the members of your family line — known or unknown, named or unnamed — who need to be mourned, entrusted to God's mercy, and prayed for, so that grief and affliction do not continue down the line unaddressed."
+
+Action Item:
+"Go through your family line on both sides, as far back as you know. List by name (or by relationship, if the name is unknown) family members who: took their own lives or attempted to; were murdered or died tragically (accidents, war); died untimely or young; died alone, unloved, or in institutions; were never given a Christian burial or never mourned; and every child lost to miscarriage or abortion in your family line — including your own. If a child was never named, you may give them a name now."
+
+Fields:
+
+
+name (text) — name or relationship ("My grandmother's brother")
+circumstance (single-select): Suicide or attempted suicide / Murdered or violent death / Tragic accident or war / Untimely or early death / Died alone, unloved, or in an institution / Never mourned or no Christian burial / Miscarried child / Aborted child / Other
+notes (textarea, optional)
+named_now (text, optional) — "If this child was never named, what name do you give them?"
+
+
+A2. Section 15 — restructure prompts (no schema change required, copy change)
+
+Update the action item to walk the HWP family-tree method: "Map both sides of your family, going back at least four generations, even where you don't know names. Patterns pass down vertically (grandfather → father) and sideways (aunt to aunt, cousin to cousin). If you were adopted, include what you know of your biological family AND your adoptive family — both lines affect you. Don't worry about what you don't know; name what you can and trust God with the rest."
+
+Optional enhancement: add a side select (Father's side / Mother's side / Both / Adoptive family) to each Section 15 entry so the prayer can group them.
+
+A3. Program tie-in (content change, not schema)
+
+
+Day 13 (confession day): instruct participants to bring Prayer 1 material (Sections 1, 4, 9, 11, 13) to Confession.
+Day 27 (Mass day): instruct participants to bring their Prayer 2 list — especially Section 25, the Family Dead — and offer it at Mass; suggest requesting a Mass intention for the deceased of their family line.
+
+
+
+PART B — New Prayer 2 Template
+
+Rendering rules:
+
+
+Blocks marked [SKIP IF EMPTY: Section N] are omitted entirely when the participant has no entries in that section.
+> blockquote lines are where entries are inserted, one line per entry, using the given sentence pattern.
+Opening, Comprehensive Binding, Blessing, and Mass Hand-off are ALWAYS included.
+
+
+
+Page 1 — Opening: Standing for My Family Line (always included)
+
+Father in heaven, I come before You in the Most Holy Name of Jesus Christ, Your Son. I confess that Jesus Christ is my Lord, my Savior, and my Deliverer.
+
+I stand before You as a representative of my family — both my father's line and my mother's line, the generations that came before me and the generations that will come after me. I do not stand here to judge my ancestors, but to intercede for them, to forgive them, and to renounce on behalf of this family every agreement with evil that was ever made in our line.
+
+I renounce Satan, all his works, and all his empty promises — for myself and on behalf of my family line. Everything I renounce in this prayer, I renounce completely: every oath, pact, ritual, curse, and claim attached to it, known or unknown, remembered or forgotten. Let this intention stand over every word I pray.
+
+Lord Jesus, cover me and my whole family line with Your Precious Blood.
+
+
+Generational Sins and Family Patterns — [SKIP IF EMPTY: Section 15]
+
+Father, I bring before You the sinful patterns that have run through our family line:
+
+
+[SECTION 15 ENTRIES — "In the name of Jesus Christ, and by the power of His Blood, I renounce ___ in our family line."]
+
+
+
+I willingly forgive my ancestors and all whose sins introduced these patterns, and I ask You to forgive them, bless them, and free this family from every consequence of their sins. Let these patterns end in our line now.
+
+
+Ancestors of Concern, Lodges, and Oath-Bound Groups — [SKIP IF EMPTY: Sections 16 & 17]
+
+Father, I bring before You the specific members of our line whose choices opened doors:
+
+
+[SECTION 16 ENTRIES — name + involvement]
+
+
+
+On behalf of my family, I renounce every lodge, secret society, and oath-bound group our line was joined to, especially:
+
+
+[SECTION 17: GROUP NAMES, TITLES, KNOWN OATHS — "I renounce ___ and every oath, degree, penalty, and curse connected to it."]
+
+
+
+I revoke every consent given by my ancestors to be bound, marked, or claimed by any spirit opposed to Jesus Christ. I forgive them, and I ask Your mercy on them.
+
+
+False Religion, Named Spirits, and Unholy Allegiances — [SKIP IF EMPTY: Sections 12 & 19]
+
+Father, I renounce every false worship and spiritual practice in my life and in our family line, especially:
+
+
+[SECTION 12 ENTRIES — "I renounce ___."]
+
+
+
+I renounce every false deity, familiar spirit, and being to whom devotion or allegiance was given, by me or by my ancestors:
+
+
+[SECTION 19 ENTRIES — "In the name of Jesus Christ, I renounce ___. I reject your worship, your benefits, and your curses. I will not serve you."]
+
+
+
+Jesus Christ alone is Lord. This family belongs to Him.
+
+
+Agreement Sins — [SKIP IF EMPTY: Section 18]
+
+Father, I repent of the sins I did not commit directly but agreed with, encouraged, or failed to oppose, especially:
+
+
+[SECTION 18 ENTRIES]
+
+
+
+I withdraw my consent from every one of them, and I ask forgiveness for every similar agreement made in our family line.
+
+
+Curses, Spells, and Blood Contracts — [SKIP IF EMPTY: Section 21]
+
+Father, in the Name of Jesus and by the power of His Precious Blood, I renounce and break:
+
+
+[SECTION 21 ENTRIES — "every ___" per entry, curses and blood contracts alike]
+
+
+
+I take the Sword of the Spirit, which is the Word of God, and I break every curse upon this family line, and I cancel the assignment of every familiar spirit that has operated in our family. Let the Blood of Jesus speak louder than every other blood, every other oath, and every other claim.
+
+
+Objects of Concern — [SKIP IF EMPTY: Section 20]
+
+Father, I renounce every object connected to evil, false worship, or occult practice in my home or inherited through our line, especially:
+
+
+[SECTION 20 ENTRIES]
+
+
+
+Sever every evil connection between these objects and my family, make them powerless, and show me what must be removed, destroyed, or brought to a priest.
+
+
+The Family Dead — [SKIP IF EMPTY: Section 25] (NEW)
+
+Father of mercy, I now bring before You the members of our family line who died in sorrow, in violence, or without prayer — the ones who were never fully mourned.
+
+
+[SECTION 25 ENTRIES — pattern by circumstance:
+Suicide/violent/tragic/untimely/alone: "I entrust N to Your mercy, Lord. I mourn N now. Forgive N's sins, heal what was broken, and receive N into Your peace."
+Miscarried/aborted child: "I entrust this child, [named_now || 'known to You by name'], to Your mercy. I acknowledge this child as part of our family. I mourn this child now. Receive this child into Your arms."]
+
+
+
+What was never grieved in our family, I grieve now. What was never prayed for, I pray for now. Eternal rest grant unto them, O Lord, and let perpetual light shine upon them. May their souls, and the souls of all the departed of our family line, through the mercy of God, rest in peace.
+
+I release every one of them into Your hands, and I ask that no grief, fear, or affliction connected to their deaths continue down our family line.
+
+
+Forgiving Those Who Harmed the Family — [SKIP IF EMPTY: Section 2 entries flagged "affected my whole family"]
+
+As an act of obedience, not emotion, I choose to forgive those whose sins wounded not only me but my whole family:
+
+
+[SECTION 2: FAMILY-FLAGGED NAMES — "I forgive ___ for ___."]
+
+
+
+I release judgment against them and place them into Your hands.
+
+
+Infirmities — [SKIP IF EMPTY: Section 22]
+
+Father, I bring before You the infirmities carried in my body and in our family line:
+
+
+[SECTION 22 ENTRIES]
+
+
+
+If any of these is connected to sin, curses, or the patterns of our line, break that connection now by the Precious Blood of Jesus. And according to Your holy will, I ask You to heal:
+
+
+[SECTION 22: ENTRIES FLAGGED FOR HEALING]
+
+
+
+
+Comprehensive Binding and Blocking (always included — full catalog appears here once)
+
+Father, in the Name of Jesus Christ and by the power of His Precious Blood, I now bring before You everything I have renounced in this prayer, together with everything hidden, forgotten, or unknown in our family line.
+
+I ask You to bind and break every curse, pact, spell, hex, seal, oath, vow, ritual bond, blood covenant, malefice, assignment, ancestral curse, and every other demonic bondage operating in our family line — and to cast out every evil spirit that has claimed access to this family through any of it.
+
+I ask You to block every one of these evils from passing to my children, my descendants, and all future generations, especially:
+
+
+[SECTION 23 ENTRIES — "Let ___ end with me."]
+
+
+
+Let the Precious Blood of Jesus stand between my family and every evil inheritance. Let these evils end now, in this generation, through Your infinite mercy and the power of the Holy Cross.
+
+
+Blessing over the Line (always included — the prayer ends on blessing)
+
+Father, I now ask for blessings where there have been curses, and healing where there has been sickness — physical, psychological, or spiritual — throughout our whole family line.
+
+Bless my ancestors, living and dead, according to Your mercy. Bless my children and descendants; let them inherit faith where there was unbelief, peace where there was violence, fidelity where there was abandonment, and life where there was death.
+
+Holy Spirit, fill every place in our family line that has been emptied of evil. Blessed Virgin Mary, spread your mantle over this family. Saint Michael the Archangel, defend us. Holy angels of God, surround our homes and our children.
+
+Lord Jesus Christ, reign in this family — in our past, our present, and our future. Thank You for Your mercy and Your kindness toward me and all my family. Amen.
+
+
+Bringing This to the Mass (always included — closing instruction, not prayer text)
+
+This prayer is completed at the altar. Bring these intentions — especially the members of your family line you named among the Family Dead — to Mass, and offer them silently with the bread and wine at the Offertory. If you are able, request a Mass to be offered for the deceased of your family line; any parish can arrange this. Generational healing may need to be prayed more than once — return to this prayer, and to the Mass, as often as the Lord leads you.
+
+
+PART C — Implementation checklist for Replit
+
+
+Add Section 25 ("The Family Dead") to the workbook schema per A1, with the four fields including the circumstance select and conditional named_now field (show only when circumstance = Miscarried child / Aborted child).
+Update Section 15 action-item copy per A2; optionally add side select.
+Replace the Prayer 2 template with Part B. Implement [SKIP IF EMPTY] at the block level — a block with zero entries must not render at all (no headings, no generic fallback text).
+Entry insertion: one rendered line per entry using the sentence pattern given in each blockquote; entries render inside the flowing prayer text, not as a detached list, but each on its own line for read-aloud pacing.
+Section 25 rendering branches on circumstance (two sentence patterns given above).
+Section 2 entries only appear in Prayer 2 when their "affected my whole family" flag = yes (they appear in Prayer 1 regardless).
+Remove from Prayer 2 anything now owned by Prayer 1 (personal sins, personal soul ties, personal sexual sin, personal vows, word curses) — Prayer 2 pulls only Sections 2 (family-flagged), 12, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25.
+Repagination: with typical entries this should render as roughly 8–11 pages instead of 17; page breaks at the --- markers.
