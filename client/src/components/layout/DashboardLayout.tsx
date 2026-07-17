@@ -128,6 +128,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <NavLink href="/mentor" active={location === "/mentor" || location.startsWith("/mentor/mentee")}>Dashboard</NavLink>
                 <NavLink href="/messages" active={location === "/messages"} badge={unreadCount}>Messages</NavLink>
                 <NavLink href="/mentor/program" active={location === "/mentor/program"}>Program</NavLink>
+                <NavLink href="/mentor/workbook-guide" active={location === "/mentor/workbook-guide"}>Workbook</NavLink>
               </>
             ) : (
               <>
@@ -315,6 +316,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <DrawerLink href="/mentor" active={location === "/mentor" || location.startsWith("/mentor/mentee")} onClick={closeDrawer}>Dashboard</DrawerLink>
               <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer} badge={unreadCount}>Messages</DrawerLink>
               <DrawerLink href="/mentor/program" active={location === "/mentor/program"} onClick={closeDrawer}>Program</DrawerLink>
+              <DrawerLink href="/mentor/workbook-guide" active={location === "/mentor/workbook-guide"} onClick={closeDrawer}>Workbook</DrawerLink>
             </>
           ) : (
             <>
