@@ -347,6 +347,10 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
     },
   });
 
+  const handleAssignRole = (role: string) => {
+    updateUser({ id: user.id, role: role as any });
+  };
+
   const handleAssignMentor = (mentorId: string) => {
      updateUser({ id: user.id, mentorId: Number(mentorId) });
   };
@@ -382,7 +386,20 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
         <div className="text-xs text-muted-foreground">{user.email}</div>
       </TableCell>
       <TableCell>
-        <span className="capitalize">{user.role}</span>
+        {user.role === 'admin' ? (
+          <span className="capitalize text-muted-foreground">{user.role}</span>
+        ) : (
+          <Select value={user.role} onValueChange={handleAssignRole}>
+            <SelectTrigger className="w-[120px] h-8" data-testid={`select-role-${user.id}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="participant">Participant</SelectItem>
+              <SelectItem value="mentor">Mentor</SelectItem>
+              <SelectItem value="superuser">Superuser</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </TableCell>
       <TableCell>
         {user.role === 'participant' ? (
