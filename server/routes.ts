@@ -116,6 +116,18 @@ function computeCurrentProgramDay(cohortStartDateStr: string | null): number {
   return calendarDaysToProgramDay(calendarDaysElapsed);
 }
 
+/**
+ * Returns the effective current program day for a user.
+ * If the user has a manualDayOverride set, that value is used instead of the
+ * global cohort calendar — allowing holdover participants from a previous
+ * cohort to finish without being locked out by the new cohort's date.
+ */
+function effectiveCurrentDay(user: Express.User | undefined, globalCurrentDay: number): number {
+  const override = (user as any)?.manualDayOverride;
+  if (typeof override === 'number' && override > 0) return override;
+  return globalCurrentDay;
+}
+
 // Rate limiters for abuse protection
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -532,7 +544,8 @@ export async function registerRoutes(
       // Days 1-30 require prelims done AND cohort started.
       if (day !== 0) {
         const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-        const currentDay = computeCurrentProgramDay(cohortStartDateStr);
+        const globalDay = computeCurrentProgramDay(cohortStartDateStr);
+        const currentDay = effectiveCurrentDay(req.user, globalDay);
         if (currentDay === 0 || day > currentDay) {
           return res.status(403).json({ message: "DAY_LOCKED", code: "DAY_LOCKED" });
         }
@@ -596,7 +609,8 @@ export async function registerRoutes(
       // Days 1-30 require prelims done AND cohort started.
       if (day !== 0) {
         const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-        const currentDay = computeCurrentProgramDay(cohortStartDateStr);
+        const globalDay = computeCurrentProgramDay(cohortStartDateStr);
+        const currentDay = effectiveCurrentDay(req.user, globalDay);
         if (currentDay === 0 || day > currentDay) {
           return res.status(403).json({ message: "DAY_LOCKED", code: "DAY_LOCKED" });
         }
@@ -1281,7 +1295,8 @@ export async function registerRoutes(
     
     if (req.user!.role === 'participant') {
       const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      const currentDay = computeCurrentProgramDay(cohortStartDateStr);
+      const globalDay = computeCurrentProgramDay(cohortStartDateStr);
+      const currentDay = effectiveCurrentDay(req.user, globalDay);
       // Allow Day 0 even before cohort starts (it's the pre-program intro module).
       // Days 1-30 are still blocked when currentDay === 0 because dayNumber > 0.
       if (input.dayNumber > currentDay) {
@@ -1490,13 +1505,14 @@ export async function registerRoutes(
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const startDateStr = await storage.getCohortSetting("cohort_start_date");
-    const currentDay = computeCurrentProgramDay(startDateStr);
+    const globalDay = computeCurrentProgramDay(startDateStr);
     
-    // Admins and superusers always see all 30 days unlocked
+    // Admins and superusers always see all 30 days unlocked;
+    // participants with a manualDayOverride use that value instead of the cohort calendar.
     const role = req.user!.role;
-    const effectiveCurrentDay = (role === 'admin' || role === 'superuser') ? 30 : currentDay;
+    const resolvedDay = (role === 'admin' || role === 'superuser') ? 30 : effectiveCurrentDay(req.user, globalDay);
     
-    res.json({ startDate: startDateStr, currentDay: effectiveCurrentDay });
+    res.json({ startDate: startDateStr, currentDay: resolvedDay });
   });
 
   // === Cohort Settings (Admin) ===

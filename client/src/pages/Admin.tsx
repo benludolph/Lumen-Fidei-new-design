@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -351,6 +351,11 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
     updateUser({ id: user.id, role: role as any });
   };
 
+  const handleToggleDayOverride = () => {
+    const hasOverride = user.manualDayOverride != null;
+    updateUser({ id: user.id, manualDayOverride: hasOverride ? null : 30 } as any);
+  };
+
   const handleAssignMentor = (mentorId: string) => {
      updateUser({ id: user.id, mentorId: Number(mentorId) });
   };
@@ -521,6 +526,22 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
               </div>
             </DialogContent>
           </Dialog>
+
+          {user.role === 'participant' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title={user.manualDayOverride != null ? "Remove day override (use cohort calendar)" : "Unlock all 30 days for this participant"}
+              data-testid={`button-day-override-${user.id}`}
+              onClick={handleToggleDayOverride}
+            >
+              {user.manualDayOverride != null ? (
+                <CalendarCheck className="w-4 h-4 text-blue-500" />
+              ) : (
+                <CalendarClock className="w-4 h-4 text-muted-foreground" />
+              )}
+            </Button>
+          )}
 
           {user.role !== 'admin' && (
             <Button
