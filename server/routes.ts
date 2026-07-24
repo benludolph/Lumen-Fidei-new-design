@@ -3521,13 +3521,29 @@ export async function registerRoutes(
     if (user.track !== 'A') {
       return res.json({ unlockedCategories: [] });
     }
-    const completions = await storage.getUserPrayerCompletions(user.id);
+    // Primary signal: morning prayer completion on the trigger day.
+    // Fallback signal: user already has workbook entries or attestations in that
+    // category's sections (data survives even if prayer completion records are lost).
+    const [completions, workbookSummary] = await Promise.all([
+      storage.getUserPrayerCompletions(user.id),
+      storage.getWorkbookSummary(user.id),
+    ]);
     const completedDays = new Set(
       completions.filter(c => c.period === 'morning').map(c => c.dayNumber)
     );
+    const sectionsWithData = new Set(
+      Object.entries(workbookSummary)
+        .filter(([, v]) => v.count > 0 || v.attested)
+        .map(([sId]) => Number(sId))
+    );
+
     const unlockedCategories: number[] = [];
     for (const [dayStr, catId] of Object.entries(WORKBOOK_TRIGGER_DAY_CATEGORY)) {
-      if (completedDays.has(Number(dayStr))) {
+      const hasPrayer = completedDays.has(Number(dayStr));
+      const hasWorkbookData = (WORKBOOK_CATEGORY_SECTIONS[catId] ?? []).some(
+        (sId: number) => sectionsWithData.has(sId)
+      );
+      if (hasPrayer || hasWorkbookData) {
         unlockedCategories.push(catId);
       }
     }
