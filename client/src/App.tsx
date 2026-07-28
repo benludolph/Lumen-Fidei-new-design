@@ -34,6 +34,7 @@ import SmsPrivacy from "@/pages/SmsPrivacy";
 import SmsOptin from "@/pages/SmsOptin";
 import MentorProgram from "@/pages/MentorProgram";
 import MentorWorkbookGuide from "@/pages/MentorWorkbookGuide";
+import Sources from "@/pages/Sources";
 
 // Standard Protected Route Wrapper — role-based
 function ProtectedRoute({ 
@@ -200,6 +201,10 @@ function Router() {
 
       <Route path="/program-overview">
         <ProtectedRoute component={ProgramOverview} allowedRoles={['participant', 'superuser', 'mentor']} />
+      </Route>
+
+      <Route path="/sources">
+        <ProtectedRoute component={Sources} />
       </Route>
 
       <Route path="/sms-privacy" component={SmsPrivacy} />

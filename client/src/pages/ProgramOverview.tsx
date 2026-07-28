@@ -373,6 +373,25 @@ export default function ProgramOverview() {
               );
             })}
           </div>
+
+          {/* Sources footnote */}
+          <div style={{ textAlign: "center", paddingTop: "32px" }}>
+            <Link href="/sources">
+              <span
+                className="type-caption-sm"
+                style={{
+                  color: "rgba(255,255,255,0.25)",
+                  cursor: "pointer",
+                  letterSpacing: "0.04em",
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "rgba(255,255,255,0.5)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLSpanElement).style.color = "rgba(255,255,255,0.25)"; }}
+              >
+                Sources &amp; Acknowledgments
+              </span>
+            </Link>
+          </div>
         </div>
 
         {/* Sticky bottom nav */}
