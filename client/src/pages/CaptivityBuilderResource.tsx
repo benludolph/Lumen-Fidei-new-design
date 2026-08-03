@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "wouter";
 import { ChevronRight, Play, X, Clock, Copy, Check, Trash2, Maximize2, Plus } from "lucide-react";
 import { useUserAnswers, useCreateAnswer } from "@/hooks/use-answers";
+import { useAuth } from "@/hooks/use-auth";
 import { CaptivityBuilderSlide } from "@/components/lesson/CaptivityBuilderSlide";
 import { SPIRITS, type SavedState } from "@/components/lesson/captivity-builder-data";
 import heroImg from "@assets/bearcla_intrusive_thoughts_--ar_169_--profile_qin2lfz_--v_8.1__1778103896965.png";
@@ -268,7 +269,74 @@ function HowToVideoWidget({ onClose }: { onClose: () => void }) {
   );
 }
 
+function MentorNotAvailable() {
+  return (
+    <DashboardLayout>
+      <Breadcrumb />
+      <div
+        style={{
+          backgroundColor: "var(--surface-ground)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          minHeight: "685px",
+          justifyContent: "center",
+          padding: "80px 20px",
+        }}
+      >
+        <div
+          data-testid="mentor-not-available"
+          style={{
+            textAlign: "center",
+            maxWidth: "420px",
+          }}
+        >
+          <div
+            style={{
+              width: "52px",
+              height: "52px",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.04)",
+              border: "0.5px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+            }}
+          >
+            <Plus style={{ width: "20px", height: "20px", color: "rgba(255,255,255,0.3)", transform: "rotate(45deg)" }} />
+          </div>
+          <p
+            className="font-serif"
+            style={{
+              fontSize: "clamp(1.2rem, 2vw + 0.5rem, 1.5rem)",
+              color: "rgba(255,255,255,0.5)",
+              lineHeight: 1.45,
+              margin: "0 0 12px",
+              fontWeight: 500,
+            }}
+          >
+            This is a participant tool
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.9rem",
+              color: "rgba(255,255,255,0.25)",
+              lineHeight: 1.6,
+              margin: 0,
+            }}
+          >
+            Breaking Lies is designed for participants working through the program. As a mentor, your dashboard is the best place to support your participants.
+          </p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
 export default function CaptivityBuilderResource() {
+  const { user } = useAuth();
   const { data: answers = [], isLoading } = useUserAnswers();
   const { mutate: savePrayers } = useCreateAnswer();
   const [prayers, setPrayers] = useState<PrayerItem[]>([]);
@@ -331,6 +399,10 @@ export default function CaptivityBuilderResource() {
       setTimeout(() => setCopiedId(null), 2000);
     } catch {}
   };
+
+  if (user?.role === "mentor") {
+    return <MentorNotAvailable />;
+  }
 
   // When there are no prayers yet and answers are loaded → show form directly
   const hasPrayers = prayers.length > 0;

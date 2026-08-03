@@ -6,6 +6,7 @@ import WorkbookShell from "@/components/workbook/WorkbookShell";
 import SectionView from "@/components/workbook/SectionView";
 import { getSectionById } from "@/components/workbook/section-definitions";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 
 function Breadcrumb({ sectionName }: { sectionName?: string }) {
   return (
@@ -127,7 +128,64 @@ function ExemptNotice() {
   );
 }
 
+function MentorNotAvailable() {
+  return (
+    <div
+      data-testid="mentor-not-available"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "80px 20px",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.04)",
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <BookOpen style={{ width: "20px", height: "20px", color: "rgba(255,255,255,0.3)" }} />
+      </div>
+      <p
+        className="font-serif"
+        style={{
+          fontSize: "clamp(1.2rem, 2vw + 0.5rem, 1.6rem)",
+          color: "rgba(255,255,255,0.5)",
+          lineHeight: 1.45,
+          margin: "0 0 12px",
+          fontWeight: 500,
+        }}
+      >
+        This is a participant tool
+      </p>
+      <p
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.9rem",
+          color: "rgba(255,255,255,0.25)",
+          maxWidth: "380px",
+          lineHeight: 1.6,
+          margin: 0,
+        }}
+      >
+        The Deliverance Workbook is designed for participants in the program. As a mentor, your dashboard is the best place to support your participants.
+      </p>
+    </div>
+  );
+}
+
 export default function FreedomWorkbookResource() {
+  const { user } = useAuth();
   const params = useParams<{ sectionId?: string }>();
   const sectionId = params.sectionId ? Number(params.sectionId) : undefined;
   const section = sectionId ? getSectionById(sectionId) : undefined;
@@ -149,7 +207,9 @@ export default function FreedomWorkbookResource() {
           minHeight: "685px",
         }}
       >
-        {isExempt ? (
+        {user?.role === "mentor" ? (
+          <MentorNotAvailable />
+        ) : isExempt ? (
           <ExemptNotice />
         ) : sectionId ? (
           <SectionView sectionId={sectionId} />

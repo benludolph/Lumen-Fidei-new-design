@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Link } from "wouter";
 import { ChevronRight } from "lucide-react";
 import { ConfessionFinderSlide } from "@/components/lesson/ConfessionFinderSlide";
+import { useAuth } from "@/hooks/use-auth";
 import heroImg from "@assets/ConfessionWalking_1778179278152.webp";
 
 const SLIDE_CONTENT = JSON.stringify({
@@ -55,8 +56,79 @@ function Breadcrumb() {
   );
 }
 
+function MentorNotAvailable() {
+  return (
+    <DashboardLayout>
+      <Breadcrumb />
+      <div
+        style={{
+          backgroundColor: "var(--surface-ground)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          minHeight: "685px",
+          justifyContent: "center",
+          padding: "80px 20px",
+        }}
+      >
+        <div
+          data-testid="mentor-not-available"
+          style={{
+            textAlign: "center",
+            maxWidth: "420px",
+          }}
+        >
+          <div
+            style={{
+              width: "52px",
+              height: "52px",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.04)",
+              border: "0.5px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+            }}
+          >
+            <ChevronRight style={{ width: "20px", height: "20px", color: "rgba(255,255,255,0.3)" }} />
+          </div>
+          <p
+            className="font-serif"
+            style={{
+              fontSize: "clamp(1.2rem, 2vw + 0.5rem, 1.5rem)",
+              color: "rgba(255,255,255,0.5)",
+              lineHeight: 1.45,
+              margin: "0 0 12px",
+              fontWeight: 500,
+            }}
+          >
+            This is a participant tool
+          </p>
+          <p
+            style={{
+              fontFamily: "'Afacad', sans-serif",
+              fontSize: "0.9rem",
+              color: "rgba(255,255,255,0.25)",
+              lineHeight: 1.6,
+              margin: 0,
+            }}
+          >
+            Confession Finder is designed for participants in the program. As a mentor, your dashboard is the best place to support your participants.
+          </p>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
 export default function ConfessionFinderResource() {
+  const { user } = useAuth();
   const [formKey, setFormKey] = useState(0);
+
+  if (user?.role === "mentor") {
+    return <MentorNotAvailable />;
+  }
 
   return (
     <DashboardLayout>

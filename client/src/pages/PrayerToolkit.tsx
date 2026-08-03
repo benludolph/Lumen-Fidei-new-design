@@ -3,6 +3,7 @@ import { Copy, Check, BookMarked } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useUserAnswers } from "@/hooks/use-answers";
+import { useAuth } from "@/hooks/use-auth";
 
 interface CaptivityData {
   thought: string;
@@ -169,8 +170,48 @@ function PrayerCard({
   );
 }
 
+function MentorNotAvailable({ title }: { title: string }) {
+  return (
+    <DashboardLayout>
+      <PageContainer variant="narrow">
+        <div style={{ paddingTop: "48px", paddingBottom: "80px" }}>
+          <div style={{ marginBottom: "40px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+              <BookMarked size={20} style={{ color: "var(--white-50)", flexShrink: 0 }} />
+              <h1 className="type-caption-xl" style={{ color: "white", margin: 0 }}>{title}</h1>
+            </div>
+          </div>
+          <div
+            data-testid="mentor-not-available"
+            style={{
+              textAlign: "center",
+              padding: "64px 24px",
+              background: "var(--white-4)",
+              border: "1px solid var(--white-6)",
+              borderRadius: "12px",
+            }}
+          >
+            <BookMarked size={36} style={{ color: "var(--white-20)", margin: "0 auto 16px" }} />
+            <p className="type-caption-lg" style={{ color: "var(--white-50)", margin: "0 0 8px" }}>
+              This is a participant tool
+            </p>
+            <p className="type-body-md" style={{ color: "var(--white-30)", margin: 0 }}>
+              This page is designed for participants in the program. As a mentor, your dashboard is the best place to manage your participants.
+            </p>
+          </div>
+        </div>
+      </PageContainer>
+    </DashboardLayout>
+  );
+}
+
 export default function PrayerToolkit() {
+  const { user } = useAuth();
   const { data: answers = [], isLoading } = useUserAnswers();
+
+  if (user?.role === "mentor") {
+    return <MentorNotAvailable title="Prayer Toolkit" />;
+  }
 
   const prayers = [...answers]
     .map((a) => ({
