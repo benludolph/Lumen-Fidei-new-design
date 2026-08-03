@@ -57,7 +57,8 @@ function ProtectedRoute({
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Redirect to="/dashboard" />;
+    const fallback = user.role === 'mentor' ? '/mentor' : '/dashboard';
+    return <Redirect to={fallback} />;
   }
 
   // Healing Track (C) participants have no access to messages, collections, or legacy journal
@@ -90,7 +91,8 @@ function HealingProtectedRoute({ component: Component }: { component: React.Comp
   }
 
   if (user.role !== 'admin' && user.track !== 'C') {
-    return <Redirect to="/dashboard" />;
+    const fallback = user.role === 'mentor' ? '/mentor' : '/dashboard';
+    return <Redirect to={fallback} />;
   }
 
   return <Component />;
