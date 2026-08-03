@@ -259,6 +259,12 @@ export default function Dashboard() {
     enabled: !!isTrackA,
   });
 
+  const { data: workbookUnlockStatus } = useQuery<{ unlockedCategories: number[]; exempt?: boolean }>({
+    queryKey: ["/api/workbook/unlock-status"],
+    enabled: !!isTrackA,
+  });
+  const isWorkbookExempt = workbookUnlockStatus?.exempt === true;
+
   const { data: openWorkbookModule } = useQuery<LessonWorkbookModuleWithStatus>({
     queryKey: ["/api/workbook-modules", selectedWorkbookId],
     enabled: viewMode === "workbook" && selectedWorkbookId > 0,
@@ -429,7 +435,7 @@ export default function Dashboard() {
             allPrelimsComplete={allPrelimsComplete}
             onPrelimSelect={handlePrelimSelect}
             onWorkbookSelect={handleWorkbookSelect}
-            week4Ready={week4Ready?.ready}
+            week4Ready={isWorkbookExempt ? true : week4Ready?.ready}
           />
         </div>
         {showWeekCinematic && (

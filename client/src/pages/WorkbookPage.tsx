@@ -195,6 +195,61 @@ function CategoryCard({
   );
 }
 
+function ExemptState() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "80px 20px",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.04)",
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <BookOpen style={{ width: "20px", height: "20px", color: "rgba(255,255,255,0.3)" }} />
+      </div>
+      <p
+        className="font-serif"
+        style={{
+          fontSize: "clamp(1.2rem, 2vw + 0.5rem, 1.6rem)",
+          color: "rgba(255,255,255,0.5)",
+          lineHeight: 1.45,
+          margin: "0 0 12px",
+          fontWeight: 500,
+        }}
+      >
+        An alternative path has been set
+      </p>
+      <p
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.9rem",
+          color: "rgba(255,255,255,0.25)",
+          maxWidth: "380px",
+          lineHeight: 1.6,
+          margin: 0,
+        }}
+      >
+        Your guide has arranged a different approach for this step of the program. Continue through your daily content as normal.
+      </p>
+    </div>
+  );
+}
+
 function LockedState() {
   return (
     <div
@@ -269,14 +324,15 @@ export default function WorkbookPage() {
     queryKey: ["/api/workbook/summary"],
   });
 
-  const { data: unlockStatus, isLoading: unlockLoading } = useQuery<{ unlockedCategories: number[] }>({
+  const { data: unlockStatus, isLoading: unlockLoading } = useQuery<{ unlockedCategories: number[]; exempt?: boolean }>({
     queryKey: ["/api/workbook/unlock-status"],
   });
 
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
   const unlockedCategories = unlockStatus?.unlockedCategories ?? [];
-  const isLocked = unlockedCategories.length === 0 && !unlockLoading;
+  const isExempt = unlockStatus?.exempt === true;
+  const isLocked = !isExempt && unlockedCategories.length === 0 && !unlockLoading;
   const isLoading = cohortLoading || summaryLoading || unlockLoading;
 
   const totalSectionsWithContent = Object.values(summary).filter(
@@ -380,6 +436,8 @@ export default function WorkbookPage() {
                   }}
                 />
               </div>
+            ) : isExempt ? (
+              <ExemptState />
             ) : isLocked ? (
               <LockedState />
             ) : (

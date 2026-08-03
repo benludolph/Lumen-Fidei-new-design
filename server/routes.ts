@@ -3371,6 +3371,10 @@ export async function registerRoutes(
 
   // GET /api/workbook-modules — all modules with completion + unlock status for the current user
   app.get('/api/workbook-modules', requireAuth, async (req, res) => {
+    // Exempt participants skip the lesson workbook entirely — return an empty list
+    if ((req.user! as any).workbookExempt) {
+      return res.json([]);
+    }
     const isAdmin = req.user!.role === 'admin' || req.user!.role === 'superuser';
     const [modules, completions] = await Promise.all([
       storage.getAllLessonWorkbookModules(),
@@ -3400,6 +3404,9 @@ export async function registerRoutes(
 
   // GET /api/workbook-modules/:id — full module with slides (gated by unlock)
   app.get('/api/workbook-modules/:id', requireAuth, async (req, res) => {
+    if ((req.user! as any).workbookExempt) {
+      return res.status(403).json({ error: 'Workbook is not required for your program path' });
+    }
     const id = Number(req.params.id);
     if (isNaN(id)) return res.sendStatus(400);
     const mod = await storage.getLessonWorkbookModule(id);
@@ -3427,6 +3434,9 @@ export async function registerRoutes(
 
   // POST /api/workbook-completions/:id — mark a workbook module complete
   app.post('/api/workbook-completions/:id', requireAuth, writeLimiter, async (req, res) => {
+    if ((req.user! as any).workbookExempt) {
+      return res.status(403).json({ error: 'Workbook is not required for your program path' });
+    }
     const id = Number(req.params.id);
     if (isNaN(id)) return res.sendStatus(400);
     const mod = await storage.getLessonWorkbookModule(id);
@@ -3490,6 +3500,7 @@ export async function registerRoutes(
 
   // GET /api/workbook/summary — aggregated section counts + attestations
   app.get("/api/workbook/summary", requireAuth, async (req, res) => {
+    if ((req.user! as any).workbookExempt) return res.json({});
     const summary = await storage.getWorkbookSummary(req.user!.id);
     res.json(summary);
   });
@@ -3517,6 +3528,9 @@ export async function registerRoutes(
     const user = req.user!;
     if (user.role === 'admin' || user.role === 'superuser') {
       return res.json({ unlockedCategories: [1, 2, 3, 4, 5] });
+    }
+    if ((user as any).workbookExempt) {
+      return res.json({ unlockedCategories: [], exempt: true });
     }
     if (user.track !== 'A') {
       return res.json({ unlockedCategories: [] });
@@ -3556,6 +3570,9 @@ export async function registerRoutes(
     if (user.role === 'admin' || user.role === 'superuser') {
       return res.json({ ready: true });
     }
+    if ((user as any).workbookExempt) {
+      return res.json({ ready: true });
+    }
     if (user.track !== 'A') {
       return res.json({ ready: false });
     }
@@ -3571,6 +3588,7 @@ export async function registerRoutes(
 
   // GET /api/workbook/:sectionId — entries for one section
   app.get("/api/workbook/:sectionId", requireAuth, async (req, res) => {
+    if ((req.user! as any).workbookExempt) return res.json([]);
     const sectionId = Number(req.params.sectionId);
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     const entries = await storage.getWorkbookEntries(req.user!.id, sectionId);
@@ -3579,6 +3597,9 @@ export async function registerRoutes(
 
   // POST /api/workbook/:sectionId — create or update an entry
   app.post("/api/workbook/:sectionId", requireAuth, writeLimiter, async (req, res) => {
+    if ((req.user! as any).workbookExempt) {
+      return res.status(403).json({ error: 'Workbook is not required for your program path' });
+    }
     const sectionId = Number(req.params.sectionId);
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
 
@@ -3611,6 +3632,9 @@ export async function registerRoutes(
 
   // DELETE /api/workbook/entry/:id — delete an entry (verifies ownership)
   app.delete("/api/workbook/entry/:id", requireAuth, async (req, res) => {
+    if ((req.user! as any).workbookExempt) {
+      return res.status(403).json({ error: 'Workbook is not required for your program path' });
+    }
     const id = Number(req.params.id);
     if (isNaN(id)) return res.sendStatus(400);
     await storage.deleteWorkbookEntry(id, req.user!.id);
@@ -3619,6 +3643,9 @@ export async function registerRoutes(
 
   // POST /api/workbook/attest/:sectionId — set attestation
   app.post("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
+    if ((req.user! as any).workbookExempt) {
+      return res.status(403).json({ error: 'Workbook is not required for your program path' });
+    }
     const sectionId = Number(req.params.sectionId);
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     await storage.setWorkbookAttestation(req.user!.id, sectionId);
@@ -3627,6 +3654,9 @@ export async function registerRoutes(
 
   // DELETE /api/workbook/attest/:sectionId — clear attestation
   app.delete("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
+    if ((req.user! as any).workbookExempt) {
+      return res.status(403).json({ error: 'Workbook is not required for your program path' });
+    }
     const sectionId = Number(req.params.sectionId);
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     await storage.clearWorkbookAttestation(req.user!.id, sectionId);

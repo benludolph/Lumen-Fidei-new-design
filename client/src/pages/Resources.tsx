@@ -504,6 +504,12 @@ export default function Resources() {
     queryKey: ["/api/practice-resources"],
   });
 
+  const { data: workbookUnlockStatus } = useQuery<{ unlockedCategories: number[]; exempt?: boolean }>({
+    queryKey: ["/api/workbook/unlock-status"],
+    enabled: user?.track === 'A',
+  });
+  const isWorkbookExempt = workbookUnlockStatus?.exempt === true;
+
   const prayerCards: (PracticeResource | null)[] = PRAYER_NAMES.map((match) =>
     resources?.find((r) => matchesPrayer(r.name, match)) ?? null
   );
@@ -566,7 +572,7 @@ export default function Resources() {
               <div className="resource-grid-equal gap-2 w-full">
                 <ConfessionFinderCard />
                 <AdorationFinderCard />
-                <FreedomWorkbookCard />
+                {!isWorkbookExempt && <FreedomWorkbookCard />}
               </div>
             </div>
 

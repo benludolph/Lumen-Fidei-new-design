@@ -1,10 +1,11 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Link, useParams } from "wouter";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, BookOpen } from "lucide-react";
 import WorkbookShell from "@/components/workbook/WorkbookShell";
 import SectionView from "@/components/workbook/SectionView";
 import { getSectionById } from "@/components/workbook/section-definitions";
+import { useQuery } from "@tanstack/react-query";
 
 function Breadcrumb({ sectionName }: { sectionName?: string }) {
   return (
@@ -71,10 +72,70 @@ function Breadcrumb({ sectionName }: { sectionName?: string }) {
   );
 }
 
+function ExemptNotice() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "80px 20px",
+        textAlign: "center",
+      }}
+    >
+      <div
+        style={{
+          width: "52px",
+          height: "52px",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.04)",
+          border: "0.5px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <BookOpen style={{ width: "20px", height: "20px", color: "rgba(255,255,255,0.3)" }} />
+      </div>
+      <p
+        className="font-serif"
+        style={{
+          fontSize: "clamp(1.2rem, 2vw + 0.5rem, 1.6rem)",
+          color: "rgba(255,255,255,0.5)",
+          lineHeight: 1.45,
+          margin: "0 0 12px",
+          fontWeight: 500,
+        }}
+      >
+        An alternative path has been set
+      </p>
+      <p
+        style={{
+          fontFamily: "'Afacad', sans-serif",
+          fontSize: "0.9rem",
+          color: "rgba(255,255,255,0.25)",
+          maxWidth: "380px",
+          lineHeight: 1.6,
+          margin: 0,
+        }}
+      >
+        Your guide has arranged a different approach for this step. Continue through your daily content as normal.
+      </p>
+    </div>
+  );
+}
+
 export default function FreedomWorkbookResource() {
   const params = useParams<{ sectionId?: string }>();
   const sectionId = params.sectionId ? Number(params.sectionId) : undefined;
   const section = sectionId ? getSectionById(sectionId) : undefined;
+
+  const { data: unlockStatus } = useQuery<{ unlockedCategories: number[]; exempt?: boolean }>({
+    queryKey: ["/api/workbook/unlock-status"],
+  });
+  const isExempt = unlockStatus?.exempt === true;
 
   return (
     <DashboardLayout>
@@ -88,7 +149,9 @@ export default function FreedomWorkbookResource() {
           minHeight: "685px",
         }}
       >
-        {sectionId ? (
+        {isExempt ? (
+          <ExemptNotice />
+        ) : sectionId ? (
           <SectionView sectionId={sectionId} />
         ) : (
           <WorkbookShell />

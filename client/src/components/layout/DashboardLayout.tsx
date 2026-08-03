@@ -428,12 +428,13 @@ function WorkbookFAB() {
     queryKey: ["/api/workbook/summary"],
   });
 
-  const { data: unlockStatus } = useQuery<{ unlockedCategories: number[] }>({
+  const { data: unlockStatus } = useQuery<{ unlockedCategories: number[]; exempt?: boolean }>({
     queryKey: ["/api/workbook/unlock-status"],
   });
 
   const currentDay = cohortData?.currentDay ?? 0;
   const unlockedCategories = unlockStatus?.unlockedCategories ?? [];
+  const isExempt = unlockStatus?.exempt === true;
   const isLocked = unlockedCategories.length === 0 && currentDay < 8;
 
   const sectionsWithContent = Object.values(summary).filter(
@@ -464,6 +465,9 @@ function WorkbookFAB() {
 
   // Hide entirely before Week 2 starts (Day 7 is the first workbook trigger)
   if (currentDay < 7) return null;
+
+  // Hide entirely for exempt participants — no workbook call-to-action
+  if (isExempt) return null;
 
   function handleClick() {
     setSpotlightSlug(null);

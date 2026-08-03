@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock, BookX } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -356,6 +356,10 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
     updateUser({ id: user.id, manualDayOverride: hasOverride ? null : 30 } as any);
   };
 
+  const handleToggleWorkbookExempt = () => {
+    updateUser({ id: user.id, workbookExempt: !user.workbookExempt } as any);
+  };
+
   const handleAssignMentor = (mentorId: string) => {
      updateUser({ id: user.id, mentorId: Number(mentorId) });
   };
@@ -540,6 +544,18 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
               ) : (
                 <CalendarClock className="w-4 h-4 text-muted-foreground" />
               )}
+            </Button>
+          )}
+
+          {user.role === 'participant' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title={user.workbookExempt ? "Remove workbook exemption (restore access)" : "Exempt from deliverance workbook (scrupulosity)"}
+              data-testid={`button-workbook-exempt-${user.id}`}
+              onClick={handleToggleWorkbookExempt}
+            >
+              <BookX className={`w-4 h-4 ${user.workbookExempt ? "text-amber-500" : "text-muted-foreground"}`} />
             </Button>
           )}
 
