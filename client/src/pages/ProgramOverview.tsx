@@ -88,11 +88,13 @@ export default function ProgramOverview() {
   });
   const [, navigate] = useLocation();
 
+  const dashboardHref = user?.role === "mentor" ? "/mentor" : "/dashboard";
+
   useEffect(() => {
     if (user && user.track !== "A" && user.role !== "superuser" && user.role !== "admin") {
-      navigate("/dashboard");
+      navigate(dashboardHref);
     }
-  }, [user, navigate]);
+  }, [user, navigate, dashboardHref]);
 
   const { data: prayerCompletions } = useUserPrayerCompletions();
   const { data: cohortData } = useQuery<{ startDate: string; currentDay: number }>({
@@ -242,7 +244,7 @@ export default function ProgramOverview() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <Link href="/dashboard">
+              <Link href={dashboardHref}>
                 <span
                   className="type-body-sm"
                   style={{
@@ -334,6 +336,7 @@ export default function ProgramOverview() {
                       phase={phase}
                       overlaysHidden={overlaysHidden}
                       showDimOverlay={showDimOverlay}
+                      dashboardHref={dashboardHref}
                     />
                   </div>
 
@@ -465,9 +468,10 @@ interface WeekCardProps {
   phase: UnlockPhase;
   overlaysHidden: boolean;
   showDimOverlay: boolean;
+  dashboardHref: string;
 }
 
-function WeekCard({ week, weekState, phase, overlaysHidden, showDimOverlay }: WeekCardProps) {
+function WeekCard({ week, weekState, phase, overlaysHidden, showDimOverlay, dashboardHref }: WeekCardProps) {
   const [, navigate] = useLocation();
 
   const isLocked = weekState === "locked";
@@ -660,7 +664,7 @@ function WeekCard({ week, weekState, phase, overlaysHidden, showDimOverlay }: We
         >
           <button
             data-testid={`button-begin-week-${week.number}`}
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(dashboardHref)}
             style={{
               display: "flex",
               alignItems: "center",
