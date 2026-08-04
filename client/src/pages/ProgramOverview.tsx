@@ -88,7 +88,7 @@ export default function ProgramOverview() {
   });
   const [, navigate] = useLocation();
 
-  const dashboardHref = user?.role === "mentor" ? "/mentor" : "/dashboard";
+  const dashboardHref = user?.role === "mentor" ? "/mentor/program" : "/dashboard";
 
   useEffect(() => {
     if (user && user.track !== "A" && user.role !== "superuser" && user.role !== "admin" && user.role !== "mentor") {
