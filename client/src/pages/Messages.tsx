@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useAllUsers } from "@/hooks/use-users";
-import { useMessages, useSendMessage } from "@/hooks/use-chat";
+import { useMessages, useSendMessage, useUnreadMessagesByConversation } from "@/hooks/use-chat";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -73,6 +73,7 @@ export default function Messages() {
   const { data: contacts } = useUsers();
   const canAddContacts = user?.role === "admin" || user?.role === "mentor";
   const { data: allUsers } = useAllUsers(canAddContacts);
+  const { data: unreadByConversation } = useUnreadMessagesByConversation();
 
   const [selectedContactId, setSelectedContactId] = useState<number | null>(null);
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
@@ -88,14 +89,15 @@ export default function Messages() {
   }, [initialUserId, contacts, selectedContactId]);
 
   useEffect(() => {
-    if (user) {
-      apiRequest("POST", "/api/messages/mark-read")
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["/api/messages/unread/count"] });
-        })
-        .catch(() => {});
-    }
-  }, [user]);
+    if (!user || !selectedContactId) return;
+
+    apiRequest("POST", "/api/messages/mark-read", { senderId: selectedContactId })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/messages/unread/count"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/messages/unread/by-conversation"] });
+      })
+      .catch(() => {});
+  }, [user, selectedContactId]);
 
   const showChat = isMobile ? selectedContactId !== null : true;
   const showContacts = isMobile ? selectedContactId === null : true;
@@ -317,8 +319,16 @@ export default function Messages() {
                 </p>
               )}
 
-              {contacts?.map((contact) => {
+              {[...(contacts ?? [])]
+                .sort((a, b) => {
+                  const unreadDifference =
+                    (unreadByConversation?.[String(b.id)] ?? 0) -
+                    (unreadByConversation?.[String(a.id)] ?? 0);
+                  return unreadDifference || a.name.localeCompare(b.name);
+                })
+                .map((contact) => {
                 const isSelected = selectedContactId === contact.id;
+                const unreadCount = unreadByConversation?.[String(contact.id)] ?? 0;
                 return (
                   <button
                     key={contact.id}
@@ -359,9 +369,32 @@ export default function Messages() {
                       <p className="type-body-md font-medium" style={{ color: "white", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {contact.name}
                       </p>
-                      <p className="type-body-sm" style={{ color: "var(--white-40)", margin: 0, textTransform: "capitalize" }}>
-                        {contact.role}
-                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <p className="type-body-sm" style={{ color: unreadCount > 0 ? "var(--brand)" : "var(--white-40)", margin: 0, textTransform: "capitalize", fontWeight: unreadCount > 0 ? 600 : undefined }}>
+                          {unreadCount > 0 ? `${unreadCount} new message${unreadCount === 1 ? "" : "s"}` : contact.role}
+                        </p>
+                        {unreadCount > 0 && (
+                          <span
+                            aria-label={`${unreadCount} unread message${unreadCount === 1 ? "" : "s"} from ${contact.name}`}
+                            style={{
+                              minWidth: "20px",
+                              height: "20px",
+                              padding: "0 6px",
+                              borderRadius: "999px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: "var(--brand)",
+                              color: "var(--surface-ground)",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {unreadCount}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );

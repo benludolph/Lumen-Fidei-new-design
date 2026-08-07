@@ -1140,11 +1140,25 @@ export async function registerRoutes(
     res.json({ count });
   });
 
-  // Mark all messages as read for the current user
+  app.get(api.chat.unreadByConversation.path, async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const counts = await storage.getUnreadMessageCountsBySender(req.user!.id);
+    res.json(counts);
+  });
+
+  // Mark messages as read for the current user. If a sender is supplied,
+  // only that conversation is marked read; otherwise preserve the legacy
+  // mark-all behavior for callers that still use this endpoint.
   app.post("/api/messages/mark-read", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    await storage.markAllMessagesAsRead(req.user!.id);
+    const senderId = Number(req.body?.senderId);
+    if (Number.isInteger(senderId) && senderId > 0) {
+      await storage.markMessagesAsRead(senderId, req.user!.id);
+    } else {
+      await storage.markAllMessagesAsRead(req.user!.id);
+    }
     res.json({ success: true });
   });
 

@@ -14,6 +14,13 @@ export function useMessages(otherUserId: number) {
   });
 }
 
+export function useUnreadMessagesByConversation() {
+  return useQuery<Record<string, number>>({
+    queryKey: ["/api/messages/unread/by-conversation"],
+    refetchInterval: 30000,
+  });
+}
+
 export function useSendMessage() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -140,6 +140,13 @@ export const api = {
         200: z.object({ count: z.number() }),
       },
     },
+    unreadByConversation: {
+      method: 'GET' as const,
+      path: '/api/messages/unread/by-conversation',
+      responses: {
+        200: z.record(z.string(), z.number()),
+      },
+    },
   },
   trackRequirements: {
     get: {
