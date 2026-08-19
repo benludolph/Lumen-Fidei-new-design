@@ -478,6 +478,18 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
           >
             Find Confession Times
           </button>
+
+          {cfg.allowSkip !== false && (
+            <button
+              type="button"
+              onClick={handleSkip}
+              data-testid="button-confession-skip"
+              className="w-full rounded-md px-4 py-2.5 transition-colors"
+              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.1)", fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.45)" }}
+            >
+              {cfg.skipText || "Skip this step"}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -571,6 +583,18 @@ export function ConfessionFinderSlide({ content, mentorId, onSaveSessionVar, onI
             style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.12)", fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.5)" }}
           >
             Enter a time manually
+          </button>
+        )}
+
+        {cfg.allowSkip !== false && (
+          <button
+            type="button"
+            onClick={handleSkip}
+            data-testid="button-confession-skip-results"
+            className="w-full rounded-md px-4 py-2.5 transition-colors"
+            style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.08)", fontFamily: "'Afacad', sans-serif", fontSize: "0.88rem", color: "rgba(255,255,255,0.35)" }}
+          >
+            {cfg.skipText || "Skip this step"}
           </button>
         )}
       </div>
