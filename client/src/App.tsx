@@ -35,8 +35,6 @@ import SmsOptin from "@/pages/SmsOptin";
 import MentorProgram from "@/pages/MentorProgram";
 import MentorWorkbookGuide from "@/pages/MentorWorkbookGuide";
 import Sources from "@/pages/Sources";
-import MyPrograms from "@/pages/MyPrograms";
-import ProgramLesson from "@/pages/ProgramLesson";
 
 // Standard Protected Route Wrapper — role-based
 function ProtectedRoute({ 
@@ -148,34 +146,6 @@ function Router() {
 
       <Route path="/messages">
         <ProtectedRoute component={Messages} excludeTrackC />
-      </Route>
-
-      <Route path="/my-programs/:programKey/lessons/:lessonKey">
-        <ProtectedRoute component={ProgramLesson} allowedRoles={['participant', 'superuser']} />
-      </Route>
-
-      <Route path="/my-programs">
-        <ProtectedRoute component={MyPrograms} allowedRoles={['participant', 'superuser']} />
-      </Route>
-
-      <Route path="/admin/program/:programId/release/:releaseId">
-        <ProtectedRoute component={Admin} allowedRoles={['admin']} />
-      </Route>
-
-      <Route path="/admin/program/track-a/module/:week/lesson/:day">
-        <ProtectedRoute component={Admin} allowedRoles={['admin']} />
-      </Route>
-
-      <Route path="/admin/program/track-a/module/:week">
-        <ProtectedRoute component={Admin} allowedRoles={['admin']} />
-      </Route>
-
-      <Route path="/admin/:section/:rest*">
-        <ProtectedRoute component={Admin} allowedRoles={['admin']} />
-      </Route>
-
-      <Route path="/admin/:section">
-        <ProtectedRoute component={Admin} allowedRoles={['admin']} />
       </Route>
 
       <Route path="/admin">

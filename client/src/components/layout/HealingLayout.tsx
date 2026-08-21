@@ -89,7 +89,6 @@ export function HealingLayout({ children }: HealingLayoutProps) {
 
           <div className="hidden sm:flex items-center gap-1">
             <NavLink href="/healing" active={location === "/healing"}>Dashboard</NavLink>
-            <NavLink href="/my-programs" active={location.startsWith("/my-programs")}>My Programs</NavLink>
             <NavLink href="/resources" active={location.startsWith("/resources")}>Resources</NavLink>
             <NavLink href="/healing/journal" active={location === "/healing/journal"}>Journal</NavLink>
 
@@ -197,7 +196,6 @@ export function HealingLayout({ children }: HealingLayoutProps) {
 
         <nav className="flex flex-col flex-1" style={{ padding: "12px 0" }}>
           <DrawerLink href="/healing" active={location === "/healing"} onClick={closeDrawer}>Dashboard</DrawerLink>
-          <DrawerLink href="/my-programs" active={location.startsWith("/my-programs")} onClick={closeDrawer}>My Programs</DrawerLink>
           <DrawerLink href="/resources" active={location.startsWith("/resources")} onClick={closeDrawer}>Resources</DrawerLink>
           <DrawerLink href="/healing/journal" active={location === "/healing/journal"} onClick={closeDrawer}>Journal</DrawerLink>
         </nav>

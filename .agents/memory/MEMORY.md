@@ -1,1 +1,0 @@
-- [Program release compatibility](program-release-compatibility.md) — releases are immutable and pinned; Track A stays compatible while other programs remain participant-deliverable.
