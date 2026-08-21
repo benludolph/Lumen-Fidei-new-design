@@ -317,3 +317,10 @@ id = "51ySx-OZZi1PlTyT7_hKy"
 uri = "file://attached_assets/deliverance-workbook-full-context.txt"
 type = "text"
 title = "Deliverance Workbook — Full Context"
+
+[[outputs]]
+id = "2YRpMCn6hnj2OneBMiLnX"
+uri = "file://docs/admin-audit.md"
+type = "text"
+title = "Admin Area Audit"
+description = "Read-only audit covering current state, severity-ranked findings with source paths, role comparison, and a sequenced remediation plan."
