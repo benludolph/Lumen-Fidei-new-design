@@ -133,6 +133,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             ) : (
               <>
                 <NavLink href="/dashboard" active={location === "/dashboard"}>Dashboard</NavLink>
+                <NavLink href="/my-programs" active={location.startsWith("/my-programs")}>My Programs</NavLink>
                 <NavLink href="/messages" active={location === "/messages"} badge={unreadCount}>Messages</NavLink>
                 <NavLink href="/resources" active={location === "/resources"}>Resources</NavLink>
                 {(user?.role === 'participant' || user?.role === 'superuser') && (
@@ -321,6 +322,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           ) : (
             <>
               <DrawerLink href="/dashboard" active={location === "/dashboard"} onClick={closeDrawer}>Dashboard</DrawerLink>
+               <DrawerLink href="/my-programs" active={location.startsWith("/my-programs")} onClick={closeDrawer}>My Programs</DrawerLink>
               <DrawerLink href="/messages" active={location === "/messages"} onClick={closeDrawer} badge={unreadCount}>Messages</DrawerLink>
               <DrawerLink href="/resources" active={location === "/resources"} onClick={closeDrawer}>Resources</DrawerLink>
               {(user?.role === 'participant' || user?.role === 'superuser') && (

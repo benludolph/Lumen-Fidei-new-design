@@ -6,6 +6,7 @@ import {
   workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
   lessonWorkbookModules, lessonWorkbookCompletions, wrapPrayers, lessonProgress,
   cohorts,
+  programs, programReleases, programEnrollments, releaseLessonProgress,
   type User, type InsertUser,
   type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
@@ -37,11 +38,25 @@ import {
   type LessonWorkbookModule, type InsertLessonWorkbookModule,
   type LessonWorkbookCompletion,
   type WrapPrayer,
+  type Program, type InsertProgram,
+  type ProgramRelease, type InsertProgramRelease,
+  type ProgramEnrollment, type InsertProgramEnrollment,
+  type ReleaseLessonProgress,
 } from "@shared/schema";
-import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql } from "drizzle-orm";
+import { type CurriculumDocument } from "@shared/curriculum";
+import { eq, and, or, lt, gt, desc, asc, min, max, count, inArray, isNull, sql, ne } from "drizzle-orm";
 
 const _envLimit = parseInt(process.env.SNAPSHOT_MAX_AUTO_SAVES ?? '', 10);
 const MAX_AUTO_SNAPSHOTS = Number.isFinite(_envLimit) && _envLimit > 0 ? _envLimit : 20;
+
+function assertCurriculumMatchesProgram(program: Program | undefined, curriculum: CurriculumDocument): void {
+  if (!program) throw new Error("Program not found");
+  if (curriculum.programKey !== program.key) {
+    throw new Error(
+      `Curriculum validation failed: programKey "${curriculum.programKey}" must match program key "${program.key}"`,
+    );
+  }
+}
 
 export interface IStorage {
   // Users
@@ -221,9 +236,53 @@ export interface IStorage {
 
   // Cohorts
   listCohorts(): Promise<Cohort[]>;
+  getCohort(id: number): Promise<Cohort | undefined>;
   getActiveCohort(): Promise<Cohort | null>;
   createCohort(name: string, startDate: Date): Promise<Cohort>;
   archiveCohort(id: number, endDate: Date): Promise<void>;
+
+  // Active admin count (for last-admin protection)
+  countActiveAdmins(): Promise<number>;
+
+  // Programs
+  listPrograms(): Promise<Program[]>;
+  getProgram(id: number): Promise<Program | undefined>;
+  getProgramByKey(key: string): Promise<Program | undefined>;
+  createProgram(data: InsertProgram): Promise<Program>;
+  updateProgram(id: number, data: Partial<InsertProgram>): Promise<Program>;
+  deleteProgram(id: number): Promise<void>;
+
+  // Program Releases
+  listReleases(programId: number): Promise<ProgramRelease[]>;
+  getRelease(id: number): Promise<ProgramRelease | undefined>;
+  getLatestPublishedRelease(programId: number): Promise<ProgramRelease | undefined>;
+  createDraftRelease(programId: number, curriculum: CurriculumDocument, label?: string, createdBy?: number): Promise<ProgramRelease>;
+  updateDraftRelease(id: number, data: { label?: string; curriculum?: CurriculumDocument }): Promise<ProgramRelease>;
+  /** Validates and atomically publishes a draft release. Returns updated release. */
+  publishRelease(id: number): Promise<ProgramRelease>;
+  /** Creates a new draft from a prior published release (rollback). */
+  rollbackToRelease(releaseId: number, createdBy?: number): Promise<ProgramRelease>;
+
+  // Program Enrollments
+  listEnrollments(programId: number): Promise<ProgramEnrollment[]>;
+  getEnrollment(id: number): Promise<ProgramEnrollment | undefined>;
+  getUserEnrollment(userId: number, programId: number): Promise<ProgramEnrollment | undefined>;
+  getActiveProgramEnrollmentByKey(userId: number, programKey: string): Promise<{
+    enrollment: ProgramEnrollment;
+    program: Program;
+    release: ProgramRelease;
+  } | undefined>;
+  listActiveProgramEnrollments(userId: number): Promise<Array<{
+    enrollment: ProgramEnrollment;
+    program: Program;
+    release: ProgramRelease;
+  }>>;
+  assignEnrollment(data: InsertProgramEnrollment): Promise<ProgramEnrollment>;
+
+  // Release-aware lesson progress
+  getReleaseLessonProgress(enrollmentId: number, lessonKey: string): Promise<ReleaseLessonProgress | undefined>;
+  upsertReleaseLessonProgress(enrollmentId: number, lessonKey: string, slideIndex: number, completed?: boolean): Promise<ReleaseLessonProgress>;
+  listReleaseLessonProgress(enrollmentId: number): Promise<ReleaseLessonProgress[]>;
 
   // session store
   sessionStore: any;
@@ -1484,6 +1543,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(cohorts).orderBy(desc(cohorts.startDate));
   }
 
+  async getCohort(id: number): Promise<Cohort | undefined> {
+    const [cohort] = await db.select().from(cohorts).where(eq(cohorts.id, id));
+    return cohort;
+  }
+
   async getActiveCohort(): Promise<Cohort | null> {
     const [cohort] = await db.select().from(cohorts).where(eq(cohorts.status, "active")).orderBy(desc(cohorts.startDate)).limit(1);
     return cohort ?? null;
@@ -1496,6 +1560,294 @@ export class DatabaseStorage implements IStorage {
 
   async archiveCohort(id: number, endDate: Date): Promise<void> {
     await db.update(cohorts).set({ status: "archived", endDate }).where(eq(cohorts.id, id));
+  }
+
+  // ─── Active admin count ────────────────────────────────────────────────────
+
+  async countActiveAdmins(): Promise<number> {
+    const [row] = await db
+      .select({ cnt: count() })
+      .from(users)
+      .where(and(eq(users.role, "admin"), eq(users.isActive, true)));
+    return row?.cnt ?? 0;
+  }
+
+  // ─── Programs ─────────────────────────────────────────────────────────────
+
+  async listPrograms(): Promise<Program[]> {
+    return db.select().from(programs).orderBy(asc(programs.id));
+  }
+
+  async getProgram(id: number): Promise<Program | undefined> {
+    const [row] = await db.select().from(programs).where(eq(programs.id, id));
+    return row;
+  }
+
+  async getProgramByKey(key: string): Promise<Program | undefined> {
+    const [row] = await db.select().from(programs).where(eq(programs.key, key));
+    return row;
+  }
+
+  async createProgram(data: InsertProgram): Promise<Program> {
+    const [row] = await db.insert(programs).values({ ...data, updatedAt: new Date() }).returning();
+    return row;
+  }
+
+  async updateProgram(id: number, data: Partial<InsertProgram>): Promise<Program> {
+    const [row] = await db.update(programs).set({ ...data, updatedAt: new Date() }).where(eq(programs.id, id)).returning();
+    return row;
+  }
+
+  async deleteProgram(id: number): Promise<void> {
+    await db.delete(programs).where(eq(programs.id, id));
+  }
+
+  // ─── Program Releases ─────────────────────────────────────────────────────
+
+  async listReleases(programId: number): Promise<ProgramRelease[]> {
+    return db.select().from(programReleases)
+      .where(eq(programReleases.programId, programId))
+      .orderBy(desc(programReleases.releaseNumber));
+  }
+
+  async getRelease(id: number): Promise<ProgramRelease | undefined> {
+    const [row] = await db.select().from(programReleases).where(eq(programReleases.id, id));
+    return row;
+  }
+
+  async getLatestPublishedRelease(programId: number): Promise<ProgramRelease | undefined> {
+    const [row] = await db.select().from(programReleases)
+      .where(and(eq(programReleases.programId, programId), eq(programReleases.status, "published")))
+      .orderBy(desc(programReleases.releaseNumber))
+      .limit(1);
+    return row;
+  }
+
+  async createDraftRelease(
+    programId: number,
+    curriculum: CurriculumDocument,
+    label?: string,
+    createdBy?: number,
+  ): Promise<ProgramRelease> {
+    return db.transaction(async (tx) => {
+      const [program] = await tx.select().from(programs).where(eq(programs.id, programId));
+      assertCurriculumMatchesProgram(program, curriculum);
+      const [maxRow] = await tx
+        .select({ maxNum: max(programReleases.releaseNumber) })
+        .from(programReleases)
+        .where(eq(programReleases.programId, programId));
+      const nextNumber = (maxRow?.maxNum ?? 0) + 1;
+      const [row] = await tx.insert(programReleases).values({
+        programId,
+        releaseNumber: nextNumber,
+        label: label ?? null,
+        status: "draft",
+        curriculum: curriculum as any,
+        createdBy: createdBy ?? null,
+      }).returning();
+      return row;
+    });
+  }
+
+  async updateDraftRelease(
+    id: number,
+    data: { label?: string; curriculum?: CurriculumDocument },
+  ): Promise<ProgramRelease> {
+    const existing = await this.getRelease(id);
+    if (!existing) throw new Error(`Release ${id} not found`);
+    if (existing.status !== "draft") throw new Error("Only draft releases can be edited");
+    if (data.curriculum !== undefined) {
+      const program = await this.getProgram(existing.programId);
+      assertCurriculumMatchesProgram(program, data.curriculum);
+    }
+    const updateValues: Partial<ProgramRelease> = {};
+    if (data.label !== undefined) updateValues.label = data.label;
+    if (data.curriculum !== undefined) updateValues.curriculum = data.curriculum as any;
+    const [row] = await db.update(programReleases).set(updateValues).where(eq(programReleases.id, id)).returning();
+    return row;
+  }
+
+  async publishRelease(id: number): Promise<ProgramRelease> {
+    const { validateCurriculumDocument } = await import("@shared/curriculum");
+    return db.transaction(async (tx) => {
+      const [release] = await tx.select().from(programReleases).where(eq(programReleases.id, id));
+      if (!release) throw new Error(`Release ${id} not found`);
+      if (release.status !== "draft") throw new Error("Only draft releases can be published");
+
+      // Validate curriculum document fully before publishing
+      const validationResult = validateCurriculumDocument(release.curriculum);
+      if (!validationResult.ok) {
+        const messages = validationResult.errors.map((e) => e.message).join("; ");
+        throw new Error(`Curriculum validation failed: ${messages}`);
+      }
+      const [program] = await tx.select().from(programs).where(eq(programs.id, release.programId));
+      assertCurriculumMatchesProgram(program, validationResult.doc);
+
+      await tx.update(programReleases)
+        .set({ status: "archived" })
+        .where(and(
+          eq(programReleases.programId, release.programId),
+          eq(programReleases.status, "published"),
+        ));
+
+      const [updated] = await tx.update(programReleases)
+        .set({ status: "published", publishedAt: new Date() })
+        .where(eq(programReleases.id, id))
+        .returning();
+      return updated;
+    });
+  }
+
+  async rollbackToRelease(releaseId: number, createdBy?: number): Promise<ProgramRelease> {
+    return db.transaction(async (tx) => {
+      const [source] = await tx.select().from(programReleases).where(eq(programReleases.id, releaseId));
+      if (!source) throw new Error(`Release ${releaseId} not found`);
+      const [program] = await tx.select().from(programs).where(eq(programs.id, source.programId));
+      const validationResult = (await import("@shared/curriculum"))
+        .validateCurriculumDocument(source.curriculum);
+      if (!validationResult.ok) {
+        const messages = validationResult.errors.map((error) => error.message).join("; ");
+        throw new Error(`Curriculum validation failed: ${messages}`);
+      }
+      assertCurriculumMatchesProgram(program, validationResult.doc);
+
+      const [maxRow] = await tx
+        .select({ maxNum: max(programReleases.releaseNumber) })
+        .from(programReleases)
+        .where(eq(programReleases.programId, source.programId));
+      const nextNumber = (maxRow?.maxNum ?? 0) + 1;
+
+      const [row] = await tx.insert(programReleases).values({
+        programId: source.programId,
+        releaseNumber: nextNumber,
+        label: `Rollback from Release ${source.releaseNumber}`,
+        status: "draft",
+        curriculum: source.curriculum,
+        createdBy: createdBy ?? null,
+      }).returning();
+      return row;
+    });
+  }
+
+  // ─── Program Enrollments ──────────────────────────────────────────────────
+
+  async listEnrollments(programId: number): Promise<ProgramEnrollment[]> {
+    return db.select().from(programEnrollments)
+      .where(eq(programEnrollments.programId, programId))
+      .orderBy(asc(programEnrollments.enrolledAt));
+  }
+
+  async getEnrollment(id: number): Promise<ProgramEnrollment | undefined> {
+    const [row] = await db.select().from(programEnrollments).where(eq(programEnrollments.id, id));
+    return row;
+  }
+
+  async getUserEnrollment(userId: number, programId: number): Promise<ProgramEnrollment | undefined> {
+    const [row] = await db.select().from(programEnrollments)
+      .where(and(eq(programEnrollments.userId, userId), eq(programEnrollments.programId, programId)));
+    return row;
+  }
+
+  async getActiveProgramEnrollmentByKey(userId: number, programKey: string): Promise<{
+    enrollment: ProgramEnrollment;
+    program: Program;
+    release: ProgramRelease;
+  } | undefined> {
+    const [row] = await db
+      .select({
+        enrollment: programEnrollments,
+        program: programs,
+        release: programReleases,
+      })
+      .from(programEnrollments)
+      .innerJoin(programs, eq(programEnrollments.programId, programs.id))
+      .innerJoin(programReleases, eq(programEnrollments.releaseId, programReleases.id))
+      .where(and(
+        eq(programEnrollments.userId, userId),
+        eq(programEnrollments.status, "active"),
+        eq(programs.key, programKey),
+      ))
+      .orderBy(desc(programEnrollments.enrolledAt))
+      .limit(1);
+    return row;
+  }
+
+  async listActiveProgramEnrollments(userId: number): Promise<Array<{
+    enrollment: ProgramEnrollment;
+    program: Program;
+    release: ProgramRelease;
+  }>> {
+    return db
+      .select({
+        enrollment: programEnrollments,
+        program: programs,
+        release: programReleases,
+      })
+      .from(programEnrollments)
+      .innerJoin(programs, eq(programEnrollments.programId, programs.id))
+      .innerJoin(programReleases, eq(programEnrollments.releaseId, programReleases.id))
+      .where(and(
+        eq(programEnrollments.userId, userId),
+        eq(programEnrollments.status, "active"),
+        eq(programs.isActive, true),
+      ))
+      .orderBy(asc(programEnrollments.enrolledAt));
+  }
+
+  async assignEnrollment(data: InsertProgramEnrollment): Promise<ProgramEnrollment> {
+    const [row] = await db.insert(programEnrollments).values(data).returning();
+    return row;
+  }
+
+  // ─── Release-aware lesson progress ────────────────────────────────────────
+
+  async getReleaseLessonProgress(enrollmentId: number, lessonKey: string): Promise<ReleaseLessonProgress | undefined> {
+    const [row] = await db.select().from(releaseLessonProgress)
+      .where(and(
+        eq(releaseLessonProgress.enrollmentId, enrollmentId),
+        eq(releaseLessonProgress.lessonKey, lessonKey),
+      ));
+    return row;
+  }
+
+  async upsertReleaseLessonProgress(
+    enrollmentId: number,
+    lessonKey: string,
+    slideIndex: number,
+    completed?: boolean,
+  ): Promise<ReleaseLessonProgress> {
+    const now = new Date();
+    const completionUpdate = completed === undefined
+      ? {}
+      : {
+          completed,
+          completedAt: completed ? now : null,
+        };
+    const [row] = await db.insert(releaseLessonProgress)
+      .values({
+        enrollmentId,
+        lessonKey,
+        slideIndex,
+        completed: completed ?? false,
+        updatedAt: now,
+        completedAt: completed ? now : null,
+      })
+      .onConflictDoUpdate({
+        target: [releaseLessonProgress.enrollmentId, releaseLessonProgress.lessonKey],
+        set: {
+          slideIndex,
+          updatedAt: now,
+          ...completionUpdate,
+        },
+      })
+      .returning();
+    return row;
+  }
+
+  async listReleaseLessonProgress(enrollmentId: number): Promise<ReleaseLessonProgress[]> {
+    return db.select().from(releaseLessonProgress)
+      .where(eq(releaseLessonProgress.enrollmentId, enrollmentId))
+      .orderBy(asc(releaseLessonProgress.lessonKey));
   }
 }
 

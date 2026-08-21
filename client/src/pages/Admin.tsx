@@ -3,6 +3,7 @@ import { SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-defi
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { Shell } from "@/components/layout/Shell";
+import { AdminWorkspaceShell } from "@/components/admin/AdminWorkspaceShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock, BookX } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, ArrowRight, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock, BookX } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -41,7 +42,16 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { api, type ContentBackup, type SafeUser } from "@shared/routes";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
+import {
+  getBlockLabel,
+  getBlockDefaultContent,
+  getTrackABlockTypes,
+  getPrelimBlockTypes,
+  lessonValidationSummary,
+  type BlockDefaultTemplates,
+} from "@/components/admin/program/blockRegistry";
+import { ProgramWorkspace } from "@/components/admin/program";
 
 type CohortRecord = {
   id: number;
@@ -52,9 +62,43 @@ type CohortRecord = {
   createdAt: string;
 };
 
+type AdminArea = "home" | "people" | "program" | "cohort" | "operations";
+
+const ADMIN_AREA_COPY: Record<AdminArea, { title: string; description: string }> = {
+  home: {
+    title: "Welcome back",
+    description: "Start with the people, program, or cohort work that needs your attention today.",
+  },
+  people: {
+    title: "People",
+    description: "Manage participant, mentor, and administrator records for the current program.",
+  },
+  program: {
+    title: "Program",
+    description: "Shape the curriculum, lessons, and participant experience in one place.",
+  },
+  cohort: {
+    title: "Cohort",
+    description: "Manage the active cohort schedule, timing, and participant pacing.",
+  },
+  operations: {
+    title: "Operations",
+    description: "Review progress, respond to messages, and handle program upkeep.",
+  },
+};
+
+function getAdminArea(location: string): AdminArea {
+  if (location.startsWith("/admin/people")) return "people";
+  if (location.startsWith("/admin/program")) return "program";
+  if (location.startsWith("/admin/cohort")) return "cohort";
+  if (location.startsWith("/admin/operations")) return "operations";
+  return "home";
+}
+
 export default function Admin() {
   const { user } = useAuth();
   const { data: users, isLoading } = useUsers();
+  const [location, setLocation] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [cohortFilter, setCohortFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -70,6 +114,8 @@ export default function Admin() {
 
   if (!user || user.role !== 'admin') return null;
 
+  const activeArea = getAdminArea(location);
+  const activeAreaCopy = ADMIN_AREA_COPY[activeArea];
   const filteredUsers = users?.filter(u => {
     const matchesSearch =
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,41 +130,17 @@ export default function Admin() {
 
   return (
     <Shell>
-      <div className="-mx-4 sm:-mx-8 px-4 sm:px-8 pb-16 min-h-screen">
-        <div className="flex justify-between items-center mb-8 pt-4">
-          <div>
-            <h1 className="font-serif text-3xl font-bold">Administration</h1>
-            <p className="text-muted-foreground">Manage users and monitor progress</p>
-          </div>
-          <CreateUserDialog />
-        </div>
+      <AdminWorkspaceShell
+        title={activeAreaCopy.title}
+        description={activeAreaCopy.description}
+        actions={activeArea === "people" ? <CreateUserDialog /> : undefined}
+      >
+        {activeArea === "home" && (
+          <AdminHomeView users={users ?? []} cohorts={cohortList ?? []} />
+        )}
 
-        <Tabs defaultValue="users" className="w-full">
-          <TabsList className="mb-6 flex-wrap h-auto gap-y-1">
-            <TabsTrigger value="users" className="gap-2" data-testid="tab-users">
-              <Users className="w-4 h-4" /> People
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="gap-2" data-testid="tab-progress">
-              <BarChart3 className="w-4 h-4" /> Progress
-            </TabsTrigger>
-            <TabsTrigger value="content" className="gap-2" data-testid="tab-content">
-              <BookOpen className="w-4 h-4" /> Content
-            </TabsTrigger>
-            <TabsTrigger value="messages" className="gap-2" data-testid="tab-messages">
-              <MessageSquare className="w-4 h-4" /> Messages
-            </TabsTrigger>
-            <TabsTrigger value="surveys" className="gap-2" data-testid="tab-surveys">
-              <BarChart3 className="w-4 h-4" /> Surveys
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2" data-testid="tab-settings">
-              <Settings className="w-4 h-4" /> Settings
-            </TabsTrigger>
-            <TabsTrigger value="testimonies" className="gap-2" data-testid="tab-testimonies">
-              <Video className="w-4 h-4" /> Testimonies
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="users">
+        {activeArea === "people" && (
+          <div data-testid="admin-area-people">
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -198,51 +220,166 @@ export default function Admin() {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="progress">
-            <ProgressView />
-          </TabsContent>
+        {activeArea === "program" && (
+          <div data-testid="admin-area-program">
+            <ProgramWorkspace legacyTrackAEditor={<TrackAContentManagementView />} />
+          </div>
+        )}
 
-          <TabsContent value="content">
-            <ContentTabView />
-          </TabsContent>
-
-          <TabsContent value="messages">
-            <MessageManagementView />
-          </TabsContent>
-
-          <TabsContent value="surveys">
-            <SurveyResultsView />
-          </TabsContent>
-
-          <TabsContent value="settings">
+        {activeArea === "cohort" && (
+          <div data-testid="admin-area-cohort">
             <CohortSettingsView />
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="testimonies">
-            <TestimoniesAdminView />
-          </TabsContent>
-
-        </Tabs>
-      </div>
+        {activeArea === "operations" && (
+          <AdminOperationsView location={location} setLocation={setLocation} />
+        )}
+      </AdminWorkspaceShell>
     </Shell>
   );
 }
 
-function ContentTabView() {
-  const [track, setTrack] = useState<"a" | "b" | "c">("a");
+function AdminHomeView({ users, cohorts }: { users: SafeUser[]; cohorts: CohortRecord[] }) {
+  const activeParticipants = users.filter((person) => person.role === "participant" && person.isActive).length;
+  const mentors = users.filter((person) => person.role === "mentor" && person.isActive).length;
+  const activeCohort = cohorts.find((cohort) => cohort.status === "active");
+
+  const destinations = [
+    {
+      href: "/admin/people",
+      title: "People",
+      description: "Find a participant, update assignments, or add someone new.",
+      detail: `${activeParticipants} active participant${activeParticipants === 1 ? "" : "s"}`,
+      icon: Users,
+      testId: "admin-home-people",
+    },
+    {
+      href: "/admin/program",
+      title: "Program",
+      description: "Continue editing Track A lessons and preview participant content.",
+      detail: "Curriculum and lessons",
+      icon: BookOpen,
+      testId: "admin-home-program",
+    },
+    {
+      href: "/admin/cohort",
+      title: "Cohort",
+      description: "Review the current schedule or prepare the next cohort.",
+      detail: activeCohort?.name ?? "No active cohort",
+      icon: Calendar,
+      testId: "admin-home-cohort",
+    },
+    {
+      href: "/admin/operations",
+      title: "Operations",
+      description: "Check progress, messages, surveys, testimonies, and maintenance.",
+      detail: `${mentors} active mentor${mentors === 1 ? "" : "s"}`,
+      icon: Settings,
+      testId: "admin-home-operations",
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2" data-testid="admin-area-home">
+      {destinations.map(({ href, title, description, detail, icon: Icon, testId }) => (
+        <Link
+          key={href}
+          href={href}
+          data-testid={testId}
+          className="group rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <Card className="h-full border-border/70 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary/35 group-hover:shadow-md">
+            <CardContent className="flex h-full items-start gap-4 p-5 sm:p-6">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-3">
+                  <span className="type-display-md text-foreground">{title}</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                </span>
+                <span className="type-body-md mt-2 block text-muted-foreground">{description}</span>
+                <span className="type-caption-sm mt-4 block text-primary">{detail}</span>
+              </span>
+            </CardContent>
+          </Card>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function AdminOperationsView({
+  location,
+  setLocation,
+}: {
+  location: string;
+  setLocation: (to: string) => void;
+}) {
+  const activeView = location.includes("/messages")
+    ? "messages"
+    : location.includes("/surveys")
+      ? "surveys"
+      : location.includes("/testimonies")
+        ? "testimonies"
+        : location.includes("/legacy")
+          ? "legacy"
+        : "progress";
+
+  return (
+    <Tabs
+      value={activeView}
+      onValueChange={(value) => setLocation(`/admin/operations/${value}`)}
+      className="w-full"
+      data-testid="admin-area-operations"
+    >
+      <TabsList className="mb-6 h-auto max-w-full flex-wrap justify-start gap-1">
+        <TabsTrigger value="progress" className="gap-2" data-testid="tab-progress">
+          <BarChart3 className="h-4 w-4" /> Progress
+        </TabsTrigger>
+        <TabsTrigger value="messages" className="gap-2" data-testid="tab-messages">
+          <MessageSquare className="h-4 w-4" /> Messages
+        </TabsTrigger>
+        <TabsTrigger value="surveys" className="gap-2" data-testid="tab-surveys">
+          <BarChart3 className="h-4 w-4" /> Surveys
+        </TabsTrigger>
+        <TabsTrigger value="testimonies" className="gap-2" data-testid="tab-testimonies">
+          <Video className="h-4 w-4" /> Testimonies
+        </TabsTrigger>
+        <TabsTrigger value="legacy" className="gap-2" data-testid="tab-legacy-programs">
+          <Archive className="h-4 w-4" /> Legacy Programs
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="progress"><ProgressView /></TabsContent>
+      <TabsContent value="messages"><MessageManagementView /></TabsContent>
+      <TabsContent value="surveys"><SurveyResultsView /></TabsContent>
+      <TabsContent value="testimonies"><TestimoniesAdminView /></TabsContent>
+      <TabsContent value="legacy"><LegacyProgramsView /></TabsContent>
+    </Tabs>
+  );
+}
+
+function LegacyProgramsView() {
+  const [track, setTrack] = useState<"b" | "c">("b");
 
   return (
     <div className="space-y-5">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Archive className="h-4 w-4" /> Legacy program reference
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Track B and Healing are preserved here for reference. They are not part of the reusable program workflow yet.
+        </CardContent>
+      </Card>
       <div className="flex gap-1 p-1 rounded-lg w-fit bg-muted border">
-        <button
-          onClick={() => setTrack("a")}
-          data-testid="button-track-a-tab"
-          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "a" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Track A
-        </button>
         <button
           onClick={() => setTrack("b")}
           data-testid="button-track-b-tab"
@@ -259,7 +396,7 @@ function ContentTabView() {
         </button>
       </div>
 
-      {track === "a" ? <TrackAContentManagementView /> : track === "b" ? <ContentManagementView /> : <HealingAdminView />}
+      {track === "b" ? <ContentManagementView /> : <HealingAdminView />}
     </div>
   );
 }
@@ -2742,45 +2879,22 @@ type TrackAContentData = {
   closingPrayerAudio: string | null;
 };
 
+// ---------------------------------------------------------------------------
+// Slide-type lists and labels — sourced from the block registry.
+// The raw `as const` tuple is kept for backward compatibility with any
+// remaining code that references SLIDE_TYPES directly.
+// ---------------------------------------------------------------------------
+
 const SLIDE_TYPES = ["text", "scripture_practice", "media", "action", "timer", "multi_select", "single_select", "text_input", "mentor_message", "knowledge_check", "knowledge_quiz", "quiz", "survey", "scenario", "chat_flow", "path_selector", "cross_grid", "story_choice", "image_carousel", "before_after", "scene", "captivity_builder", "confession_finder", "pdf_download", "guided_prayer_process", "workbook_link", "workbook_session", "prayer_link", "selection_reveal", "bento_reveal"] as const;
 
-const PRELIM_SLIDE_TYPES = SLIDE_TYPES;
+// Registry-sourced arrays replace the old hand-maintained lists:
+const PRELIM_SLIDE_TYPES = getPrelimBlockTypes().map(e => e.type);
+const TRACK_A_SLIDE_TYPES = getTrackABlockTypes().map(e => e.type);
 
-const TRACK_A_EXCLUDED = new Set(["action", "scenario"]);
-const TRACK_A_SLIDE_TYPES = SLIDE_TYPES.filter(t => !TRACK_A_EXCLUDED.has(t));
-
-const SLIDE_TYPE_LABELS: Record<string, string> = {
-  text: "Text",
-  multi_select: "Multi Select",
-  single_select: "Single Select",
-  media: "Media",
-  text_input: "Text Input",
-  action: "Action",
-  mentor_message: "Mentor Message",
-  timer: "Timer",
-  knowledge_check: "Knowledge Check",
-  knowledge_quiz: "Knowledge Quiz",
-  quiz: "Quiz",
-  survey: "Survey",
-  scenario: "Scenario Stepper",
-  chat_flow: "Chat Flow",
-  path_selector: "Path Selector",
-  cross_grid: "Cross Grid Puzzle",
-  story_choice: "Story Choice",
-  image_carousel: "Image Carousel",
-  before_after: "Before / After Slider",
-  scripture_practice: "Scripture Practice",
-  scene: "Interactive Scene",
-  captivity_builder: "Breaking Lies",
-  confession_finder: "Confession Finder",
-  pdf_download: "PDF Download",
-  guided_prayer_process: "Guided Prayer",
-  workbook_link: "Workbook Link",
-  workbook_session: "Workbook Session",
-  prayer_link: "Prayer Link",
-  selection_reveal: "Selection Reveal",
-  bento_reveal: "Bento Reveal",
-};
+/** Human-readable label for any slide type (delegates to registry). */
+const SLIDE_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  SLIDE_TYPES.map(t => [t, getBlockLabel(t)])
+);
 
 const SLIDE_TYPE_COLORS: Record<string, string> = {
   text: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -4682,6 +4796,33 @@ const CROSS_GRID_DUAL_DEFAULT = JSON.stringify({
   overlayText: ["But it does not heal you.", "It keeps you in control."],
   finalText: ["This is how healing happens.", "Not instantly. But truly."],
 }, null, 2);
+
+// ---------------------------------------------------------------------------
+// Block registry template bag — assembled after all large template constants
+// are declared.  Passed to getBlockDefaultContent() to generate defaults.
+// ---------------------------------------------------------------------------
+
+function makeRegistryTemplates(isPrelim: boolean): BlockDefaultTemplates {
+  return {
+    ORIGIN_OF_THE_WEIGHT_TEMPLATE,
+    PATH_SELECTOR_DEFAULT,
+    CROSS_GRID_DEFAULT,
+    STORY_CHOICE_DEFAULT,
+    IMAGE_CAROUSEL_DEFAULT,
+    BEFORE_AFTER_DEFAULT,
+    SELECTION_REVEAL_DEFAULT,
+    BENTO_REVEAL_DEFAULT,
+    // For guided_prayer_process, use the context-specific default.
+    // The registry entry reads GUIDED_PRAYER_DEFAULT_TRACK_A, so we
+    // point it at the prelim template when building the prelim bag.
+    GUIDED_PRAYER_DEFAULT_TRACK_A: isPrelim ? GUIDED_PRAYER_OCCULT_DEFAULT : GUIDED_PRAYER_DEFAULT,
+    GUIDED_PRAYER_DEFAULT_PRELIM: GUIDED_PRAYER_OCCULT_DEFAULT,
+  };
+}
+
+// Per-context template bags (object identity is stable; created once per call)
+const TRACK_A_TEMPLATES: BlockDefaultTemplates = makeRegistryTemplates(false);
+const PRELIM_TEMPLATES: BlockDefaultTemplates = makeRegistryTemplates(true);
 
 function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { content: string; onChange: (val: string) => void; index: number; idPrefix: string }) {
   let parsed: { sectionId?: number | null; sectionIds?: number[]; label?: string } = {};
@@ -7039,10 +7180,17 @@ function WrapPrayersManagementSection() {
 
 function TrackAContentManagementView() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
-  const [view, setView] = useState<"modules" | "days" | "slides">("modules");
-  const [selectedModule, setSelectedModule] = useState<number | null>(null);
-  const [selectedDay, setSelectedDay] = useState(1);
+  const [location, setLocation] = useLocation();
+  const initialRoute = window.location.pathname.match(
+    /^\/admin\/program\/track-a(?:\/module\/(\d+))?(?:\/lesson\/(\d+))?/,
+  );
+  const initialModule = initialRoute?.[1] ? Number(initialRoute[1]) : null;
+  const initialDay = initialRoute?.[2] ? Number(initialRoute[2]) : 1;
+  const [view, setView] = useState<"modules" | "days" | "slides">(
+    initialRoute?.[2] ? "slides" : initialModule !== null ? "days" : "modules",
+  );
+  const [selectedModule, setSelectedModule] = useState<number | null>(initialModule);
+  const [selectedDay, setSelectedDay] = useState(initialDay);
   const [editMode, setEditMode] = useState(false);
   const [centralTheme, setCentralTheme] = useState("");
   const [slides, setSlides] = useState<TrackASlide[]>([]);
@@ -7374,10 +7522,33 @@ function TrackAContentManagementView() {
     setExpandedSlide(null);
   };
 
+  useEffect(() => {
+    const route = location.match(
+      /^\/admin\/program\/track-a(?:\/module\/(\d+))?(?:\/lesson\/(\d+))?$/,
+    );
+    if (!route) return;
+    const routeModule = route[1] ? Number(route[1]) : null;
+    const routeDay = route[2] ? Number(route[2]) : null;
+    setEditMode(false);
+    if (routeDay !== null) {
+      setSelectedModule(routeModule);
+      setSelectedDay(routeDay);
+      setView("slides");
+      loadContentIntoState(allContent?.find((content) => content.dayNumber === routeDay));
+    } else if (routeModule !== null) {
+      setSelectedModule(routeModule);
+      setView("days");
+    } else {
+      setSelectedModule(null);
+      setView("modules");
+    }
+  }, [location, allContent]);
+
   const openModule = (weekNumber: number) => {
     setSelectedModule(weekNumber);
     setView("days");
     setEditMode(false);
+    setLocation(`/admin/program/track-a/module/${weekNumber}`);
   };
 
   const openDay = (dayNumber: number) => {
@@ -7385,6 +7556,9 @@ function TrackAContentManagementView() {
     setView("slides");
     setEditMode(false);
     const content = allContent?.find(c => c.dayNumber === dayNumber);
+    const weekNumber = content?.weekNumber ?? selectedModule ?? Math.ceil(dayNumber / 6);
+    setSelectedModule(weekNumber);
+    setLocation(`/admin/program/track-a/module/${weekNumber}/lesson/${dayNumber}`);
     loadContentIntoState(content);
   };
 
@@ -7392,11 +7566,15 @@ function TrackAContentManagementView() {
     setView("modules");
     setSelectedModule(null);
     setEditMode(false);
+    setLocation("/admin/program/track-a");
   };
 
   const goBackToDays = () => {
     setView("days");
     setEditMode(false);
+    if (selectedModule !== null) {
+      setLocation(`/admin/program/track-a/module/${selectedModule}`);
+    }
   };
 
   const startEditModule = (mod: TrackAModuleData) => {
@@ -7442,32 +7620,9 @@ function TrackAContentManagementView() {
     setExpandedSlide(null);
   };
 
-  const KNOWLEDGE_QUIZ_DEFAULT = JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" });
-
-  const getTrackADefaultSlideContent = (type: string): string => {
-    if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } });
-    if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
-    if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
-    if (type === "knowledge_quiz") return KNOWLEDGE_QUIZ_DEFAULT;
-    if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
-    if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
-    if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
-    if (type === "cross_grid") return CROSS_GRID_DEFAULT;
-    if (type === "story_choice") return STORY_CHOICE_DEFAULT;
-    if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
-    if (type === "before_after") return BEFORE_AFTER_DEFAULT;
-    if (type === "scene") return "{}";
-    if (type === "captivity_builder") return JSON.stringify({ intro: "" });
-    if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
-    if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
-    if (type === "guided_prayer_process") return GUIDED_PRAYER_DEFAULT;
-    if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
-    if (type === "workbook_session") return JSON.stringify({ heading: "Your open work", subheading: "Work through what you can." });
-    if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
-    if (type === "selection_reveal") return SELECTION_REVEAL_DEFAULT;
-    if (type === "bento_reveal") return BENTO_REVEAL_DEFAULT;
-    return "";
-  };
+  // Delegate to the block registry for default content (Track A context).
+  const getTrackADefaultSlideContent = (type: string): string =>
+    getBlockDefaultContent(type, TRACK_A_TEMPLATES);
 
   const addSlide = () => {
     setSlides(prev => [...prev, { type: addSlideType, content: getTrackADefaultSlideContent(addSlideType) }]);
@@ -8359,6 +8514,21 @@ function TrackAContentManagementView() {
             })}
           </div>
 
+          {/* Validation summary — shown before save when issues exist */}
+          {(() => {
+            const summary = lessonValidationSummary(slides);
+            if (!summary) return null;
+            return (
+              <div
+                className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 px-3 py-2 text-xs text-amber-700 dark:text-amber-300"
+                data-testid="lesson-validation-summary"
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>Lesson has {summary}. Review slides above before saving.</span>
+              </div>
+            );
+          })()}
+
           <Card>
             <CardContent className="pt-4 pb-4 space-y-3">
               <div className="flex items-center gap-3 flex-wrap">
@@ -8927,29 +9097,9 @@ function SurveyResultsView() {
 // Shared slide helpers (used by Prelim and Healing editors)
 // ========================
 
+// Delegate to the block registry for default content (Prelim / Healing context).
 function getDefaultSlideContent(type: string): string {
-  if (type === "quiz") return JSON.stringify({ questions: [{ question: "", options: ["", "", "", ""] }], results: { A: { title: "", description: "" }, B: { title: "", description: "" }, C: { title: "", description: "" }, D: { title: "", description: "" } } }, null, 2);
-  if (type === "timer") return JSON.stringify({ duration: 60, text: "" });
-  if (type === "knowledge_check") return JSON.stringify({ question: "", options: ["", ""], correctIndex: 0, explanation: "" });
-  if (type === "knowledge_quiz") return JSON.stringify({ intro: { title: "Test Your Knowledge", subtitle: "" }, questions: [{ question: "", options: ["", "", "", ""], correctIndex: 0 }], conclusion: "" });
-  if (type === "scenario") return JSON.stringify({ headline: "Imagine the following scenario", steps: [{ imageUrl: "", text: "" }] });
-  if (type === "chat_flow") return ORIGIN_OF_THE_WEIGHT_TEMPLATE;
-  if (type === "path_selector") return PATH_SELECTOR_DEFAULT;
-  if (type === "cross_grid") return CROSS_GRID_DEFAULT;
-  if (type === "story_choice") return STORY_CHOICE_DEFAULT;
-  if (type === "image_carousel") return IMAGE_CAROUSEL_DEFAULT;
-  if (type === "before_after") return BEFORE_AFTER_DEFAULT;
-  if (type === "scene") return "{}";
-  if (type === "captivity_builder") return JSON.stringify({ intro: "" });
-  if (type === "confession_finder") return JSON.stringify({ title: "Find a Confession", subtitle: "Make a plan to receive the Sacrament.", introText: "Enter your ZIP code and we'll show you listed Confession times at nearby parishes.", searchLabel: "Your ZIP code", searchPlaceholder: "e.g. 60611", confirmationReminder: "Parish schedules can change — please verify on the parish website or by calling before you go.", manualEntryEnabled: true, allowSkip: true, skipText: "I need help finding a time", saveVariable: "confession_plan" }, null, 2);
-  if (type === "pdf_download") return JSON.stringify({ url: "", label: "" });
-  if (type === "guided_prayer_process") return GUIDED_PRAYER_OCCULT_DEFAULT;
-  if (type === "workbook_link") return JSON.stringify({ sectionId: null, label: "" });
-  if (type === "workbook_session") return JSON.stringify({ sectionIds: [], heading: "Your open work", subheading: "Work through what you can." });
-  if (type === "prayer_link") return JSON.stringify({ prayerId: "prayer_1", label: "" });
-  if (type === "selection_reveal") return SELECTION_REVEAL_DEFAULT;
-  if (type === "bento_reveal") return BENTO_REVEAL_DEFAULT;
-  return "";
+  return getBlockDefaultContent(type, PRELIM_TEMPLATES);
 }
 
 // ========================
@@ -10123,16 +10273,34 @@ function HealingAdminView() {
 
   const { data: modules, isLoading: modulesLoading } = useQuery<HealingModule[]>({
     queryKey: ['/api/healing/modules'],
-    queryFn: () => fetch('/api/healing/modules', { credentials: 'include' }).then(r => r.json()),
+    queryFn: async () => {
+      const response = await fetch('/api/healing/modules', { credentials: 'include' });
+      if (!response.ok) throw new Error("Failed to load Healing modules");
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
   const { data: allContent } = useQuery<HealingContent[]>({
     queryKey: ['/api/healing/content'],
-    queryFn: () => fetch('/api/healing/content', { credentials: 'include' }).then(r => r.json()),
+    queryFn: async () => {
+      const response = await fetch('/api/healing/content', { credentials: 'include' });
+      if (!response.ok) throw new Error("Failed to load Healing content");
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
   const { data: allUsers } = useQuery<SafeUser[]>({
     queryKey: ['/api/admin/users'],
-    queryFn: () => fetch('/api/admin/users', { credentials: 'include' }).then(r => r.json()),
+    queryFn: async () => {
+      const response = await fetch('/api/admin/users', { credentials: 'include' });
+      if (!response.ok) throw new Error("Failed to load Healing participants");
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
+  const healingModules = Array.isArray(modules) ? modules : [];
+  const healingContent = Array.isArray(allContent) ? allContent : [];
+  const healingUsers = Array.isArray(allUsers) ? allUsers : [];
 
   const reorderMutation = useMutation({
     mutationFn: async (moduleNumbers: number[]) => {
@@ -10163,8 +10331,8 @@ function HealingAdminView() {
 
   const createModuleMutation = useMutation({
     mutationFn: async () => {
-      const maxNum = modules && modules.length > 0 ? Math.max(...modules.map((m) => m.moduleNumber)) : 0;
-      const maxSort = modules && modules.length > 0 ? Math.max(...modules.map((m) => m.sortOrder)) : 0;
+      const maxNum = healingModules.length > 0 ? Math.max(...healingModules.map((m) => m.moduleNumber)) : 0;
+      const maxSort = healingModules.length > 0 ? Math.max(...healingModules.map((m) => m.sortOrder)) : 0;
       const newNum = maxNum + 1;
       const newSort = maxSort + 1;
       await apiRequest("POST", '/api/admin/healing/create-module', { moduleNumber: newNum, title: `Module ${newNum}`, sortOrder: newSort });
@@ -10188,7 +10356,7 @@ function HealingAdminView() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: { moduleNumber: number; title: string; subtitle: string | null; imageUrl: string | null; slides: TrackASlide[] }) => {
-      const existingSortOrder = modules?.find((m) => m.moduleNumber === data.moduleNumber)?.sortOrder ?? data.moduleNumber;
+      const existingSortOrder = healingModules.find((m) => m.moduleNumber === data.moduleNumber)?.sortOrder ?? data.moduleNumber;
       await apiRequest("POST", '/api/admin/healing/modules', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, sortOrder: existingSortOrder });
       await apiRequest("POST", '/api/admin/healing/content', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, slides: data.slides });
     },
@@ -10221,12 +10389,12 @@ function HealingAdminView() {
     }
   };
 
-  const contentMap = new Map((allContent ?? []).map((c) => [c.moduleNumber, c]));
-  const modulesWithContent = (modules ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder).map((m) => ({ ...m, content: contentMap.get(m.moduleNumber) }));
-  const healingParticipants = allUsers?.filter((u) => u.track === 'C') ?? [];
+  const contentMap = new Map(healingContent.map((c) => [c.moduleNumber, c]));
+  const modulesWithContent = healingModules.slice().sort((a, b) => a.sortOrder - b.sortOrder).map((m) => ({ ...m, content: contentMap.get(m.moduleNumber) }));
+  const healingParticipants = healingUsers.filter((u) => u.track === 'C');
 
   const loadModuleIntoState = (moduleNumber: number) => {
-    const mod = modules?.find((m) => m.moduleNumber === moduleNumber);
+    const mod = healingModules.find((m) => m.moduleNumber === moduleNumber);
     const cont = contentMap.get(moduleNumber);
     setModTitle(mod?.title ?? `Module ${moduleNumber}`);
     setModSubtitle(mod?.subtitle ?? "");
@@ -10247,8 +10415,8 @@ function HealingAdminView() {
   };
 
   const handleReorder = (moduleNumber: number, dir: "up" | "down") => {
-    if (!modules) return;
-    const sorted = [...modules].sort((a, b) => a.sortOrder - b.sortOrder);
+    if (healingModules.length === 0) return;
+    const sorted = [...healingModules].sort((a, b) => a.sortOrder - b.sortOrder);
     const idx = sorted.findIndex((m) => m.moduleNumber === moduleNumber);
     const swapIdx = dir === "up" ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= sorted.length) return;

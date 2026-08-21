@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings } from './schema';
+import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, programs, programReleases, programEnrollments, releaseLessonProgress } from './schema';
 
 export type SafeUser = Omit<typeof users.$inferSelect, 'password'>;
 
@@ -448,6 +448,260 @@ export const api = {
         400: errorSchemas.validation,
         403: errorSchemas.forbidden,
       },
+    },
+  },
+};
+
+// ─── Programs & Releases API Contracts ───────────────────────────────────────
+
+export const programsApi = {
+  // Programs CRUD
+  listPrograms: {
+    method: 'GET' as const,
+    path: '/api/admin/programs',
+    responses: {
+      200: z.array(z.custom<typeof programs.$inferSelect>()),
+      403: errorSchemas.forbidden,
+    },
+  },
+  getProgram: {
+    method: 'GET' as const,
+    path: '/api/admin/programs/:id',
+    responses: {
+      200: z.custom<typeof programs.$inferSelect>(),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  createProgram: {
+    method: 'POST' as const,
+    path: '/api/admin/programs',
+    input: z.object({
+      key: z.string().min(1).regex(/^\S+$/),
+      name: z.string().min(1),
+      description: z.string().optional(),
+    }),
+    responses: {
+      201: z.custom<typeof programs.$inferSelect>(),
+      400: errorSchemas.validation,
+      403: errorSchemas.forbidden,
+      409: z.object({ message: z.string() }),
+    },
+  },
+  updateProgram: {
+    method: 'PATCH' as const,
+    path: '/api/admin/programs/:id',
+    input: z.object({
+      name: z.string().min(1).optional(),
+      description: z.string().optional(),
+      isActive: z.boolean().optional(),
+    }),
+    responses: {
+      200: z.custom<typeof programs.$inferSelect>(),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  deleteProgram: {
+    method: 'DELETE' as const,
+    path: '/api/admin/programs/:id',
+    responses: {
+      200: z.object({ message: z.string() }),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+      409: z.object({ message: z.string() }), // has published releases
+    },
+  },
+
+  // Releases
+  listReleases: {
+    method: 'GET' as const,
+    path: '/api/admin/programs/:programId/releases',
+    responses: {
+      200: z.array(z.custom<typeof programReleases.$inferSelect>()),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  getRelease: {
+    method: 'GET' as const,
+    path: '/api/admin/programs/:programId/releases/:releaseId',
+    responses: {
+      200: z.custom<typeof programReleases.$inferSelect>(),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  createDraftRelease: {
+    method: 'POST' as const,
+    path: '/api/admin/programs/:programId/releases',
+    input: z.object({
+      label: z.string().optional(),
+      curriculum: z.record(z.unknown()), // raw doc; server validates fully
+    }),
+    responses: {
+      201: z.custom<typeof programReleases.$inferSelect>(),
+      400: errorSchemas.validation,
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  updateDraftRelease: {
+    method: 'PATCH' as const,
+    path: '/api/admin/programs/:programId/releases/:releaseId',
+    input: z.object({
+      label: z.string().optional(),
+      curriculum: z.record(z.unknown()).optional(),
+    }),
+    responses: {
+      200: z.custom<typeof programReleases.$inferSelect>(),
+      400: errorSchemas.validation,
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+      409: z.object({ message: z.string() }), // not a draft
+    },
+  },
+  validateRelease: {
+    method: 'POST' as const,
+    path: '/api/admin/programs/:programId/releases/:releaseId/validate',
+    responses: {
+      200: z.object({ valid: z.boolean(), errors: z.array(z.string()).optional() }),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  publishRelease: {
+    method: 'POST' as const,
+    path: '/api/admin/programs/:programId/releases/:releaseId/publish',
+    responses: {
+      200: z.custom<typeof programReleases.$inferSelect>(),
+      400: errorSchemas.validation,
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+      409: z.object({ message: z.string() }), // not a draft
+    },
+  },
+  rollbackRelease: {
+    method: 'POST' as const,
+    path: '/api/admin/programs/:programId/releases/:releaseId/rollback',
+    responses: {
+      200: z.custom<typeof programReleases.$inferSelect>(), // new draft created from prior release
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+      409: z.object({ message: z.string() }),
+    },
+  },
+
+  // Enrollments
+  listEnrollments: {
+    method: 'GET' as const,
+    path: '/api/admin/programs/:programId/enrollments',
+    responses: {
+      200: z.array(z.custom<typeof programEnrollments.$inferSelect>()),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  getProgramProgress: {
+    method: 'GET' as const,
+    path: '/api/admin/programs/:programId/progress',
+    responses: {
+      200: z.array(z.object({
+        enrollmentId: z.number(),
+        userId: z.number(),
+        userName: z.string(),
+        userEmail: z.string(),
+        releaseId: z.number(),
+        releaseNumber: z.number(),
+        releaseLabel: z.string().nullable(),
+        status: z.string(),
+        completedLessons: z.number(),
+        totalLessons: z.number(),
+        percent: z.number(),
+        lastActivityAt: z.string().nullable(),
+      })),
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+    },
+  },
+  assignEnrollment: {
+    method: 'POST' as const,
+    path: '/api/admin/programs/:programId/enrollments',
+    input: z.object({
+      userId: z.number().int().positive(),
+      releaseId: z.number().int().positive().optional(), // defaults to latest published
+      cohortId: z.number().int().positive(),
+    }),
+    responses: {
+      201: z.custom<typeof programEnrollments.$inferSelect>(),
+      400: errorSchemas.validation,
+      403: errorSchemas.forbidden,
+      404: errorSchemas.notFound,
+      409: z.object({ message: z.string() }), // already enrolled
+    },
+  },
+  listMyEnrollments: {
+    method: 'GET' as const,
+    path: '/api/programs/my-enrollments',
+    responses: {
+      200: z.array(z.object({
+        program: z.custom<typeof programs.$inferSelect>(),
+        enrollment: z.custom<typeof programEnrollments.$inferSelect>(),
+        release: z.custom<typeof programReleases.$inferSelect>(),
+        progress: z.array(z.custom<typeof releaseLessonProgress.$inferSelect>()),
+      })),
+      401: errorSchemas.unauthorized,
+    },
+  },
+  getEffectiveEnrollment: {
+    method: 'GET' as const,
+    path: '/api/programs/:programId/my-enrollment',
+    responses: {
+      200: z.object({
+        enrollment: z.custom<typeof programEnrollments.$inferSelect>(),
+        release: z.custom<typeof programReleases.$inferSelect>(),
+      }).nullable(),
+      401: errorSchemas.unauthorized,
+    },
+  },
+
+  // Release-aware lesson progress (new program system)
+  getLessonProgress: {
+    method: 'GET' as const,
+    path: '/api/programs/progress/:enrollmentId/:lessonKey',
+    responses: {
+      200: z.custom<typeof releaseLessonProgress.$inferSelect>().nullable(),
+      401: errorSchemas.unauthorized,
+      403: errorSchemas.forbidden,
+    },
+  },
+  upsertLessonProgress: {
+    method: 'PUT' as const,
+    path: '/api/programs/progress/:enrollmentId/:lessonKey',
+    input: z.object({
+      slideIndex: z.number().int().min(0),
+      completed: z.boolean().optional(),
+    }),
+    responses: {
+      200: z.custom<typeof releaseLessonProgress.$inferSelect>(),
+      400: errorSchemas.validation,
+      401: errorSchemas.unauthorized,
+      403: errorSchemas.forbidden,
+    },
+  },
+
+  // Track A import
+  importTrackA: {
+    method: 'POST' as const,
+    path: '/api/admin/programs/import-track-a',
+    responses: {
+      200: z.object({
+        program: z.custom<typeof programs.$inferSelect>(),
+        release: z.custom<typeof programReleases.$inferSelect>(),
+        created: z.boolean(),
+      }),
+      400: errorSchemas.validation,
+      403: errorSchemas.forbidden,
     },
   },
 };

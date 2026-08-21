@@ -27,6 +27,11 @@ export interface PrayerData {
   audioUrl?: string | null;
 }
 
+export interface ReleaseProgressIdentity {
+  enrollmentId: number;
+  lessonKey: string;
+}
+
 interface LessonFlowProps {
   content: TrackAContent;
   dayNumber: number;
@@ -41,6 +46,8 @@ interface LessonFlowProps {
   closingPrayer?: PrayerData | null;
   canSkipPrayer?: boolean;
   notebookUnlockCategory?: { name: string; slug: string } | null;
+  releaseProgress?: ReleaseProgressIdentity;
+  lessonContextKey?: string;
 }
 
 export function LessonFlow({
@@ -57,6 +64,8 @@ export function LessonFlow({
   closingPrayer,
   canSkipPrayer = false,
   notebookUnlockCategory,
+  releaseProgress,
+  lessonContextKey,
 }: LessonFlowProps) {
   const { data: mentorData } = useQuery<{ profilePhotoUrl?: string | null; name?: string | null }>({
     queryKey: ["/api/users", mentorId],
@@ -97,6 +106,9 @@ export function LessonFlow({
   // Ref version so handleLoadingComplete can read it synchronously after the fetch resolves
   const savedProgressRef = useRef<number>(0);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const releaseProgressPath = releaseProgress
+    ? `/api/programs/progress/${releaseProgress.enrollmentId}/${encodeURIComponent(releaseProgress.lessonKey)}`
+    : null;
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
@@ -173,8 +185,9 @@ export function LessonFlow({
   // Fetch saved progress on mount — write to both ref (for sync read in handleLoadingComplete)
   // and state (for the resume banner fallback if fetch resolves after loading completes)
   useEffect(() => {
-    if (previewMode || dayNumber < 0) return;
-    fetch(`/api/lesson-progress/${dayNumber}`, { credentials: "include" })
+    if (previewMode || (!releaseProgressPath && dayNumber < 0)) return;
+    const progressPath = releaseProgressPath ?? `/api/lesson-progress/${dayNumber}`;
+    fetch(progressPath, { credentials: "include" })
       .then(r => r.ok ? r.json() : null)
       .then((data: { slideIndex: number } | null) => {
         if (data && data.slideIndex > 0) {
@@ -184,13 +197,19 @@ export function LessonFlow({
       })
       .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dayNumber, previewMode, releaseProgressPath]);
 
   // Auto-save current slide index as user progresses (debounced, skip slide 0)
   useEffect(() => {
-    if (previewMode || flowState !== "slides" || dayNumber < 0 || currentSlide <= 0) return;
+    if (
+      previewMode
+      || flowState !== "slides"
+      || (!releaseProgressPath && dayNumber < 0)
+      || currentSlide <= 0
+    ) return;
+    const progressPath = releaseProgressPath ?? `/api/lesson-progress/${dayNumber}`;
     const timer = setTimeout(() => {
-      fetch(`/api/lesson-progress/${dayNumber}`, {
+      fetch(progressPath, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -198,7 +217,7 @@ export function LessonFlow({
       }).catch(() => {});
     }, 800);
     return () => clearTimeout(timer);
-  }, [currentSlide, flowState, dayNumber, previewMode]);
+  }, [currentSlide, flowState, dayNumber, previewMode, releaseProgressPath]);
 
   const handleContentScroll = useCallback(() => {
     const el = scrollContentRef.current;
@@ -207,12 +226,18 @@ export function LessonFlow({
     if (atBottom) setHasReachedBottom(true);
   }, [hasReachedBottom]);
 
-  const overlayContextKey =
-    dayNumber < 0 ? `prelim-module-${Math.abs(dayNumber)}` : `chat-flow-${dayNumber}`;
+  const overlayContextKey = lessonContextKey
+    ? `program-${lessonContextKey}`
+    : dayNumber < 0
+      ? `prelim-module-${Math.abs(dayNumber)}`
+      : `chat-flow-${dayNumber}`;
 
   const { data: overlayConfig } = useQuery<OverlayConfig>({
     queryKey: ["/api/admin/module-overlays", overlayContextKey],
     queryFn: async () => {
+      if (lessonContextKey) {
+        return {} as OverlayConfig;
+      }
       const res = await fetch(
         `/api/admin/module-overlays/${encodeURIComponent(overlayContextKey)}`,
         { credentials: "include" }
@@ -222,6 +247,7 @@ export function LessonFlow({
     },
     staleTime: 0,
     refetchOnMount: "always",
+    enabled: !lessonContextKey,
   });
 
   const slides = useMemo<SlideData[]>(() => {
@@ -398,13 +424,27 @@ export function LessonFlow({
   // Fire completion recording as soon as the completion screen appears — don't wait for the button press
   useEffect(() => {
     if (flowState === "complete" && !previewMode) {
-      onLessonFinished?.();
+      if (releaseProgressPath) {
+        fetch(releaseProgressPath, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            slideIndex: Math.max(currentSlide, 0),
+            completed: true,
+          }),
+        })
+          .catch(() => {})
+          .finally(() => onLessonFinished?.());
+      } else {
+        onLessonFinished?.();
+      }
     }
   }, [flowState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFinalComplete = useCallback(() => {
     // Clear saved progress when lesson finishes
-    if (!previewMode && dayNumber >= 0) {
+    if (!previewMode && !releaseProgressPath && dayNumber >= 0) {
       fetch(`/api/lesson-progress/${dayNumber}`, {
         method: "DELETE",
         credentials: "include",
@@ -419,7 +459,7 @@ export function LessonFlow({
       }
     }
     onComplete();
-  }, [notebookUnlockCategory, onComplete, previewMode, dayNumber]);
+  }, [notebookUnlockCategory, onComplete, previewMode, dayNumber, releaseProgressPath]);
 
   const handleContinue = useCallback(() => {
     const alreadySeen = localStorage.getItem(`overlay-seen-${overlayContextKey}`) === "true";
@@ -597,9 +637,11 @@ export function LessonFlow({
       surveyAlreadySubmitted={effectiveSlideData.type === "survey" ? completedSurveySlides.has(currentSlide) : undefined}
       scenarioRevealCount={effectiveSlideData.type === "scenario" ? scenarioRevealCount : undefined}
       chatFlowContextKey={effectiveSlideData.type === "chat_flow"
-        ? (dayNumber < 0
-            ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
-            : `track_a-day${dayNumber}-slide${currentSlide}`)
+        ? (lessonContextKey
+            ? `program-${lessonContextKey}-slide${currentSlide}`
+            : dayNumber < 0
+              ? `prelim-module${Math.abs(dayNumber)}-slide${currentSlide}`
+              : `track_a-day${dayNumber}-slide${currentSlide}`)
         : undefined}
       guidedPrayerSlideIndex={effectiveSlideData.type === "guided_prayer_process" ? currentSlide : undefined}
       chatFlowTotalSlides={slides.length}

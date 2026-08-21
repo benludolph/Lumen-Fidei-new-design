@@ -58,9 +58,10 @@ export async function setupAuth(app: Express) {
   }
 
   const isProduction = app.get("env") === "production";
-  if (isProduction) {
-    app.set("trust proxy", 1);
-  }
+  // Replit proxies both development previews and production deployments.
+  // Trust exactly that first hop so secure cookies and rate limiting use the
+  // participant's forwarded address without accepting an arbitrary chain.
+  app.set("trust proxy", 1);
 
   // Use PostgreSQL session store in production so sessions survive autoscale
   // restarts and are shared across all instances. Fall back to MemoryStore in dev.

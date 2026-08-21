@@ -4,9 +4,16 @@ import { setupAuth, hashPassword, verifyPassword } from "./auth";
 import { storage } from "./storage";
 import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
-import { api } from "@shared/routes";
+import { api, programsApi } from "@shared/routes";
 import { z } from "zod";
 import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
+import { validateCurriculumDocument } from "@shared/curriculum";
+import {
+  getTrackALessonKey,
+  releaseToPrelimModules,
+  releaseToTrackAContent,
+  releaseToTrackAModules,
+} from "./program-release-adapter";
 import { db } from "./db";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
@@ -473,6 +480,20 @@ export async function registerRoutes(
     const userId = Number(req.params.id);
     const input = api.users.update.input.parse(req.body);
     
+    // Last-active-admin protection: reject if this update would demote or deactivate
+    // the last active admin.
+    const target = await storage.getUser(userId);
+    if (target?.role === 'admin') {
+      const isDeactivating = input.isActive === false;
+      const isDemoting = input.role !== undefined && input.role !== 'admin';
+      if (isDeactivating || isDemoting) {
+        const activeAdminCount = await storage.countActiveAdmins();
+        if (activeAdminCount <= 1) {
+          return res.status(409).json({ message: "Cannot deactivate or demote the last active admin account." });
+        }
+      }
+    }
+
     // Hash the password if it is being updated
     const updateData = input.password
       ? { ...input, password: await hashPassword(input.password) }
@@ -487,7 +508,14 @@ export async function registerRoutes(
     if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
     const target = await storage.getUser(userId);
     if (!target) return res.status(404).json({ message: "User not found" });
-    if (target.role === 'admin') return res.status(403).json({ message: "Cannot deactivate an admin account" });
+    if (target.role === 'admin') {
+      // Last-active-admin protection
+      const activeAdminCount = await storage.countActiveAdmins();
+      if (activeAdminCount <= 1) {
+        return res.status(409).json({ message: "Cannot deactivate the last active admin account." });
+      }
+      return res.status(403).json({ message: "Use the user update endpoint to deactivate an admin account." });
+    }
     const updated = await storage.updateUser(userId, { isActive: false });
     res.json(sanitizeUser(updated));
   });
@@ -574,9 +602,61 @@ export async function registerRoutes(
     };
   }
 
+  async function getUserTrackAReleaseData(userId: number) {
+    const context = await storage.getActiveProgramEnrollmentByKey(userId, "track-a");
+    if (!context) return null;
+    const validation = validateCurriculumDocument(context.release.curriculum);
+    if (!validation.ok) {
+      throw new Error(`Pinned Track A release ${context.release.id} is invalid`);
+    }
+    return { ...context, curriculum: validation.doc };
+  }
+
+  async function getReleaseAwareCurrentDay(
+    user: Express.User,
+    releaseData: Awaited<ReturnType<typeof getUserTrackAReleaseData>>,
+  ): Promise<number> {
+    if (releaseData) {
+      if (!releaseData.enrollment.cohortId) return effectiveCurrentDay(user, 0);
+      const cohort = await storage.getCohort(releaseData.enrollment.cohortId);
+      if (!cohort) return effectiveCurrentDay(user, 0);
+      const startDate = cohort.startDate.toISOString().slice(0, 10);
+      return effectiveCurrentDay(user, computeCurrentProgramDay(startDate));
+    }
+    const cohortStartDate = await storage.getCohortSetting("cohort_start_date");
+    return effectiveCurrentDay(user, computeCurrentProgramDay(cohortStartDate));
+  }
+
+  async function getCompletedPrelimPositions(
+    userId: number,
+    releaseData: Awaited<ReturnType<typeof getUserTrackAReleaseData>>,
+  ): Promise<Set<number>> {
+    if (releaseData) {
+      const prelimLessons = releaseData.curriculum.modules
+        .find((module) => module.key === "prelim")
+        ?.lessons ?? [];
+      const progress = await storage.listReleaseLessonProgress(releaseData.enrollment.id);
+      const completedKeys = new Set(
+        progress.filter((item) => item.completed).map((item) => item.lessonKey),
+      );
+      return new Set(
+        prelimLessons.flatMap((lesson, index) => completedKeys.has(lesson.key) ? [index + 1] : []),
+      );
+    }
+    const completions = await storage.getUserPrelimCompletions(userId);
+    return new Set(completions.map((item) => item.modulePosition));
+  }
+
   app.get('/api/track-a-content', requireAuth, async (req, res) => {
-    const variant = await getUserVariantData(req.user!.id);
-    const content = variant ? variant.track_a_content : await storage.getAllTrackAContent();
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(req.user!.id)
+      : null;
+    const variant = releaseData ? null : await getUserVariantData(req.user!.id);
+    const content = releaseData
+      ? releaseToTrackAContent(releaseData.curriculum)
+      : variant
+        ? variant.track_a_content
+        : await storage.getAllTrackAContent();
     if (req.user!.role !== 'admin') {
       const summaries = content.map((c: any) => ({
         id: c.id,
@@ -594,32 +674,38 @@ export async function registerRoutes(
 
   app.get('/api/track-a-content/:day', requireAuth, async (req, res) => {
     const day = Number(req.params.day);
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(req.user!.id)
+      : null;
 
     if (req.user!.role === 'participant') {
       // Check prelim completion gate (Day 0 also requires all prelims done)
-      const [completions, prelimMods] = await Promise.all([
-        storage.getUserPrelimCompletions(req.user!.id),
-        storage.getPrelimModules(),
-      ]);
-      const allPrelimsComplete = completions.length >= prelimMods.length;
+      const prelimMods = releaseData
+        ? releaseToPrelimModules(releaseData.curriculum)
+        : await storage.getPrelimModules();
+      const completedPositions = await getCompletedPrelimPositions(req.user!.id, releaseData);
+      const allPrelimsComplete = prelimMods.every((module) => completedPositions.has(module.position));
       if (!allPrelimsComplete) {
         return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
       }
       // Day 0 unlocks once prelims are done (regardless of cohort start).
       // Days 1-30 require prelims done AND cohort started.
       if (day !== 0) {
-        const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-        const globalDay = computeCurrentProgramDay(cohortStartDateStr);
-        const currentDay = effectiveCurrentDay(req.user, globalDay);
+        const currentDay = await getReleaseAwareCurrentDay(req.user!, releaseData);
         if (currentDay === 0 || day > currentDay) {
           return res.status(403).json({ message: "DAY_LOCKED", code: "DAY_LOCKED" });
         }
       }
     }
 
-    const variant = await getUserVariantData(req.user!.id);
+    const variant = releaseData ? null : await getUserVariantData(req.user!.id);
     let content: any | undefined;
-    if (variant) {
+    if (releaseData) {
+      const ordered = releaseToTrackAContent(releaseData.curriculum);
+      content = day === 0
+        ? ordered.find((item) => item.dayNumber === 0)
+        : ordered.filter((item) => item.dayNumber > 0)[day - 1];
+    } else if (variant) {
       if (day === 0) {
         content = variant.track_a_content.find((c: any) => c.dayNumber === 0);
       } else {
@@ -689,10 +775,25 @@ export async function registerRoutes(
     const day = Number(req.params.day);
     if (isNaN(day)) return res.status(400).json({ message: "Invalid day" });
 
-    const [globalPrayers, dayContent] = await Promise.all([
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(req.user!.id)
+      : null;
+    const [globalPrayers, legacyDayContent] = await Promise.all([
       storage.getWrapPrayers(),
-      day > 0 ? storage.getTrackAContentByPosition(day) : storage.getTrackAContent(day),
+      releaseData
+        ? Promise.resolve(undefined)
+        : day > 0
+          ? storage.getTrackAContentByPosition(day)
+          : storage.getTrackAContent(day),
     ]);
+    const releaseContent = releaseData
+      ? releaseToTrackAContent(releaseData.curriculum)
+      : [];
+    const dayContent = releaseData
+      ? day === 0
+        ? releaseContent.find((item) => item.dayNumber === 0)
+        : releaseContent.filter((item) => item.dayNumber > 0)[day - 1]
+      : legacyDayContent;
 
     const globalOpening = globalPrayers.find(p => p.kind === "opening");
     const globalClosing = globalPrayers.find(p => p.kind === "closing");
@@ -715,7 +816,12 @@ export async function registerRoutes(
   // === Track A Modules ===
 
   app.get('/api/track-a-modules', requireAuth, async (req, res) => {
-    const modules = await storage.getTrackAModules();
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(req.user!.id)
+      : null;
+    const modules = releaseData
+      ? releaseToTrackAModules(releaseData.curriculum)
+      : await storage.getTrackAModules();
     res.json(modules);
   });
 
@@ -1308,9 +1414,8 @@ export async function registerRoutes(
     const input = api.prayerCompletions.create.input.parse(req.body);
     
     if (req.user!.role === 'participant') {
-      const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-      const globalDay = computeCurrentProgramDay(cohortStartDateStr);
-      const currentDay = effectiveCurrentDay(req.user, globalDay);
+      const releaseData = await getUserTrackAReleaseData(req.user!.id);
+      const currentDay = await getReleaseAwareCurrentDay(req.user!, releaseData);
       // Allow Day 0 even before cohort starts (it's the pre-program intro module).
       // Days 1-30 are still blocked when currentDay === 0 because dayNumber > 0.
       if (input.dayNumber > currentDay) {
@@ -1329,6 +1434,25 @@ export async function registerRoutes(
       dayNumber: input.dayNumber,
       period: input.period
     });
+
+    if (input.period === "morning") {
+      const releaseData = await getUserTrackAReleaseData(req.user!.id);
+      const lessonKey = releaseData
+        ? getTrackALessonKey(releaseData.curriculum, input.dayNumber)
+        : null;
+      if (releaseData && lessonKey) {
+        const existingProgress = await storage.getReleaseLessonProgress(
+          releaseData.enrollment.id,
+          lessonKey,
+        );
+        await storage.upsertReleaseLessonProgress(
+          releaseData.enrollment.id,
+          lessonKey,
+          existingProgress?.slideIndex ?? 0,
+          true,
+        );
+      }
+    }
     
     res.status(201).json(completion);
   });
@@ -1345,31 +1469,96 @@ export async function registerRoutes(
     }
     
     await storage.deletePrayerCompletion(req.user!.id, day, period);
+    if (period === "morning") {
+      const releaseData = await getUserTrackAReleaseData(req.user!.id);
+      const lessonKey = releaseData
+        ? getTrackALessonKey(releaseData.curriculum, day)
+        : null;
+      if (releaseData && lessonKey) {
+        const existingProgress = await storage.getReleaseLessonProgress(
+          releaseData.enrollment.id,
+          lessonKey,
+        );
+        await storage.upsertReleaseLessonProgress(
+          releaseData.enrollment.id,
+          lessonKey,
+          existingProgress?.slideIndex ?? 0,
+          false,
+        );
+      }
+    }
     res.json({ message: "Completion removed" });
   });
 
   // === Lesson Progress ===
 
   app.get("/api/lesson-progress/:dayNumber", requireAuth, async (req, res) => {
-    const dayNumber = parseInt(req.params.dayNumber, 10);
+    const dayNumber = parseInt(String(req.params.dayNumber), 10);
     if (isNaN(dayNumber)) return res.sendStatus(400);
+    const releaseData = await getUserTrackAReleaseData(req.user!.id);
+    const lessonKey = releaseData
+      ? getTrackALessonKey(releaseData.curriculum, dayNumber)
+      : null;
+    if (releaseData && lessonKey) {
+      const progress = await storage.getReleaseLessonProgress(
+        releaseData.enrollment.id,
+        lessonKey,
+      );
+      return res.json(progress ? { slideIndex: progress.slideIndex } : null);
+    }
     const progress = await storage.getLessonProgress(req.user!.id, dayNumber);
     res.json(progress ?? null);
   });
 
   app.put("/api/lesson-progress/:dayNumber", requireAuth, writeLimiter, async (req, res) => {
-    const dayNumber = parseInt(req.params.dayNumber, 10);
+    const dayNumber = parseInt(String(req.params.dayNumber), 10);
     if (isNaN(dayNumber)) return res.sendStatus(400);
     const schema = z.object({ slideIndex: z.number().int().min(0) });
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
+    const releaseData = await getUserTrackAReleaseData(req.user!.id);
+    const lessonKey = releaseData
+      ? getTrackALessonKey(releaseData.curriculum, dayNumber)
+      : null;
+    if (releaseData && lessonKey) {
+      const current = await storage.getReleaseLessonProgress(
+        releaseData.enrollment.id,
+        lessonKey,
+      );
+      await storage.upsertReleaseLessonProgress(
+        releaseData.enrollment.id,
+        lessonKey,
+        parsed.data.slideIndex,
+        current?.completed ?? false,
+      );
+      return res.json({ ok: true });
+    }
     await storage.upsertLessonProgress(req.user!.id, dayNumber, parsed.data.slideIndex);
     res.json({ ok: true });
   });
 
   app.delete("/api/lesson-progress/:dayNumber", requireAuth, async (req, res) => {
-    const dayNumber = parseInt(req.params.dayNumber, 10);
+    const dayNumber = parseInt(String(req.params.dayNumber), 10);
     if (isNaN(dayNumber)) return res.sendStatus(400);
+    const releaseData = await getUserTrackAReleaseData(req.user!.id);
+    const lessonKey = releaseData
+      ? getTrackALessonKey(releaseData.curriculum, dayNumber)
+      : null;
+    if (releaseData && lessonKey) {
+      const current = await storage.getReleaseLessonProgress(
+        releaseData.enrollment.id,
+        lessonKey,
+      );
+      if (current) {
+        await storage.upsertReleaseLessonProgress(
+          releaseData.enrollment.id,
+          lessonKey,
+          0,
+          current.completed,
+        );
+      }
+      return res.json({ ok: true });
+    }
     await storage.deleteLessonProgress(req.user!.id, dayNumber);
     res.json({ ok: true });
   });
@@ -1394,6 +1583,14 @@ export async function registerRoutes(
     const userId = Number(req.params.id);
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Last-active-admin protection
+    if (user.role === 'admin' && user.isActive) {
+      const activeAdminCount = await storage.countActiveAdmins();
+      if (activeAdminCount <= 1) {
+        return res.status(409).json({ message: "Cannot delete the last active admin account." });
+      }
+    }
     
     await storage.deleteUser(userId);
     res.json({ message: "User deleted" });
@@ -1517,8 +1714,19 @@ export async function registerRoutes(
   
   app.get(api.cohort.getStartDate.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const startDateStr = await storage.getCohortSetting("cohort_start_date");
+
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(req.user!.id)
+      : null;
+    let startDateStr: string | null;
+    if (releaseData) {
+      const cohort = releaseData.enrollment.cohortId
+        ? await storage.getCohort(releaseData.enrollment.cohortId)
+        : undefined;
+      startDateStr = cohort?.startDate.toISOString().slice(0, 10) ?? null;
+    } else {
+      startDateStr = await storage.getCohortSetting("cohort_start_date");
+    }
     const globalDay = computeCurrentProgramDay(startDateStr);
     
     // Admins and superusers always see all 30 days unlocked;
@@ -2440,18 +2648,22 @@ export async function registerRoutes(
   // GET /api/prelim-modules — returns all 3 modules with user completion status
   app.get('/api/prelim-modules', requireAuth, async (req, res) => {
     const userId = req.user!.id;
-    const variant = await getUserVariantData(userId);
-    const modules = variant
-      ? [...variant.prelim_modules].sort((a: any, b: any) => a.position - b.position)
-      : await storage.getPrelimModules();
-    let completedPositions: number[] = [];
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(userId)
+      : null;
+    const variant = releaseData ? null : await getUserVariantData(userId);
+    const modules = releaseData
+      ? releaseToPrelimModules(releaseData.curriculum)
+      : variant
+        ? [...variant.prelim_modules].sort((a: any, b: any) => a.position - b.position)
+        : await storage.getPrelimModules();
+    let completedPositions = new Set<number>();
     if (req.user!.role === 'participant' || req.user!.role === 'superuser') {
-      const completions = await storage.getUserPrelimCompletions(userId);
-      completedPositions = completions.map(c => c.modulePosition);
+      completedPositions = await getCompletedPrelimPositions(userId, releaseData);
     }
     const result = modules.map((m: any) => ({
       ...m,
-      completed: completedPositions.includes(m.position),
+      completed: completedPositions.has(m.position),
     }));
     res.json(result);
   });
@@ -2466,19 +2678,40 @@ export async function registerRoutes(
       return res.status(400).json({ message: "Invalid module position." });
     }
     const userId = req.user!.id;
-    const variant = await getUserVariantData(userId);
-    const allModules = variant ? variant.prelim_modules : await storage.getPrelimModules();
+    const releaseData = req.user!.role === "participant"
+      ? await getUserTrackAReleaseData(userId)
+      : null;
+    const variant = releaseData ? null : await getUserVariantData(userId);
+    const allModules = releaseData
+      ? releaseToPrelimModules(releaseData.curriculum)
+      : variant
+        ? variant.prelim_modules
+        : await storage.getPrelimModules();
     if (position > allModules.length) {
       return res.status(400).json({ message: "Invalid module position." });
     }
     // Enforce sequential unlock: must have completed position-1 first
     if (position > 1) {
-      const completions = await storage.getUserPrelimCompletions(userId);
-      const completedPositions = completions.map(c => c.modulePosition);
-      if (!completedPositions.includes(position - 1)) {
+      const completedPositions = await getCompletedPrelimPositions(userId, releaseData);
+      if (!completedPositions.has(position - 1)) {
         return res.status(403).json({ message: "You must complete the previous module first." });
       }
     }
+    if (releaseData) {
+      const prelimLesson = releaseData.curriculum.modules
+        .find((module) => module.key === "prelim")
+        ?.lessons[position - 1];
+      if (prelimLesson) {
+        await storage.upsertReleaseLessonProgress(
+          releaseData.enrollment.id,
+          prelimLesson.key,
+          0,
+          true,
+        );
+      }
+    }
+    // Keep the legacy completion row in sync for the existing admin/participant
+    // surfaces, but enrolled participants read release progress as their authority.
     const completion = await storage.completePrelimModule(userId, position);
     res.json(completion);
   });
@@ -3730,6 +3963,644 @@ export async function registerRoutes(
   app.get("/api/mentor/activity-summary", requireRole("mentor", "admin"), async (req, res) => {
     const summary = await storage.getMenteeActivitySummary(req.user!.id);
     res.json(summary);
+  });
+
+  // ─── Programs CRUD ──────────────────────────────────────────────────────────
+
+  app.get(programsApi.listPrograms.path, requireRole('admin'), async (_req, res) => {
+    const list = await storage.listPrograms();
+    res.json(list);
+  });
+
+  app.get(programsApi.getProgram.path, requireRole('admin'), async (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid program id" });
+    const prog = await storage.getProgram(id);
+    if (!prog) return res.status(404).json({ message: "Program not found" });
+    res.json(prog);
+  });
+
+  app.post(programsApi.createProgram.path, requireRole('admin'), async (req, res) => {
+    try {
+      const input = programsApi.createProgram.input.parse(req.body);
+      const existing = await storage.getProgramByKey(input.key);
+      if (existing) return res.status(409).json({ message: `Program with key "${input.key}" already exists` });
+      const prog = await storage.createProgram({ key: input.key, name: input.name, description: input.description ?? null });
+      res.status(201).json(prog);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  app.patch(programsApi.updateProgram.path, requireRole('admin'), async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid program id" });
+      const input = programsApi.updateProgram.input.parse(req.body);
+      const prog = await storage.getProgram(id);
+      if (!prog) return res.status(404).json({ message: "Program not found" });
+      const updated = await storage.updateProgram(id, input);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  app.delete(programsApi.deleteProgram.path, requireRole('admin'), async (req, res) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid program id" });
+    const prog = await storage.getProgram(id);
+    if (!prog) return res.status(404).json({ message: "Program not found" });
+    // A program becomes historical data as soon as it has a release. Deleting
+    // it would cascade through pinned enrollments and release progress.
+    const [releases, enrollments] = await Promise.all([
+      storage.listReleases(id),
+      storage.listEnrollments(id),
+    ]);
+    if (releases.length > 0 || enrollments.length > 0) {
+      return res.status(409).json({
+        message: "Cannot delete a program that has release or enrollment history.",
+      });
+    }
+    await storage.deleteProgram(id);
+    res.json({ message: "Program deleted" });
+  });
+
+  // ─── Releases ───────────────────────────────────────────────────────────────
+
+  app.get(programsApi.listReleases.path, requireRole('admin'), async (req, res) => {
+    const programId = Number(req.params.programId);
+    if (isNaN(programId)) return res.status(400).json({ message: "Invalid programId" });
+    const prog = await storage.getProgram(programId);
+    if (!prog) return res.status(404).json({ message: "Program not found" });
+    const releases = await storage.listReleases(programId);
+    res.json(releases);
+  });
+
+  app.get(programsApi.getRelease.path, requireRole('admin'), async (req, res) => {
+    const programId = Number(req.params.programId);
+    const releaseId = Number(req.params.releaseId);
+    if (isNaN(programId) || isNaN(releaseId)) return res.status(400).json({ message: "Invalid release id" });
+    const release = await storage.getRelease(releaseId);
+    if (!release || release.programId !== programId) return res.status(404).json({ message: "Release not found" });
+    res.json(release);
+  });
+
+  app.post(programsApi.createDraftRelease.path, requireRole('admin'), async (req, res) => {
+    try {
+      const programId = Number(req.params.programId);
+      if (isNaN(programId)) return res.status(400).json({ message: "Invalid programId" });
+      const prog = await storage.getProgram(programId);
+      if (!prog) return res.status(404).json({ message: "Program not found" });
+      const input = programsApi.createDraftRelease.input.parse(req.body);
+      // Validate curriculum document
+      const validation = validateCurriculumDocument(input.curriculum);
+      if (!validation.ok) {
+        return res.status(400).json({ message: "Invalid curriculum document", errors: validation.errors.map(e => e.message) });
+      }
+      if (validation.doc.programKey !== prog.key) {
+        return res.status(400).json({
+          message: `Curriculum programKey must match program key "${prog.key}".`,
+        });
+      }
+      const release = await storage.createDraftRelease(programId, validation.doc, input.label, req.user!.id);
+      res.status(201).json(release);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  app.patch(programsApi.updateDraftRelease.path, requireRole('admin'), async (req, res) => {
+    try {
+      const programId = Number(req.params.programId);
+      const releaseId = Number(req.params.releaseId);
+      if (isNaN(programId) || isNaN(releaseId)) return res.status(400).json({ message: "Invalid release id" });
+      const release = await storage.getRelease(releaseId);
+      if (!release || release.programId !== programId) return res.status(404).json({ message: "Release not found" });
+      const prog = await storage.getProgram(programId);
+      if (!prog) return res.status(404).json({ message: "Program not found" });
+      if (release.status !== 'draft') return res.status(409).json({ message: "Only draft releases can be edited." });
+      const input = programsApi.updateDraftRelease.input.parse(req.body);
+      const updateData: { label?: string; curriculum?: any } = {};
+      if (input.label !== undefined) updateData.label = input.label;
+      if (input.curriculum !== undefined) {
+        const validation = validateCurriculumDocument(input.curriculum);
+        if (!validation.ok) {
+          return res.status(400).json({ message: "Invalid curriculum document", errors: validation.errors.map(e => e.message) });
+        }
+        if (validation.doc.programKey !== prog.key) {
+          return res.status(400).json({
+            message: `Curriculum programKey must match program key "${prog.key}".`,
+          });
+        }
+        updateData.curriculum = validation.doc;
+      }
+      const updated = await storage.updateDraftRelease(releaseId, updateData);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  app.post(programsApi.validateRelease.path, requireRole('admin'), async (req, res) => {
+    const programId = Number(req.params.programId);
+    const releaseId = Number(req.params.releaseId);
+    if (isNaN(programId) || isNaN(releaseId)) return res.status(400).json({ message: "Invalid release id" });
+    const release = await storage.getRelease(releaseId);
+    if (!release || release.programId !== programId) return res.status(404).json({ message: "Release not found" });
+    const prog = await storage.getProgram(programId);
+    if (!prog) return res.status(404).json({ message: "Program not found" });
+    const validation = validateCurriculumDocument(release.curriculum);
+    if (validation.ok && validation.doc.programKey === prog.key) {
+      res.json({ valid: true });
+    } else {
+      const errors = validation.ok
+        ? [`Curriculum programKey must match program key "${prog.key}".`]
+        : validation.errors.map(e => e.message);
+      res.json({ valid: false, errors });
+    }
+  });
+
+  app.post(programsApi.publishRelease.path, requireRole('admin'), async (req, res) => {
+    try {
+      const programId = Number(req.params.programId);
+      const releaseId = Number(req.params.releaseId);
+      if (isNaN(programId) || isNaN(releaseId)) return res.status(400).json({ message: "Invalid release id" });
+      const release = await storage.getRelease(releaseId);
+      if (!release || release.programId !== programId) return res.status(404).json({ message: "Release not found" });
+      if (release.status !== 'draft') return res.status(409).json({ message: "Only draft releases can be published." });
+      const published = await storage.publishRelease(releaseId);
+      res.json(published);
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("validation failed")) {
+        return res.status(400).json({ message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  app.post(programsApi.rollbackRelease.path, requireRole('admin'), async (req, res) => {
+    try {
+      const programId = Number(req.params.programId);
+      const releaseId = Number(req.params.releaseId);
+      if (isNaN(programId) || isNaN(releaseId)) return res.status(400).json({ message: "Invalid release id" });
+      const release = await storage.getRelease(releaseId);
+      if (!release || release.programId !== programId) return res.status(404).json({ message: "Release not found" });
+      const newDraft = await storage.rollbackToRelease(releaseId, req.user!.id);
+      res.json(newDraft);
+    } catch (err) {
+      if (err instanceof Error) return res.status(409).json({ message: err.message });
+      throw err;
+    }
+  });
+
+  // ─── Enrollments ─────────────────────────────────────────────────────────────
+
+  app.get(programsApi.listEnrollments.path, requireRole('admin'), async (req, res) => {
+    const programId = Number(req.params.programId);
+    if (isNaN(programId)) return res.status(400).json({ message: "Invalid programId" });
+    const prog = await storage.getProgram(programId);
+    if (!prog) return res.status(404).json({ message: "Program not found" });
+    const enrollments = await storage.listEnrollments(programId);
+    res.json(enrollments);
+  });
+
+  app.get(programsApi.getProgramProgress.path, requireRole('admin'), async (req, res) => {
+    const programId = Number(req.params.programId);
+    if (isNaN(programId)) return res.status(400).json({ message: "Invalid programId" });
+    const program = await storage.getProgram(programId);
+    if (!program) return res.status(404).json({ message: "Program not found" });
+
+    const enrollments = await storage.listEnrollments(programId);
+    const rows = await Promise.all(enrollments.map(async (enrollment) => {
+      const [user, release, progress] = await Promise.all([
+        storage.getUser(enrollment.userId),
+        storage.getRelease(enrollment.releaseId),
+        storage.listReleaseLessonProgress(enrollment.id),
+      ]);
+      if (!user || !release || release.programId !== programId) return null;
+
+      const validation = validateCurriculumDocument(release.curriculum);
+      const lessonKeys = validation.ok
+        ? new Set(validation.doc.modules.flatMap((module) => module.lessons.map((lesson) => lesson.key)))
+        : new Set<string>();
+      const releaseProgress = progress.filter((item) => lessonKeys.has(item.lessonKey));
+      const completedLessons = releaseProgress.filter((item) => item.completed).length;
+      const totalLessons = lessonKeys.size;
+      const lastActivityAt = releaseProgress.reduce<Date | null>(
+        (latest, item) => !latest || item.updatedAt > latest ? item.updatedAt : latest,
+        null,
+      );
+      return {
+        enrollmentId: enrollment.id,
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        releaseId: release.id,
+        releaseNumber: release.releaseNumber,
+        releaseLabel: release.label,
+        status: enrollment.status,
+        completedLessons,
+        totalLessons,
+        percent: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+        lastActivityAt: lastActivityAt?.toISOString() ?? null,
+      };
+    }));
+    res.json(rows.filter((row): row is NonNullable<typeof row> => row !== null));
+  });
+
+  app.post(programsApi.assignEnrollment.path, requireRole('admin'), async (req, res) => {
+    try {
+      const programId = Number(req.params.programId);
+      if (isNaN(programId)) return res.status(400).json({ message: "Invalid programId" });
+      const prog = await storage.getProgram(programId);
+      if (!prog) return res.status(404).json({ message: "Program not found" });
+      const input = programsApi.assignEnrollment.input.parse(req.body);
+      const participant = await storage.getUser(input.userId);
+      if (!participant || participant.role !== "participant") {
+        return res.status(400).json({ message: "Only participant accounts can be enrolled in a program." });
+      }
+      // Determine release: use provided releaseId or latest published
+      let releaseId = input.releaseId;
+      if (!releaseId) {
+        const latest = await storage.getLatestPublishedRelease(programId);
+        if (!latest) return res.status(400).json({ message: "No published release found for this program." });
+        releaseId = latest.id;
+      }
+      const selectedRelease = await storage.getRelease(releaseId);
+      if (!selectedRelease || selectedRelease.programId !== programId) {
+        return res.status(400).json({ message: "The selected release does not belong to this program." });
+      }
+      if (selectedRelease.status !== "published") {
+        return res.status(400).json({ message: "Participants can only be enrolled in a published release." });
+      }
+      const selectedReleaseValidation = validateCurriculumDocument(selectedRelease.curriculum);
+      if (!selectedReleaseValidation.ok) {
+        return res.status(400).json({ message: "The selected release is invalid." });
+      }
+      if (selectedReleaseValidation.doc.programKey !== prog.key) {
+        return res.status(400).json({
+          message: `Release programKey must match program key "${prog.key}".`,
+        });
+      }
+      const cohort = await storage.getCohort(input.cohortId);
+      if (!cohort) {
+        return res.status(400).json({ message: "The selected cohort does not exist." });
+      }
+      // Check no duplicate enrollment
+      const existing = await storage.getUserEnrollment(input.userId, programId);
+      if (existing) return res.status(409).json({ message: "User is already enrolled in this program." });
+      const enrollment = await storage.assignEnrollment({
+        userId: input.userId,
+        programId,
+        releaseId,
+        cohortId: input.cohortId ?? null,
+        status: "active",
+      });
+
+      // When an existing Track A participant is first moved onto a pinned
+      // release, reconcile their legacy completions into release-scoped
+      // progress so the cutover does not make completed work appear undone.
+      if (prog.key === "track-a") {
+        const [prelimCompletions, prayerCompletions] = await Promise.all([
+          storage.getUserPrelimCompletions(input.userId),
+          storage.getUserPrayerCompletions(input.userId),
+        ]);
+        const prelimLessons = selectedReleaseValidation.doc.modules
+          .find((module) => module.key === "prelim")
+          ?.lessons ?? [];
+        const writes: Promise<unknown>[] = [];
+        for (const completion of prelimCompletions) {
+          const lesson = prelimLessons[completion.modulePosition - 1];
+          if (lesson) {
+            writes.push(storage.upsertReleaseLessonProgress(enrollment.id, lesson.key, 0, true));
+          }
+        }
+
+        const completedMorningDays = new Set(
+          prayerCompletions
+            .filter((completion) => completion.period === "morning")
+            .map((completion) => completion.dayNumber),
+        );
+        for (let day = 0; day <= 30; day += 1) {
+          const lessonKey = getTrackALessonKey(selectedReleaseValidation.doc, day);
+          if (!lessonKey) continue;
+          const legacyProgress = await storage.getLessonProgress(input.userId, day);
+          if (legacyProgress || completedMorningDays.has(day)) {
+            writes.push(storage.upsertReleaseLessonProgress(
+              enrollment.id,
+              lessonKey,
+              legacyProgress?.slideIndex ?? 0,
+              completedMorningDays.has(day),
+            ));
+          }
+        }
+        await Promise.all(writes);
+      }
+      res.status(201).json(enrollment);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  app.get(programsApi.getEffectiveEnrollment.path, requireAuth, async (req, res) => {
+    const programId = Number(req.params.programId);
+    if (isNaN(programId)) return res.status(400).json({ message: "Invalid programId" });
+    const enrollment = await storage.getUserEnrollment(req.user!.id, programId);
+    if (!enrollment || enrollment.status !== "active") return res.json(null);
+    const release = await storage.getRelease(enrollment.releaseId);
+    if (!release) return res.json(null);
+    res.json({ enrollment, release });
+  });
+
+  app.get(programsApi.listMyEnrollments.path, requireAuth, async (req, res) => {
+    const rows = await storage.listActiveProgramEnrollments(req.user!.id);
+    const result = await Promise.all(rows.map(async (row) => {
+      const validation = validateCurriculumDocument(row.release.curriculum);
+      if (!validation.ok || validation.doc.programKey !== row.program.key) {
+        throw new Error(`Active enrollment ${row.enrollment.id} has an invalid release.`);
+      }
+      return {
+        ...row,
+        release: { ...row.release, curriculum: validation.doc },
+        progress: await storage.listReleaseLessonProgress(row.enrollment.id),
+      };
+    }));
+    res.json(result);
+  });
+
+  // ─── Release-aware lesson progress ──────────────────────────────────────────
+
+  app.get(programsApi.getLessonProgress.path, requireAuth, async (req, res) => {
+    const enrollmentId = Number(req.params.enrollmentId);
+    const lessonKey = String(req.params.lessonKey);
+    if (isNaN(enrollmentId)) return res.status(400).json({ message: "Invalid enrollmentId" });
+    // Verify ownership
+    const enrollment = await storage.getEnrollment(enrollmentId);
+    if (!enrollment) return res.status(404).json({ message: "Enrollment not found" });
+    if (enrollment.userId !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    if (enrollment.status !== "active") {
+      return res.status(403).json({ message: "This enrollment is not active." });
+    }
+    const release = await storage.getRelease(enrollment.releaseId);
+    if (!release) return res.status(404).json({ message: "Release not found" });
+    const validation = validateCurriculumDocument(release.curriculum);
+    if (!validation.ok) {
+      return res.status(409).json({ message: "The enrollment release is invalid." });
+    }
+    const lessonExists = validation.doc.modules.some((module) =>
+      module.lessons.some((lesson) => lesson.key === lessonKey),
+    );
+    if (!lessonExists) {
+      return res.status(404).json({ message: "Lesson is not part of this release." });
+    }
+    const progress = await storage.getReleaseLessonProgress(enrollmentId, lessonKey);
+    res.json(progress ?? null);
+  });
+
+  app.put(programsApi.upsertLessonProgress.path, requireAuth, writeLimiter, async (req, res) => {
+    try {
+      const enrollmentId = Number(req.params.enrollmentId);
+      const lessonKey = String(req.params.lessonKey);
+      if (isNaN(enrollmentId)) return res.status(400).json({ message: "Invalid enrollmentId" });
+      const input = programsApi.upsertLessonProgress.input.parse(req.body);
+      // Verify ownership
+      const enrollment = await storage.getEnrollment(enrollmentId);
+      if (!enrollment) return res.status(404).json({ message: "Enrollment not found" });
+      if (enrollment.userId !== req.user!.id && req.user!.role !== 'admin') {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      if (enrollment.status !== "active") {
+        return res.status(403).json({ message: "This enrollment is not active." });
+      }
+      const release = await storage.getRelease(enrollment.releaseId);
+      if (!release) return res.status(404).json({ message: "Release not found" });
+      const validation = validateCurriculumDocument(release.curriculum);
+      if (!validation.ok) {
+        return res.status(409).json({ message: "The enrollment release is invalid." });
+      }
+      const lessonExists = validation.doc.modules.some((module) =>
+        module.lessons.some((lesson) => lesson.key === lessonKey),
+      );
+      if (!lessonExists) {
+        return res.status(400).json({ message: "Lesson is not part of this release." });
+      }
+      const progress = await storage.upsertReleaseLessonProgress(
+        enrollmentId, lessonKey, input.slideIndex, input.completed,
+      );
+      res.json(progress);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      throw err;
+    }
+  });
+
+  // ─── Track A import ──────────────────────────────────────────────────────────
+
+  app.post(programsApi.importTrackA.path, requireRole('admin'), async (req, res) => {
+    try {
+      // 1. Get or create the Track A program
+      let trackAProgram = await storage.getProgramByKey("track-a");
+      if (!trackAProgram) {
+        trackAProgram = await storage.createProgram({
+          key: "track-a",
+          name: "Track A",
+          description: "The 30-day Lumen Fidei spiritual program",
+          isActive: true,
+        });
+      }
+
+      // A draft can be refreshed from the live Track A workspace. Published
+      // releases are never modified; if no draft exists, import creates the
+      // next release.
+      const existingReleases = await storage.listReleases(trackAProgram.id);
+      const existingDraft = existingReleases.find((release) => release.status === "draft");
+      const keySourceRelease = existingDraft
+        ?? existingReleases.find((release) => release.status === "published")
+        ?? existingReleases[0];
+      const existingDraftValidation = keySourceRelease
+        ? validateCurriculumDocument(keySourceRelease.curriculum)
+        : null;
+      const existingDocument = existingDraftValidation?.ok
+        ? existingDraftValidation.doc
+        : null;
+
+      // 3. Build curriculum document from live tables
+      const [modules, allContent, prelims] = await Promise.all([
+        storage.getTrackAModules(),
+        storage.getAllTrackAContent(),
+        storage.getPrelimModules(),
+      ]);
+      const importedDays = new Set(allContent.map((content) => content.dayNumber));
+      const missingDays = Array.from({ length: 31 }, (_, day) => day)
+        .filter((day) => !importedDays.has(day));
+      if (prelims.length === 0 || missingDays.length > 0) {
+        return res.status(400).json({
+          message: prelims.length === 0
+            ? "Track A import requires at least one preliminary module."
+            : `Track A import is missing day${missingDays.length === 1 ? "" : "s"}: ${missingDays.join(", ")}.`,
+        });
+      }
+
+      const existingPrelim = existingDocument?.modules.find((module) => module.key === "prelim");
+      const existingLessonForDay = (dayNumber: number) =>
+        existingDocument?.modules
+          .flatMap((module) => module.lessons)
+          .find((lesson) => new RegExp(`^day-${dayNumber}(?:-|$)`).test(lesson.key));
+      const existingModuleForWeek = (weekNumber: number) =>
+        existingDocument?.modules.find((module) =>
+          new RegExp(`^week-${weekNumber}(?:-|$)`).test(module.key),
+        );
+
+      // Build a map of content by weekNumber for grouping
+      const contentByWeek = new Map<number, typeof allContent>();
+      for (const c of allContent) {
+        if (!contentByWeek.has(c.weekNumber)) contentByWeek.set(c.weekNumber, []);
+        contentByWeek.get(c.weekNumber)!.push(c);
+      }
+
+      // Build prelim module
+      const prelimModuleKey = "prelim";
+      const prelimLessons = prelims.map((p) => {
+        const existingLesson = existingPrelim?.lessons.find((lesson) =>
+          new RegExp(`^prelim-${p.position}(?:-|$)`).test(lesson.key),
+        ) ?? existingPrelim?.lessons[p.position - 1];
+        const lessonKey = existingLesson?.key ?? `prelim-${p.position}`;
+        const blocks = (p.slides ?? []).map((slide, idx) => ({
+          key: existingLesson?.blocks[idx]?.key ?? `${lessonKey}-block-${idx}`,
+          type: slide.type,
+          content: slide.content,
+        }));
+        return {
+          key: lessonKey,
+          title: p.title,
+          subtitle: p.subtitle ?? undefined,
+          imageUrl: p.imageUrl ?? undefined,
+          blocks,
+        };
+      });
+
+      const curriculumModules: any[] = [
+        {
+          key: prelimModuleKey,
+          title: "Preliminary Modules",
+          subtitle: "Pre-program onboarding",
+          sortOrder: 0,
+          lessons: prelimLessons,
+        },
+      ];
+
+      const introContent = (contentByWeek.get(0) ?? [])
+        .sort((a, b) => a.dayNumber - b.dayNumber);
+      if (introContent.length > 0) {
+        curriculumModules.push({
+          key: "introduction",
+          title: "Introduction",
+          sortOrder: 1,
+          lessons: introContent.map((content) => {
+            const existingLesson = existingLessonForDay(content.dayNumber);
+            const lessonKey = existingLesson?.key ?? `day-${content.dayNumber}`;
+            return {
+              key: lessonKey,
+              title: content.centralTheme || "Introduction",
+              subtitle: content.subtitle ?? undefined,
+              imageUrl: content.imageUrl ?? undefined,
+              completionMessage: content.completionMessage ?? undefined,
+              openingPrayerText: content.openingPrayerText ?? undefined,
+              openingPrayerAudio: content.openingPrayerAudio ?? undefined,
+              closingPrayerText: content.closingPrayerText ?? undefined,
+              closingPrayerAudio: content.closingPrayerAudio ?? undefined,
+              blocks: (content.slides ?? []).map((slide, idx) => ({
+                key: existingLesson?.blocks[idx]?.key ?? `${lessonKey}-block-${idx}`,
+                type: slide.type,
+                content: slide.content,
+              })),
+            };
+          }),
+        });
+      }
+
+      // Build weekly modules from track_a_modules + track_a_content
+      for (const mod of modules) {
+        const existingModule = existingModuleForWeek(mod.weekNumber);
+        const modKey = existingModule?.key ?? `week-${mod.weekNumber}`;
+        const weekContent = (contentByWeek.get(mod.weekNumber) ?? [])
+          .sort((a, b) => a.dayNumber - b.dayNumber);
+        const lessons = weekContent.map((c) => {
+          const existingLesson = existingLessonForDay(c.dayNumber);
+          const lessonKey = existingLesson?.key ?? `day-${c.dayNumber}`;
+          const blocks = (c.slides ?? []).map((slide, idx) => ({
+            key: existingLesson?.blocks[idx]?.key ?? `${lessonKey}-block-${idx}`,
+            type: slide.type,
+            content: slide.content,
+          }));
+          return {
+            key: lessonKey,
+            title: c.centralTheme,
+            subtitle: c.subtitle ?? undefined,
+            imageUrl: c.imageUrl ?? undefined,
+            completionMessage: c.completionMessage ?? undefined,
+            openingPrayerText: c.openingPrayerText ?? undefined,
+            openingPrayerAudio: c.openingPrayerAudio ?? undefined,
+            closingPrayerText: c.closingPrayerText ?? undefined,
+            closingPrayerAudio: c.closingPrayerAudio ?? undefined,
+            blocks,
+          };
+        });
+        curriculumModules.push({
+          key: modKey,
+          title: mod.title,
+          subtitle: mod.subtitle,
+          imageUrl: mod.imageUrl ?? undefined,
+          sortOrder: mod.sortOrder,
+          lessons,
+        });
+      }
+
+      const rawDoc = {
+        schemaVersion: 1 as const,
+        programKey: "track-a",
+        modules: curriculumModules,
+        activities: [],
+      };
+
+      // Validate before creating release
+      const validation = validateCurriculumDocument(rawDoc);
+      if (!validation.ok) {
+        return res.status(400).json({
+          message: "Track A curriculum validation failed",
+          errors: validation.errors.map((e) => e.message),
+        });
+      }
+
+      if (existingDraft) {
+        const release = await storage.updateDraftRelease(existingDraft.id, {
+          curriculum: validation.doc,
+          label: `Release ${existingDraft.releaseNumber} – Imported from Track A`,
+        });
+        return res.json({ program: trackAProgram, release, created: false });
+      }
+
+      const nextReleaseNumber = (existingReleases[0]?.releaseNumber ?? 0) + 1;
+      const release = await storage.createDraftRelease(
+        trackAProgram.id,
+        validation.doc,
+        `Release ${nextReleaseNumber} – Imported from Track A`,
+        req.user!.id,
+      );
+
+      res.json({ program: trackAProgram, release, created: true });
+    } catch (err) {
+      if (err instanceof Error) return res.status(400).json({ message: err.message });
+      throw err;
+    }
   });
 
   // Seed Data
