@@ -10,6 +10,21 @@ import { useLocation } from "wouter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+const messageTimestampFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function formatMessageTimestamp(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return messageTimestampFormatter.format(date);
+}
+
 function InitialsAvatar({ name, size = 36 }: { name: string; size?: number }) {
   const initials = name
     .split(" ")
@@ -577,6 +592,7 @@ function ChatWindow({
 
             {messages?.map((msg) => {
               const isMe = msg.senderId === currentUserId;
+              const timestamp = formatMessageTimestamp(msg.createdAt);
               return (
                 <div
                   key={msg.id}
@@ -590,10 +606,32 @@ function ChatWindow({
                     color: "var(--white-90)",
                     wordBreak: "break-word",
                     overflowWrap: "break-word",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px",
                   }}
                   className="type-body-md"
                 >
-                  {msg.content}
+                  <span>{msg.content}</span>
+                  {timestamp && (
+                    <time
+                      dateTime={
+                        msg.createdAt instanceof Date
+                          ? msg.createdAt.toISOString()
+                          : new Date(msg.createdAt).toISOString()
+                      }
+                      data-testid={`message-timestamp-${msg.id}`}
+                      style={{
+                        alignSelf: isMe ? "flex-end" : "flex-start",
+                        color: "var(--white-45)",
+                        fontSize: "0.68rem",
+                        lineHeight: 1.2,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {timestamp}
+                    </time>
+                  )}
                 </div>
               );
             })}
