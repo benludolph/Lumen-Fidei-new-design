@@ -101,6 +101,7 @@ export function LessonFlow({
   const scrollContentRef = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState(false);
   const [hasReachedBottom, setHasReachedBottom] = useState(true);
+  const activeInjectedSlideType = isShowingInjected ? pendingInjectedSlide?.type : undefined;
 
   useEffect(() => {
     setCanScroll(false);
@@ -109,21 +110,20 @@ export function LessonFlow({
     if (!el) return;
     // Media slides embed iframes that intercept scroll events — the footer
     // would become permanently unreachable, so never gate them behind scroll.
-    // Read type from the content prop directly to avoid a TDZ on `slides`.
+    // Read type from the content prop directly to avoid a TDZ on `slides`, but
+    // prefer an injected slide because it shares the selector's slide index.
     const rawSlides = (content.slides ?? []) as { type: string; content: string }[];
-    if (rawSlides[currentSlide]?.type === "media") {
+    const visibleSlideType = activeInjectedSlideType ?? rawSlides[currentSlide]?.type;
+    if (visibleSlideType === "media") {
+      el.scrollTop = 0;
       return;
     }
 
-    let settled = false;
     const check = (resetScroll: boolean) => {
       if (resetScroll) el.scrollTop = 0;
       const scrollable = el.scrollHeight > el.clientHeight + 8;
-      if (!settled || scrollable) {
-        settled = true;
-        setCanScroll(scrollable);
-        setHasReachedBottom(!scrollable);
-      }
+      setCanScroll(scrollable);
+      setHasReachedBottom(!scrollable);
     };
 
     // First pass at 80ms for desktop (fast layout)
@@ -134,13 +134,16 @@ export function LessonFlow({
     // ResizeObserver catches dynamic content changes (images loading, etc.)
     const ro = new ResizeObserver(() => check(false));
     ro.observe(el);
+    if (el.firstElementChild instanceof HTMLElement) {
+      ro.observe(el.firstElementChild);
+    }
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       ro.disconnect();
     };
-  }, [currentSlide, content.slides]);
+  }, [currentSlide, content.slides, isShowingInjected, activeInjectedSlideType]);
 
   // Track selection_reveal chip state so we can gate the main Continue button
   useEffect(() => {
@@ -206,6 +209,29 @@ export function LessonFlow({
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 12;
     if (atBottom) setHasReachedBottom(true);
   }, [hasReachedBottom]);
+
+  const handleScrollHintClick = useCallback(() => {
+    const el = scrollContentRef.current;
+    if (!el) return;
+
+    const scrollable = el.scrollHeight > el.clientHeight + 8;
+    if (!scrollable) {
+      setCanScroll(false);
+      setHasReachedBottom(true);
+      return;
+    }
+
+    const nextTop = Math.min(
+      el.scrollTop + el.clientHeight * 0.7,
+      el.scrollHeight - el.clientHeight,
+    );
+    if (nextTop <= el.scrollTop + 1) {
+      setHasReachedBottom(true);
+      return;
+    }
+
+    el.scrollTo({ top: nextTop, behavior: "smooth" });
+  }, []);
 
   const overlayContextKey =
     dayNumber < 0 ? `prelim-module-${Math.abs(dayNumber)}` : `chat-flow-${dayNumber}`;
@@ -847,7 +873,9 @@ export function LessonFlow({
                 pointerEvents: "none",
               }}
             >
-              <div
+              <button
+                type="button"
+                aria-label="Scroll down to see more"
                 className="flex items-center gap-1.5 px-4 py-2 rounded-full cursor-pointer"
                 style={{
                   background: "var(--surface-float)",
@@ -855,16 +883,14 @@ export function LessonFlow({
                   animation: "bounce 1.6s ease-in-out infinite",
                   pointerEvents: "auto",
                 }}
-                onClick={() => {
-                  const el = scrollContentRef.current;
-                  if (el) el.scrollBy({ top: el.clientHeight * 0.7, behavior: "smooth" });
-                }}
+                onClick={handleScrollHintClick}
+                data-testid="button-scroll-lesson"
               >
                 <ChevronDown className="w-4 h-4 text-white" />
                 <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.08em", color: "rgba(255,255,255,0.8)", textTransform: "uppercase" }}>
                   Scroll
                 </span>
-              </div>
+              </button>
             </div>
           )}
         </div>
