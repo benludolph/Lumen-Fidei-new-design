@@ -1,0 +1,25 @@
+I want to add two features to the mentor messaging in Lumen Fidei: alerts when a mentee sends a message, and dates/times on every message. Before changing any code, inspect the codebase and report back to me in plain language on:
+
+1. How mentor-mentee messages are currently stored and displayed (and whether each message already has a saved send time).
+2. How Twilio SMS is currently set up, what it's used for, and which phone numbers/opt-in records it relies on.
+3. Whether the app can currently send email, and through what service.
+4. Anything in the current setup that would make these features risky or complicated.
+
+Stop after this report and wait for me to say "proceed."
+
+Once I say proceed, build the following:
+
+FEATURE 1: MESSAGE ALERTS FOR MENTORS
+- When a mentee sends a message to their mentor, alert the mentor by text message, email, or both, based on that mentor's choice.
+- Add a notification settings section to the mentor's account with: a text alert on/off toggle, an email alert on/off toggle, and a phone number field. Default email to on and text to off.
+- Turning on text alerts requires a clear opt-in checkbox with consent language matching our existing Twilio opt-in pages (message frequency, "Reply STOP to opt out, HELP for help," message and data rates may apply). Save the date and time the mentor opted in. Honor STOP replies.
+- The alert must NOT include what the mentee wrote. Use this wording for texts: "Lumen Fidei: [Mentee first name] sent you a new message. Open the app to read and reply: [link]". Use similar wording for the email, with the subject "New message from [Mentee first name] in Lumen Fidei".
+- Do not send a new alert for every message in a burst. After an alert goes out, send no further alerts for that same mentee conversation until the mentor opens the conversation, or 30 minutes pass, whichever comes first.
+- The link should take the mentor directly to that conversation, with login if needed.
+
+FEATURE 2: TIMESTAMPS ON MESSAGES
+- Show the date and time under every message in the conversation view, for both mentors and mentees.
+- Use Central Time. Format: "Tue, Sep 22 · 2:06 PM". For messages from today, "Today · 2:06 PM" is fine.
+- Make sure this displays cleanly on a phone screen.
+
+When finished, tell me exactly how to test both features using my own account and phone, step by step.
