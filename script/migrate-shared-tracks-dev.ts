@@ -38,8 +38,8 @@ try {
       await client.query(`CREATE UNIQUE INDEX "${indexName}" ON "${name}" (${names.map(n => `"${n}"`).join(",")})`);
     }
   }
-  // Exactly the reviewed retired tables. Never delete sessions or shared assets.
-  await client.query("DROP TABLE IF EXISTS healing_answers, healing_completions, healing_content, healing_modules, daily_content");
+  // Schema reconciliation must not perform retirement/deletion. Legacy data
+  // remains untouched until the separately reviewed retirement is applied.
   await client.query("COMMIT");
   console.log("Development shared-track schema applied.");
 } catch (error) {

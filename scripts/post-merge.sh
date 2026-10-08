@@ -20,4 +20,6 @@ pool.query(\`
 \`).then(() => { console.log('user_profiles: ok'); pool.end(); }).catch(e => { console.error(e.message); pool.end(); process.exit(1); });
 "
 
-npm run db:push
+# Apply the shared-track schema without interactive rename prompts or dropping
+# legacy tables. Retirement is a separate, explicitly reviewed operation.
+NODE_ENV=development npx tsx script/migrate-shared-tracks-dev.ts
