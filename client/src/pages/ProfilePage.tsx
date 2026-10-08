@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { Link } from "wouter";
 import { ChevronRight, Camera, Loader2, Check } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { HealingLayout } from "@/components/layout/HealingLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -395,9 +395,8 @@ function MentorProfileEditor({ user }: { user: { id: number; name: string; profi
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const isHealingTrack = user?.track === "C";
   const isMentor = user?.role === "mentor";
-  const Layout = isHealingTrack ? HealingLayout : DashboardLayout;
+  const Layout = DashboardLayout;
 
   const backHref = isMentor ? "/mentor" : "/resources";
   const backLabel = isMentor ? "Dashboard" : "Resources";

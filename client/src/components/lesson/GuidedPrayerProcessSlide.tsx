@@ -1,3 +1,4 @@
+import { trackFetch as fetch } from "@/lib/track-context";
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";

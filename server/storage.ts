@@ -1,13 +1,14 @@
-import { db } from "./db";
+import { trackDb as db } from "./track-db";
+import { remapActivityDays } from "./track-remap";
+import { currentTrackId, withTrack } from "./track-context";
 import {
-  users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
+  users, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings, trackAContent, trackAModules,
   prelimModules, prelimCompletions, moduleOverlays, testimonies, testimonyParts, passwordResetTokens, surveyResponses, trackASnapshots,
-  healingModules, healingContent, healingCompletions, healingAnswers, guidedPrayerResponses,
+  guidedPrayerResponses,
   workbookEntries, workbookAttestations, workbookStreaks, userProfiles,
   lessonWorkbookModules, lessonWorkbookCompletions, wrapPrayers, lessonProgress,
   cohorts,
   type User, type InsertUser,
-  type DailyContent, type InsertDailyContent,
   type UserAnswer, type InsertUserAnswer,
   type Message, type InsertMessage,
   type TrackRequirement, type InsertTrackRequirement,
@@ -24,10 +25,6 @@ import {
   type TestimonyPart, type InsertTestimonyPart,
   type PasswordResetToken,
   type TrackASnapshot,
-  type HealingModule, type InsertHealingModule,
-  type HealingContent, type InsertHealingContent,
-  type HealingCompletion,
-  type HealingAnswer,
   type GuidedPrayerResponse,
   type WorkbookEntry, type InsertWorkbookEntry,
   type WorkbookAttestation,
@@ -53,15 +50,9 @@ export interface IStorage {
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User>;
   deleteUser(id: number): Promise<void>;
 
-  // Daily Content
-  getDailyContent(dayNumber: number): Promise<DailyContent | undefined>;
-  getAllDailyContent(): Promise<DailyContent[]>;
-  createDailyContent(content: InsertDailyContent): Promise<DailyContent>;
-  upsertDailyContent(content: InsertDailyContent): Promise<DailyContent>;
-
   // Track Requirements
-  getTrackRequirements(track: "A" | "B" | "C", weekNumber: number): Promise<TrackRequirement | undefined>;
-  getAllTrackRequirements(track: "A" | "B" | "C"): Promise<TrackRequirement[]>;
+  getTrackRequirements(track: string, weekNumber: number): Promise<TrackRequirement | undefined>;
+  getAllTrackRequirements(track: string): Promise<TrackRequirement[]>;
   createTrackRequirement(req: InsertTrackRequirement): Promise<TrackRequirement>;
 
   // Answers
@@ -155,20 +146,6 @@ export interface IStorage {
   listPublishedTrackAVariants(): Promise<TrackASnapshot[]>;
   setTrackASnapshotPublication(id: number, isPublished: boolean, variantLabel: string | null): Promise<TrackASnapshot>;
   getTrackASnapshot(id: number): Promise<TrackASnapshot | undefined>;
-
-  // Healing Track
-  getHealingModules(): Promise<HealingModule[]>;
-  getHealingContent(moduleNumber: number): Promise<HealingContent | undefined>;
-  getAllHealingContent(): Promise<HealingContent[]>;
-  upsertHealingModule(module: InsertHealingModule): Promise<HealingModule>;
-  upsertHealingContent(content: InsertHealingContent): Promise<HealingContent>;
-  createHealingModuleWithContent(moduleNumber: number, title: string, sortOrder: number): Promise<{ module: HealingModule; content: HealingContent }>;
-  deleteHealingModule(moduleNumber: number): Promise<void>;
-  reorderHealingModules(moduleNumbers: number[]): Promise<void>;
-  getHealingCompletions(userId: number): Promise<HealingCompletion[]>;
-  markHealingComplete(userId: number, moduleNumber: number): Promise<HealingCompletion>;
-  getHealingAnswers(userId: number): Promise<HealingAnswer[]>;
-  upsertHealingAnswer(userId: number, moduleNumber: number, content: string): Promise<HealingAnswer>;
 
   // Guided Prayer Process
   getGuidedPrayerResponse(userId: number, dayNumber: number, slideIndex: number): Promise<GuidedPrayerResponse | undefined>;
@@ -277,41 +254,14 @@ export class DatabaseStorage implements IStorage {
     await db.delete(users).where(eq(users.id, id));
   }
 
-  // Daily Content
-  async getDailyContent(dayNumber: number): Promise<DailyContent | undefined> {
-    const [content] = await db.select().from(dailyContent).where(eq(dailyContent.dayNumber, dayNumber));
-    return content;
-  }
-
-  async getAllDailyContent(): Promise<DailyContent[]> {
-      return await db.select().from(dailyContent).orderBy(dailyContent.dayNumber);
-  }
-
-  async createDailyContent(content: InsertDailyContent): Promise<DailyContent> {
-    const [newContent] = await db.insert(dailyContent).values(content).returning();
-    return newContent;
-  }
-
-  async upsertDailyContent(content: InsertDailyContent): Promise<DailyContent> {
-    const existing = await this.getDailyContent(content.dayNumber);
-    if (existing) {
-      const [updated] = await db.update(dailyContent)
-        .set(content)
-        .where(eq(dailyContent.dayNumber, content.dayNumber))
-        .returning();
-      return updated;
-    }
-    return this.createDailyContent(content);
-  }
-
   // Track Requirements
-  async getTrackRequirements(track: "A" | "B" | "C", weekNumber: number): Promise<TrackRequirement | undefined> {
+  async getTrackRequirements(track: string, weekNumber: number): Promise<TrackRequirement | undefined> {
     const [req] = await db.select().from(trackRequirements)
       .where(and(eq(trackRequirements.track, track), eq(trackRequirements.weekNumber, weekNumber)));
     return req;
   }
 
-  async getAllTrackRequirements(track: "A" | "B" | "C"): Promise<TrackRequirement[]> {
+  async getAllTrackRequirements(track: string): Promise<TrackRequirement[]> {
     return await db.select().from(trackRequirements)
       .where(eq(trackRequirements.track, track))
       .orderBy(asc(trackRequirements.weekNumber));
@@ -602,45 +552,46 @@ export class DatabaseStorage implements IStorage {
     if (!hasChanges) return;
 
     await db.transaction(async (tx) => {
+      await remapActivityDays(tx, dayNumbers.map((oldDay, i) => ({ oldDay, newDay: sortedDays[i] })));
       // Step 1: move track_a_content rows to temp day_number values to avoid unique constraint violations
       for (const oldDay of dayNumbers) {
-        await tx.execute(sql`UPDATE track_a_content SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay}`);
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${oldDay + 10000} WHERE day_number = ${oldDay} AND track_id = ${currentTrackId()}`);
       }
       // Step 2: cascade temp values to Track A user data only, to avoid touching other tracks' records
       for (const oldDay of dayNumbers) {
         await tx.execute(sql`
           UPDATE user_answers SET day_number = ${oldDay + 10000}
-          WHERE day_number = ${oldDay}
-            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+          WHERE day_number = ${oldDay} AND track_id = ${currentTrackId()}
+            
         `);
         await tx.execute(sql`
           UPDATE prayer_completions SET day_number = ${oldDay + 10000}
-          WHERE day_number = ${oldDay}
-            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+          WHERE day_number = ${oldDay} AND track_id = ${currentTrackId()}
+            
         `);
         await tx.execute(sql`
           UPDATE survey_responses SET day_number = ${oldDay + 10000}
-          WHERE day_number = ${oldDay} AND track = 'A'
+          WHERE day_number = ${oldDay} AND track = ${currentTrackId()}
         `);
       }
       // Step 3: write final day_number values — dayNumbers[i] (old) becomes sortedDays[i] (new)
       for (let i = 0; i < dayNumbers.length; i++) {
         const tempDay = dayNumbers[i] + 10000;
         const newDay = sortedDays[i];
-        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay} WHERE day_number = ${tempDay}`);
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay} WHERE day_number = ${tempDay} AND track_id = ${currentTrackId()}`);
         await tx.execute(sql`
           UPDATE user_answers SET day_number = ${newDay}
-          WHERE day_number = ${tempDay}
-            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+          WHERE day_number = ${tempDay} AND track_id = ${currentTrackId()}
+            
         `);
         await tx.execute(sql`
           UPDATE prayer_completions SET day_number = ${newDay}
-          WHERE day_number = ${tempDay}
-            AND user_id IN (SELECT id FROM users WHERE track = 'A')
+          WHERE day_number = ${tempDay} AND track_id = ${currentTrackId()}
+            
         `);
         await tx.execute(sql`
           UPDATE survey_responses SET day_number = ${newDay}
-          WHERE day_number = ${tempDay} AND track = 'A'
+          WHERE day_number = ${tempDay} AND track = ${currentTrackId()}
         `);
       }
     });
@@ -681,24 +632,25 @@ export class DatabaseStorage implements IStorage {
     }
 
     await db.transaction(async (tx) => {
+      await remapActivityDays(tx, fullMapping);
       // Step 1: move day_number to temp values (avoids unique constraint conflicts)
       for (const { oldDay } of dayChanges) {
         const tempDay = oldDay + 10000;
-        await tx.execute(sql`UPDATE track_a_content SET day_number = ${tempDay} WHERE day_number = ${oldDay}`);
-        await tx.execute(sql`UPDATE user_answers SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
-        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
-        await tx.execute(sql`UPDATE survey_responses SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track = 'A'`);
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track_id = ${currentTrackId()}`);
+        await tx.execute(sql`UPDATE user_answers SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track_id = ${currentTrackId()} `);
+        await tx.execute(sql`UPDATE prayer_completions SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track_id = ${currentTrackId()} `);
+        await tx.execute(sql`UPDATE survey_responses SET day_number = ${tempDay} WHERE day_number = ${oldDay} AND track = ${currentTrackId()}`);
       }
 
       // Step 2: write final day_number and week_number on every row that needs it
       for (const { oldDay, newDay, newWeek } of needsUpdate) {
         const hasDayChange = oldDay !== newDay;
         const lookupDay = hasDayChange ? oldDay + 10000 : oldDay;
-        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay}, week_number = ${newWeek} WHERE day_number = ${lookupDay}`);
+        await tx.execute(sql`UPDATE track_a_content SET day_number = ${newDay}, week_number = ${newWeek} WHERE day_number = ${lookupDay} AND track_id = ${currentTrackId()}`);
         if (hasDayChange) {
-          await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
-          await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND user_id IN (SELECT id FROM users WHERE track = 'A')`);
-          await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND track = 'A'`);
+          await tx.execute(sql`UPDATE user_answers SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND track_id = ${currentTrackId()} `);
+          await tx.execute(sql`UPDATE prayer_completions SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND track_id = ${currentTrackId()} `);
+          await tx.execute(sql`UPDATE survey_responses SET day_number = ${newDay} WHERE day_number = ${lookupDay} AND track = ${currentTrackId()}`);
         }
       }
 
@@ -1027,6 +979,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrackASnapshot(id: number): Promise<void> {
+    if (!(await this.getTrackASnapshot(id))) throw new Error("Snapshot not found in this track");
     // Unassign any users pointing to this snapshot so the FK doesn't dangle
     await db.update(users).set({ contentVariantSnapshotId: null }).where(eq(users.contentVariantSnapshotId, id));
     await db.delete(trackASnapshots).where(eq(trackASnapshots.id, id));
@@ -1074,91 +1027,6 @@ export class DatabaseStorage implements IStorage {
       await db.update(users).set({ contentVariantSnapshotId: null }).where(eq(users.contentVariantSnapshotId, id));
     }
     return updated;
-  }
-
-  // Healing Track
-  async getHealingModules(): Promise<HealingModule[]> {
-    return await db.select().from(healingModules).orderBy(asc(healingModules.sortOrder), asc(healingModules.moduleNumber));
-  }
-
-  async getHealingContent(moduleNumber: number): Promise<HealingContent | undefined> {
-    const [row] = await db.select().from(healingContent).where(eq(healingContent.moduleNumber, moduleNumber));
-    return row;
-  }
-
-  async getAllHealingContent(): Promise<HealingContent[]> {
-    return await db.select().from(healingContent).orderBy(asc(healingContent.moduleNumber));
-  }
-
-  async upsertHealingModule(module: InsertHealingModule): Promise<HealingModule> {
-    const [existing] = await db.select().from(healingModules).where(eq(healingModules.moduleNumber, module.moduleNumber));
-    if (existing) {
-      const [updated] = await db.update(healingModules).set(module).where(eq(healingModules.moduleNumber, module.moduleNumber)).returning();
-      return updated;
-    }
-    const [newMod] = await db.insert(healingModules).values(module).returning();
-    return newMod;
-  }
-
-  async upsertHealingContent(content: InsertHealingContent): Promise<HealingContent> {
-    const payload = { ...content, slides: (content.slides ?? null) as { type: string; content: string }[] | null };
-    const [existing] = await db.select().from(healingContent).where(eq(healingContent.moduleNumber, content.moduleNumber));
-    if (existing) {
-      const [updated] = await db.update(healingContent).set(payload).where(eq(healingContent.moduleNumber, content.moduleNumber)).returning();
-      return updated;
-    }
-    const [newContent] = await db.insert(healingContent).values(payload).returning();
-    return newContent;
-  }
-
-  async createHealingModuleWithContent(moduleNumber: number, title: string, sortOrder: number): Promise<{ module: HealingModule; content: HealingContent }> {
-    return await db.transaction(async (tx) => {
-      const [mod] = await tx.insert(healingModules).values({ moduleNumber, title, sortOrder }).returning();
-      const [cont] = await tx.insert(healingContent).values({ moduleNumber, title, slides: null, subtitle: null, imageUrl: null, completionMessage: null }).returning();
-      return { module: mod, content: cont };
-    });
-  }
-
-  async deleteHealingModule(moduleNumber: number): Promise<void> {
-    await db.delete(healingContent).where(eq(healingContent.moduleNumber, moduleNumber));
-    await db.delete(healingModules).where(eq(healingModules.moduleNumber, moduleNumber));
-  }
-
-  async reorderHealingModules(moduleNumbers: number[]): Promise<void> {
-    await Promise.all(
-      moduleNumbers.map((moduleNumber, index) =>
-        db.update(healingModules).set({ sortOrder: index }).where(eq(healingModules.moduleNumber, moduleNumber))
-      )
-    );
-  }
-
-  async getHealingCompletions(userId: number): Promise<HealingCompletion[]> {
-    return await db.select().from(healingCompletions).where(eq(healingCompletions.userId, userId)).orderBy(asc(healingCompletions.moduleNumber));
-  }
-
-  async markHealingComplete(userId: number, moduleNumber: number): Promise<HealingCompletion> {
-    const [existing] = await db.select().from(healingCompletions).where(
-      and(eq(healingCompletions.userId, userId), eq(healingCompletions.moduleNumber, moduleNumber))
-    );
-    if (existing) return existing;
-    const [completion] = await db.insert(healingCompletions).values({ userId, moduleNumber }).returning();
-    return completion;
-  }
-
-  async getHealingAnswers(userId: number): Promise<HealingAnswer[]> {
-    return await db.select().from(healingAnswers).where(eq(healingAnswers.userId, userId)).orderBy(asc(healingAnswers.moduleNumber));
-  }
-
-  async upsertHealingAnswer(userId: number, moduleNumber: number, content: string): Promise<HealingAnswer> {
-    const [row] = await db
-      .insert(healingAnswers)
-      .values({ userId, moduleNumber, content })
-      .onConflictDoUpdate({
-        target: [healingAnswers.userId, healingAnswers.moduleNumber],
-        set: { content },
-      })
-      .returning();
-    return row;
   }
 
   // Guided Prayer Process
@@ -1340,51 +1208,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMenteeActivitySummary(mentorId: number): Promise<{ menteeId: number; lastAnswerDate: Date | null; unreadCount: number; completedDays: number }[]> {
-    const mentees = await db.select({ id: users.id })
-      .from(users)
-      .where(eq(users.mentorId, mentorId));
-
-    if (mentees.length === 0) return [];
-    const menteeIds = mentees.map(m => m.id);
-
-    const latestAnswers = await db.select({
-      userId: userAnswers.userId,
-      lastDate: sql<string>`MAX(${userAnswers.createdAt})`,
-    })
-      .from(userAnswers)
-      .where(inArray(userAnswers.userId, menteeIds))
-      .groupBy(userAnswers.userId);
-
-    const unreadRows = await db.select({
-      senderId: messages.senderId,
-      cnt: sql<string>`COUNT(*)`,
-    })
-      .from(messages)
-      .where(and(
-        eq(messages.receiverId, mentorId),
-        eq(messages.isRead, false),
-        inArray(messages.senderId, menteeIds)
-      ))
-      .groupBy(messages.senderId);
-
-    const completionRows = await db.select({
-      userId: prayerCompletions.userId,
-      cnt: sql<string>`COUNT(DISTINCT ${prayerCompletions.dayNumber})`,
-    })
-      .from(prayerCompletions)
-      .where(inArray(prayerCompletions.userId, menteeIds))
-      .groupBy(prayerCompletions.userId);
-
-    const latestAnswerMap = new Map(latestAnswers.map(a => [a.userId, a.lastDate ? new Date(a.lastDate) : null]));
-    const unreadCountMap = new Map(unreadRows.map(r => [r.senderId, Number(r.cnt)]));
-    const completedDaysMap = new Map(completionRows.map(r => [r.userId, Number(r.cnt)]));
-
-    return menteeIds.map(menteeId => ({
-      menteeId,
-      lastAnswerDate: latestAnswerMap.get(menteeId) ?? null,
-      unreadCount: unreadCountMap.get(menteeId) ?? 0,
-      completedDays: completedDaysMap.get(menteeId) ?? 0,
-    }));
+    const mentees = await db.select().from(users).where(eq(users.mentorId, mentorId));
+    return Promise.all(mentees.map(mentee => withTrack(mentee.track || "A", async () => {
+      const answers = mentee.track ? await this.getUserAnswers(mentee.id) : [];
+      const completions = mentee.track ? await this.getUserPrayerCompletions(mentee.id) : [];
+      const unread = await db.select({ count: sql<string>`COUNT(*)` }).from(messages).where(and(eq(messages.receiverId, mentorId), eq(messages.senderId, mentee.id), eq(messages.isRead, false)));
+      return { menteeId: mentee.id, lastAnswerDate: answers.reduce<Date | null>((last, a) => !last || a.createdAt > last ? a.createdAt : last, null), unreadCount: Number(unread[0].count), completedDays: new Set(completions.filter(c => c.period === "morning" && c.dayNumber > 0).map(c => c.dayNumber)).size };
+    })));
   }
 
   async getAllLessonWorkbookModules(): Promise<LessonWorkbookModule[]> {
@@ -1437,24 +1267,13 @@ export class DatabaseStorage implements IStorage {
 
   // Wrap Prayers
   async getWrapPrayers(): Promise<WrapPrayer[]> {
-    const result = await db.execute(sql`
-      SELECT id, kind, prayer_text AS "prayerText", audio_url AS "audioUrl"
-      FROM wrap_prayers
-      ORDER BY kind
-    `);
-    return result.rows as WrapPrayer[];
+    return db.select().from(wrapPrayers).orderBy(wrapPrayers.kind);
   }
 
   async upsertWrapPrayer(kind: "opening" | "closing", prayerText: string, audioUrl: string | null): Promise<WrapPrayer> {
-    const result = await db.execute(sql`
-      INSERT INTO wrap_prayers (kind, prayer_text, audio_url)
-      VALUES (${kind}, ${prayerText}, ${audioUrl})
-      ON CONFLICT (kind) DO UPDATE
-        SET prayer_text = EXCLUDED.prayer_text,
-            audio_url   = EXCLUDED.audio_url
-      RETURNING id, kind, prayer_text AS "prayerText", audio_url AS "audioUrl"
-    `);
-    return result.rows[0] as WrapPrayer;
+    const [row] = await db.insert(wrapPrayers).values({ kind, prayerText, audioUrl })
+      .onConflictDoUpdate({ target: [wrapPrayers.trackId, wrapPrayers.kind], set: { prayerText, audioUrl } }).returning();
+    return row;
   }
 
   // Lesson Progress

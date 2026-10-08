@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { MapPin, Phone, Globe, Check, ArrowLeft, Edit3, CheckCircle2, Bell, Mail } from "lucide-react";
 import { SiGooglecalendar, SiApple } from "react-icons/si";
 import { cn } from "@/lib/utils";

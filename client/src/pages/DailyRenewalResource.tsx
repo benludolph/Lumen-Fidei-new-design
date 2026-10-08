@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { trackFetch as fetch, activitySessionStorage as sessionStorage } from "@/lib/track-context";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";

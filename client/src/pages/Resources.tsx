@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { HealingLayout } from "@/components/layout/HealingLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
@@ -506,7 +505,7 @@ export default function Resources() {
 
   const { data: workbookUnlockStatus } = useQuery<{ unlockedCategories: number[]; exempt?: boolean }>({
     queryKey: ["/api/workbook/unlock-status"],
-    enabled: user?.track === 'A',
+    enabled: !!user,
   });
   const isWorkbookExempt = workbookUnlockStatus?.exempt === true;
 
@@ -514,8 +513,7 @@ export default function Resources() {
     resources?.find((r) => matchesPrayer(r.name, match)) ?? null
   );
 
-  const isHealingTrack = user?.track === 'C';
-  const Layout = isHealingTrack ? HealingLayout : DashboardLayout;
+  const Layout = DashboardLayout;
 
   return (
     <Layout>

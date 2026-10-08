@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { trackFetch } from "@/lib/track-context";
 import { useRoute, Link } from "wouter";
 import { useUsers } from "@/hooks/use-users";
 import { useUserAnswers } from "@/hooks/use-answers";
@@ -56,7 +58,7 @@ function DayCompletionGrid({
           marginBottom: "14px",
         }}
       >
-        30-Day Progress
+        {totalDays}-Day Progress
       </p>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
@@ -143,7 +145,8 @@ export default function MenteeDetails() {
   const mentee = users?.find((u) => u.id === menteeId);
   const { data: answers, isLoading } = useUserAnswers(menteeId);
   const { data: prayerCompletions } = useUserPrayerCompletions(menteeId);
-  const { data: cohortData } = useCohortStartDate();
+  const { data: cohortData } = useQuery<{startDate: string | null; currentDay: number}>({queryKey: ["/api/cohort/start-date", menteeId], queryFn: async () => { const res = await trackFetch("/api/cohort/start-date?userId=" + menteeId); if (!res.ok) throw new Error("Unable to load track schedule"); return res.json(); }, enabled: !!menteeId });
+  const { data: lessons } = useQuery<{dayNumber: number}[]>({queryKey: ["/api/track-a-content", menteeId], queryFn: async () => { const res = await trackFetch("/api/track-a-content?summary=true&userId=" + menteeId); if (!res.ok) throw new Error("Unable to load track lessons"); return res.json(); }, enabled: !!menteeId });
 
   const currentDay = (() => {
     if (!cohortData?.startDate) return 0;
@@ -251,7 +254,7 @@ export default function MenteeDetails() {
 
           {/* 30-day completion grid */}
           <DayCompletionGrid
-            totalDays={30}
+            totalDays={mentee?.track === "A" ? 30 : (lessons?.filter(l => l.dayNumber > 0).length ?? 0)}
             currentDay={currentDay}
             completedDays={completedDays}
             answeredDays={answeredDays}

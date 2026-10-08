@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { buildUrl } from "@shared/routes";
 import type { trackRequirements, practiceResources } from "@shared/schema";
 
 export type TrackRequirement = typeof trackRequirements.$inferSelect;
 export type PracticeResource = typeof practiceResources.$inferSelect;
 
-export function useTrackRequirements(track: "A" | "B" | "C" | null, week: number) {
+export function useTrackRequirements(track: string | null, week: number) {
   return useQuery<TrackRequirement>({
     queryKey: ['/api/track-requirements', track, week],
     queryFn: async () => {

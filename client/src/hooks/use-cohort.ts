@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { api } from "@shared/routes";
 
 export function useCohortStartDate() {

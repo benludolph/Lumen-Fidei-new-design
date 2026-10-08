@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type LoginRequest, type SafeUser } from "@shared/routes";
+import { api, type LoginRequest } from "@shared/routes";
 import { useLocation } from "wouter";
+import { trackFetch as fetch, setTrackIdentity } from "@/lib/track-context";
 
 export function useAuth() {
   const queryClient = useQueryClient();
@@ -10,9 +11,11 @@ export function useAuth() {
     queryKey: ["/api/user"],
     queryFn: async () => {
       const res = await fetch(api.auth.me.path, { credentials: "include" });
-      if (res.status === 401) return null;
+      if (res.status === 401) { setTrackIdentity(null); return null; }
       if (!res.ok) throw new Error("Failed to fetch user");
-      return api.auth.me.responses[200].parse(await res.json());
+      const user = api.auth.me.responses[200].parse(await res.json());
+      setTrackIdentity(user);
+      return user;
     },
   });
 
@@ -29,7 +32,9 @@ export function useAuth() {
         if (res.status === 401) throw new Error("Invalid credentials");
         throw new Error("Login failed");
       }
-      return api.auth.login.responses[200].parse(await res.json());
+      const user = api.auth.login.responses[200].parse(await res.json());
+      setTrackIdentity(user);
+      return user;
     },
     onSuccess: (user) => {
       queryClient.clear();
@@ -45,6 +50,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
+      setTrackIdentity(null);
       queryClient.clear();
       setLocation("/login");
     },

@@ -30,7 +30,7 @@ declare global {
       email: string;
       password: string;
       role: "participant" | "mentor" | "admin" | "superuser";
-      track: "A" | "B" | "C" | null;
+      track: string | null;
       mentorId: number | null;
       startDate: Date | null;
       profilePhotoUrl: string | null;

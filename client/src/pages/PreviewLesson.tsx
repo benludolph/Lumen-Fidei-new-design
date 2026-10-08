@@ -1,4 +1,5 @@
 import { useParams, useLocation } from "wouter";
+import { trackFetch as fetch, getSelectedTrackId } from "@/lib/track-context";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { LessonFlow } from "@/components/lesson/LessonFlow";
@@ -17,9 +18,10 @@ export default function PreviewLesson() {
   const params = useParams<{ day: string }>();
   const [, setLocation] = useLocation();
   const day = Number(params.day);
+  const trackId = new URLSearchParams(window.location.search).get("trackId") || getSelectedTrackId();
 
   const { data: content, isLoading, isError } = useQuery<TrackAContent>({
-    queryKey: ["/api/track-a-content", day],
+    queryKey: ["/api/track-a-content", day, "preview", trackId],
     queryFn: async () => {
       const res = await fetch(`/api/track-a-content/${day}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to load lesson");
@@ -29,7 +31,7 @@ export default function PreviewLesson() {
   });
 
   const { data: prayerWrapData } = useQuery<PrayerWrapPayload>({
-    queryKey: ["/api/track-a/prayers", day],
+    queryKey: ["/api/track-a/prayers", day, "preview", trackId],
     queryFn: async () => {
       const res = await fetch(`/api/track-a/prayers/${day}`, { credentials: "include" });
       if (!res.ok) return { opening: null, closing: null };
@@ -52,7 +54,7 @@ export default function PreviewLesson() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4">
-        <div className="w-8 h-8 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
+        <Skeleton className="h-24 w-64 bg-white/10" />
         <p className="text-white/50 text-sm">Loading Day {day} preview…</p>
       </div>
     );
@@ -73,7 +75,7 @@ export default function PreviewLesson() {
 
   return (
     <LessonFlow
-      key={`preview-${day}`}
+      key={`preview-${trackId}-${day}`}
       content={content}
       dayNumber={day}
       previewMode

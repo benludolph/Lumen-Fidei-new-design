@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { trackFetch as fetch } from "@/lib/track-context";
 import type { TrackAContent } from "@shared/schema";
 
 export function useTrackADailyContent(day: number) {

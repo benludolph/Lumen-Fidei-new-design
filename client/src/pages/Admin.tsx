@@ -1,4 +1,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { TrackManagement, TrackAssignment } from "@/components/TrackManagement";
+import { useTracks } from "@/hooks/use-tracks";
+import { trackFetch as fetch, getSelectedTrackId, activityLocalStorage as localStorage } from "@/lib/track-context";
 import { SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-definitions";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useCreateUser, useUpdateUser } from "@/hooks/use-users";
@@ -12,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Sun, Moon, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock, BookX } from "lucide-react";
+import { Plus, Minus, Search, Users, BarChart3, CheckCircle2, Circle, Settings, Calendar, Key, Award, AlertTriangle, BookOpen, Save, ChevronLeft, ChevronRight, Trash2, Download, Eye, FileText, Filter, X, ChevronUp, ChevronDown, Edit2, GripVertical, Upload, Image as ImageIcon, ArrowLeft, Layers, MessageSquare, Volume2, Lock, Video, Play, Copy, ClipboardPaste, ArrowLeftRight, Hash, Heart, UserX, UserCheck, Archive, CalendarCheck, CalendarClock, BookX } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -35,7 +38,7 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { insertUserSchema, type HealingModule, type HealingContent } from "@shared/schema";
+import { insertUserSchema } from "@shared/schema";
 import { format } from "date-fns";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api, type ContentBackup, type SafeUser } from "@shared/routes";
@@ -231,36 +234,8 @@ export default function Admin() {
 }
 
 function ContentTabView() {
-  const [track, setTrack] = useState<"a" | "b" | "c">("a");
-
   return (
-    <div className="space-y-5">
-      <div className="flex gap-1 p-1 rounded-lg w-fit bg-muted border">
-        <button
-          onClick={() => setTrack("a")}
-          data-testid="button-track-a-tab"
-          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "a" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Track A
-        </button>
-        <button
-          onClick={() => setTrack("b")}
-          data-testid="button-track-b-tab"
-          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "b" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Track B
-        </button>
-        <button
-          onClick={() => setTrack("c")}
-          data-testid="button-track-c-tab"
-          className={`px-5 py-1.5 rounded text-sm font-medium transition-colors ${track === "c" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          Healing
-        </button>
-      </div>
-
-      {track === "a" ? <TrackAContentManagementView /> : track === "b" ? <ContentManagementView /> : <HealingAdminView />}
-    </div>
+    <TrackManagement>{trackId => <TrackAContentManagementView key={trackId} />}</TrackManagement>
   );
 }
 
@@ -365,7 +340,7 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
   };
   
   const handleAssignTrack = (track: string) => {
-    updateUser({ id: user.id, track: track as "A" | "B" | "C" });
+    updateUser({ id: user.id, track });
   };
 
   const handleAssignVariant = (val: string) => {
@@ -411,17 +386,8 @@ function UserRow({ user, allUsers }: { user: any, allUsers: any[] }) {
         )}
       </TableCell>
       <TableCell>
-        {user.role === 'participant' ? (
-           <Select defaultValue={user.track ?? ""} onValueChange={handleAssignTrack}>
-             <SelectTrigger className="w-[110px] h-8">
-               <SelectValue placeholder="-" />
-             </SelectTrigger>
-             <SelectContent>
-               <SelectItem value="A">A</SelectItem>
-               <SelectItem value="B">B</SelectItem>
-               <SelectItem value="C">C – Healing</SelectItem>
-             </SelectContent>
-           </Select>
+        {(user.role === 'participant' || user.role === 'superuser') ? (
+           <TrackAssignment value={user.track} onChange={handleAssignTrack} />
         ) : (
           <span className="text-muted-foreground">-</span>
         )}
@@ -640,6 +606,7 @@ type UserDetailsData = {
     startDate: string | null;
     currentDay: number;
     daysCompleted: number;
+    totalDays: number;
     totalPossibleDays: number;
     graduationEligible: boolean;
   };
@@ -796,10 +763,10 @@ function UserDetailsDialog({ userId, userName }: { userId: number; userName: str
                 
                 <div className="mt-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-muted-foreground">Progress toward graduation (24 days)</span>
-                    <span className="text-sm font-medium">{data.user.daysCompleted} / 24</span>
+                    <span className="text-sm text-muted-foreground">Progress toward graduation ({Math.ceil(data.user.totalDays * 0.8)} days)</span>
+                    <span className="text-sm font-medium">{data.user.daysCompleted} / {Math.ceil(data.user.totalDays * 0.8)}</span>
                   </div>
-                  <Progress value={Math.min((data.user.daysCompleted / 24) * 100, 100)} className="h-2" />
+                  <Progress value={Math.min((data.user.daysCompleted / Math.max(1, Math.ceil(data.user.totalDays * 0.8))) * 100, 100)} className="h-2" />
                 </div>
               </CardContent>
             </Card>
@@ -884,6 +851,8 @@ function UserDetailsDialog({ userId, userName }: { userId: number; userName: str
 
 function CreateUserDialog() {
   const [open, setOpen] = useState(false);
+  const tracks = useTracks();
+  const { toast } = useToast();
   const { mutateAsync, isPending } = useCreateUser();
   const form = useForm<z.infer<typeof insertUserSchema>>({
     resolver: zodResolver(insertUserSchema),
@@ -895,14 +864,23 @@ function CreateUserDialog() {
   });
 
   const onSubmit = async (data: any) => {
+    if ((data.role === "participant" || data.role === "superuser") &&
+      !tracks.data?.some(track => track.id === data.track && track.status === "published")) {
+      toast({ title: "Choose a published track", variant: "destructive" });
+      return;
+    }
     // Ensure startDate is set for participants
     const payload = {
       ...data,
       startDate: new Date(), // Start today by default
     };
-    await mutateAsync(payload);
-    setOpen(false);
-    form.reset();
+    try {
+      await mutateAsync(payload);
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      toast({ title: "Could not create user", description: error instanceof Error ? error.message : "Please try again.", variant: "destructive" });
+    }
   };
 
   return (
@@ -945,16 +923,7 @@ function CreateUserDialog() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Track</label>
-              <Select onValueChange={v => form.setValue("track", v as any)} defaultValue="A">
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">A</SelectItem>
-                  <SelectItem value="B">B</SelectItem>
-                  <SelectItem value="C">C</SelectItem>
-                </SelectContent>
-              </Select>
+              <TrackAssignment value={form.watch("track")} onChange={v => form.setValue("track", v)} />
             </div>
           </div>
 
@@ -973,6 +942,7 @@ function CreateUserDialog() {
 }
 
 type ProgressData = {
+  totalDays: number;
   userId: number;
   userName: string;
   userEmail: string;
@@ -1030,7 +1000,7 @@ function ProgressView() {
   const cohortComplete = cohortCurrentDay >= 30;
   
   const totalParticipants = progressData?.length || 0;
-  const graduatingCount = progressData?.filter(p => (p.daysCompleted / 30) >= GRADUATION_THRESHOLD).length || 0;
+  const graduatingCount = progressData?.filter(p => (p.daysCompleted / Math.max(1, p.totalDays)) >= GRADUATION_THRESHOLD).length || 0;
   const atRiskCount = progressData?.filter(p => {
     const completionRate = p.daysCompleted / Math.max(p.currentDay, 1);
     return completionRate < GRADUATION_THRESHOLD && p.currentDay > 5;
@@ -1130,7 +1100,7 @@ function ProgressView() {
                   </TableCell>
                 </TableRow>
               ) : progressData?.map((p) => {
-                const completionPercent = Math.round((p.daysCompleted / 30) * 100);
+                const completionPercent = Math.round((p.daysCompleted / Math.max(1, p.totalDays)) * 100);
                 const isGraduating = completionPercent >= 80;
                 const currentRate = p.daysCompleted / Math.max(p.currentDay, 1);
                 const isAtRisk = currentRate < GRADUATION_THRESHOLD && p.currentDay > 5;
@@ -1149,7 +1119,7 @@ function ProgressView() {
                     </TableCell>
                     <TableCell>
                       <span className="font-bold">{p.currentDay}</span>
-                      <span className="text-muted-foreground">/30</span>
+                      <span className="text-muted-foreground">/{p.totalDays}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -1179,7 +1149,6 @@ function ProgressView() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {p.track === 'A' ? (
                         <div className="flex items-center gap-1" title="Daily Activity">
                           {p.morningToday ? (
                             <CheckCircle2 className="w-4 h-4 text-green-600" />
@@ -1188,26 +1157,6 @@ function ProgressView() {
                           )}
                           <span className="text-xs text-muted-foreground">Done</span>
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1" title="Morning Prayer">
-                            <Sun className="w-4 h-4 text-amber-500" />
-                            {p.morningToday ? (
-                              <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Circle className="w-4 h-4 text-muted-foreground/30" />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1" title="Evening Prayer">
-                            <Moon className="w-4 h-4 text-indigo-400" />
-                            {p.eveningToday ? (
-                              <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <Circle className="w-4 h-4 text-muted-foreground/30" />
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -2259,469 +2208,6 @@ function DataExportCard() {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-type DailyContentType = {
-  id: number;
-  dayNumber: number;
-  weekNumber: number;
-  weekTitle: string;
-  isReflectionDay: boolean;
-  morningScriptureRef: string;
-  morningScriptureText: string;
-  morningMeditation: string;
-  morningPrayer: string | null;
-  eveningCatechismRef: string | null;
-  eveningCatechism: string;
-  eveningSummary: string | null;
-  eveningQuestions: string[] | null;
-  assignment: string | null;
-};
-
-function ContentManagementView() {
-  const { toast } = useToast();
-  const [selectedDay, setSelectedDay] = useState(1);
-  const [editMode, setEditMode] = useState(false);
-  
-  const { data: allContent, isLoading } = useQuery<DailyContentType[]>({
-    queryKey: [api.content.list.path],
-    queryFn: async () => {
-      const res = await fetch(api.content.list.path, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed to fetch content");
-      return res.json();
-    },
-  });
-
-  const currentContent = allContent?.find(c => c.dayNumber === selectedDay);
-
-  const [formData, setFormData] = useState({
-    weekTheme: "",
-    morningScriptureRef: "",
-    morningScriptureText: "",
-    morningMeditation: "",
-    morningPrayer: "",
-    eveningCatechismRef: "",
-    eveningCatechism: "",
-    eveningSummary: "",
-    eveningQuestions: "",
-    assignment: "",
-  });
-
-  const updateFormFromContent = (content: DailyContentType | undefined) => {
-    if (content) {
-      setFormData({
-        weekTheme: content.weekTitle || "",
-        morningScriptureRef: content.morningScriptureRef || "",
-        morningScriptureText: content.morningScriptureText || "",
-        morningMeditation: content.morningMeditation || "",
-        morningPrayer: content.morningPrayer || "",
-        eveningCatechismRef: content.eveningCatechismRef || "",
-        eveningCatechism: content.eveningCatechism || "",
-        eveningSummary: content.eveningSummary || "",
-        eveningQuestions: content.eveningQuestions?.join("\n") || "",
-        assignment: content.assignment || "",
-      });
-    } else {
-      setFormData({
-        weekTheme: "",
-        morningScriptureRef: "",
-        morningScriptureText: "",
-        morningMeditation: "",
-        morningPrayer: "",
-        eveningCatechismRef: "",
-        eveningCatechism: "",
-        eveningSummary: "",
-        eveningQuestions: "",
-        assignment: "",
-      });
-    }
-  };
-
-  const handleDayChange = (day: number) => {
-    setSelectedDay(day);
-    setEditMode(false);
-    const content = allContent?.find(c => c.dayNumber === day);
-    updateFormFromContent(content);
-  };
-
-  const saveMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", api.admin.createContent.path, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.content.list.path] });
-      toast({ title: "Content saved successfully" });
-      setEditMode(false);
-    },
-    onError: () => {
-      toast({ title: "Failed to save content", variant: "destructive" });
-    },
-  });
-
-  const handleSave = () => {
-    const weekNumber = currentContent?.weekNumber || Math.ceil(selectedDay / 6);
-    const isReflectionDay = currentContent?.isReflectionDay ?? (selectedDay % 6 === 0);
-    
-    saveMutation.mutate({
-      dayNumber: selectedDay,
-      weekNumber,
-      weekTitle: formData.weekTheme || weekThemes[weekNumber - 1] || "Week " + weekNumber,
-      isReflectionDay,
-      morningScriptureRef: formData.morningScriptureRef || "",
-      morningScriptureText: formData.morningScriptureText || "",
-      morningMeditation: formData.morningMeditation || "",
-      morningPrayer: formData.morningPrayer || null,
-      eveningCatechismRef: formData.eveningCatechismRef || null,
-      eveningCatechism: formData.eveningCatechism || "",
-      eveningSummary: formData.eveningSummary || null,
-      eveningQuestions: formData.eveningQuestions.trim() 
-        ? formData.eveningQuestions.split("\n").filter(q => q.trim())
-        : null,
-      assignment: formData.assignment.trim() || null,
-    });
-  };
-
-  const startEdit = () => {
-    updateFormFromContent(currentContent);
-    setEditMode(true);
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center">Loading content...</CardContent>
-      </Card>
-    );
-  }
-
-  const weeks = [1, 2, 3, 4, 5];
-  const weekThemes = [
-    "God's Loving Plan for Humanity",
-    "Turning Away From Sin",
-    "Jesus Christ The Messiah",
-    "Grace, Our Defense Against Evil",
-    "Scripture: The Truth of God's Word"
-  ];
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Daily Content Management
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleDayChange(Math.max(1, selectedDay - 1))}
-                disabled={selectedDay <= 1}
-                data-testid="button-prev-day"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="font-medium min-w-[80px] text-center">Day {selectedDay}</span>
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={() => handleDayChange(Math.min(30, selectedDay + 1))}
-                disabled={selectedDay >= 30}
-                data-testid="button-next-day"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Mobile: Dropdown selector */}
-          <div className="md:hidden mb-6">
-            <Select value={String(selectedDay)} onValueChange={(val) => handleDayChange(Number(val))}>
-              <SelectTrigger className="w-full" data-testid="select-day-mobile">
-                <SelectValue placeholder="Select a day" />
-              </SelectTrigger>
-              <SelectContent>
-                {weeks.map(week => (
-                  <SelectGroup key={week}>
-                    <SelectLabel>Week {week}</SelectLabel>
-                    {[1, 2, 3, 4, 5, 6].map(dayInWeek => {
-                      const day = (week - 1) * 6 + dayInWeek;
-                      const hasContent = allContent?.some(c => c.dayNumber === day);
-                      const isReflection = dayInWeek === 6;
-                      return (
-                        <SelectItem key={day} value={String(day)} data-testid={`select-day-${day}`}>
-                          Day {day} {isReflection ? "(Reflection)" : ""} {hasContent ? "" : "(No content)"}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectGroup>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Desktop: Grid selector */}
-          <div className="hidden md:grid grid-cols-5 gap-2 mb-6">
-            {weeks.map(week => (
-              <div key={week} className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground text-center">Week {week}</p>
-                <div className="grid grid-cols-6 gap-1">
-                  {[1, 2, 3, 4, 5, 6].map(dayInWeek => {
-                    const day = (week - 1) * 6 + dayInWeek;
-                    const hasContent = allContent?.some(c => c.dayNumber === day);
-                    const isReflection = dayInWeek === 6;
-                    return (
-                      <Button
-                        key={day}
-                        variant={selectedDay === day ? "default" : hasContent ? "secondary" : "outline"}
-                        size="sm"
-                        className={`h-8 w-8 p-0 text-xs ${isReflection ? "ring-1 ring-primary/30" : ""}`}
-                        onClick={() => handleDayChange(day)}
-                        data-testid={`button-day-${day}`}
-                      >
-                        {day}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-serif text-xl" data-testid="text-day-label">Day {selectedDay} - Week {Math.ceil(selectedDay / 6)}</h3>
-              <p className="text-sm text-muted-foreground">
-                <span data-testid="text-week-theme">{weekThemes[Math.ceil(selectedDay / 6) - 1]}</span>
-                {currentContent?.isReflectionDay && (
-                  <Badge variant="outline" className="ml-2" data-testid="badge-reflection-day">Reflection Day</Badge>
-                )}
-              </p>
-            </div>
-            {!editMode ? (
-              <Button onClick={startEdit} data-testid="button-edit-content">
-                Edit Content
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setEditMode(false)} data-testid="button-cancel-edit">
-                  Cancel
-                </Button>
-                <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-save-content">
-                  <Save className="w-4 h-4 mr-2" />
-                  {saveMutation.isPending ? "Saving..." : "Save"}
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {editMode ? (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Day Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Week Theme (optional)</label>
-                <Input
-                  value={formData.weekTheme}
-                  onChange={(e) => setFormData(prev => ({ ...prev, weekTheme: e.target.value }))}
-                  placeholder="e.g., God's Loving Plan for Humanity"
-                  data-testid="input-week-theme"
-                />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Morning Content</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Scripture Reference</label>
-                  <Input
-                    value={formData.morningScriptureRef}
-                    onChange={(e) => setFormData(prev => ({ ...prev, morningScriptureRef: e.target.value }))}
-                    placeholder="e.g., John 3:16-17"
-                    data-testid="input-scripture-ref"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Scripture Text</label>
-                  <RichTextEditor
-                    value={formData.morningScriptureText}
-                    onChange={(value) => setFormData(prev => ({ ...prev, morningScriptureText: value }))}
-                    className="min-h-[150px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meditation</label>
-                  <RichTextEditor
-                    value={formData.morningMeditation}
-                    onChange={(value) => setFormData(prev => ({ ...prev, morningMeditation: value }))}
-                    className="min-h-[180px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Morning Prayer (optional)</label>
-                  <RichTextEditor
-                    value={formData.morningPrayer}
-                    onChange={(value) => setFormData(prev => ({ ...prev, morningPrayer: value }))}
-                    className="min-h-[120px]"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Evening Content</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Catechism Reference</label>
-                  <Input
-                    value={formData.eveningCatechismRef}
-                    onChange={(e) => setFormData(prev => ({ ...prev, eveningCatechismRef: e.target.value }))}
-                    placeholder="e.g., CCC 232-237"
-                    data-testid="input-catechism-ref"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Catechism / Activity Content</label>
-                  <RichTextEditor
-                    value={formData.eveningCatechism}
-                    onChange={(value) => setFormData(prev => ({ ...prev, eveningCatechism: value }))}
-                    className="min-h-[200px]"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Tip: Use [VIDEO:youtubeId] format to embed YouTube videos
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Evening Summary (optional)</label>
-                  <RichTextEditor
-                    value={formData.eveningSummary}
-                    onChange={(value) => setFormData(prev => ({ ...prev, eveningSummary: value }))}
-                    className="min-h-[100px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Assignment (optional - leave blank for no assignment)</label>
-                  <Textarea
-                    value={formData.assignment}
-                    onChange={(e) => setFormData(prev => ({ ...prev, assignment: e.target.value }))}
-                    placeholder="Enter assignment text (e.g., 'Message your mentor about...' or 'Reflect on today's readings...'). Leave blank for no assignment."
-                    rows={3}
-                    data-testid="input-assignment"
-                  />
-                  <p className="text-xs text-muted-foreground">If blank, no assignment section will be shown to participants for this day.</p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Reflection Questions (optional - one per line, for reflection days)</label>
-                  <Textarea
-                    value={formData.eveningQuestions}
-                    onChange={(e) => setFormData(prev => ({ ...prev, eveningQuestions: e.target.value }))}
-                    placeholder="Enter reflection questions, one per line (only used on reflection days)..."
-                    rows={4}
-                    data-testid="input-questions"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Morning Content</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4" data-testid="content-morning">
-              {currentContent?.morningScriptureRef ? (
-                <>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Scripture Reference</p>
-                    <p className="font-serif" data-testid="text-scripture-ref">{currentContent.morningScriptureRef}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Scripture Text</p>
-                    <p className="italic text-muted-foreground whitespace-pre-wrap" data-testid="text-scripture-text">
-                      "{currentContent.morningScriptureText}"
-                    </p>
-                  </div>
-                  {currentContent.morningMeditation && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Meditation</p>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="text-meditation">
-                        {currentContent.morningMeditation}
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-muted-foreground text-center py-8" data-testid="text-no-morning-content">No morning content for this day</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Evening Content</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4" data-testid="content-evening">
-              {currentContent?.eveningCatechism || currentContent?.eveningQuestions?.length || currentContent?.assignment ? (
-                <>
-                  {currentContent.eveningCatechismRef && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Reference</p>
-                      <p className="font-serif" data-testid="text-catechism-ref">{currentContent.eveningCatechismRef}</p>
-                    </div>
-                  )}
-                  {currentContent.eveningCatechism && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Content</p>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed max-h-64 overflow-y-auto" data-testid="text-catechism">
-                        {currentContent.eveningCatechism}
-                      </p>
-                    </div>
-                  )}
-                  {currentContent.assignment && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Assignment</p>
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed" data-testid="text-assignment">
-                        {currentContent.assignment}
-                      </p>
-                    </div>
-                  )}
-                  {currentContent.eveningQuestions && currentContent.eveningQuestions.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Reflection Questions</p>
-                      <ul className="list-disc list-inside space-y-1 text-sm" data-testid="text-questions">
-                        {currentContent.eveningQuestions.map((q, i) => (
-                          <li key={i}>{q}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-muted-foreground text-center py-8" data-testid="text-no-evening-content">No evening content for this day</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -6447,6 +5933,8 @@ function SortableModuleCard({
   };
 
   const days = (() => {
+    if (getSelectedTrackId() !== "A") return (allContent || []).filter(content =>
+      content.weekNumber === mod.weekNumber && content.dayNumber > 0).map(content => content.dayNumber);
     const start = (mod.weekNumber - 1) * 6 + 1;
     const end = Math.min(mod.weekNumber * 6, 30);
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -7038,6 +6526,7 @@ function WrapPrayersManagementSection() {
 }
 
 function TrackAContentManagementView() {
+  const isCalendarTrack = getSelectedTrackId() === "A";
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [view, setView] = useState<"modules" | "days" | "slides">("modules");
@@ -7186,7 +6675,7 @@ function TrackAContentManagementView() {
     }
   };
 
-  const { data: modules, isLoading: modulesLoading } = useQuery<TrackAModuleData[]>({
+  const { data: modules, isLoading: modulesLoading, isError: modulesError, refetch: refetchModules } = useQuery<TrackAModuleData[]>({
     queryKey: ['/api/track-a-modules'],
     queryFn: async () => {
       const res = await fetch('/api/track-a-modules', { credentials: "include" });
@@ -7257,7 +6746,7 @@ function TrackAContentManagementView() {
     reorderDaysMutation.mutate(newOrder);
   };
 
-  const { data: allContent, isLoading: contentLoading } = useQuery<TrackAContentData[]>({
+  const { data: allContent, isLoading: contentLoading, isError: contentError, refetch: refetchContent } = useQuery<TrackAContentData[]>({
     queryKey: ['/api/track-a-content'],
     queryFn: async () => {
       const res = await fetch('/api/track-a-content', { credentials: "include" });
@@ -7420,7 +6909,7 @@ function TrackAContentManagementView() {
   const handleSave = () => {
     saveMutation.mutate({
       dayNumber: selectedDay,
-      weekNumber: Math.ceil(selectedDay / 6),
+      weekNumber: selectedDay === 0 ? 0 : currentContent?.weekNumber ?? selectedModule ?? Math.ceil(selectedDay / 6),
       centralTheme: centralTheme || "Untitled",
       subtitle: daySubtitle || null,
       slides,
@@ -7513,6 +7002,8 @@ function TrackAContentManagementView() {
   };
 
   const getDaysForWeek = (weekNumber: number) => {
+    if (!isCalendarTrack) return (allContent || []).filter(content =>
+      content.weekNumber === weekNumber && content.dayNumber > 0).map(content => content.dayNumber);
     const start = (weekNumber - 1) * 6 + 1;
     const end = Math.min(weekNumber * 6, 30);
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -7521,10 +7012,15 @@ function TrackAContentManagementView() {
   if (modulesLoading || contentLoading) {
     return (
       <Card>
-        <CardContent className="py-8 text-center">Loading Track A content...</CardContent>
+        <CardContent className="py-8"><div className="h-24 rounded bg-muted animate-pulse" /></CardContent>
       </Card>
     );
   }
+
+  if (modulesError || contentError) return <Card><CardContent className="py-8 text-center space-y-3">
+    <p className="text-sm text-muted-foreground">Curriculum could not be loaded.</p>
+    <Button variant="outline" onClick={() => { refetchModules(); refetchContent(); }}>Try again</Button>
+  </CardContent></Card>;
 
   // === MODULE LIST VIEW ===
   if (view === "modules") {
@@ -7725,9 +7221,13 @@ function TrackAContentManagementView() {
             <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
               {modules?.length || 0}
             </span>
+            <Button size="sm" variant="outline" disabled={moduleSaveMutation.isPending} onClick={() => {
+              const weekNumber = Math.max(0, ...(modules || []).map(module => module.weekNumber)) + 1;
+              moduleSaveMutation.mutate({ weekNumber, title: `Module ${weekNumber}`, subtitle: "", imageUrl: null, sortOrder: weekNumber });
+            }} data-testid="button-add-curriculum-module"><Plus className="w-3.5 h-3.5 mr-1" />Add module</Button>
           </div>
 
-          <div
+          {(isCalendarTrack || allContent?.some(content => content.dayNumber === 0)) && <div
             className="cursor-pointer rounded-lg border mb-4 transition-shadow hover:shadow-md"
             onClick={() => openDay(0)}
             data-testid="card-day-0-intro"
@@ -7760,7 +7260,13 @@ function TrackAContentManagementView() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>}
+
+          {!modules?.length && <Card><CardContent className="py-8 text-center space-y-2">
+            <Layers className="w-8 h-8 mx-auto text-muted-foreground" />
+            <p className="font-medium">Start with a module</p>
+            <p className="text-sm text-muted-foreground">Add a module above, then add lessons and use the slide editor to build your curriculum.</p>
+          </CardContent></Card>}
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={localModuleOrder} strategy={rectSortingStrategy}>
@@ -7800,9 +7306,20 @@ function TrackAContentManagementView() {
                 </CardTitle>
                 <p className="text-sm text-muted-foreground" data-testid="text-module-sub">{currentModule?.subtitle || ""}</p>
               </div>
+              <Button size="sm" variant="outline" disabled={saveMutation.isPending || (allContent?.filter(content => content.dayNumber > 0).length || 0) >= 30}
+                onClick={() => {
+                  const dayNumber = Math.max(0, ...(allContent || []).map(content => content.dayNumber)) + 1;
+                  saveMutation.mutate({ dayNumber, weekNumber: selectedModule, centralTheme: `Lesson ${dayNumber}`, subtitle: null, slides: [], imageUrl: null },
+                    { onSuccess: () => { setSelectedDay(dayNumber); loadContentIntoState(undefined); setCentralTheme(`Lesson ${dayNumber}`); setEditMode(true); setView("slides"); } });
+                }} data-testid="button-add-curriculum-lesson"><Plus className="w-3.5 h-3.5 mr-1" />Add lesson</Button>
             </div>
           </CardHeader>
         </Card>
+
+        {!localDayOrder.length && <Card><CardContent className="py-8 text-center">
+          <p className="font-medium">No lessons in this module</p>
+          <p className="text-sm text-muted-foreground mt-2">Add a lesson to begin. Its slides are edited with the same curriculum tools.</p>
+        </CardContent></Card>}
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDayDragEnd}>
           <SortableContext items={localDayOrder} strategy={rectSortingStrategy}>
@@ -7813,7 +7330,7 @@ function TrackAContentManagementView() {
                   dayNumber={dayNumber}
                   dayContent={allContent?.find(c => c.dayNumber === dayNumber)}
                   onOpen={openDay}
-                  onPreview={(dn) => setLocation(`/preview/track-a/${dn}`)}
+                  onPreview={(dn) => setLocation(`/preview/track-a/${dn}?trackId=${encodeURIComponent(getSelectedTrackId())}`)}
                   modules={modules}
                   currentWeekNumber={selectedModule ?? undefined}
                   onMove={(dn, wk) => moveDayMutation.mutate({ dayNumber: dn, newWeekNumber: wk })}
@@ -7827,7 +7344,7 @@ function TrackAContentManagementView() {
   }
 
   // === SLIDE EDITOR VIEW ===
-  const currentModule = selectedDay > 0 ? modules?.find(m => m.weekNumber === Math.ceil(selectedDay / 6)) : null;
+  const currentModule = selectedDay > 0 ? modules?.find(m => m.weekNumber === (currentContent?.weekNumber ?? selectedModule ?? Math.ceil(selectedDay / 6))) : null;
   const isDay0 = selectedDay === 0;
 
   return (
@@ -8832,7 +8349,8 @@ function QuestionResultCard({ q, totalRespondents }: { q: AggregatedQuestion; to
 }
 
 function SurveyResultsView() {
-  const [filterTrack, setFilterTrack] = useState<string>("A");
+  const tracks = useTracks();
+  const [filterTrack, setFilterTrack] = useState<string>(getSelectedTrackId);
   const [filterDay, setFilterDay] = useState<string>("");
 
   const queryKey = ["/api/admin/survey-responses", filterTrack, filterDay];
@@ -8869,8 +8387,7 @@ function SurveyResultsView() {
               <SelectValue placeholder="All tracks" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="A">Track A</SelectItem>
-              <SelectItem value="B">Track B</SelectItem>
+              {tracks.data?.map(track => <SelectItem key={track.id} value={track.id}>{track.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -8924,7 +8441,7 @@ function SurveyResultsView() {
 }
 
 // ========================
-// Shared slide helpers (used by Prelim and Healing editors)
+// Shared slide helpers for the curriculum editor.
 // ========================
 
 function getDefaultSlideContent(type: string): string {
@@ -9337,11 +8854,7 @@ function PrelimContentManagementView() {
   }
 
   if (selectedPosition === null) {
-    const defaultModules: PrelimModuleAdminData[] = [
-      { id: 0, position: 1, title: "Welcome to Lumen Fidei", subtitle: null, slides: null, imageUrl: null },
-      { id: 0, position: 2, title: "The Program Structure", subtitle: null, slides: null, imageUrl: null },
-    ];
-    const displayModules = (prelimModules && prelimModules.length > 0) ? prelimModules : defaultModules;
+    const displayModules = prelimModules ?? [];
     return (
       <div className="space-y-4">
         <Card>
@@ -9351,8 +8864,13 @@ function PrelimContentManagementView() {
               Pre-Cohort Onboarding Modules
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              These 2 modules must be completed by participants before the main program unlocks. Click a module to edit its content and upload a card image.
+              {displayModules.length ? `These ${displayModules.length} modules must be completed before the main program unlocks.` : "No preliminary modules yet. Add one if this track needs onboarding before its lessons."} Click a module to edit its content and card image.
             </p>
+            <Button variant="outline" className="w-fit" onClick={() => {
+              setSelectedPosition(Math.max(0, ...displayModules.map(m => m.position)) + 1);
+              loadModuleIntoState(undefined);
+              setEditMode(true);
+            }} data-testid="button-add-prelim-module"><Plus className="w-4 h-4 mr-2" />Add preliminary module</Button>
           </CardHeader>
         </Card>
         <div className="space-y-3">
@@ -10107,541 +9625,3 @@ function TestimoniesAdminView() {
   );
 }
 
-function HealingAdminView() {
-  const { toast } = useToast();
-  const [selectedModule, setSelectedModule] = useState<number | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [modTitle, setModTitle] = useState("");
-  const [modSubtitle, setModSubtitle] = useState("");
-  const [modImageUrl, setModImageUrl] = useState<string | null>(null);
-  const [slides, setSlides] = useState<TrackASlide[]>([]);
-  const [expandedSlide, setExpandedSlide] = useState<number | null>(null);
-  const [addSlideType, setAddSlideType] = useState<string>("text");
-  const [certTemplateFile, setCertTemplateFile] = useState<File | null>(null);
-  const [isUploadingCert, setIsUploadingCert] = useState(false);
-  const certInputRef = useRef<HTMLInputElement>(null);
-
-  const { data: modules, isLoading: modulesLoading } = useQuery<HealingModule[]>({
-    queryKey: ['/api/healing/modules'],
-    queryFn: () => fetch('/api/healing/modules', { credentials: 'include' }).then(r => r.json()),
-  });
-  const { data: allContent } = useQuery<HealingContent[]>({
-    queryKey: ['/api/healing/content'],
-    queryFn: () => fetch('/api/healing/content', { credentials: 'include' }).then(r => r.json()),
-  });
-  const { data: allUsers } = useQuery<SafeUser[]>({
-    queryKey: ['/api/admin/users'],
-    queryFn: () => fetch('/api/admin/users', { credentials: 'include' }).then(r => r.json()),
-  });
-
-  const reorderMutation = useMutation({
-    mutationFn: async (moduleNumbers: number[]) => {
-      await apiRequest("PATCH", '/api/admin/healing/modules/reorder', { moduleNumbers });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
-    },
-    onError: () => {
-      toast({ title: "Failed to reorder modules", variant: "destructive" });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (moduleNumber: number) => {
-      await apiRequest("DELETE", `/api/admin/healing/modules/${moduleNumber}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/content'] });
-      if (selectedModule !== null) setSelectedModule(null);
-      toast({ title: "Module deleted" });
-    },
-    onError: () => {
-      toast({ title: "Failed to delete module", variant: "destructive" });
-    },
-  });
-
-  const createModuleMutation = useMutation({
-    mutationFn: async () => {
-      const maxNum = modules && modules.length > 0 ? Math.max(...modules.map((m) => m.moduleNumber)) : 0;
-      const maxSort = modules && modules.length > 0 ? Math.max(...modules.map((m) => m.sortOrder)) : 0;
-      const newNum = maxNum + 1;
-      const newSort = maxSort + 1;
-      await apiRequest("POST", '/api/admin/healing/create-module', { moduleNumber: newNum, title: `Module ${newNum}`, sortOrder: newSort });
-      return newNum;
-    },
-    onSuccess: (newNum) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/content'] });
-      setSelectedModule(newNum);
-      setModTitle(`Module ${newNum}`);
-      setModSubtitle("");
-      setModImageUrl(null);
-      setSlides([]);
-      setEditMode(true);
-      toast({ title: "New module created" });
-    },
-    onError: () => {
-      toast({ title: "Failed to create module", variant: "destructive" });
-    },
-  });
-
-  const saveMutation = useMutation({
-    mutationFn: async (data: { moduleNumber: number; title: string; subtitle: string | null; imageUrl: string | null; slides: TrackASlide[] }) => {
-      const existingSortOrder = modules?.find((m) => m.moduleNumber === data.moduleNumber)?.sortOrder ?? data.moduleNumber;
-      await apiRequest("POST", '/api/admin/healing/modules', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, sortOrder: existingSortOrder });
-      await apiRequest("POST", '/api/admin/healing/content', { moduleNumber: data.moduleNumber, title: data.title, subtitle: data.subtitle, imageUrl: data.imageUrl, slides: data.slides });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/modules'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/healing/content'] });
-      toast({ title: "Module saved" });
-      setEditMode(false);
-    },
-    onError: (err: Error) => {
-      toast({ title: "Failed to save module", description: err?.message || "Unknown error", variant: "destructive" });
-    },
-  });
-
-  const handleCertUpload = async () => {
-    if (!certTemplateFile) return;
-    setIsUploadingCert(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', certTemplateFile);
-      const res = await fetch('/api/admin/healing/certificate-template', { method: 'POST', credentials: 'include', body: formData });
-      if (!res.ok) throw new Error('Upload failed');
-      toast({ title: 'Certificate template uploaded' });
-      setCertTemplateFile(null);
-      if (certInputRef.current) certInputRef.current.value = '';
-    } catch {
-      toast({ title: 'Upload failed', description: 'Please try again.', variant: 'destructive' });
-    } finally {
-      setIsUploadingCert(false);
-    }
-  };
-
-  const contentMap = new Map((allContent ?? []).map((c) => [c.moduleNumber, c]));
-  const modulesWithContent = (modules ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder).map((m) => ({ ...m, content: contentMap.get(m.moduleNumber) }));
-  const healingParticipants = allUsers?.filter((u) => u.track === 'C') ?? [];
-
-  const loadModuleIntoState = (moduleNumber: number) => {
-    const mod = modules?.find((m) => m.moduleNumber === moduleNumber);
-    const cont = contentMap.get(moduleNumber);
-    setModTitle(mod?.title ?? `Module ${moduleNumber}`);
-    setModSubtitle(mod?.subtitle ?? "");
-    setModImageUrl(mod?.imageUrl ?? cont?.imageUrl ?? null);
-    setSlides(cont?.slides ? [...cont.slides] : []);
-    setExpandedSlide(null);
-  };
-
-  const handleSave = () => {
-    if (selectedModule === null) return;
-    saveMutation.mutate({
-      moduleNumber: selectedModule,
-      title: modTitle || `Module ${selectedModule}`,
-      subtitle: modSubtitle || null,
-      imageUrl: modImageUrl,
-      slides,
-    });
-  };
-
-  const handleReorder = (moduleNumber: number, dir: "up" | "down") => {
-    if (!modules) return;
-    const sorted = [...modules].sort((a, b) => a.sortOrder - b.sortOrder);
-    const idx = sorted.findIndex((m) => m.moduleNumber === moduleNumber);
-    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= sorted.length) return;
-    const newOrder = [...sorted];
-    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
-    reorderMutation.mutate(newOrder.map((m) => m.moduleNumber));
-  };
-
-  const addSlide = () => {
-    setSlides(prev => [...prev, { type: addSlideType, content: getDefaultSlideContent(addSlideType) }]);
-    setExpandedSlide(slides.length);
-  };
-
-  const removeSlide = (index: number) => {
-    setSlides(prev => prev.filter((_, i) => i !== index));
-    if (expandedSlide === index) setExpandedSlide(null);
-    else if (expandedSlide !== null && expandedSlide > index) setExpandedSlide(expandedSlide - 1);
-  };
-
-  const moveSlide = (index: number, dir: "up" | "down") => {
-    const newIdx = dir === "up" ? index - 1 : index + 1;
-    if (newIdx < 0 || newIdx >= slides.length) return;
-    setSlides(prev => {
-      const next = [...prev];
-      [next[index], next[newIdx]] = [next[newIdx], next[index]];
-      return next;
-    });
-    if (expandedSlide === index) setExpandedSlide(newIdx);
-    else if (expandedSlide === newIdx) setExpandedSlide(index);
-  };
-
-  const updateSlide = (index: number, field: "type" | "content", value: string) => {
-    setSlides(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
-  };
-
-  // Module list view
-  if (selectedModule === null) {
-    return (
-      <div className="space-y-6">
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Award className="w-4 h-4" /> Certificate Template
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">Upload a custom PNG certificate background for the Healing Track. Leave blank to use the default.</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <input ref={certInputRef} type="file" accept="image/png" data-testid="input-healing-cert-template" onChange={(e) => setCertTemplateFile(e.target.files?.[0] ?? null)} className="text-sm" />
-              <Button size="sm" onClick={handleCertUpload} disabled={!certTemplateFile || isUploadingCert} data-testid="button-upload-healing-cert">
-                {isUploadingCert ? 'Uploading…' : 'Upload'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BookOpen className="w-4 h-4" /> Modules
-              </CardTitle>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-2 h-8 text-xs"
-                disabled={createModuleMutation.isPending}
-                onClick={() => createModuleMutation.mutate()}
-                data-testid="button-healing-add-module"
-              >
-                <Plus className="w-3 h-3" /> Add Module
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">Click any module to edit its title, subtitle, and slide content.</p>
-          </CardHeader>
-          <CardContent className="p-0">
-            {modulesLoading ? (
-              <div className="space-y-2 p-4">{[1,2,3].map(i => <div key={i} className="h-12 rounded bg-secondary animate-pulse" />)}</div>
-            ) : (
-              <div className="divide-y divide-border">
-                {modulesWithContent.map((m, idx) => (
-                  <div
-                    key={m.moduleNumber}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
-                    data-testid={`row-healing-module-admin-${m.moduleNumber}`}
-                  >
-                    <div
-                      className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
-                      onClick={() => { setSelectedModule(m.moduleNumber); loadModuleIntoState(m.moduleNumber); setEditMode(false); }}
-                    >
-                      <span className="text-xs font-mono text-muted-foreground w-6 flex-shrink-0">{m.moduleNumber < 10 ? `0${m.moduleNumber}` : m.moduleNumber}</span>
-                      {m.imageUrl && (
-                        <img src={m.imageUrl} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{m.title}</p>
-                        {m.subtitle && <p className="text-xs text-muted-foreground truncate">{m.subtitle}</p>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0 ml-4">
-                      <span className="text-xs text-muted-foreground mr-2">{m.content?.slides?.length ?? 0} slides</span>
-                      <Button
-                        variant="ghost" size="icon" className="h-7 w-7"
-                        disabled={idx === 0 || reorderMutation.isPending}
-                        onClick={(e) => { e.stopPropagation(); handleReorder(m.moduleNumber, "up"); }}
-                        data-testid={`button-healing-module-up-${m.moduleNumber}`}
-                      >
-                        <ChevronLeft className="w-3 h-3 -rotate-90" />
-                      </Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-7 w-7"
-                        disabled={idx === modulesWithContent.length - 1 || reorderMutation.isPending}
-                        onClick={(e) => { e.stopPropagation(); handleReorder(m.moduleNumber, "down"); }}
-                        data-testid={`button-healing-module-down-${m.moduleNumber}`}
-                      >
-                        <ChevronLeft className="w-3 h-3 rotate-90" />
-                      </Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-                        disabled={deleteMutation.isPending}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Delete Module ${m.moduleNumber} "${m.title}"? This cannot be undone.`)) {
-                            deleteMutation.mutate(m.moduleNumber);
-                          }
-                        }}
-                        data-testid={`button-healing-module-delete-${m.moduleNumber}`}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                      <ChevronRight
-                        className="w-4 h-4 text-muted-foreground cursor-pointer"
-                        onClick={() => { setSelectedModule(m.moduleNumber); loadModuleIntoState(m.moduleNumber); setEditMode(false); }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Module detail/edit view
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" onClick={() => { setSelectedModule(null); setEditMode(false); }} className="gap-2" data-testid="button-healing-back">
-          <ArrowLeft className="w-4 h-4" /> Back to Modules
-        </Button>
-        <Badge variant="outline">Module {selectedModule}</Badge>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{modTitle || `Module ${selectedModule}`}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {editMode ? (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
-                <Input value={modTitle} onChange={e => setModTitle(e.target.value)} placeholder="Module title" data-testid="input-healing-module-title" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Subtitle</label>
-                <Input value={modSubtitle} onChange={e => setModSubtitle(e.target.value)} placeholder="Brief description (optional)" data-testid="input-healing-module-subtitle" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Card Background Image</label>
-                <p className="text-xs text-muted-foreground">Image displayed on the module card in the healing dashboard.</p>
-                <ModuleImageUpload currentUrl={modImageUrl} onUploaded={setModImageUrl} />
-              </div>
-            </>
-          ) : (
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">{modTitle}</p>
-                {modSubtitle && <p className="text-sm text-muted-foreground">{modSubtitle}</p>}
-                {modImageUrl && (
-                  <div className="mt-3">
-                    <img src={modImageUrl} alt="" className="h-20 w-auto rounded object-cover border border-border" />
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">{slides.length} slide{slides.length !== 1 ? 's' : ''}</p>
-              </div>
-              <Button size="sm" onClick={() => { loadModuleIntoState(selectedModule); setEditMode(true); }} data-testid="button-healing-edit-module">
-                <Edit2 className="w-4 h-4 mr-1" /> Edit
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {editMode && (
-        <>
-          <div className="space-y-3">
-            {slides.map((slide, index) => {
-              const isExpanded = expandedSlide === index;
-              return (
-                <Card key={index} data-testid={`card-healing-slide-${index}`}>
-                  <CardContent className="pt-4 pb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex flex-col items-center gap-1 pt-1">
-                        <GripVertical className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-xs font-medium text-muted-foreground">{index + 1}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <SlideTypeBadge type={slide.type} />
-                          {!isExpanded && (
-                            <span className="text-sm text-muted-foreground truncate">
-                              {slide.type === "workbook_link"
-                                ? (() => { try { const p = JSON.parse(slide.content); if (Array.isArray(p.sectionIds) && p.sectionIds.length > 0) return `${p.sectionIds.length} section${p.sectionIds.length === 1 ? "" : "s"}`; return p.label || (p.sectionId != null ? `Section ${p.sectionId}` : "Workbook Link"); } catch { return "Workbook Link"; } })()
-                                : slide.type === "workbook_session"
-                                ? (() => { try { const p = JSON.parse(slide.content); const ids = Array.isArray(p.sectionIds) ? p.sectionIds : []; return ids.length > 0 ? `${ids.length} section${ids.length === 1 ? "" : "s"}` : "Workbook Session"; } catch { return "Workbook Session"; } })()
-                                : slide.type === "prayer_link"
-                                ? (() => { try { const p = JSON.parse(slide.content); const names: Record<string,string> = { prayer_1: "Personal Deliverance Prayer", prayer_2: "Generational Renunciation Prayer", prayer_3: "Daily Prayer" }; return p.label || names[p.prayerId] || "Prayer Link"; } catch { return "Prayer Link"; } })()
-                                : slide.type === "knowledge_check"
-                                ? (() => { try { const p = JSON.parse(slide.content); return `Q: ${p.question || "(empty)"} — ${Array.isArray(p.options) ? p.options.length : 0} option${Array.isArray(p.options) && p.options.length !== 1 ? "s" : ""}`; } catch { return slide.content || "(empty)"; } })()
-                                : slide.content ? (slide.content.length > 80 ? slide.content.substring(0, 80) + "..." : slide.content) : "(empty)"}
-                            </span>
-                          )}
-                        </div>
-                        {isExpanded && (
-                          <div className="space-y-3 mt-3">
-                            <div className="space-y-1">
-                              <label className="text-xs font-medium text-muted-foreground">Slide Type</label>
-                              <Select value={slide.type} onValueChange={(val) => {
-                                updateSlide(index, "type", val);
-                                const def = getDefaultSlideContent(val);
-                                if (def) updateSlide(index, "content", def);
-                              }}>
-                                <SelectTrigger data-testid={`select-healing-slide-type-${index}`}><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {PRELIM_SLIDE_TYPES.map(t => (
-                                    <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {slide.type === "quiz" ? (
-                              <QuizSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "media" ? (
-                              <MediaSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "timer" ? (
-                              <TimerSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "knowledge_check" ? (
-                              <KnowledgeCheckEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "knowledge_quiz" ? (
-                              <KnowledgeQuizEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "survey" ? (
-                              <SurveySlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "scenario" ? (
-                              <ScenarioSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "chat_flow" ? (
-                              <ChatFlowSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "path_selector" ? (
-                              <PathSelectorSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "before_after" ? (
-                              <BeforeAfterSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "image_carousel" ? (
-                              <ImageCarouselSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "cross_grid" ? (
-                              <CrossGridSlideEditor content={slide.content} onChange={(val) => updateSlide(index, "content", val)} index={index} />
-                            ) : slide.type === "workbook_link" ? (
-                              <WorkbookLinkSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                                idPrefix="healing"
-                              />
-                            ) : slide.type === "workbook_session" ? (
-                              <WorkbookSessionSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                                idPrefix="healing"
-                              />
-                            ) : slide.type === "prayer_link" ? (
-                              <div className="space-y-3">
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Prayer</label>
-                                  <Select
-                                    value={(() => { try { return JSON.parse(slide.content).prayerId || "prayer_1"; } catch { return "prayer_1"; } })()}
-                                    onValueChange={(val) => {
-                                      try { const p = JSON.parse(slide.content); p.prayerId = val; updateSlide(index, "content", JSON.stringify(p)); }
-                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: val, label: "" })); }
-                                    }}
-                                  >
-                                    <SelectTrigger data-testid={`select-healing-prayer-id-${index}`}><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="prayer_1">Personal Deliverance Prayer</SelectItem>
-                                      <SelectItem value="prayer_2">Generational Renunciation Prayer</SelectItem>
-                                      <SelectItem value="prayer_3">Daily Prayer</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-xs font-medium text-muted-foreground">Label (optional)</label>
-                                  <input
-                                    type="text"
-                                    value={(() => { try { return JSON.parse(slide.content).label || ""; } catch { return ""; } })()}
-                                    onChange={(e) => {
-                                      try { const p = JSON.parse(slide.content); p.label = e.target.value; updateSlide(index, "content", JSON.stringify(p)); }
-                                      catch { updateSlide(index, "content", JSON.stringify({ prayerId: "prayer_1", label: e.target.value })); }
-                                    }}
-                                    placeholder="Override the default prayer name..."
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    data-testid={`input-healing-prayer-label-${index}`}
-                                  />
-                                  <p className="text-[11px] text-muted-foreground/60">Overrides the prayer name shown on the slide card.</p>
-                                </div>
-                              </div>
-                            ) : slide.type === "selection_reveal" ? (
-                              <SelectionRevealSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                              />
-                            ) : slide.type === "bento_reveal" ? (
-                              <BentoRevealSlideEditor
-                                content={slide.content}
-                                onChange={(val) => updateSlide(index, "content", val)}
-                                index={index}
-                              />
-                            ) : (
-                              <div className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">Content</label>
-                                <Textarea
-                                  value={slide.content}
-                                  onChange={e => updateSlide(index, "content", e.target.value)}
-                                  rows={4}
-                                  placeholder="Slide content…"
-                                  data-testid={`textarea-healing-slide-content-${index}`}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-1 flex-shrink-0">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpandedSlide(isExpanded ? null : index)} data-testid={`button-toggle-healing-slide-${index}`}>
-                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveSlide(index, "up")} disabled={index === 0} data-testid={`button-healing-slide-up-${index}`}>
-                          <ChevronLeft className="w-3 h-3 -rotate-90" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveSlide(index, "down")} disabled={index === slides.length - 1} data-testid={`button-healing-slide-down-${index}`}>
-                          <ChevronLeft className="w-3 h-3 rotate-90" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => removeSlide(index)} data-testid={`button-healing-slide-delete-${index}`}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <Select value={addSlideType} onValueChange={setAddSlideType}>
-                  <SelectTrigger className="flex-1" data-testid="select-healing-add-slide-type"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PRELIM_SLIDE_TYPES.map(t => (
-                      <SelectItem key={t} value={t}>{SLIDE_TYPE_LABELS[t]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={addSlide} data-testid="button-healing-add-slide">
-                  <Plus className="w-4 h-4 mr-1" /> Add Slide
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex items-center justify-end gap-3">
-            <Button variant="outline" onClick={() => { loadModuleIntoState(selectedModule); setEditMode(false); }} data-testid="button-healing-cancel-edit">
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={saveMutation.isPending} data-testid="button-healing-save-module">
-              {saveMutation.isPending ? "Saving…" : "Save Module"}
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}

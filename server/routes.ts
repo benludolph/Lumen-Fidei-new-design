@@ -6,12 +6,14 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, dailyContent, testimonies, testimonyParts, healingModules, healingContent, healingCompletions, healingAnswers, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
-import { db } from "./db";
+import { tracks, insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, testimonies, testimonyParts, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
+import { trackDb as db } from "./track-db";
+import { currentTrackId, withTrack } from "./track-context";
+import { registerTrackRoutes, trackScopeMiddleware, validateTrackAssignment } from "./tracks";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
-import { dailyContentData, practiceResourcesData } from "./content-data";
+import { practiceResourcesData } from "./content-data";
 import { trackAContentData } from "./track-a-content-data";
 import multer from "multer";
 import path from "path";
@@ -197,18 +199,6 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Middleware for Healing Track: requires track C participant OR admin
-function requireHealingAccess(req: Request, res: Response, next: NextFunction) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
-  const user = req.user!;
-  if (user.role === 'admin' || user.track === 'C') {
-    return next();
-  }
-  return res.status(403).json({ message: "Healing Track access only" });
-}
-
 // Helper to strip sensitive fields from user objects
 function sanitizeUser(user: User): Omit<User, 'password'> {
   const { password, ...safeUser } = user;
@@ -225,6 +215,8 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Setup Authentication
   await setupAuth(app);
+  registerTrackRoutes(app);
+  app.use("/api", trackScopeMiddleware);
 
   const express = await import("express");
   app.use("/attached_assets", express.default.static(uploadDir));
@@ -437,6 +429,8 @@ export async function registerRoutes(
 
     try {
       const input = api.users.create.input.parse(req.body);
+      try { await validateTrackAssignment(input.track, input.contentVariantSnapshotId); }
+      catch (error) { return res.status(400).json({ message: (error as Error).message }); }
       // Normalize email to lowercase for case-insensitive matching
       const normalizedEmail = input.email.toLowerCase().trim();
       const existing = await storage.getUserByUsername(normalizedEmail);
@@ -472,6 +466,15 @@ export async function registerRoutes(
     
     const userId = Number(req.params.id);
     const input = api.users.update.input.parse(req.body);
+    const existingUser = await storage.getUser(userId);
+    if (!existingUser) return res.sendStatus(404);
+    if (input.track !== undefined && input.track !== existingUser.track && input.contentVariantSnapshotId === undefined) {
+      input.contentVariantSnapshotId = null;
+    }
+    try {
+      await validateTrackAssignment(input.track === undefined ? existingUser.track : input.track,
+        input.contentVariantSnapshotId === undefined ? existingUser.contentVariantSnapshotId : input.contentVariantSnapshotId);
+    } catch (error) { return res.status(400).json({ message: (error as Error).message }); }
     
     // Hash the password if it is being updated
     const updateData = input.password
@@ -499,63 +502,6 @@ export async function registerRoutes(
     if (!target) return res.status(404).json({ message: "User not found" });
     const updated = await storage.updateUser(userId, { isActive: true });
     res.json(sanitizeUser(updated));
-  });
-
-  // === Content ===
-  
-  app.get(api.content.list.path, requireAuth, async (req, res) => {
-      // Only admin can get full content list (for content management)
-      if (req.user!.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const content = await storage.getAllDailyContent();
-      res.json(content);
-  });
-
-  app.get('/api/content-summaries', requireAuth, async (req, res) => {
-    const content = await storage.getAllDailyContent();
-    const summaries = content.map(c => ({
-      dayNumber: c.dayNumber,
-      weekNumber: c.weekNumber,
-      weekTitle: c.weekTitle,
-      title: c.isReflectionDay ? "Weekly Reflection" : (c.morningScriptureRef || `Day ${c.dayNumber}`),
-      isReflectionDay: c.isReflectionDay,
-      isMentorDay: c.isMentorDay,
-    }));
-    res.json(summaries);
-  });
-
-  app.get(api.content.get.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const day = Number(req.params.day);
-    
-    if (req.user!.role === 'participant') {
-      // Check prelim completion gate
-      const [completions, prelimMods] = await Promise.all([
-        storage.getUserPrelimCompletions(req.user!.id),
-        storage.getPrelimModules(),
-      ]);
-      const allPrelimsComplete = completions.length >= prelimMods.length;
-      if (!allPrelimsComplete) {
-        return res.status(403).json({ message: "PRELIMS_INCOMPLETE", code: "PRELIMS_INCOMPLETE" });
-      }
-      // Day 0 unlocks once prelims are done (regardless of cohort start).
-      // Days 1-30 require prelims done AND cohort started.
-      if (day !== 0) {
-        const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-        const globalDay = computeCurrentProgramDay(cohortStartDateStr);
-        const currentDay = effectiveCurrentDay(req.user, globalDay);
-        if (currentDay === 0 || day > currentDay) {
-          return res.status(403).json({ message: "DAY_LOCKED", code: "DAY_LOCKED" });
-        }
-      }
-    }
-
-    const content = await storage.getDailyContent(day);
-    if (!content) return res.sendStatus(404);
-    
-    res.json(content);
   });
 
   // === Track A Content ===
@@ -627,12 +573,12 @@ export async function registerRoutes(
         const ordered = variant.track_a_content
           .filter((c: any) => typeof c.dayNumber === 'number' && c.dayNumber > 0)
           .sort((a: any, b: any) => a.weekNumber - b.weekNumber || a.dayNumber - b.dayNumber);
-        content = ordered[day - 1];
+        content = currentTrackId() === "A" ? ordered[day - 1] : ordered.find((c: any) => c.dayNumber === day);
       }
     } else {
       content = day === 0
         ? await storage.getTrackAContent(0)
-        : await storage.getTrackAContentByPosition(day);
+        : currentTrackId() === "A" ? await storage.getTrackAContentByPosition(day) : await storage.getTrackAContent(day);
     }
     if (!content) return res.sendStatus(404);
     res.json(content);
@@ -1225,7 +1171,7 @@ export async function registerRoutes(
   app.get(api.trackRequirements.list.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const track = req.params.track as "A" | "B" | "C";
+    const track = req.params.track as string;
     const reqs = await storage.getAllTrackRequirements(track);
     res.json(reqs);
   });
@@ -1233,7 +1179,7 @@ export async function registerRoutes(
   app.get(api.trackRequirements.get.path, async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    const track = req.params.track as "A" | "B" | "C";
+    const track = req.params.track as string;
     const week = Number(req.params.week);
     const req_ = await storage.getTrackRequirements(track, week);
     if (!req_) return res.status(404).json({ message: "Requirements not found" });
@@ -1351,14 +1297,14 @@ export async function registerRoutes(
   // === Lesson Progress ===
 
   app.get("/api/lesson-progress/:dayNumber", requireAuth, async (req, res) => {
-    const dayNumber = parseInt(req.params.dayNumber, 10);
+    const dayNumber = parseInt(String(req.params.dayNumber), 10);
     if (isNaN(dayNumber)) return res.sendStatus(400);
     const progress = await storage.getLessonProgress(req.user!.id, dayNumber);
     res.json(progress ?? null);
   });
 
   app.put("/api/lesson-progress/:dayNumber", requireAuth, writeLimiter, async (req, res) => {
-    const dayNumber = parseInt(req.params.dayNumber, 10);
+    const dayNumber = parseInt(String(req.params.dayNumber), 10);
     if (isNaN(dayNumber)) return res.sendStatus(400);
     const schema = z.object({ slideIndex: z.number().int().min(0) });
     const parsed = schema.safeParse(req.body);
@@ -1368,23 +1314,13 @@ export async function registerRoutes(
   });
 
   app.delete("/api/lesson-progress/:dayNumber", requireAuth, async (req, res) => {
-    const dayNumber = parseInt(req.params.dayNumber, 10);
+    const dayNumber = parseInt(String(req.params.dayNumber), 10);
     if (isNaN(dayNumber)) return res.sendStatus(400);
     await storage.deleteLessonProgress(req.user!.id, dayNumber);
     res.json({ ok: true });
   });
 
   // === Admin Routes ===
-
-  app.post(api.admin.createContent.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const input = api.admin.createContent.input.parse(req.body);
-    const content = await storage.upsertDailyContent(input);
-    res.status(201).json(content);
-  });
 
   app.delete(api.admin.deleteUser.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
@@ -1435,6 +1371,7 @@ export async function registerRoutes(
     
     const allUsers = await storage.getAllUsers();
     const completions = await storage.getAllPrayerCompletions();
+    const totalDays = currentTrackId() === "A" ? 30 : (await storage.getAllTrackAContent()).filter(c => c.dayNumber > 0).length;
 
     let cohortStartDateStr: string | null;
     let participantUsers: typeof allUsers;
@@ -1445,17 +1382,17 @@ export async function registerRoutes(
       // Filter to users in the specified cohort; use that cohort's startDate
       const selectedCohort = cohortList.find(c => c.id === cohortIdParam);
       cohortStartDateStr = selectedCohort ? selectedCohort.startDate.toISOString().split('T')[0] : null;
-      participantUsers = allUsers.filter(u => u.role === 'participant' && u.cohortId === cohortIdParam);
+      participantUsers = allUsers.filter(u => u.track === currentTrackId() && u.role === 'participant' && u.cohortId === cohortIdParam);
     } else {
       // Default to active cohort
       const activeCohort = cohortList.find(c => c.status === "active");
       if (activeCohort) {
         cohortStartDateStr = activeCohort.startDate.toISOString().split('T')[0];
-        participantUsers = allUsers.filter(u => u.role === 'participant' && u.cohortId === activeCohort.id);
+        participantUsers = allUsers.filter(u => u.track === currentTrackId() && u.role === 'participant' && u.cohortId === activeCohort.id);
       } else {
         // Fallback for databases without cohort records
         cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
-        participantUsers = allUsers.filter(u => u.role === 'participant');
+        participantUsers = allUsers.filter(u => u.track === currentTrackId() && u.role === 'participant');
       }
     }
 
@@ -1482,7 +1419,7 @@ export async function registerRoutes(
         
         let daysCompleted = 0;
         dayCompletionMap.forEach((status) => {
-          if (u.track === 'A') {
+          if (Boolean(u.track)) {
             if (status.morning) daysCompleted++;
           } else {
             if (status.morning && status.evening) daysCompleted++;
@@ -1505,6 +1442,7 @@ export async function registerRoutes(
           startDate: u.startDate ? new Date(u.startDate).toISOString() : null,
           currentDay,
           daysCompleted,
+          totalDays,
           morningToday: todayStatus.morning,
           eveningToday: todayStatus.evening,
         };
@@ -1577,6 +1515,7 @@ export async function registerRoutes(
     try {
       const { enabled, imageUrl, text, subtext, label } = schema.parse(req.body);
       const overlay = await storage.upsertModuleOverlay({
+        trackId: currentTrackId(),
         contextKey: req.params.contextKey as string,
         enabled,
         imageUrl,
@@ -1725,7 +1664,7 @@ export async function registerRoutes(
     
     // Calculate days completed based on track
     let daysCompleted: number;
-    if (user.track === 'A') {
+    if (Boolean(user.track)) {
       daysCompleted = new Set(prayerCompletions.filter(c => c.period === 'morning').map(c => c.dayNumber)).size;
     } else {
       const dayMap = new Map<number, { morning: boolean, evening: boolean }>();
@@ -1740,13 +1679,14 @@ export async function registerRoutes(
     }
     
     // Graduation: 80% of 30 days = 24 days
-    const graduationEligible = daysCompleted >= 24;
+    const totalDays = currentTrackId() === "A" ? 30 : (await storage.getAllTrackAContent()).filter(c => c.dayNumber > 0).length;
+    const graduationEligible = totalDays > 0 && daysCompleted >= Math.ceil(totalDays * 0.8);
     
     // Get answers
     const answers = await storage.getUserAnswers(userId);
     
     // Get all daily content to get questions
-    const allContent = await storage.getAllDailyContent();
+    const allContent = await storage.getAllTrackAContent();
     
     // Enrich answers with question texts
     const enrichedAnswers = answers.map(a => {
@@ -1756,7 +1696,7 @@ export async function registerRoutes(
         dayNumber: a.dayNumber,
         content: a.content,
         createdAt: a.createdAt.toISOString(),
-        questions: dayContent?.eveningQuestions || null,
+        questions: null,
       };
     });
     
@@ -1772,7 +1712,8 @@ export async function registerRoutes(
         startDate: user.startDate?.toISOString() || null,
         currentDay,
         daysCompleted,
-        totalPossibleDays: currentDay,
+        totalPossibleDays: Math.min(currentDay, totalDays),
+        totalDays,
         graduationEligible,
       },
       answers: enrichedAnswers,
@@ -1860,12 +1801,13 @@ export async function registerRoutes(
   app.get(api.admin.exportProgress.path, requireRole('admin'), async (req, res) => {
     const users = await storage.getAllUsers();
     const completions = await storage.getAllPrayerCompletions();
+    const totalDays = currentTrackId() === "A" ? 30 : (await storage.getAllTrackAContent()).filter(c => c.dayNumber > 0).length;
     
     const cohortStartDateStr = await storage.getCohortSetting("cohort_start_date");
     const cohortCurrentDay = computeCurrentProgramDay(cohortStartDateStr);
     
     const progressData = users
-      .filter(u => u.role === 'participant')
+      .filter(u => u.role === 'participant' && u.track === currentTrackId())
       .map(u => {
         const currentDay = cohortCurrentDay;
         const userCompletions = completions.filter(c => c.userId === u.id);
@@ -1882,7 +1824,7 @@ export async function registerRoutes(
         
         let daysCompleted = 0;
         dayCompletionMap.forEach((status) => {
-          if (u.track === 'A') {
+          if (Boolean(u.track)) {
             if (status.morning) daysCompleted++;
           } else {
             if (status.morning && status.evening) daysCompleted++;
@@ -1891,8 +1833,8 @@ export async function registerRoutes(
         
         const mentor = users.find(m => m.id === u.mentorId);
         const completionRate = currentDay > 0 ? ((daysCompleted / currentDay) * 100).toFixed(1) : '0.0';
-        const graduationStatus = daysCompleted >= 24 ? 'Passed' : 
-          (currentDay >= 30 ? 'At Risk' : 'In Progress');
+        const graduationStatus = daysCompleted >= Math.ceil(totalDays * .8) && totalDays > 0 ? 'Passed' : 
+          (currentDay >= totalDays ? 'At Risk' : 'In Progress');
         
         return {
           userId: u.id,
@@ -2288,7 +2230,6 @@ export async function registerRoutes(
         dbPrelimModules,
         dbTrackAContent,
         dbTrackAModules,
-        dbDailyContent,
         dbModuleOverlays,
         dbPracticeResources,
         dbCohortSettings,
@@ -2296,7 +2237,6 @@ export async function registerRoutes(
         db.select().from(prelimModules),
         db.select().from(trackAContent),
         db.select().from(trackAModules),
-        db.select().from(dailyContent),
         db.select().from(moduleOverlays),
         db.select().from(practiceResources),
         db.select().from(cohortSettings),
@@ -2304,12 +2244,13 @@ export async function registerRoutes(
 
       const backup = {
         version: 1,
+        trackId: currentTrackId(),
         exportedAt: new Date().toISOString(),
         data: {
           prelim_modules: dbPrelimModules,
           track_a_content: dbTrackAContent,
           track_a_modules: dbTrackAModules,
-          daily_content: dbDailyContent,
+          daily_content: [],
           module_overlays: dbModuleOverlays,
           practice_resources: dbPracticeResources,
           cohort_settings: dbCohortSettings,
@@ -2328,6 +2269,7 @@ export async function registerRoutes(
 
   const backupRestoreSchema = z.object({
     version: z.literal(1),
+    trackId: z.string().optional(),
     exportedAt: z.string(),
     data: z.object({
       prelim_modules: z.array(z.object({ position: z.number(), title: z.string() }).passthrough()),
@@ -2348,6 +2290,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid backup file format", errors: parsed.error.errors });
       }
 
+      if ((parsed.data.trackId || "A") !== currentTrackId()) return res.status(400).json({ message: "Select the track this backup belongs to before restoring it." });
       const { data } = parsed.data;
 
       await db.transaction(async (tx) => {
@@ -2355,9 +2298,7 @@ export async function registerRoutes(
         await tx.delete(prelimModules);
         await tx.delete(trackAContent);
         await tx.delete(trackAModules);
-        await tx.delete(dailyContent);
         await tx.delete(moduleOverlays);
-        await tx.delete(practiceResources);
         await tx.delete(cohortSettings);
 
         for (const row of data.prelim_modules) {
@@ -2375,19 +2316,9 @@ export async function registerRoutes(
           await tx.insert(trackAModules).values(rest);
         }
 
-        for (const row of data.daily_content) {
-          const { id: _id, ...rest } = row;
-          await tx.insert(dailyContent).values(rest as any);
-        }
-
         for (const row of data.module_overlays) {
           const { updatedAt: _ua, ...rest } = row;
           await tx.insert(moduleOverlays).values(rest as any);
-        }
-
-        for (const row of data.practice_resources) {
-          const { id: _id, ...rest } = row;
-          await tx.insert(practiceResources).values(rest as any);
         }
 
         for (const row of data.cohort_settings) {
@@ -2400,9 +2331,9 @@ export async function registerRoutes(
         prelim_modules: data.prelim_modules.length,
         track_a_content: data.track_a_content.length,
         track_a_modules: data.track_a_modules.length,
-        daily_content: data.daily_content.length,
+        daily_content: 0,
         module_overlays: data.module_overlays.length,
-        practice_resources: data.practice_resources.length,
+        practice_resources: 0,
         cohort_settings: data.cohort_settings.length,
       };
 
@@ -3062,190 +2993,6 @@ export async function registerRoutes(
 
   // === Healing Track Routes — Participant ===
 
-  app.get('/api/healing/modules', requireHealingAccess, async (req, res) => {
-    const modules = await storage.getHealingModules();
-    res.json(modules);
-  });
-
-  app.get('/api/healing/content', requireHealingAccess, async (req, res) => {
-    const content = await storage.getAllHealingContent();
-    res.json(content);
-  });
-
-  app.get('/api/healing/content/:moduleNumber', requireHealingAccess, async (req, res) => {
-    const moduleNumber = Number(req.params.moduleNumber);
-    if (isNaN(moduleNumber)) return res.sendStatus(400);
-    const content = await storage.getHealingContent(moduleNumber);
-    if (!content) return res.sendStatus(404);
-    res.json(content);
-  });
-
-  app.get('/api/healing/completions', requireHealingAccess, async (req, res) => {
-    const completions = await storage.getHealingCompletions(req.user!.id);
-    res.json(completions);
-  });
-
-  app.post('/api/healing/completions', requireHealingAccess, writeLimiter, async (req, res) => {
-    const schema = z.object({ moduleNumber: z.number().int().min(1) });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-    const { moduleNumber } = parsed.data;
-    // Enforce sequential unlock based on sortOrder position, not raw moduleNumber
-    const allModules = await storage.getHealingModules(); // sorted by sortOrder
-    const currentIdx = allModules.findIndex(m => m.moduleNumber === moduleNumber);
-    if (currentIdx === -1) return res.status(404).json({ message: "Module not found." });
-    if (currentIdx > 0) {
-      const prevModule = allModules[currentIdx - 1];
-      const existingCompletions = await storage.getHealingCompletions(req.user!.id);
-      const completedSet = new Set(existingCompletions.map(c => c.moduleNumber));
-      if (!completedSet.has(prevModule.moduleNumber)) {
-        return res.status(400).json({ message: `You must complete the previous module first.` });
-      }
-    }
-    const completion = await storage.markHealingComplete(req.user!.id, moduleNumber);
-    res.json(completion);
-  });
-
-  app.get('/api/healing/answers', requireHealingAccess, async (req, res) => {
-    const answers = await storage.getHealingAnswers(req.user!.id);
-    res.json(answers);
-  });
-
-  app.post('/api/healing/answers', requireHealingAccess, writeLimiter, async (req, res) => {
-    const schema = z.object({
-      moduleNumber: z.number().int().min(1),
-      content: z.string().min(1).max(50000),
-    });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-    const sanitized = stripHtml(parsed.data.content);
-    const answer = await storage.upsertHealingAnswer(req.user!.id, parsed.data.moduleNumber, sanitized);
-    res.json(answer);
-  });
-
-  app.post('/api/healing/generate-certificate', requireHealingAccess, async (req, res) => {
-    try {
-      const completions = await storage.getHealingCompletions(req.user!.id);
-      const allModules = await storage.getHealingModules();
-      if (completions.length < allModules.length) {
-        return res.status(403).json({ message: `Complete all ${allModules.length} modules to download your certificate.` });
-      }
-
-      const user = await storage.getUser(req.user!.id);
-      const safeName = (user?.name ?? "Graduate").replace(/[^a-zA-Z0-9 ]/g, '').trim() || "Graduate";
-
-      const { PDFDocument, rgb } = await import('pdf-lib');
-      const fontkit = (await import('@pdf-lib/fontkit')).default;
-
-      const certDir = path.join(process.cwd(), 'server', 'assets', 'certificate');
-
-      // Try healing-specific certificate template first, fall back to standard
-      const healingBgSetting = await storage.getCohortSetting('healing_certificate_bg');
-      let bgBytes: Buffer;
-      if (healingBgSetting && healingBgSetting.startsWith('data:')) {
-        const base64 = healingBgSetting.split(',')[1];
-        bgBytes = Buffer.from(base64, 'base64');
-      } else {
-        bgBytes = fs.readFileSync(path.join(certDir, 'certificate-bg.png'));
-      }
-
-      const fontBytes = fs.readFileSync(path.join(certDir, 'custom-font.otf'));
-
-      const pdfDoc = await PDFDocument.create();
-      pdfDoc.registerFontkit(fontkit);
-      const bgImage = await pdfDoc.embedPng(bgBytes);
-      const { width, height } = bgImage.scale(1);
-      const page = pdfDoc.addPage([width, height]);
-      page.drawImage(bgImage, { x: 0, y: 0, width, height });
-      const font = await pdfDoc.embedFont(fontBytes);
-
-      const maxFontSize = Math.round(height * 0.052);
-      const minFontSize = Math.round(height * 0.025);
-      let fontSize = maxFontSize;
-      while (fontSize > minFontSize && font.widthOfTextAtSize(safeName, fontSize) > width * 0.60) {
-        fontSize -= 1;
-      }
-      const textWidth = font.widthOfTextAtSize(safeName, fontSize);
-      const x = (width - textWidth) / 2;
-      const y = height * 0.41;
-
-      page.drawText(safeName, { x, y, size: fontSize, font, color: rgb(1, 1, 1) });
-
-      const pdfBytes = await pdfDoc.save();
-      res.set('Content-Type', 'application/pdf');
-      res.set('Content-Disposition', `attachment; filename="healing-certificate-${safeName}.pdf"`);
-      res.send(Buffer.from(pdfBytes));
-    } catch (error) {
-      console.error("Healing certificate generation error:", error);
-      res.status(500).json({ message: "Failed to generate certificate" });
-    }
-  });
-
-  // === Healing Track Routes — Admin ===
-
-  app.delete('/api/admin/healing/modules/:moduleNumber', requireRole('admin'), async (req, res) => {
-    const moduleNumber = parseInt(req.params.moduleNumber as string);
-    if (isNaN(moduleNumber) || moduleNumber < 1) return res.status(400).json({ message: "Invalid module number" });
-    await storage.deleteHealingModule(moduleNumber);
-    res.json({ success: true });
-  });
-
-  app.post('/api/admin/healing/modules', requireRole('admin'), async (req, res) => {
-    const schema = z.object({
-      moduleNumber: z.number().int().min(1),
-      title: z.string().min(1),
-      subtitle: z.string().optional().nullable(),
-      imageUrl: z.string().optional().nullable(),
-      sortOrder: z.number().int().optional(),
-    });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-    const mod = await storage.upsertHealingModule({ ...parsed.data, sortOrder: parsed.data.sortOrder ?? parsed.data.moduleNumber });
-    res.json(mod);
-  });
-
-  app.post('/api/admin/healing/create-module', requireRole('admin'), async (req, res) => {
-    const schema = z.object({ moduleNumber: z.number().int().min(1), title: z.string().min(1), sortOrder: z.number().int() });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-    const existing = await storage.getHealingModules();
-    if (existing.some(m => m.moduleNumber === parsed.data.moduleNumber)) {
-      return res.status(409).json({ message: `Module ${parsed.data.moduleNumber} already exists.` });
-    }
-    const result = await storage.createHealingModuleWithContent(parsed.data.moduleNumber, parsed.data.title, parsed.data.sortOrder);
-    res.json(result);
-  });
-
-  app.post('/api/admin/healing/content', requireRole('admin'), async (req, res) => {
-    const schema = z.object({
-      moduleNumber: z.number().int().min(1),
-      title: z.string().min(1),
-      subtitle: z.string().optional().nullable(),
-      imageUrl: z.string().optional().nullable(),
-      slides: z.array(z.object({ type: z.string(), content: z.string() })).optional().nullable(),
-      completionMessage: z.string().optional().nullable(),
-    });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-    const content = await storage.upsertHealingContent(parsed.data);
-    res.json(content);
-  });
-
-  app.patch('/api/admin/healing/modules/reorder', requireRole('admin'), async (req, res) => {
-    const schema = z.object({ moduleNumbers: z.array(z.number().int()) });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-    await storage.reorderHealingModules(parsed.data.moduleNumbers);
-    res.json({ success: true });
-  });
-
-  app.post('/api/admin/healing/certificate-template', requireRole('admin'), upload.single('image'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ message: "No image uploaded" });
-    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    await storage.setCohortSetting('healing_certificate_bg', base64);
-    res.json({ success: true, message: "Certificate template uploaded" });
-  });
-
   // Migration: convert timer slides to scripture_practice
   app.post('/api/admin/migrate-timer-to-scripture-practice', requireRole('admin'), async (req, res) => {
     try {
@@ -3768,125 +3515,8 @@ async function migrateFilesystemImages() {
   }
 }
 
-async function ensureSchemaColumns() {
-  try {
-    const checkCol = async (table: string, column: string, colType: string) => {
-      const result = await db.execute(sql`
-        SELECT column_name FROM information_schema.columns 
-        WHERE table_name = ${table} AND column_name = ${column}
-      `);
-      if (result.rows.length === 0) {
-        await db.execute(sql.raw(`ALTER TABLE ${table} ADD COLUMN ${column} ${colType}`));
-        console.log(`Added column ${column} to ${table}`);
-      }
-    };
-    // Create survey_responses table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS survey_responses (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        track TEXT NOT NULL,
-        day_number INTEGER NOT NULL,
-        question_index INTEGER NOT NULL,
-        question_label TEXT NOT NULL,
-        question_type TEXT NOT NULL,
-        response TEXT NOT NULL,
-        submitted_at TIMESTAMP DEFAULT NOW() NOT NULL
-      )
-    `);
-
-    // Create prelim_modules table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS prelim_modules (
-        id SERIAL PRIMARY KEY,
-        position INTEGER NOT NULL UNIQUE,
-        title TEXT NOT NULL,
-        subtitle TEXT,
-        slides JSON
-      )
-    `);
-
-    // Create prelim_completions table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS prelim_completions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        module_position INTEGER NOT NULL,
-        completed_at TIMESTAMP DEFAULT NOW() NOT NULL,
-        UNIQUE(user_id, module_position)
-      )
-    `);
-
-    // Create healing_modules table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS healing_modules (
-        id SERIAL PRIMARY KEY,
-        module_number INTEGER NOT NULL UNIQUE,
-        title TEXT NOT NULL,
-        subtitle TEXT,
-        image_url TEXT,
-        sort_order INTEGER NOT NULL DEFAULT 0
-      )
-    `);
-
-    // Create healing_content table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS healing_content (
-        id SERIAL PRIMARY KEY,
-        module_number INTEGER NOT NULL UNIQUE,
-        title TEXT NOT NULL,
-        subtitle TEXT,
-        image_url TEXT,
-        slides JSONB,
-        completion_message TEXT
-      )
-    `);
-
-    // Create healing_completions table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS healing_completions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        module_number INTEGER NOT NULL,
-        completed_at TIMESTAMP DEFAULT NOW() NOT NULL,
-        UNIQUE(user_id, module_number)
-      )
-    `);
-
-    // Create healing_answers table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS healing_answers (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        module_number INTEGER NOT NULL,
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-        UNIQUE(user_id, module_number)
-      )
-    `);
-
-    // Create cohorts table if it doesn't exist
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS cohorts (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        start_date TIMESTAMP NOT NULL,
-        end_date TIMESTAMP,
-        status TEXT NOT NULL DEFAULT 'active',
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
-      )
-    `);
-
-    // Add cohort_id column to users if it doesn't exist
-    await checkCol("users", "cohort_id", "INTEGER REFERENCES cohorts(id) ON DELETE SET NULL");
-
-  } catch (e) {
-    console.warn("Schema migration warning (non-fatal):", e);
-  }
-}
-
 async function seed() {
-    await ensureSchemaColumns();
+    await db.insert(tracks).values({ id: "A", name: "Track A", status: "published" }).onConflictDoNothing();
     await migrateFilesystemImages();
 
     // NOTE: do NOT delete prelim modules — admin can create up to 3 (or more)
@@ -4015,11 +3645,8 @@ async function seed() {
         });
     }
 
-    // Force-reset practice resources to the canonical set on every startup
-    // (admin management of resources is removed; this ensures prod/staging always match)
-    {
-        console.log("Force-resetting practice resources to canonical set...");
-        await db.delete(practiceResources);
+    // Shared resource IDs must survive restarts. Seed only a fresh database.
+    if ((await storage.getAllPracticeResources()).length === 0) {
 
         const canonicalResources = [
             {
@@ -4334,368 +3961,6 @@ In Jesus' name, Amen.
         console.log(`Practice resources reset: ${canonicalResources.length} resources loaded.`);
     }
 
-    // Only seed daily content if none exists (preserves admin edits)
-    const existingContent = await storage.getAllDailyContent();
-    if (existingContent.length === 0) {
-        console.log("No daily content found - seeding from imported data...");
-        for (const content of dailyContentData) {
-            await storage.upsertDailyContent({
-                dayNumber: content.dayNumber,
-                weekNumber: content.weekNumber,
-                weekTitle: content.weekTitle,
-                morningScriptureRef: content.morningScriptureRef,
-                morningScriptureText: content.morningScriptureText,
-                morningMeditation: content.morningMeditation,
-                morningPrayer: null,
-                eveningCatechismRef: content.eveningCatechismRef,
-                eveningCatechism: content.eveningCatechism,
-                eveningSummary: null,
-                eveningQuestions: content.eveningQuestions,
-                isReflectionDay: content.isReflectionDay,
-                isMentorDay: content.isMentorDay
-            });
-        }
-        console.log("Daily content seeded successfully.");
-    } else {
-        console.log(`Daily content already exists (${existingContent.length} days) - preserving admin edits.`);
-    }
-    
-    // Legacy seeding code - no longer needed but keeping structure
-    const existing = await storage.getAllDailyContent();
-    if (false) { // Disabled - content is now seeded from imported data above
-        
-        // Now update Day 1 with the actual content from the document
-        await storage.upsertDailyContent({
-            dayNumber: 1,
-            weekNumber: 1,
-            weekTitle: "God's Loving Plan for Humanity",
-            morningScriptureRef: "John 14:23",
-            morningScriptureText: "Jesus said to His disciples: \"Whoever loves Me will keep My word, and My Father will love him, and We will come to him and make Our dwelling with him.\"",
-            morningMeditation: `Do you want our Lord to come to you and dwell within the depths of your soul? Presumably the answer is an easy "Yes." The way to make this happen is to love God and keep His word. When you do that, the Blessed Trinity will come and dwell within you.
-
-It's interesting that the love of God appears to be contingent upon our love of Him. In other words, does God only love us when we love Him first? Strictly speaking, God loves us with a perfect love regardless of whether we love Him or not. But with that said, love takes on a whole new form when it is received and reciprocated. Therefore, when we choose to love God we suddenly realize that our love of Him opens the door for Him to come and dwell within us, transforming us and making our heart His holy sanctuary. What a glorious gift!
-
-It's also interesting to note that love of God means, in part, that we are obedient to Him. But that's the nature of God. He is Love itself and, therefore, loving Him necessarily involves a complete submission of your will to His. Perfect obedience to Him in all things is a powerful way of loving Him. It's a way of allowing Him to dwell within you and, in that act, to take over your will. Only then can you love Him even more fully with your whole being.
-
-Reflect, today, especially upon your desire to have the Most Holy Trinity come and dwell within your soul. This should be the primary goal of our lives. If God lives within us then all else in life will fall into place. All things will work for the good and God will be glorified in and through us. Make the choice to love Him through your obedience this day, and your relationship of love will grow by leaps and bounds.`,
-            morningPrayer: `Lord, I do love You and desire to love You in a more perfect way this day. Help me to submit to Your perfect will in all things. Help me to embrace perfect obedience to You always. In that act of love and submission, come and make Your dwelling within me. Jesus, I trust in You.
-
-—Philip Neri`,
-            eveningCatechismRef: "CCC #214-227",
-            eveningCatechism: `THE PROFESSION OF THE CHRISTIAN FAITH
-
-God, "He Who Is", Is Truth and Love
-
-God, "HE WHO IS", revealed himself to Israel as the One "abounding in steadfast love and faithfulness". These two terms express summarily the riches of the divine name. In all His works God displays, not only His kindness, goodness, grace and steadfast love, but also His trustworthiness, constancy, faithfulness and truth. "I give thanks to Your name for Your steadfast love and Your faithfulness." He is the Truth, for "God is light and in Him there is no darkness"; "God is love", as the apostle John teaches.
-
-God Is Truth
-
-"The sum of Your word is truth; and every one of Your righteous ordinances endures forever." "And now, O LORD God, You are God, and Your words are true"; this is why God's promises always come true. God is Truth itself, whose words cannot deceive. This is why one can abandon oneself in full trust to the truth and faithfulness of His Word in all things. The beginning of sin and of man's fall was due to a lie of the tempter who induced doubt of God's Word, kindness and faithfulness.
-
-God's truth is His wisdom, which commands the whole created order and governs the world. God, who alone made heaven and earth, can alone impart true knowledge of every created thing in relation to Himself.
-
-God is also truthful when he reveals Himself—the teaching that comes from God is "true instruction." When He sends His Son into the world it will be "to bear witness to the truth": "We know that the Son of God has come and has given us understanding, to know Him who is true."
-
-God is Love
-
-In the course of its history, Israel was able to discover that God had only one reason to reveal Himself to them, a single motive for choosing them from among all peoples as His special possession: His sheer gratuitous love. And thanks to the prophets Israel understood that it was again out of love that God never stopped saving them and pardoning their unfaithfulness and sins.
-
-God's love for Israel is compared to a father's love for his son. His love for His people is stronger than a mother's for her children. God loves His people more than a bridegroom his beloved; His love will be victorious over even the worst infidelities and will extend to His most precious gift: "God so loved the world that He gave His only Son."
-
-God's love is "everlasting": "For the mountains may depart and the hills be removed, but My steadfast love shall not depart from you." Through Jeremiah, God declares to His people, "I have loved you with an everlasting love; therefore I have continued my faithfulness to you."
-
-But St. John goes even further when he affirms that "God is love." God's very being is love. By sending His only Son and the Spirit of Love in the fullness of time, God has revealed His innermost secret: God Himself is an eternal exchange of love, Father, Son and Holy Spirit, and He has destined us to share in that exchange.
-
-The Implications of Faith in One God
-
-Believing in God, the only One, and loving Him with all our being has enormous consequences for our whole life.
-
-It means coming to know God's greatness and majesty: "Behold, God is great, and we know Him not." Therefore, we must "serve God first."
-
-It means living in thanksgiving: if God is the only One, everything we are and have comes from Him: "What have you that you did not receive?" "What shall I render to the LORD for all His bounty to me?"
-
-It means knowing the unity and true dignity of all men: everyone is made in the image and likeness of God.
-
-It means making good use of created things: faith in God, the only One, leads us to use everything that is not God only insofar as it brings us closer to Him, and to detach ourselves from it insofar as it turns us away from Him:
-
-My Lord and my God, take from me everything that distances me from You.
-My Lord and my God, give me everything that brings me closer to You.
-My Lord and my God, detach me from myself to give my all to You.
-
-It means trusting God in every circumstance, even in adversity. A prayer of St. Teresa of Jesus wonderfully expresses this trust:
-
-Let nothing trouble you. Let nothing frighten you.
-Everything passes. God never changes.
-Patience obtains all.
-Whoever has God wants for nothing.
-God alone is enough.`,
-            eveningSummary: `God's Nature: God is love and truth and He wills our good. He is trustworthy and faithful and continually showers His mercy upon His children despite our unfaithfulness.
-
-The Holy Trinity: The one true God is triune with three distinct persons, the Father, the Son, and the Holy Spirit. When we obey God's laws, Christ dwells in our hearts through the power of the Holy Spirit as granted through the Father's glory (Eph 3: 14–19).
-
-God's Love for All Creation: God's love is perfect and everlasting. It is far greater than the love that any human can offer. It is sacrificial and is made manifest in the offering of His only son, Jesus, to die on the cross to atone for our sins and to bring us to salvation.
-
-Misconceptions About God: People often believe that we must earn God's love. In fact, God's love is steadfast and always available to us, but we must be willing to repent of our sins and make our hearts a suitable home for Him so He can guide us in all things.`,
-            eveningQuestions: [
-                "Am I obeying all of God's commandments or do I sometimes choose to follow my will rather than His?",
-                "Do I love God above all things and all people? If not, what or who have I placed before God in my heart? (e.g. money, power, beauty, spouse, children)",
-                "Do I trust God in all circumstances of my life? If not, why not?",
-                "What can I do to make my heart and soul a more fit dwelling place for God?"
-            ],
-            isReflectionDay: false
-        });
-        
-        // Day 2 content
-        await storage.upsertDailyContent({
-            dayNumber: 2,
-            weekNumber: 1,
-            weekTitle: "God's Loving Plan for Humanity",
-            morningScriptureRef: "Revelations 12:7–17",
-            morningScriptureText: `Then war broke out in heaven; Michael and his angels battled against the dragon. The dragon and its angels fought back, but they did not prevail and there was no longer any place for them in heaven. The huge dragon, the ancient serpent, who is called the Devil and Satan, who deceived the whole world, was thrown down to earth, and its angels were thrown down with it.
-
-Then I heard a loud voice in heaven say: "Now have salvation and power come, and the Kingdom of our God and the authority of His Anointed. For the accuser of our brothers is cast out, who accuses them before our God day and night. They conquered him by the blood of the Lamb and by the word of their testimony; love for life did not deter them from death."`,
-            morningMeditation: `THE DEVIL AND THE WEAKNESSES OF HUMAN NATURE
-
-We must realize that demons are pure intellectual beings, not rational beings like us. They possess a superior knowledge of our weaknesses and dispositions, which they use to tempt us. St. Teresa is aware that, "The devil knows very well to take advantage of our nature and little understanding."
-
-In his Spiritual Canticle, St. John of the Cross also suggests that demons use the world and flesh to enhance the power of their work: "The temptation of the devils... is stronger than those of the world and the flesh, because the devils reinforce themselves with these other two enemies, the world and the flesh, in order to wage a rugged war."
-
-The devil knows how to exploit our instincts and passions, the weakness of our flesh and our pride. Misfortune, sickness, or mental anxiety are not sins, but they may induce us to rebellion and despair. And Satan may take advantage of all of them to tempt us to sin.
-
-St. Teresa of Avila warns: "But the devil comes with his artful wiles, and, under the color of doing good, sets about undermining it in trivial ways... little by little he darkens its understanding and weakens its will, and causes its self-love to increase."`,
-            morningPrayer: null,
-            eveningCatechismRef: "CCC #391-395",
-            eveningCatechism: `THE FALL OF THE ANGELS
-
-Behind the disobedient choice of our first parents lurks a seductive voice, opposed to God, which makes them fall into death out of envy. Scripture and the Church's Tradition see in this being a fallen angel, called "Satan" or "the devil." The Church teaches that Satan was at first a good angel, made by God: "The devil and the other demons were indeed created naturally good by God, but they became evil by their own doing."
-
-Scripture speaks of a sin of these angels. This "fall" consists in the free choice of these created spirits, who radically and irrevocably rejected God and His reign. We find a reflection of that rebellion in the tempter's words to our first parents: "You will be like God." The devil "has sinned from the beginning"; he is "a liar and the father of lies."
-
-The power of Satan is, nonetheless, not infinite. He is only a creature, powerful from the fact that he is pure spirit, but still a creature. He cannot prevent the building up of God's reign. Although Satan may act in the world out of hatred for God and His Kingdom in Christ Jesus, and although his action may cause grave injuries—of a spiritual nature and, indirectly, even of a physical nature—to each man and to society, the action is permitted by divine providence which with strength and gentleness guides human and cosmic history. It is a great mystery that providence should permit diabolical activity, but "we know that in everything God works for good with those who love Him."`,
-            eveningSummary: `Creation of Angels, Lucifer: "The devil and the other demons were indeed created naturally good by God, but they became evil by their own doing" (Lateran Council). Lucifer is another name for Satan and means "angel of light."
-
-The Fall of the Angels: Scripture tells us that "The huge dragon, the ancient serpent, who is called the devil and Satan, who deceived the whole world, was thrown down to earth." The devil refused to serve God because of his pride and desire to be equal to God.
-
-Nature of Angels & Demons: In the natural sphere they were pure spirits with a very keen mind and a strong free will. By their nature, angels are superior to all other creatures, including humans.`,
-            eveningQuestions: [
-                "Do you believe that the devil and his angels wage war on the children of God on earth through his hatred for God and His Kingdom?",
-                "Do you understand that although the devil has greater power than people, that he can only act by the permissive will of God?",
-                "Do you trust that God uses diabolical activity to work for good in people's lives?"
-            ],
-            isReflectionDay: false
-        });
-        
-        // Day 3 content
-        await storage.upsertDailyContent({
-            dayNumber: 3,
-            weekNumber: 1,
-            weekTitle: "God's Loving Plan for Humanity",
-            morningScriptureRef: "Genesis 3:1–24",
-            morningScriptureText: `EXPULSION FROM EDEN
-
-Now the snake was the most cunning of all the wild animals that the LORD God had made. He asked the woman, "Did God really say, 'You shall not eat from any of the trees in the garden'?" The woman answered the snake: "We may eat of the fruit of the trees in the garden; it is only about the fruit of the tree in the middle of the garden that God said, 'You shall not eat it or even touch it, or else you will die.'" But the snake said to the woman: "You certainly will not die! God knows well that when you eat of it your eyes will be opened and you will be like gods, who know good and evil."
-
-The woman saw that the tree was good for food and pleasing to the eyes, and the tree was desirable for gaining wisdom. So she took some of its fruit and ate it; and she also gave some to her husband, who was with her, and he ate it. Then the eyes of both of them were opened, and they knew that they were naked...
-
-The LORD God therefore banished him from the Garden of Eden, to till the ground from which he had been taken.`,
-            morningMeditation: `Original Sin is the sin inherited by all humankind from Adam in his disobedience of God's command not to eat from the fruit of the Tree of Knowledge. The Original Sin event is referred to as "The Fall of Man."
-
-Adam's choice to disobey God's command is considered a "fall" because his choice to sin represents a fall from grace. God created Adam in His image and likeness and saw that he was good. Adam was created with an original grace and holiness.
-
-Adam and Eve were given the free choice to love and serve God. God gave us the ability to love God freely (free will) because true love is one that is not forced. With this ability to choose, mankind has chosen not to love God, hence our inheritance of a fallen nature.
-
-Sin is rooted in man's preference for himself over God. Instead of choosing God, Adam chose himself by eating of the fruit of the tree so that he could be like God. Making a choice to sin leads to weakness of the soul and a propensity to continue to sin.
-
-Christ's Redemption and Original Sin: The sin of Adam is linked directly to Christ's redemption; through one man, Adam, sin entered the world, and through one man, Jesus, humanity is restored (Romans 5:12–21). Jesus is the perfect sacrifice that atones for all of our sins. Baptism removes Original Sin and any personal sin, and cleanses the soul making it new and fresh.`,
-            morningPrayer: null,
-            eveningCatechismRef: "CCC #1704–1705",
-            eveningCatechism: `The human person participates in the light and power of the divine Spirit. By his reason, he is capable of understanding the order of things established by the Creator. By free will, he is capable of directing himself toward his true good. He finds his perfection "in seeking and loving what is true and good."
-
-By virtue of his soul and his spiritual powers of intellect and will, man is endowed with freedom, an "outstanding manifestation of the divine image."
-
-What makes us in the image and likeness of God?
-
-Answer: We are made in the image and likeness of God because we can love, create, and truly choose good. We are capable of truly and freely choosing to do good and to love. Human persons are not mere reactionary creatures but a creation that, like God, can choose to do good and to love one another. Human persons are also able to know and understand goodness and love.`,
-            eveningSummary: `Original Sin: Original Sin is not one's own personal sin, it is a state of the soul, representing the fallen nature that was handed on to us by Adam who fell into death upon committing the Original Sin.
-
-Made in God's Image & Likeness: We are made in the image and likeness of God because we can love, create, and truly understand, know, and choose to do good.`,
-            eveningQuestions: [
-                "Do you understand how choices to disobey God's commandments cause people to fall from His grace and can open the door to demonic activity?",
-                "Through God's extraordinary love for us He sent His only Son to save us and invites us into a new covenant relationship. Do you understand how you need to choose each day to remain in this relationship by following Him?"
-            ],
-            isReflectionDay: false
-        });
-        
-        // Day 4 content
-        await storage.upsertDailyContent({
-            dayNumber: 4,
-            weekNumber: 1,
-            weekTitle: "God's Loving Plan for Humanity",
-            morningScriptureRef: "Matthew 25:31–46",
-            morningScriptureText: `When the Son of Man comes in His glory, and all the angels with Him, He will sit upon His glorious throne, and all the nations will be assembled before Him. And He will separate them one from another, as a shepherd separates the sheep from the goats. He will place the sheep on His right and the goats on His left.
-
-Then the King will say to those on His right, 'Come, you who are blessed by My Father. Inherit the Kingdom prepared for you from the foundation of the world. For I was hungry and you gave Me food, I was thirsty and you gave Me drink, a stranger and you welcomed Me, naked and you clothed Me, ill and you cared for Me, in prison and you visited Me.'
-
-Then He will say to those on His left, 'Depart from Me, you accursed, into the eternal fire prepared for the devil and his angels. For I was hungry and you gave Me no food, I was thirsty and you gave Me no drink...'
-
-And these will go off to eternal punishment, but the righteous to eternal life.`,
-            morningMeditation: `This powerful passage from Matthew reveals the reality of the Final Judgment. Christ will come in glory to judge the living and the dead. The criteria for judgment is simple yet profound: how did we treat the least of His brothers and sisters?
-
-The King identifies Himself with the hungry, the thirsty, the stranger, the naked, the sick, and the imprisoned. When we serve them, we serve Christ Himself. When we neglect them, we neglect Christ.
-
-This teaching challenges us to see Christ in every person we encounter, especially those who are suffering. Our eternal destiny is connected to how we respond to human need. The works of mercy are not optional extras in the Christian life—they are essential to following Christ.
-
-The passage also reminds us of the reality of hell—a place "prepared for the devil and his angels." Those who persistently reject God's love and refuse to love their neighbor ultimately choose eternal separation from God. But God's desire is for all to be saved, and He gives us the means of grace to live lives of love and service.`,
-            morningPrayer: null,
-            eveningCatechismRef: "Pope John Paul II on Heaven, Hell, and Purgatory",
-            eveningCatechism: `HEAVEN, HELL AND PURGATORY
-
-Heaven is fullness of Communion with God: Heaven "is neither an abstraction nor a physical place in the clouds, but a living, personal relationship with the Holy Trinity. It is our meeting with the Father which takes place in the risen Christ through the communion of the Holy Spirit."
-
-When the form of this world has passed away, those who have welcomed God into their lives and have sincerely opened themselves to His love, at least at the moment of death, will enjoy that fullness of communion with God which is the goal of human life.
-
-Hell is the state of those who reject God: "Hell is the ultimate consequence of sin itself... Rather than a place, hell indicates the state of those who freely and definitively separate themselves from God, the source of all life and joy."
-
-God is the infinitely good and merciful Father. But man, called to respond to Him freely, can unfortunately choose to reject His love and forgiveness once and for all, thus separating himself forever from joyful communion with Him.
-
-Purgatory is necessary purification: Before we enter into full communion with God, every trace of sin within us must be eliminated and every imperfection in our soul must be corrected. The term Purgatory does not indicate a place, but a condition of existence, where Christ "removes... the remnants of imperfection."`,
-            eveningSummary: `Particular Judgment: At death, each person is judged by Christ and enters into eternal life or awaits purification before entering heaven, or is condemned to eternal separation from God.
-
-General Judgment: At the end of time, Christ will come in glory to judge the living and the dead. All will be revealed.
-
-Heaven: The ultimate end and fulfillment of the deepest human longings—the state of supreme, definitive happiness in communion with God.
-
-Hell: The state of eternal separation from God, chosen freely by those who reject His love.
-
-Purgatory: A state of purification for those who die in God's grace but still need to be cleansed of venial sins or temporal punishment.`,
-            eveningQuestions: [
-                "When you imagine Heaven, what things or people are included? Why are these important to you?",
-                "Many today do not believe in the existence of Purgatory. How can you help them understand that it is a great blessing for those who just need more purification before they would feel comfortable in the presence of God?",
-                "Every trace of sin must be absent before one may enter Heaven. What are you willing to do now so as to make eternal life in Heaven possible?"
-            ],
-            isReflectionDay: false
-        });
-        
-        // Day 5 content
-        await storage.upsertDailyContent({
-            dayNumber: 5,
-            weekNumber: 1,
-            weekTitle: "God's Loving Plan for Humanity",
-            morningScriptureRef: "Revelations 21:1–8",
-            morningScriptureText: `THE NEW HEAVEN AND THE NEW EARTH
-
-Then I saw a new heaven and a new earth. The former heaven and the former earth had passed away, and the sea was no more. I also saw the holy city, a new Jerusalem, coming down out of heaven from God, prepared as a bride adorned for her husband.
-
-I heard a loud voice from the throne saying, "Behold, God's dwelling is with the human race. He will dwell with them and they will be His people and God Himself will always be with them [as their God]. He will wipe every tear from their eyes, and there shall be no more death or mourning, wailing or pain, [for] the old order has passed away."
-
-The one who sat on the throne said, "Behold, I make all things new." Then He said, "Write these words down, for they are trustworthy and true."
-
-He said to me, "They are accomplished. I [am] the Alpha and the Omega, the beginning and the end. To the thirsty I will give a gift from the spring of life-giving water. The victor will inherit these gifts, and I shall be his God, and he will be My son."`,
-            morningMeditation: `This glorious vision from Revelation reveals God's ultimate plan for creation. God will make all things new. The former things—death, mourning, crying, pain—will pass away. God Himself will dwell with His people.
-
-Notice the intimate language: "I shall be his God, and he will be My son." The relationship God desires with us is not distant or formal but familial and personal. We are called to be children of God, heirs with Christ to the Kingdom.
-
-The promise of "living water" echoes Jesus's words to the Samaritan woman. God offers us life in abundance, a spring welling up to eternal life. This living water is available now through faith and the sacraments, but it will be fully realized in the new creation.
-
-The passage also contains a sobering warning: "As for cowards, the unfaithful, the depraved, murderers, the unchaste, sorcerers, idol-worshipers, and deceivers of every sort, their lot is in the burning pool of fire and sulfur, which is the second death." Our choices in this life have eternal consequences.
-
-Let this vision of the new heaven and new earth fill you with hope. No matter what suffering you face now, God has prepared something infinitely better for those who love Him.`,
-            morningPrayer: null,
-            eveningCatechismRef: "CCC #1023–1027",
-            eveningCatechism: `HEAVEN
-
-Those who die in God's grace and friendship and are perfectly purified live forever with Christ. They are like God forever, for they "see Him as He is," face to face.
-
-This perfect life with the Most Holy Trinity—this communion of life and love with the Trinity, with the Virgin Mary, the angels and all the blessed—is called "heaven." Heaven is the ultimate end and fulfillment of the deepest human longings, the state of supreme, definitive happiness.
-
-To live in heaven is "to be with Christ." The elect live "in Christ," but they retain, or rather find, their true identity, their own name. For life is to be with Christ; where Christ is, there is life, there is the Kingdom.
-
-By His death and Resurrection, Jesus Christ has "opened" heaven to us. The life of the blessed consists in the full and perfect possession of the fruits of the redemption accomplished by Christ. He makes partners in His heavenly glorification those who have believed in Him and remained faithful to His will.
-
-This mystery of blessed communion with God and all who are in Christ is beyond all understanding and description. Scripture speaks of it in images: life, light, peace, wedding feast, wine of the Kingdom, the Father's house, the heavenly Jerusalem, paradise: "no eye has seen, nor ear heard, nor the heart of man conceived, what God has prepared for those who love Him."
-
-From the Diary of St. Faustina: "Today I was in heaven, in spirit, and I saw its unconceivable beauties and the happiness that awaits us after death. I saw how all creatures give ceaseless praise and glory to God. I saw how great is happiness in God, which spreads to all creatures, making them happy."`,
-            eveningSummary: `Beatific Vision: In heaven, the blessed see God face to face, as He truly is. This is the ultimate source of their happiness.
-
-What is Heaven Like? Heaven is beyond human description, but Scripture uses images of life, light, peace, and the wedding feast to hint at its glory.
-
-St. Faustina's Vision: "God has given me to understand that there is but one thing that is of infinite value in His eyes, and that is love of God; love, love and once again, love."`,
-            eveningQuestions: [
-                "What images of heaven resonate most with you—light, peace, the wedding feast, the Father's house?",
-                "Do you believe that heaven is real and that it's worth any sacrifice to get there?",
-                "St. Faustina says only love of God is of infinite value. How can you grow in love today?"
-            ],
-            isReflectionDay: false
-        });
-        
-        // Day 6 - Weekly Reflection Day
-        await storage.upsertDailyContent({
-            dayNumber: 6,
-            weekNumber: 1,
-            weekTitle: "God's Loving Plan for Humanity",
-            morningScriptureRef: "Romans 8:28-39",
-            morningScriptureText: `We know that all things work for good for those who love God, who are called according to His purpose. For those He foreknew He also predestined to be conformed to the image of His Son, so that He might be the firstborn among many brothers.
-
-What then shall we say to this? If God is for us, who can be against us? He who did not spare His own Son but handed Him over for us all, how will He not also give us everything else along with Him?
-
-Who will bring a charge against God's chosen ones? It is God who acquits us. Who will condemn? It is Christ Jesus who died, rather, was raised, who also is at the right hand of God, who indeed intercedes for us.
-
-What will separate us from the love of Christ? Will anguish, or distress, or persecution, or famine, or nakedness, or peril, or the sword? No, in all these things we conquer overwhelmingly through Him who loved us.
-
-For I am convinced that neither death, nor life, nor angels, nor principalities, nor present things, nor future things, nor powers, nor height, nor depth, nor any other creature will be able to separate us from the love of God in Christ Jesus our Lord.`,
-            morningMeditation: `WEEK 1 REFLECTION: THE SPIRITUAL REALITY
-
-This week we have journeyed through profound truths about the spiritual reality in which we live. We learned that God is Love and Truth, that He desires to dwell within us, and that our obedience opens the door for Him to transform our hearts.
-
-We encountered the reality of spiritual warfare—the fall of the angels, the nature of demons, and how they seek to exploit our weaknesses. Yet we also learned that God's power is infinitely greater, and Satan can only act by divine permission.
-
-We reflected on Original Sin and its effects on humanity, recognizing that through baptism and faith in Christ, we can be restored to communion with God. We confronted the reality of heaven, hell, and purgatory—understanding that our choices have eternal consequences.
-
-Through it all, one truth shines clearly: NOTHING CAN SEPARATE US FROM THE LOVE OF GOD IN CHRIST JESUS.
-
-As you complete this first week, consider:
-- What struck you most powerfully about the spiritual reality?
-- How has your understanding of spiritual warfare changed?
-- What practices will you carry forward to strengthen your spiritual life?
-
-Remember: You are loved with an everlasting love. God has a plan for your salvation. The battle is real, but the victory is assured in Christ.`,
-            morningPrayer: `Heavenly Father, as I complete this first week of spiritual formation, I thank You for opening my eyes to the reality of the spiritual world. I praise You for Your infinite love and mercy.
-
-I acknowledge the reality of spiritual warfare, but I trust in Your protection and the power of the Blood of Christ. Help me to grow in holiness, to resist temptation, and to choose You above all else.
-
-Mary, my mother, Queen of Peace, pray for me. St. Michael the Archangel, defend me in battle. All you holy angels and saints, intercede for me.
-
-Lord, fill me with Your Holy Spirit and guide me through the days ahead. I surrender my life to You. Jesus, I trust in You. Amen.`,
-            eveningCatechismRef: "Reflection Summary",
-            eveningCatechism: `WEEK 1 SUMMARY: GOD'S LOVING PLAN FOR HUMANITY
-
-Key Themes:
-• God is Love and Truth—He desires to dwell in our hearts
-• The reality of angels and demons—spiritual warfare is real
-• Original Sin and the Fall—humanity's need for redemption
-• Christ's victory—through His death and resurrection, He has conquered sin and death
-• Heaven, Hell, and Purgatory—our eternal destiny depends on our response to God's love
-• Nothing can separate us from God's love—we are more than conquerors in Christ
-
-Prayer Practices Introduced:
-• Prayer Against Retaliation—protection from spiritual attack
-• Miracle Prayer—surrender and commitment to Christ
-• Lectio Divina—praying with Scripture
-• Examen—reviewing the day with God
-
-As you move into Week 2, continue these daily practices. They are building a foundation for a deeper relationship with God and a stronger defense against the enemy.`,
-            eveningSummary: null,
-            eveningQuestions: [
-                "What was the most significant insight or grace you received this week?",
-                "How has your prayer life changed since beginning this program?",
-                "What areas of your life do you sense God inviting you to surrender more fully?",
-                "Are there any sins or attachments you need to confess or renounce?",
-                "What are you most looking forward to in the coming week?"
-            ],
-            isReflectionDay: true
-        });
-    }
-    
     // Seed Track A modules if needed
     const existingModules = await storage.getTrackAModules();
     if (existingModules.length === 0) {
@@ -4955,122 +4220,12 @@ As you move into Week 2, continue these daily practices. They are building a fou
         FROM json_array_elements(slides) WITH ORDINALITY AS t(slide, idx)
         WHERE slide->>'type' NOT IN ('action', 'knowledge_check', 'scenario')
       )
-      WHERE slides IS NOT NULL
+      WHERE track_id = 'A' AND slides IS NOT NULL
         AND EXISTS (
           SELECT 1 FROM json_array_elements(slides) s
           WHERE s->>'type' IN ('action', 'knowledge_check', 'scenario')
         )
     `);
-
-    // Seed Healing Track modules and content if empty
-    const existingHealingModules = await storage.getHealingModules();
-    if (existingHealingModules.length === 0) {
-        console.log("Seeding Healing Track modules...");
-        const healingModuleData = [
-            { moduleNumber: 1, title: "Introduction", subtitle: "Welcome to Healing of Our Hearts", sortOrder: 1 },
-            { moduleNumber: 2, title: "Module 2", subtitle: "Understanding the Wounds", sortOrder: 2 },
-            { moduleNumber: 3, title: "Module 3", subtitle: "The Father's Love", sortOrder: 3 },
-            { moduleNumber: 4, title: "Module 4", subtitle: "Healing Through Forgiveness", sortOrder: 4 },
-            { moduleNumber: 5, title: "Module 5", subtitle: "Breaking Free from Sin", sortOrder: 5 },
-            { moduleNumber: 6, title: "Module 6", subtitle: "The Role of the Holy Spirit", sortOrder: 6 },
-            { moduleNumber: 7, title: "Module 7", subtitle: "Healing Relationships", sortOrder: 7 },
-            { moduleNumber: 8, title: "Module 8", subtitle: "Healing of Memories", sortOrder: 8 },
-            { moduleNumber: 9, title: "Module 9", subtitle: "Interior Freedom", sortOrder: 9 },
-            { moduleNumber: 10, title: "Module 10", subtitle: "Praying for Healing", sortOrder: 10 },
-            { moduleNumber: 11, title: "Module 11", subtitle: "Healing and the Sacraments", sortOrder: 11 },
-            { moduleNumber: 12, title: "Module 12", subtitle: "Overcoming Anxiety and Fear", sortOrder: 12 },
-            { moduleNumber: 13, title: "Module 13", subtitle: "Identity in Christ", sortOrder: 13 },
-            { moduleNumber: 14, title: "Module 14", subtitle: "Healing and the Eucharist", sortOrder: 14 },
-            { moduleNumber: 15, title: "Module 15", subtitle: "Healing Through Mary", sortOrder: 15 },
-            { moduleNumber: 16, title: "Module 16", subtitle: "Spiritual Warfare and Healing", sortOrder: 16 },
-            { moduleNumber: 17, title: "Module 17", subtitle: "Healing Family Trees", sortOrder: 17 },
-            { moduleNumber: 18, title: "Module 18", subtitle: "Healing and Community", sortOrder: 18 },
-            { moduleNumber: 19, title: "Module 19", subtitle: "Continuing Your Journey", sortOrder: 19 },
-            { moduleNumber: 20, title: "Conclusion", subtitle: "Living in God's Healing Love", sortOrder: 20 },
-        ];
-        for (const mod of healingModuleData) {
-            await storage.upsertHealingModule(mod);
-        }
-        console.log(`Healing Track modules seeded (${healingModuleData.length} modules).`);
-    }
-
-    const existingHealingContent = await storage.getAllHealingContent();
-    if (existingHealingContent.length === 0) {
-        console.log("Seeding Healing Track content...");
-
-        const youtubeUrls: Record<number, string> = {
-            2: "https://www.youtube.com/watch?v=p6VtZHlucdU",
-            3: "https://www.youtube.com/watch?v=qzgZfy9E4PY",
-            4: "https://www.youtube.com/watch?v=_2_zToSZZMY",
-            5: "https://www.youtube.com/watch?v=rLklZU6Zio8",
-            6: "https://www.youtube.com/watch?v=j4coVDGjYiM",
-            7: "https://www.youtube.com/watch?v=6_vmDWrGIbY",
-            8: "https://www.youtube.com/watch?v=Awffm-KbOL8",
-            9: "https://www.youtube.com/watch?v=YQ0JbjsFFuE",
-            10: "https://www.youtube.com/watch?v=DNSdq_KMnck",
-            11: "https://www.youtube.com/watch?v=XqbT6SxMPLM",
-            12: "https://www.youtube.com/watch?v=txFeMUaNIiQ",
-            13: "https://www.youtube.com/watch?v=tvExDsnc1ds",
-            14: "https://www.youtube.com/watch?v=g0fcgPuTxCY",
-            15: "https://www.youtube.com/watch?v=htlu-6qvVW0",
-            16: "https://www.youtube.com/watch?v=EZrw_dQPOGs",
-            17: "https://www.youtube.com/watch?v=7iy5S12G7w0",
-            18: "https://www.youtube.com/watch?v=-lRvag_RzK0",
-        };
-
-        const getYouTubeVideoId = (url: string) => {
-            const match = url.match(/[?&]v=([^&]+)/);
-            return match ? match[1] : "";
-        };
-
-        await storage.upsertHealingContent({
-            moduleNumber: 1,
-            title: "Introduction",
-            subtitle: "Welcome to Healing of Our Hearts",
-            slides: [
-                { type: "text", content: "Welcome to the Healing of Our Hearts program, presented by Fr. Monahan. This 20-module journey is designed to lead you into the deep healing that only God can provide." },
-                { type: "text", content: "Over the course of these modules, you will explore the roots of your wounds, encounter God's unconditional love, and experience lasting transformation through prayer, Scripture, and the sacraments." },
-                { type: "text", content: "This program is self-paced. Complete each module when you are ready. Each module will unlock after you complete the previous one. Begin with open hands and an open heart." },
-                { type: "action", content: "Pray this simple prayer: \"Lord, I come to you with my wounds, my fears, and my broken places. I trust that you are the healer of my heart. Come, Holy Spirit. Amen.\"" },
-            ],
-        });
-
-        for (let moduleNumber = 2; moduleNumber <= 18; moduleNumber++) {
-            const url = youtubeUrls[moduleNumber];
-            const videoId = getYouTubeVideoId(url);
-            await storage.upsertHealingContent({
-                moduleNumber,
-                title: `Module ${moduleNumber}`,
-                subtitle: "",
-                slides: [
-                    { type: "media", content: JSON.stringify({ url: `https://www.youtube.com/watch?v=${videoId}`, videoId }) },
-                ],
-            });
-        }
-
-        await storage.upsertHealingContent({
-            moduleNumber: 19,
-            title: "Module 19",
-            subtitle: "Continuing Your Journey",
-            slides: [
-                { type: "text", content: "You are nearly at the end of this healing journey. Take time to reflect on how far you have come and all the ways God has worked in your heart through these modules." },
-                { type: "text", content: "The graces you have received are not meant to stay with you alone. As you have been healed, you are called to bring healing to others — in your family, your parish, and your community." },
-            ],
-        });
-
-        await storage.upsertHealingContent({
-            moduleNumber: 20,
-            title: "Conclusion",
-            subtitle: "Living in God's Healing Love",
-            slides: [
-                { type: "text", content: "Congratulations on completing the Healing of Our Hearts program. You have taken a courageous step toward wholeness and freedom in Christ." },
-                { type: "text", content: "This is not an ending but a beginning. The healing you have received is a foundation for a deeper life with God. Continue to pray, receive the sacraments, and trust in His ongoing work in your heart." },
-                { type: "action", content: "Write a letter to yourself about the healing you have experienced. Seal it and open it in one year to see how God has continued His work." },
-            ],
-        });
-
-        console.log("Healing Track content seeded (20 modules).");
-    }
 
     console.log("Seeding complete.");
 

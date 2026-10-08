@@ -29,16 +29,14 @@ export default function MentorProgram() {
       <div className="h-full">
         <DayGridView
           currentDay={30}
-          isTrackA={true}
+           isCalendarTrack={true}
           trackASummaries={trackASummaries}
-          trackBSummaries={undefined}
           cohortStartDate={undefined}
           prayerCompletions={[]}
           isDayCompleted={() => false}
-          isPeriodCompleted={() => false}
           onDaySelect={(day) => {
             if (day && day > 0) {
-              setLocation(`/preview/track-a/${day}`);
+               setLocation(`/preview/track-a/${day}?trackId=A`);
             }
           }}
           prelimModulesData={prelimModulesData}

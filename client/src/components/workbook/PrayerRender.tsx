@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { PRAYER_TEMPLATES } from "./prayer-templates";

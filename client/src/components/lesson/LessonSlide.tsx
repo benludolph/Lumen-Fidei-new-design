@@ -1,3 +1,4 @@
+import { trackFetch as fetch } from "@/lib/track-context";
 import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";

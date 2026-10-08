@@ -25,9 +25,6 @@ import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
 import ConfessionFinderResource from "@/pages/ConfessionFinderResource";
 import FreedomWorkbookResource from "@/pages/FreedomWorkbookResource";
 import WorkbookPage from "@/pages/WorkbookPage";
-import HealingDashboard from "@/pages/HealingDashboard";
-import HealingLesson from "@/pages/HealingLesson";
-import HealingJournal from "@/pages/HealingJournal";
 import ProfilePage from "@/pages/ProfilePage";
 import ProgramOverview from "@/pages/ProgramOverview";
 import SmsPrivacy from "@/pages/SmsPrivacy";
@@ -40,11 +37,9 @@ import Sources from "@/pages/Sources";
 function ProtectedRoute({ 
   component: Component, 
   allowedRoles,
-  excludeTrackC,
 }: { 
   component: React.ComponentType, 
   allowedRoles?: string[],
-  excludeTrackC?: boolean,
 }) {
   const { user, isLoading } = useAuth();
 
@@ -61,41 +56,15 @@ function ProtectedRoute({
     return <Redirect to={fallback} />;
   }
 
-  // Healing Track (C) participants have no access to messages, collections, or legacy journal
-  if (excludeTrackC && user.role !== 'admin' && user.track === 'C') {
-    return <Redirect to="/healing" />;
-  }
-
-  return <Component />;
+  return <Component key={`${user.id}-${user.track || ""}`} />;
 }
 
-// Redirect /testimonies to collections, but track C users go to /healing
+// Preserve the legacy testimonies URL.
 function TestimoniesRedirect() {
   const { user, isLoading } = useAuth();
   if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   if (!user) return <Redirect to="/login" />;
-  if (user.track === 'C' && user.role !== 'admin') return <Redirect to="/healing" />;
   return <Redirect to="/collections?tab=testimonies" />;
-}
-
-// Healing Track Protected Route — only Track C participants and admins
-function HealingProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Redirect to="/login" />;
-  }
-
-  if (user.role !== 'admin' && user.track !== 'C') {
-    const fallback = user.role === 'mentor' ? '/mentor' : '/dashboard';
-    return <Redirect to={fallback} />;
-  }
-
-  return <Component />;
 }
 
 function RootRedirect() {
@@ -109,7 +78,6 @@ function RootRedirect() {
   if (user.role === 'admin') return <Redirect to="/admin" />;
   if (user.role === 'mentor') return <Redirect to="/mentor" />;
   if (user.role === 'superuser') return <Redirect to="/dashboard" />;
-  if (user.track === 'C') return <Redirect to="/healing" />;
   return <Redirect to="/dashboard" />;
 }
 
@@ -145,7 +113,7 @@ function Router() {
       </Route>
 
       <Route path="/messages">
-        <ProtectedRoute component={Messages} excludeTrackC />
+        <ProtectedRoute component={Messages} />
       </Route>
 
       <Route path="/admin">
@@ -186,7 +154,7 @@ function Router() {
       </Route>
 
       <Route path="/collections">
-        <ProtectedRoute component={Collections} allowedRoles={['participant', 'superuser']} excludeTrackC />
+        <ProtectedRoute component={Collections} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/testimonies">
@@ -194,7 +162,7 @@ function Router() {
       </Route>
 
       <Route path="/journal">
-        <ProtectedRoute component={Journal} allowedRoles={['participant', 'superuser']} excludeTrackC />
+        <ProtectedRoute component={Journal} allowedRoles={['participant', 'superuser']} />
       </Route>
 
       <Route path="/toolkit">
@@ -216,18 +184,19 @@ function Router() {
         <ProtectedRoute component={PreviewLesson} allowedRoles={['admin', 'mentor']} />
       </Route>
 
-      {/* Healing Track — Track C participants and admins only */}
+      {/* Retired Healing URLs remain safe bookmarks. */}
       <Route path="/healing/module/:n">
-        <HealingProtectedRoute component={HealingLesson} />
+        <Redirect to="/dashboard" />
       </Route>
 
       <Route path="/healing/journal">
-        <HealingProtectedRoute component={HealingJournal} />
+        <Redirect to="/dashboard" />
       </Route>
 
       <Route path="/healing">
-        <HealingProtectedRoute component={HealingDashboard} />
+        <Redirect to="/dashboard" />
       </Route>
+      <Route path="/healing/:rest*"><Redirect to="/dashboard" /></Route>
 
       <Route component={NotFound} />
     </Switch>

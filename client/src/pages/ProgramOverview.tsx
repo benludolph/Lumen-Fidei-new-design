@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import { activityLocalStorage as localStorage } from "@/lib/track-context";
 import { useLocation, Link } from "wouter";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useUserPrayerCompletions } from "@/hooks/use-prayer-completions";

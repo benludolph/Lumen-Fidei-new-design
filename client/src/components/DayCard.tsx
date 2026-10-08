@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Lock, Loader, CircleCheck, Sun, Moon, BookOpen } from "lucide-react";
+import { Lock, Loader, CircleCheck, BookOpen } from "lucide-react";
 
 export type DayCardVariant = "full" | "half";
 
@@ -13,9 +13,6 @@ interface DayCardProps {
   isToday: boolean;
   isLocked: boolean;
   isWorkbookGate?: boolean;
-  morningCompleted?: boolean;
-  eveningCompleted?: boolean;
-  isTrackB?: boolean;
   backgroundImage?: string;
   cohortStartDate?: string | null;
   onClick: () => void;
@@ -42,9 +39,6 @@ export function DayCard({
   isToday,
   isLocked,
   isWorkbookGate,
-  morningCompleted,
-  eveningCompleted,
-  isTrackB,
   backgroundImage,
   cohortStartDate,
   onClick,
@@ -152,18 +146,6 @@ export function DayCard({
           >
             {subtitle}
           </p>
-        )}
-        {isTrackB && !isLocked && (
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-[2px]">
-              <Sun style={{ width: "10px", height: "10px", color: morningCompleted ? "#22c55e" : "var(--white-30)" }} />
-              <span className="type-body-xs" style={{ color: morningCompleted ? "#22c55e" : "var(--white-30)" }}>AM</span>
-            </span>
-            <span className="flex items-center gap-[2px]">
-              <Moon style={{ width: "10px", height: "10px", color: eveningCompleted ? "#22c55e" : "var(--white-30)" }} />
-              <span className="type-body-xs" style={{ color: eveningCompleted ? "#22c55e" : "var(--white-30)" }}>PM</span>
-            </span>
-          </div>
         )}
       </div>
     </button>

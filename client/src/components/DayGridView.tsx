@@ -1,13 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { useLocation } from "wouter";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { DayCard } from "./DayCard";
-import { PeriodSelectionDialog } from "./PeriodSelectionDialog";
-import { OverviewGuideModal } from "./OverviewGuideModal";
-import type { ContentSummary } from "@/hooks/use-content-summaries";
 import type { TrackAContent, TrackAModule, PrelimModuleWithStatus, LessonWorkbookModuleWithStatus } from "@shared/schema";
 import { CheckCircle2, Map as MapIcon, Scale, Lock, Loader, CircleCheck, Info, X, Download, BookOpen } from "lucide-react";
 
@@ -26,13 +24,11 @@ interface PrayerCompletionRecord {
 
 interface DayGridViewProps {
   currentDay: number;
-  isTrackA: boolean;
+  isCalendarTrack: boolean;
   trackASummaries?: TrackAContent[];
-  trackBSummaries?: ContentSummary[];
   cohortStartDate?: string | null;
   prayerCompletions?: PrayerCompletionRecord[];
   isDayCompleted: (day: number) => boolean;
-  isPeriodCompleted: (day: number, period: "morning" | "evening") => boolean;
   onDaySelect: (day: number, period?: "morning" | "evening") => void;
   prelimModulesData?: PrelimModuleWithStatus[];
   allPrelimsComplete?: boolean;
@@ -41,14 +37,9 @@ interface DayGridViewProps {
   week4Ready?: boolean;
 }
 
-function getWeekTheme(weekNumber: number, isTrackA: boolean, trackBSummaries?: ContentSummary[], modules?: TrackAModule[]): string {
-  if (isTrackA) {
-    const mod = modules?.find(m => m.weekNumber === weekNumber);
-    if (mod) return mod.subtitle || mod.title;
-  } else if (trackBSummaries) {
-    const day = trackBSummaries.find(c => c.weekNumber === weekNumber);
-    if (day?.weekTitle) return day.weekTitle;
-  }
+function getWeekTheme(weekNumber: number, modules?: TrackAModule[]): string {
+  const mod = modules?.find(m => m.weekNumber === weekNumber);
+  if (mod) return mod.subtitle || mod.title;
   return `Week ${weekNumber}`;
 }
 
@@ -58,21 +49,6 @@ function getTrackAAtPosition(position: number, summaries?: TrackAContent[]): Tra
   if (!summaries) return undefined;
   const programDays = summaries.filter(c => c.dayNumber > 0);
   return programDays[position - 1];
-}
-
-function getDayTitle(day: number, isTrackA: boolean, trackASummaries?: TrackAContent[], trackBSummaries?: ContentSummary[]): string {
-  if (isTrackA && trackASummaries) {
-    return getTrackAAtPosition(day, trackASummaries)?.centralTheme || "Daily Activity";
-  }
-  if (trackBSummaries) {
-    return trackBSummaries.find(c => c.dayNumber === day)?.title || `Day ${day}`;
-  }
-  return `Day ${day}`;
-}
-
-function getTrackAImage(dayNumber: number, trackASummaries?: TrackAContent[]): string | undefined {
-  const content = getTrackAAtPosition(dayNumber, trackASummaries);
-  return content?.imageUrl ?? undefined;
 }
 
 function groupDaysByWeek(days: number[]): { week: number; days: number[] }[] {
@@ -629,13 +605,11 @@ function CertificateCard({ prayerCompletions }: CertificateCardProps) {
 
 export function DayGridView({
   currentDay,
-  isTrackA,
+  isCalendarTrack,
   trackASummaries,
-  trackBSummaries,
   cohortStartDate,
   prayerCompletions,
   isDayCompleted,
-  isPeriodCompleted,
   onDaySelect,
   prelimModulesData,
   allPrelimsComplete = false,
@@ -646,27 +620,29 @@ export function DayGridView({
   const [, navigate] = useLocation();
   const { data: trackAModules } = useQuery<TrackAModule[]>({
     queryKey: ["/api/track-a-modules"],
-    enabled: isTrackA,
   });
 
   const { data: workbookModules } = useQuery<LessonWorkbookModuleWithStatus[]>({
     queryKey: ["/api/workbook-modules"],
-    enabled: isTrackA,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const prelimSectionRef = useRef<HTMLDivElement>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedDayForDialog, setSelectedDayForDialog] = useState(0);
-  const [guideModalOpen, setGuideModalOpen] = useState(false);
   const [activeWeek, setActiveWeek] = useState(1);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const hasPrelims = !!(prelimModulesData && prelimModulesData.length > 0);
   const [inPrelimSection, setInPrelimSection] = useState(hasPrelims);
 
-  const allDays = Array.from({ length: 30 }, (_, i) => i + 1);
+  const allDays = isCalendarTrack ? Array.from({ length: 30 }, (_, i) => i + 1)
+    : (trackASummaries || []).filter(content => content.dayNumber > 0).map(content => content.dayNumber);
   const baseWeekGroups = groupDaysByWeek(allDays);
-  const weekGroups = isTrackA && trackAModules && trackAModules.length > 0
+  const weekGroups = !isCalendarTrack
+    ? Array.from(new Set([...(trackAModules || []).map(module => module.weekNumber),
+        ...(trackASummaries || []).filter(content => content.dayNumber > 0).map(content => content.weekNumber)]))
+        .sort((a, b) => (trackAModules?.find(module => module.weekNumber === a)?.sortOrder ?? a)
+          - (trackAModules?.find(module => module.weekNumber === b)?.sortOrder ?? b))
+        .map(week => ({ week, days: (trackASummaries || []).filter(content => content.dayNumber > 0 && content.weekNumber === week).map(content => content.dayNumber) }))
+    : trackAModules && trackAModules.length > 0
     ? [...baseWeekGroups].sort((a, b) => {
         const modA = trackAModules.find(m => m.weekNumber === a.week);
         const modB = trackAModules.find(m => m.weekNumber === b.week);
@@ -716,28 +692,17 @@ export function DayGridView({
     return () => observer.disconnect();
   }, [hasPrelims]);
 
-  const handleCardClick = (day: number) => {
-    if (isTrackA) {
-      onDaySelect(day);
-    } else {
-      setSelectedDayForDialog(day);
-      setDialogOpen(true);
-    }
-  };
-
-  const handlePeriodSelect = (period: "morning" | "evening") => {
-    setDialogOpen(false);
-    onDaySelect(selectedDayForDialog, period);
-  };
-
-  const activeWeekTheme = getWeekTheme(activeWeek, isTrackA, trackBSummaries, trackAModules);
+  const contentForDay = (day: number) => isCalendarTrack
+    ? getTrackAAtPosition(day, trackASummaries)
+    : trackASummaries?.find(content => content.dayNumber === day);
+  const activeWeekTheme = getWeekTheme(activeWeek, trackAModules);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: "64px", paddingTop: "12px", position: "relative" }} className="custom-scrollbar">
         <PageContainer variant="narrow">
 
-          <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => isTrackA ? navigate('/program-overview') : setGuideModalOpen(true)} inPrelimSection={inPrelimSection} />
+          {isCalendarTrack && <StickyWeekBanner weekNumber={activeWeek} title={activeWeekTheme} onGuideClick={() => navigate('/program-overview')} inPrelimSection={inPrelimSection} />}
 
           <div style={{ paddingTop: "24px" }}>
             {prelimModulesData && prelimModulesData.length > 0 && (
@@ -746,8 +711,9 @@ export function DayGridView({
                 <SectionDivider label="Pre-Modules" />
                 <ThreeColGrid>
                   {prelimModulesData.map((mod) => {
-                    const prevDone = mod.position === 1 || prelimModulesData.find(m => m.position === mod.position - 1)?.completed;
-                    const isFirst = mod.position === 1;
+                    const index = prelimModulesData.findIndex(item => item.position === mod.position);
+                    const prevDone = index === 0 || prelimModulesData[index - 1]?.completed;
+                    const isFirst = isCalendarTrack && mod.position === 1;
                     const moduleWithThumb = isFirst
                       ? { ...mod, imageUrl: mod.imageUrl ?? introVideoThumb }
                       : mod;
@@ -776,15 +742,13 @@ export function DayGridView({
             )}
 
             {weekGroups.map(({ week, days }, groupIdx) => {
-              const weekTheme = getWeekTheme(week, isTrackA, trackBSummaries, trackAModules);
-
               return (
                 <div key={week} ref={(el) => setWeekRef(week, el)} data-week={week}>
-                  {groupIdx > 0 && <SundayBanner />}
+                  {isCalendarTrack && groupIdx > 0 && <SundayBanner />}
 
-                  <SectionDivider label={`Week ${week}`} />
+                  <SectionDivider label={isCalendarTrack ? `Week ${week}` : trackAModules?.find(module => module.weekNumber === week)?.title || `Module ${week}`} />
 
-                  {groupIdx === 0 && isTrackA && (
+                  {groupIdx === 0 && (isCalendarTrack || trackASummaries?.some(content => content.dayNumber === 0)) && (
                     <div style={{ gridColumn: "1 / -1", marginBottom: "16px" }}>
                       <DayCard
                         variant="full"
@@ -803,18 +767,18 @@ export function DayGridView({
 
                   <TwoColGrid>
                     {days.map((day) => {
-                      const isWorkbookGate = isTrackA && day === 19 && !week4Ready && day <= currentDay && allPrelimsComplete;
-                      const isLocked = (day > currentDay || !allPrelimsComplete) && !isWorkbookGate;
-                      const isToday = day === currentDay && allPrelimsComplete;
+                      const isWorkbookGate = isCalendarTrack && day === 19 && !week4Ready && day <= currentDay && allPrelimsComplete;
+                      const isLocked = ((isCalendarTrack && day > currentDay) || !allPrelimsComplete) && !isWorkbookGate;
+                      const isToday = isCalendarTrack && day === currentDay && allPrelimsComplete;
                       const completed = isDayCompleted(day);
-                      const title = getDayTitle(day, isTrackA, trackASummaries, trackBSummaries);
+                      const title = contentForDay(day)?.centralTheme || "Daily Activity";
                       const subtitle = isWorkbookGate
                         ? "Complete your Notebook to begin Week 4"
-                        : isTrackA ? getTrackAAtPosition(day, trackASummaries)?.subtitle ?? undefined : undefined;
-                      const workbookMod = isTrackA ? workbookModules?.find(m => m.dayNumber === day) : undefined;
+                        : contentForDay(day)?.subtitle ?? undefined;
+                      const workbookMod = workbookModules?.find(m => m.dayNumber === day);
 
                       let completedLate = false;
-                      if (isTrackA && completed && cohortStartDate && prayerCompletions) {
+                      if (isCalendarTrack && completed && cohortStartDate && prayerCompletions) {
                         const record = prayerCompletions.find(c => c.dayNumber === day && c.period === "morning");
                         if (record) {
                           const start = new Date(cohortStartDate + "T00:00:00");
@@ -839,12 +803,9 @@ export function DayGridView({
                           isToday={isToday}
                           isLocked={isLocked}
                           isWorkbookGate={isWorkbookGate}
-                          isTrackB={!isTrackA}
-                          morningCompleted={isPeriodCompleted(day, "morning")}
-                          eveningCompleted={isPeriodCompleted(day, "evening")}
-                          backgroundImage={isTrackA ? getTrackAImage(day, trackASummaries) : undefined}
-                          cohortStartDate={cohortStartDate}
-                          onClick={isWorkbookGate ? () => navigate("/workbook") : () => handleCardClick(day)}
+                          backgroundImage={contentForDay(day)?.imageUrl ?? undefined}
+                          cohortStartDate={isCalendarTrack ? cohortStartDate : undefined}
+                          onClick={isWorkbookGate ? () => navigate("/workbook") : () => onDaySelect(day)}
                         />
                       );
 
@@ -868,29 +829,16 @@ export function DayGridView({
               );
             })}
 
-            <CertificateCard prayerCompletions={prayerCompletions} />
+            {!isCalendarTrack && !allDays.length && <div className="rounded-lg border border-[var(--white-15)] p-8 text-center my-5">
+              <BookOpen className="w-8 h-8 mx-auto mb-3 text-[var(--white-45)]" />
+              <p className="type-display-md text-[var(--white-80)]">No lessons available yet</p>
+              <p className="type-body-sm text-[var(--white-45)] mt-2">Your curriculum will appear here when lessons are ready.</p>
+            </div>}
+            {isCalendarTrack && <CertificateCard prayerCompletions={prayerCompletions} />}
           </div>
         </PageContainer>
       </div>
 
-      <OverviewGuideModal
-        open={guideModalOpen}
-        onOpenChange={setGuideModalOpen}
-        weekNumber={activeWeek}
-        weekTheme={activeWeekTheme}
-      />
-
-      {!isTrackA && (
-        <PeriodSelectionDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          dayNumber={selectedDayForDialog}
-          dayTitle={getDayTitle(selectedDayForDialog, isTrackA, trackASummaries, trackBSummaries)}
-          morningCompleted={isPeriodCompleted(selectedDayForDialog, "morning")}
-          eveningCompleted={isPeriodCompleted(selectedDayForDialog, "evening")}
-          onSelect={handlePeriodSelect}
-        />
-      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertUserSchema, insertDailyContentSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, dailyContent, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings } from './schema';
+import { insertUserSchema, insertUserAnswerSchema, insertMessageSchema, insertTrackRequirementsSchema, insertPrayerCompletionSchema, users, userAnswers, messages, trackRequirements, prayerCompletions, practiceResources, cohortSettings } from './schema';
 
 export type SafeUser = Omit<typeof users.$inferSelect, 'password'>;
 
@@ -78,24 +78,6 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
-  },
-  content: {
-    get: {
-      method: 'GET' as const,
-      path: '/api/content/:day',
-      responses: {
-        200: z.custom<typeof dailyContent.$inferSelect>(),
-        403: errorSchemas.forbidden, // Future days locked
-        404: errorSchemas.notFound,
-      },
-    },
-    list: {
-        method: 'GET' as const,
-        path: '/api/content',
-        responses: {
-            200: z.array(z.custom<typeof dailyContent.$inferSelect>()),
-        }
-    }
   },
   answers: {
     list: {
@@ -227,16 +209,6 @@ export const api = {
     },
   },
   admin: {
-    createContent: {
-      method: 'POST' as const,
-      path: '/api/admin/content',
-      input: insertDailyContentSchema,
-      responses: {
-        201: z.custom<typeof dailyContent.$inferSelect>(),
-        400: errorSchemas.validation,
-        403: errorSchemas.forbidden,
-      },
-    },
     deleteUser: {
       method: 'DELETE' as const,
       path: '/api/users/:id',
@@ -280,6 +252,7 @@ export const api = {
           startDate: z.string().nullable(),
           currentDay: z.number(),
           daysCompleted: z.number(),
+          totalDays: z.number(),
           morningToday: z.boolean(),
           eveningToday: z.boolean(),
         })),
@@ -313,6 +286,7 @@ export const api = {
             startDate: z.string().nullable(),
             currentDay: z.number(),
             daysCompleted: z.number(),
+          totalDays: z.number(),
             totalPossibleDays: z.number(),
             graduationEligible: z.boolean(),
           }),

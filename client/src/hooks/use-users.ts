@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackFetch as fetch } from "@/lib/track-context";
 import { api, buildUrl, type CreateUserRequest, type UpdateUserRequest } from "@shared/routes";
 
 export function useUsers(role?: "participant" | "mentor") {

@@ -1,8 +1,19 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { trackFetch as fetch } from "@/lib/track-context";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    try {
+      const payload = JSON.parse(text);
+      const details = payload.errors || payload.details;
+      const message = payload.message || payload.error;
+      if (message || details) {
+        throw new Error(`${message || "Request failed"}${details ? `: ${Array.isArray(details) ? details.join("; ") : JSON.stringify(details)}` : ""}`);
+      }
+    } catch (error) {
+      if (error instanceof Error && !(error instanceof SyntaxError)) throw error;
+    }
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -28,9 +39,10 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+   async ({ queryKey, signal }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
+       signal,
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
