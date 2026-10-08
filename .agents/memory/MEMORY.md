@@ -1,0 +1,1 @@
+- [Shared track direction](shared-track-direction.md) — Track A is the common editor/player baseline; B/C removal and permanent record deletion require scoped review.
