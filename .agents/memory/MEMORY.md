@@ -1,3 +1,4 @@
 - [Shared track direction](shared-track-direction.md) — Track A is the common editor/player baseline; B/C removal and permanent record deletion require scoped review.
 - [Track schema reconciliation](track-schema-reconciliation.md) — merge-time schema repair must remain separate from destructive B/C retirement.
 - [Workbook revision boundaries](workbook-release-boundary.md) — preview-only until both stages ship together; exact-copy, first-access faith question and counts-only impact rules.
+- [Workbook editing and typography](workbook-editor-direction.md) — retire obsolete workbook UI, consolidate editing, and never bold IvyOra.
