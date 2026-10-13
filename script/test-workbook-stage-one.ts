@@ -40,9 +40,9 @@ for (const category of SECTION_CATEGORIES) {
   assert.ok(spec.includes(`## Movement ${category.id}: ${category.name.replace(/^Movement \d+: /,"")}`));
   assert.ok(spec.includes(`**Category description:** ${category.description}`));
 }
-assert.equal(SECTIONS.length,25);
-assert.equal(Object.keys(WORKBOOK_SECTION_CATEGORY).length,25);
-assert.equal(new Set(Object.values(WORKBOOK_CATEGORY_SECTIONS).flat()).size,25);
+assert.equal(SECTIONS.length,17);
+assert.equal(Object.keys(WORKBOOK_SECTION_CATEGORY).length,17);
+assert.equal(new Set(Object.values(WORKBOOK_CATEGORY_SECTIONS).flat()).size,17);
 for (const s of SECTIONS) assert.equal(s.categoryId,WORKBOOK_SECTION_CATEGORY[s.id]);
 assert.equal(WORKBOOK_SECTION_CATEGORY[14],5);
 assert.equal(WORKBOOK_SECTION_CATEGORY[24],4);
@@ -53,7 +53,8 @@ const impactSql = readFileSync("scripts/workbook-map-impact.sql","utf8");
 const oldMapText = impactSql.split("), scenarios")[0];
 const oldMap = Object.fromEntries([...oldMapText.matchAll(/\((\d+),(\d+)\)/g)].map(m=>[Number(m[1]),Number(m[2])]));
 assert.equal(Object.keys(oldMap).length,24);
-for (let id=1;id<=24;id++) assert.equal(oldMap[id], id===14||id===24 ? 1 : WORKBOOK_SECTION_CATEGORY[id], `impact baseline ${id}`);
+const retiredCategories: Record<number, number> = { 8:1,9:1,10:5,12:2,17:3,18:1,19:2,21:2 };
+for (let id=1;id<=24;id++) assert.equal(oldMap[id], id===14||id===24 ? 1 : WORKBOOK_SECTION_CATEGORY[id] ?? retiredCategories[id], `impact baseline ${id}`);
 for (const file of ["CategorySession.tsx","SessionWrapper.tsx"]) {
   const source = readFileSync(`client/src/components/workbook/${file}`,"utf8");
   assert.ok(source.includes("<WorkbookAccessGate categorySession"),`${file}: persisted intro gate`);
@@ -67,10 +68,7 @@ for (const prayer of [OPENING_PRAYER,CLOSING_PRAYER]) {
 }
 for (const spirit of ["unseen","helplessness","false_father"] as const) assert.equal(getSuggestedScriptures(spirit).length,1);
 const hash = (text: string) => createHash("sha256").update(text).digest("hex");
-for (const [file,digest] of [
-  ["prayer-templates.ts","0dddc4d6a20c70c3ba865f1a98511c1423a145e6fe1f8238b9a2117fcd882704"],
-  ["PrayerRender.tsx","6d3afe4aeb8b71e0223b5766fbaf909526f098ee461603373c9317c13e982f66"],
-]) assert.equal(hash(readFileSync(`client/src/components/workbook/${file}`,"utf8")),digest,`${file} unchanged`);
+// Stage 2 intentionally replaces the prayer contracts; its separate suite checks them.
 const baseline: Record<number,string> = {
   8:"6ef06701270c0decdf7a0f20f9a047da5246595c05a1b9639bf736ea9ed7cdfe",
   9:"1dfedde6c5245b6adc740dd82cca9bfcfdf06c1711485b9782c04e9b62e088bd",
@@ -86,4 +84,4 @@ for (const [id,digest] of Object.entries(baseline)) {
   const block = definitions.match(new RegExp("  \\{\\n    id: "+id+",\\n[\\s\\S]*?\\n  \\},"))![0];
   assert.equal(hash(block),digest,`legacy section ${id} unchanged`);
 }
-console.log("Stage 1: exact copy/fields, 25-section map, legacy sections and prayer contracts passed.");
+console.log("Stage 1 retained copy/fields, 17-section map, and archived legacy definitions passed.");

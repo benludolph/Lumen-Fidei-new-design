@@ -3225,13 +3225,13 @@ function PrayerLinkSlide({
   }
 
   const PRAYER_NAMES: Record<PrayerId, string> = {
-    prayer_1: "Personal Deliverance Prayer",
-    prayer_2: "Generational Renunciation Prayer",
+    prayer_1: "Personal Prayer for Freedom",
+    prayer_2: "Family Line Prayer",
     prayer_3: "Daily Prayer",
   };
   const PRAYER_SUBTITLES: Record<PrayerId, string> = {
     prayer_1: "Pray once, with intention, after working through the Workbook",
-    prayer_2: "Binding prayer for generational and ancestral sins",
+    prayer_2: "Family Line Prayer",
     prayer_3: "Ongoing daily prayer — your living armor",
   };
 

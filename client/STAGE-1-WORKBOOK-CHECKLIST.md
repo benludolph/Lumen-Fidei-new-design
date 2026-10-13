@@ -1,5 +1,7 @@
 # Stage 1 workbook review checklist
 
+Historical Stage 1 checklist: Stage 2 now retires the eight legacy sections and replaces the prayers. Use `docs/workbook-stage-two-report.md` for the current release boundary and verification.
+
 Preview only; do not publish separately from Stage 2. See `docs/workbook-stage-one-report.md` for verification and production impact results.
 
 ## Common checks

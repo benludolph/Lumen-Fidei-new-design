@@ -6,7 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { WORKBOOK_CATEGORY_SECTIONS } from "@shared/workbook-categories";
+import { WORKBOOK_CATEGORY_SECTIONS, isActiveWorkbookSection } from "@shared/workbook-categories";
 import { tracks, insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, testimonies, testimonyParts, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
 import { trackDb as db } from "./track-db";
 import { currentTrackId, withTrack } from "./track-context";
@@ -3345,6 +3345,7 @@ export async function registerRoutes(
   app.get("/api/workbook/:sectionId", requireAuth, async (req, res) => {
     if ((req.user! as any).workbookExempt) return res.json([]);
     const sectionId = Number(req.params.sectionId);
+    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     const entries = await storage.getWorkbookEntries(req.user!.id, sectionId);
     res.json(entries);
@@ -3356,6 +3357,7 @@ export async function registerRoutes(
       return res.status(403).json({ error: 'Workbook is not required for your program path' });
     }
     const sectionId = Number(req.params.sectionId);
+    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
 
     const schema = z.object({
@@ -3402,6 +3404,7 @@ export async function registerRoutes(
       return res.status(403).json({ error: 'Workbook is not required for your program path' });
     }
     const sectionId = Number(req.params.sectionId);
+    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     await storage.setWorkbookAttestation(req.user!.id, sectionId);
     res.sendStatus(204);
@@ -3413,6 +3416,7 @@ export async function registerRoutes(
       return res.status(403).json({ error: 'Workbook is not required for your program path' });
     }
     const sectionId = Number(req.params.sectionId);
+    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
     if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
     await storage.clearWorkbookAttestation(req.user!.id, sectionId);
     res.sendStatus(204);

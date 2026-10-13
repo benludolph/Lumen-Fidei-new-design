@@ -273,6 +273,15 @@ export const workbookEntries = pgTable("workbook_entries", {
 ]);
 
 // Per-user, per-section "I have nothing to add" attestation
+// Copy ledger contains no answers. A deleted destination stays recorded, preventing resurrection.
+export const workbookEntryRetirements = pgTable("workbook_entry_retirements", {
+  sourceEntryId: integer("source_entry_id").primaryKey().references(() => workbookEntries.id, { onDelete: "cascade" }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  targetEntryId: integer("target_entry_id").references(() => workbookEntries.id, { onDelete: "set null" }),
+  targetSectionId: integer("target_section_id").notNull(),
+  copiedAt: timestamp("copied_at").defaultNow().notNull(),
+});
+
 export const workbookAttestations = pgTable("workbook_attestations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

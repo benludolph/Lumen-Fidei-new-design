@@ -1,4 +1,5 @@
 import { trackDb as db } from "./track-db";
+import { ACTIVE_WORKBOOK_SECTION_IDS, isActiveWorkbookSection } from "@shared/workbook-categories";
 import { remapActivityDays } from "./track-remap";
 import { currentTrackId, withTrack } from "./track-context";
 import {
@@ -1068,6 +1069,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, unknown>, position = 0, id?: number): Promise<WorkbookEntry> {
+    if (!isActiveWorkbookSection(sectionId)) throw new Error("Workbook section retired");
     if (id) {
       const [row] = await db.update(workbookEntries)
         .set({ entryData: sql`${workbookEntries.entryData} || ${JSON.stringify(entryData)}::jsonb`, position })
@@ -1083,7 +1085,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWorkbookEntry(id: number, userId: number): Promise<void> {
     await db.delete(workbookEntries)
-      .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId)));
+      .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId), inArray(workbookEntries.sectionId, ACTIVE_WORKBOOK_SECTION_IDS)));
   }
 
   async getWorkbookSummary(userId: number): Promise<WorkbookSummary> {
@@ -1099,9 +1101,11 @@ export class DatabaseStorage implements IStorage {
 
     const summary: WorkbookSummary = {};
     for (const row of counts) {
+      if (!isActiveWorkbookSection(row.sectionId)) continue;
       summary[row.sectionId] = { count: Number(row.count), attested: false };
     }
     for (const att of attestations) {
+      if (!isActiveWorkbookSection(att.sectionId)) continue;
       if (!summary[att.sectionId]) summary[att.sectionId] = { count: 0, attested: false };
       summary[att.sectionId].attested = true;
     }

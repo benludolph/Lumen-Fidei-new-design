@@ -366,7 +366,7 @@ function WorkbookShellContent() {
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="type-body-md" style={{ color: "rgba(255,255,255,0.7)", margin: 0, marginBottom: "2px" }}>
-                Personal Deliverance Prayer
+                Personal Prayer for Freedom
               </p>
               <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.3)", margin: 0 }}>
                 Pray once, with intention, after working through the Workbook
@@ -416,7 +416,7 @@ function WorkbookShellContent() {
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="type-body-md" style={{ color: "rgba(255,255,255,0.6)", margin: 0, marginBottom: "2px" }}>
-                Generational Renunciation Prayer
+                Family Line Prayer
               </p>
               <p className="type-body-sm" style={{ color: "rgba(255,255,255,0.25)", margin: 0 }}>
                 Binding prayer for generational and ancestral sins

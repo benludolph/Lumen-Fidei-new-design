@@ -33,3 +33,6 @@ pool.query(fs.readFileSync('scripts/workbook-stage-one-schema.sql', 'utf8'))
   .then(() => pool.end())
   .catch(e => { console.error(e.message); pool.end(); process.exitCode = 1; });
 "
+
+# Preview-only approved copy-and-preserve migration; originals are never deleted.
+NODE_ENV=development npx tsx script/migrate-workbook-stage-two.ts

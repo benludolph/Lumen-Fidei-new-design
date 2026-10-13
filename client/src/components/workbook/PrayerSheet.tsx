@@ -24,8 +24,8 @@ export default function PrayerSheet({ prayerId, onClose, onDone }: PrayerSheetPr
   }, [onClose]);
 
   const PRAYER_LABELS: Record<PrayerId, string> = {
-    prayer_1: "Personal Deliverance Prayer",
-    prayer_2: "Generational Renunciation Prayer",
+    prayer_1: "Personal Prayer for Freedom",
+    prayer_2: "Family Line Prayer",
     prayer_3: "Daily Prayer",
   };
 

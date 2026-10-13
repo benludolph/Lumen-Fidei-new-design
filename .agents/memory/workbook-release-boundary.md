@@ -13,3 +13,11 @@ Ask both new and existing participants their faith tradition on first workbook a
 Category-map impact reporting must use counts only, without opening answers. Break down affected category-unlock and Week 4 readiness counts by sections 14, 24 and 25; do not compensate by changing unlock/completion rules. The user decides after reviewing the counts.
 
 **How to apply:** Enforce the preview-only release boundary across unrelated shipping work. Keep personal contact details in the scoped plan/content, not memory. Follow the approved instructions when implementing or evaluating this revision.
+
+The revised prayer attachment authorizes copy-and-preserve migration: copy legacy entries into the retained sections, keep originals untouched, and return counts only. Do not delete originals as a later “cleanup” without separate approval.
+
+**Why:** The supplied preservation plan explicitly retains original rows.
+
+Prayer filter specifications omit terminal punctuation present in some approved workbook options. Accept both documented variants when reading rather than rewriting stored values.
+
+**Why:** Exact-copy section labels and exact-copy prayer filter tables use different punctuation for the same choices.

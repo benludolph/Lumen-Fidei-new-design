@@ -1,5 +1,7 @@
 # Freedom Workbook — Stage 1 delivery
 
+Historical Stage 1 handoff. Stage 2 supersedes the all-25-sections/prayers-unchanged boundary below; see `docs/workbook-stage-two-report.md`. The combined release still requires approval.
+
 ## Release boundary
 
 Preview only. Nothing was published and no production data was changed. Stage 1 and Stage 2 must ship together after the prayer rewrite and eight-section retirement. Warn the owner before shipping any unrelated change from this branch. There is deliberately no feature flag.

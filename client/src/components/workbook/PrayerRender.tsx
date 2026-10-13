@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { trackFetch as fetch } from "@/lib/track-context";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { PRAYER_TEMPLATES } from "./prayer-templates";
@@ -11,8 +10,11 @@ import type {
   ConditionalBlockNode,
   InjectFilter,
   InjectFormat,
+  PrayerTemplate,
 } from "./prayer-templates";
 import { SECTIONS } from "./section-definitions";
+import WorkbookAccessGate from "./WorkbookAccessGate";
+import { isFaithAnswered, useWorkbookProfile } from "@/hooks/use-workbook-profile";
 import type { WorkbookEntry, PrayerId, UserProfile } from "@shared/schema";
 
 interface PrayerRenderProps {
@@ -29,12 +31,24 @@ function joinComma(items: string[]): string {
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
 
-function filterEntries(
+export function filterEntries(
   entries: WorkbookEntry[],
   filter: InjectFilter | undefined,
 ): WorkbookEntry[] {
   if (!filter) return entries;
   switch (filter) {
+    case "where_how_encouraged":
+      return entries.filter(e => ["I encouraged, approved, or went along with it", "I encouraged, approved, or went along with it."].includes(String(e.entryData.how)));
+    case "where_who_someone":
+      return entries.filter(e => !String(e.entryData.who_kind ?? "").trim() || e.entryData.who_kind === "Someone who hurt me");
+    case "where_who_self":
+      return entries.filter(e => e.entryData.who_kind === "Myself");
+    case "where_who_god":
+      return entries.filter(e => e.entryData.who_kind === "My anger at God" || e.entryData.who_kind === "My anger at God.");
+    case "where_kind_pact":
+      return entries.filter(e => ["A spell, curse, or pact I made", "A spell, curse, or pact I made."].includes(String(e.entryData.kind)));
+    case "where_amends_owed":
+      return entries.filter(e => e.entryData.amends_owed === true);
     case "where_is_family_harm":
       return entries.filter((e) => {
         const v = (e.entryData as Record<string, unknown>)?.is_family_harm;
@@ -68,7 +82,7 @@ function filterEntries(
   }
 }
 
-function evaluateInjectToString(
+export function evaluateInjectToString(
   node: InjectNode,
   allEntries: Record<number, WorkbookEntry[]>,
   profile: UserProfile | null | undefined,
@@ -77,14 +91,11 @@ function evaluateInjectToString(
   if (node.profileField) {
     if (!profile) return "";
     const value = (profile as Record<string, unknown>)[node.profileField];
-    if (node.format === "text") {
-      return typeof value === "string" ? value : "";
-    }
     if (Array.isArray(value)) {
-      const items = (value as string[]).filter(Boolean);
+      const items = (value as string[]).filter(v => typeof v === "string" && v.trim());
       return joinComma(items);
     }
-    return "";
+    return typeof value === "string" ? value : "";
   }
 
   const sectionId = node.sectionId!;
@@ -121,7 +132,7 @@ function isProfileFieldNonEmpty(
   if (!profile) return false;
   const value = (profile as Record<string, unknown>)[profileField];
   if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
+  if (Array.isArray(value)) return value.some(v => typeof v === "string" && v.trim());
   return false;
 }
 
@@ -159,7 +170,7 @@ const ENTRY_STYLE: React.CSSProperties = {
 
 // ─── Page node renderer ───────────────────────────────────────────────────────
 
-function renderNodes(
+export function renderNodes(
   nodes: PrayerNode[],
   allEntries: Record<number, WorkbookEntry[]>,
   profile: UserProfile | null | undefined,
@@ -180,7 +191,9 @@ function renderNodes(
       const val = textareaValues[key] ?? "";
       return (
         <span key={key} style={{ display: "block", margin: "10px 0" }}>
+          {val.trim() && <span>{ta.before}</span>}
           <textarea
+            aria-label={ta.placeholder}
             value={val}
             onChange={(e) => setTextareaValue(key, e.target.value)}
             placeholder={ta.placeholder}
@@ -203,6 +216,7 @@ function renderNodes(
               transition: "border-color 0.15s, color 0.15s",
             }}
           />
+          {val.trim() && <span>{ta.after}</span>}
         </span>
       );
     }
@@ -211,7 +225,11 @@ function renderNodes(
       const cb = node as ConditionalBlockNode;
 
       let shouldRender = false;
-      if (cb.profileField) {
+      if (cb.faith) {
+        shouldRender = cb.faith === "catholic"
+          ? profile?.faithTradition === "Yes"
+          : isFaithAnswered(profile?.faithTradition) && profile?.faithTradition !== "Yes";
+      } else if (cb.profileField) {
         shouldRender = isProfileFieldNonEmpty(profile, cb.profileField);
       } else if (cb.sectionId != null && cb.sectionField) {
         let entries = allEntries[cb.sectionId] ?? [];
@@ -219,6 +237,7 @@ function renderNodes(
         shouldRender = entries.some((e) => {
           const val = (e.entryData as Record<string, unknown>)?.[cb.sectionField!];
           if (typeof val === "boolean") return val === true;
+          if (Array.isArray(val)) return val.some(v => typeof v === "string" && v.trim());
           return String(val ?? "").trim().length > 0;
         });
       }
@@ -309,7 +328,8 @@ function renderNodes(
                   {". The Lord reminds me: "}
                   <strong style={{ color: "#e8c88a" }}>{d.truth_statement}</strong>
                   {d.scripture_reference
-                    ? `. As Scripture says, ${d.scripture_reference}: "${d.scripture_text ?? ""}"`
+                    && d.scripture_text?.trim()
+                    ? `. As Scripture says, ${d.scripture_reference}: "${d.scripture_text}"`
                     : "."}
                 </span>
               );
@@ -329,6 +349,7 @@ function renderNodes(
         "family_dead_each",
         "let_end_each",
         "ancestor_each",
+        "pattern_side_each",
       ];
 
       if (BLOCK_FORMATS.includes(inj.format)) {
@@ -337,6 +358,7 @@ function renderNodes(
 
         const renderEntry = (e: WorkbookEntry, ii: number) => {
           const d = e.entryData as Record<string, string>;
+          if (inj.format !== "family_dead_each" && !String(d[inj.field!] ?? "").trim()) return null;
           let sentence = "";
 
           if (inj.format === "items_each") {
@@ -352,7 +374,16 @@ function renderNodes(
             sentence = `I renounce ${val}.`;
           } else if (inj.format === "renounce_spirit_each") {
             const val = d[inj.field!] ?? "";
-            sentence = `In the name of Jesus Christ, I renounce ${val}. I reject your worship, your benefits, and your curses. I will not serve you.`;
+            sentence = `I renounce ${val}. I will not serve you. Jesus Christ is my only Lord.`;
+          } else if (inj.format === "pattern_side_each") {
+            const sides: Record<string, string> = {
+              "Father's side": "father's side", "Mother's side": "mother's side",
+              "Both": "both sides", "Both sides": "both sides",
+              "Adoptive": "adoptive family", "Adoptive family": "adoptive family",
+              "Adoptive family.": "adoptive family",
+            };
+            const side = sides[d.side];
+            sentence = `${d[inj.field!] ?? ""}${side ? ` (${side})` : ""}`;
           } else if (inj.format === "forgive_each") {
             const person = d.person ?? "";
             const what = d.what?.trim() ? ` for ${d.what.trim()}` : "";
@@ -370,9 +401,10 @@ function renderNodes(
             const isChild = circumstance === "Miscarried child" || circumstance === "Aborted child";
             if (isChild) {
               const childName = d.named_now?.trim() || "known to You by name";
-              sentence = `I entrust this child, ${childName}, to Your mercy. I acknowledge this child as part of our family. I mourn this child now. Receive this child into Your arms.`;
+              sentence = `I entrust this child, ${childName}, to Your mercy. I acknowledge this child as part of our family, and I mourn this child now. Receive this child into Your arms.`;
             } else {
-              sentence = `I entrust ${name} to Your mercy, Lord. I mourn ${name} now. Forgive ${name}'s sins, heal what was broken, and receive ${name} into Your peace.`;
+              if (!d.name?.trim()) return null;
+              sentence = `I remember ${name} before You. I mourn this loss, and I entrust ${name} to Your mercy.`;
             }
           }
 
@@ -393,13 +425,7 @@ function renderNodes(
 
       // ── Inline format ──
       const value = evaluateInjectToString(inj, allEntries, profile);
-      if (!value) {
-        return (
-          <span key={key} style={EMPTY_INJECT_STYLE}>
-            (not yet filled)
-          </span>
-        );
-      }
+      if (!value) return null;
       return (
         <span key={key} style={HIGHLIGHT_STYLE}>
           {value}
@@ -413,7 +439,41 @@ function renderNodes(
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+export function getVisiblePages(template: PrayerTemplate, allEntries: Record<number, WorkbookEntry[]>) {
+  const hasContent = (nodes: PrayerNode[]): boolean => nodes.some(node => {
+    if (node.type === "text") return Boolean(node.content.trim());
+    if (node.type === "conditional_block" && node.sectionId && node.sectionField) {
+      return filterEntries(allEntries[node.sectionId] ?? [], node.sectionFilter).some(e => {
+        const value = e.entryData[node.sectionField!];
+        return typeof value === "boolean" ? value : typeof value === "string" ? Boolean(value.trim())
+          : Array.isArray(value) && value.some(v => typeof v === "string" && v.trim());
+      }) && hasContent(node.nodes);
+    }
+    return true;
+  });
+  return template.pages.filter(page => {
+    if (!hasContent(page.nodes)) return false;
+    if (page.requiresCheckedThemes && !evaluateInjectToString(
+      { type: "inject", sectionId: 14, format: "patterns_comma" }, allEntries, null,
+    )) return false;
+    if (page.skipIfSectionsEmpty && !page.skipIfSectionsEmpty.some(id =>
+      (allEntries[id] ?? []).some(e => Object.values(e.entryData).some(value =>
+        typeof value === "string" ? Boolean(value.trim()) : Array.isArray(value) && value.length > 0,
+      )),
+    )) return false;
+    if (page.skipIfFilteredSectionEmpty) {
+      const { sectionId, filter } = page.skipIfFilteredSectionEmpty;
+      if (!filterEntries(allEntries[sectionId] ?? [], filter).length) return false;
+    }
+    return true;
+  });
+}
+
 export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
+  return <WorkbookAccessGate onDismiss={onDone}><PrayerContent key={prayerId} prayerId={prayerId} onDone={onDone} /></WorkbookAccessGate>;
+}
+
+function PrayerContent({ prayerId, onDone }: PrayerRenderProps) {
   const template = PRAYER_TEMPLATES[prayerId];
   const [pageIndex, setPageIndex] = useState(0);
   const [textareaValues, setTextareaValuesState] = useState<Record<string, string>>({});
@@ -428,15 +488,7 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
     useQuery<WorkbookEntry[]>({ queryKey: [`/api/workbook/${s.id}`] }),
   );
 
-  // Fetch user profile (needed by Daily Prayer pages 3, 8, 12)
-  const { data: profile } = useQuery<UserProfile | null>({
-    queryKey: ["/api/user-profile"],
-    queryFn: async () => {
-      const res = await fetch("/api/user-profile", { credentials: "include" });
-      if (!res.ok) return null;
-      return res.json();
-    },
-  });
+  const { data: profile } = useWorkbookProfile();
 
   const isLoading = sectionQueries.some((q) => q.isLoading);
 
@@ -454,24 +506,17 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
   }
 
   // Compute which pages should actually render (respecting skip rules)
-  const visiblePages = template.pages.filter((page) => {
-    if (page.skipIfSectionsEmpty) {
-      const hasAny = page.skipIfSectionsEmpty.some(
-        (sid) => (allEntries[sid] ?? []).length > 0,
-      );
-      if (!hasAny) return false;
-    }
-    if (page.skipIfFilteredSectionEmpty) {
-      const { sectionId, filter } = page.skipIfFilteredSectionEmpty;
-      const filtered = filterEntries(allEntries[sectionId] ?? [], filter);
-      if (!filtered.length) return false;
-    }
-    return true;
-  });
+  const visiblePages = getVisiblePages(template, allEntries);
+
+  if (isLoading) return <p aria-busy="true" style={{ padding: 32 }}>Loading your prayer…</p>;
+  if (sectionQueries.some(q => q.isError)) return <div role="alert" style={{ padding: 32 }}>
+    Could not load your workbook. Your prayer has not been opened with missing entries.
+    <button onClick={() => sectionQueries.filter(q => q.isError).forEach(q => q.refetch())}>Try again</button>
+  </div>;
 
   const currentPage = visiblePages[pageIndex] ?? visiblePages[0];
   const isFirst = pageIndex === 0;
-  const isLast = pageIndex === visiblePages.length - 1;
+  const isLast = pageIndex >= visiblePages.length - 1;
 
   return (
     <div

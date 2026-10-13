@@ -400,7 +400,7 @@ const LEGACY_SECTIONS: SectionDefinition[] = [
 ];
 
 export const SECTION_CATEGORIES = REVISED_CATEGORIES;
-export const SECTIONS: SectionDefinition[] = LEGACY_SECTIONS.map((section) => {
+export const SECTIONS: SectionDefinition[] = LEGACY_SECTIONS.filter(section => WORKBOOK_SECTION_CATEGORY[section.id] != null).map((section) => {
   const revision = REVISED_SECTIONS[section.id];
   if (!revision) return { ...section, categoryId: WORKBOOK_SECTION_CATEGORY[section.id] };
   const fields = revision.fields
