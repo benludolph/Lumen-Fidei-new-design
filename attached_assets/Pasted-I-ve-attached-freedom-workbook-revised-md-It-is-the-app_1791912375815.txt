@@ -1,0 +1,34 @@
+I've attached freedom-workbook-revised.md. It is the approved content spec for the Freedom Workbook revision. This is Stage 1 of 2. Before changing anything, read the spec and the current workbook files (section-definitions.ts, prayer-templates.ts, CategorySession.tsx, PrayerRender.tsx, patterns_data.ts, catholic_truth_library.json, and the workbook routes in server/routes.ts). Then give me a short plan in plain language and wait for my approval.
+
+WHAT STAGE 1 CHANGES
+
+1. Category names and descriptions. Rename the five categories to the five "Movement" names and use the "Category description" lines from the spec. Keep category IDs and unlock days exactly as they are.
+
+2. Section copy and fields for these 17 sections only: 1, 2, 3, 4, 5, 6, 7, 11, 13, 14, 15, 16, 20, 22, 23, 24, 25.
+   - Use the spec's section names.
+   - Each section shows, in order: "Why it matters," then "What the Catholic Church teaches" (collapsed toggle, closed by default), then "Bring to Confession," then any extra note (such as "Abuse is a wound," "Care note," or "On God and yourself"), then "Invitation," then the fields.
+   - Add every new field listed in the spec with the labels, types, and options exactly as written. Keep all existing field keys unchanged so saved entries and the prayers keep working.
+   - Section 14: trim the checklist to the spec's list and add the father_word field. Existing checked values that are not in the new list must stay in the saved data.
+   - Section 6: change the lying_spirit label to "What the lie says" and add the three new entries (unseen, helplessness, false_father) to the lie categories and the truth library. Use the ESV text for Genesis 16:13, 1 Corinthians 10:13, and Luke 15:20, matching the existing library.
+
+3. Category map. Make client and server read one shared section-to-category definition. Move section 14 to category 5. Put section 24 in category 4 and section 25 in category 3 on both sides. Retired sections keep their current category for now.
+
+4. Session prayers. Replace OPENING_PRAYER and CLOSING_PRAYER with the spec's versions.
+
+5. Faith tradition.
+   - Add faithTradition to the participant profile with three options: "Yes," "No, I'm a Christian of another tradition," and "No, I'm exploring faith."
+   - Ask it at signup. For existing participants with no answer, ask once the first time they open the workbook.
+   - When the answer is anything other than "Yes": show "Bring to the Lord" with the standard replacement text in place of "Bring to Confession," followed by the section's line from the non-Catholic table. Sections without a table line keep their guidance, with "Confession" changed to "confession to God." Use the non-Catholic closing prayer line.
+
+6. Workbook intro screen. Before a participant's first category session, show one screen with "Three things every participant learns" from the spec. Non-Catholics see the alternate second point.
+
+7. Care line. On sections 3 and 25, show a short line with the 988 Suicide & Crisis Lifeline and the ministry's contact. If the app already has a ministry contact, use it. If not, leave a clear placeholder and tell me.
+
+DO NOT CHANGE IN STAGE 1
+- Sections 8, 9, 10, 12, 17, 18, 19, 21. Leave them visible with their current copy.
+- The three prayer templates (prayer_1, prayer_2, prayer_3) and PrayerRender.tsx output.
+- Any saved participant entries, attestations, or streaks.
+- Unlock and readiness logic, other than the shared category map. Leave the existing track A check as it is.
+
+WHEN DONE
+Report back with: the files changed, any field or label you could not match to the spec, and a short checklist I can use to verify each section in the app.
