@@ -7,6 +7,7 @@ import { SECTIONS, SECTION_CATEGORIES, getSectionsByCategory } from "./section-d
 import PrayerRender from "./PrayerRender";
 import SessionWrapper from "./SessionWrapper";
 import type { WorkbookSummary, WorkbookEntry } from "@shared/schema";
+import WorkbookAccessGate from "./WorkbookAccessGate";
 
 function Section6Badge({ liesCount, truthsCount }: { liesCount: number; truthsCount: number }) {
   if (liesCount === 0) {
@@ -103,6 +104,10 @@ function StatusBadge({ count, attested }: { count: number; attested: boolean }) 
 type ShellView = "list" | "prayer_1" | "prayer_2" | "session";
 
 export default function WorkbookShell() {
+  return <WorkbookAccessGate><WorkbookShellContent /></WorkbookAccessGate>;
+}
+
+function WorkbookShellContent() {
   const [view, setView] = useState<ShellView>("list");
   const [, navigate] = useLocation();
 

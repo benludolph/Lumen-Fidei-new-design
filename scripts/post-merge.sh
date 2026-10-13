@@ -23,3 +23,13 @@ pool.query(\`
 # Apply the shared-track schema without interactive rename prompts or dropping
 # legacy tables. Retirement is a separate, explicitly reviewed operation.
 NODE_ENV=development npx tsx script/migrate-shared-tracks-dev.ts
+
+# Add only the preview workbook profile columns; never migrate participant answers.
+node -e "
+const { Pool } = require('pg');
+const fs = require('fs');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+pool.query(fs.readFileSync('scripts/workbook-stage-one-schema.sql', 'utf8'))
+  .then(() => pool.end())
+  .catch(e => { console.error(e.message); pool.end(); process.exitCode = 1; });
+"

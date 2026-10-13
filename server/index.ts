@@ -76,7 +76,11 @@ app.use((req, res, next) => {
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
+    // Workbook and profile responses contain sensitive personal reflections and faith.
+    // Do not retain their bodies for logging, even temporarily.
+    if (!path.startsWith("/api/workbook") && !path.startsWith("/api/user-profile")) {
+      capturedJsonResponse = bodyJson;
+    }
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 

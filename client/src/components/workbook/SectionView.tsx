@@ -4,6 +4,8 @@ import ListBuilder from "./ListBuilder";
 import LiesAndTruthsEditor from "./LiesAndTruthsEditor";
 import PatternsChecklist from "./PatternsChecklist";
 import { getSectionById } from "./section-definitions";
+import SectionGuidance from "./SectionGuidance";
+import WorkbookAccessGate from "./WorkbookAccessGate";
 
 interface SectionViewProps {
   sectionId: number;
@@ -12,6 +14,10 @@ interface SectionViewProps {
 }
 
 export default function SectionView({ sectionId, inSheet, onClose }: SectionViewProps) {
+  return <WorkbookAccessGate><SectionContent sectionId={sectionId} inSheet={inSheet} onClose={onClose} /></WorkbookAccessGate>;
+}
+
+function SectionContent({ sectionId, inSheet, onClose }: SectionViewProps) {
   const section = getSectionById(sectionId);
 
   if (!section) {
@@ -99,7 +105,7 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
           >
             {section.name}
           </h1>
-          <p
+          {section.revised ? <SectionGuidance section={section} /> : <><p
             style={{
               fontFamily: "'Afacad', sans-serif",
               fontSize: "1rem",
@@ -147,6 +153,7 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
               </p>
             </div>
           )}
+          </>}
         </div>
 
         {/* Content — dispatch by section type */}
@@ -155,7 +162,7 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
         ) : section.type === "patterns_checklist" ? (
           <PatternsChecklist />
         ) : (
-          <ListBuilder section={section} onClose={onClose} />
+          <ListBuilder key={section.id} section={section} onClose={onClose} />
         )}
       </div>
     </div>

@@ -167,12 +167,14 @@ export interface IStorage {
   // User Profile
   getUserProfile(userId: number): Promise<UserProfile | null>;
   upsertUserProfile(userId: number, data: {
-    familyMembers: string[];
-    spouseName: string;
-    childrenNames: string[];
-    chronicIssues: string[];
-    chronicIdentityLabels: string[];
+    familyMembers?: string[];
+    spouseName?: string;
+    childrenNames?: string[];
+    chronicIssues?: string[];
+    chronicIdentityLabels?: string[];
     bio?: string | null;
+    faithTradition?: string | null;
+    workbookIntroAcknowledged?: boolean;
   }): Promise<UserProfile>;
 
   // Mentor Activity
@@ -1068,8 +1070,8 @@ export class DatabaseStorage implements IStorage {
   async upsertWorkbookEntry(userId: number, sectionId: number, entryData: Record<string, unknown>, position = 0, id?: number): Promise<WorkbookEntry> {
     if (id) {
       const [row] = await db.update(workbookEntries)
-        .set({ entryData, position })
-        .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId)))
+        .set({ entryData: sql`${workbookEntries.entryData} || ${JSON.stringify(entryData)}::jsonb`, position })
+        .where(and(eq(workbookEntries.id, id), eq(workbookEntries.userId, userId), eq(workbookEntries.sectionId, sectionId)))
         .returning();
       return row;
     }
@@ -1189,16 +1191,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUserProfile(userId: number, data: {
-    familyMembers: string[];
-    spouseName: string;
-    childrenNames: string[];
-    chronicIssues: string[];
-    chronicIdentityLabels: string[];
+    familyMembers?: string[];
+    spouseName?: string;
+    childrenNames?: string[];
+    chronicIssues?: string[];
+    chronicIdentityLabels?: string[];
     bio?: string | null;
+    faithTradition?: string | null;
+    workbookIntroAcknowledged?: boolean;
   }): Promise<UserProfile> {
     const [result] = await db
       .insert(userProfiles)
-      .values({ userId, ...data, updatedAt: new Date() })
+      .values({ userId, familyMembers: [], childrenNames: [], chronicIssues: [], chronicIdentityLabels: [], ...data, updatedAt: new Date() })
       .onConflictDoUpdate({
         target: userProfiles.userId,
         set: { ...data, updatedAt: new Date() },

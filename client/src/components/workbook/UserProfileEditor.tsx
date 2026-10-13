@@ -3,6 +3,7 @@ import { trackFetch as fetch } from "@/lib/track-context";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { UserProfile } from "@shared/schema";
+import { FaithTraditionEditor } from "./WorkbookAccessGate";
 
 type ProfileData = {
   familyMembers: string[];
@@ -185,7 +186,7 @@ function TagInput({
 }
 
 export default function UserProfileEditor() {
-  const { data: rawProfile, isLoading } = useQuery<UserProfile | null>({
+  const { data: rawProfile, isLoading, isError, refetch } = useQuery<UserProfile | null>({
     queryKey: ["/api/user-profile"],
     queryFn: async () => {
       const res = await fetch("/api/user-profile", { credentials: "include" });
@@ -198,7 +199,7 @@ export default function UserProfileEditor() {
   const isHydrated = useRef(false);
   const isDirty = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     if (rawProfile !== undefined && !isHydrated.current) {
@@ -215,12 +216,12 @@ export default function UserProfileEditor() {
       return res.json();
     },
     onMutate: () => setSaveState("saving"),
-    onSuccess: () => {
+    onSuccess: (profile) => {
       setSaveState("saved");
-      queryClient.invalidateQueries({ queryKey: ["/api/user-profile"] });
+      queryClient.setQueryData(["/api/user-profile"], profile);
       setTimeout(() => setSaveState("idle"), 1800);
     },
-    onError: () => setSaveState("idle"),
+    onError: () => setSaveState("error"),
   });
 
   function scheduleSave(next: ProfileData) {
@@ -237,6 +238,9 @@ export default function UserProfileEditor() {
     scheduleSave(next);
   }
 
+  if (isError) {
+    return <div role="alert" style={{ color: "rgba(255,255,255,0.65)" }}><p>Your profile could not be loaded.</p><button type="button" onClick={() => refetch()}>Try again</button></div>;
+  }
   if (isLoading) {
     return (
       <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
@@ -284,11 +288,12 @@ export default function UserProfileEditor() {
               color: saveState === "saved" ? "rgba(120,220,120,0.7)" : "rgba(255,255,255,0.3)",
             }}
           >
-            {saveState === "saving" ? "Saving…" : "Saved"}
+            {saveState === "saving" ? "Saving…" : saveState === "error" ? <button type="button" onClick={() => saveMutation.mutate(data)}>Could not save — retry</button> : "Saved"}
           </span>
         )}
       </div>
 
+      <FaithTraditionEditor />
       <div
         style={{
           background: "rgba(255,255,255,0.03)",

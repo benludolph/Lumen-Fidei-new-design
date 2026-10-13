@@ -6,6 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { WORKBOOK_CATEGORY_SECTIONS } from "@shared/workbook-categories";
 import { tracks, insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, testimonies, testimonyParts, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
 import { trackDb as db } from "./track-db";
 import { currentTrackId, withTrack } from "./track-context";
@@ -3276,13 +3277,6 @@ export async function registerRoutes(
   };
 
   // Section-to-category mapping (mirrors client section-definitions.ts after swap)
-  const WORKBOOK_CATEGORY_SECTIONS: Record<number, number[]> = {
-    1: [1, 4, 8, 9, 11, 13, 14, 18, 24],
-    2: [5, 12, 19, 20, 21],
-    3: [15, 16, 17, 22, 23],
-    4: [6, 7],
-    5: [2, 3, 10],
-  };
 
   // GET /api/workbook/unlock-status — which categories the current user has unlocked
   app.get("/api/workbook/unlock-status", requireAuth, async (req, res) => {
@@ -3439,6 +3433,8 @@ export async function registerRoutes(
         chronicIssues: [],
         chronicIdentityLabels: [],
         updatedAt: null,
+        faithTradition: null,
+        workbookIntroAcknowledged: false,
       });
     }
     res.json(profile);
@@ -3453,7 +3449,9 @@ export async function registerRoutes(
       chronicIssues: z.array(z.string().max(500)).max(100),
       chronicIdentityLabels: z.array(z.string().max(300)).max(100),
       bio: z.string().max(2000).optional().nullable(),
-    });
+      faithTradition: z.enum(["Yes", "No, I'm a Christian of another tradition", "No, I'm exploring faith"]).nullable().optional(),
+      workbookIntroAcknowledged: z.boolean().optional(),
+    }).partial();
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: parsed.error.errors[0].message });

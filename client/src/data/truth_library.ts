@@ -1,6 +1,9 @@
 import libraryData from "./catholic_truth_library.json";
 
 export type LyingSpirit =
+  | "unseen"
+  | "helplessness"
+  | "false_father"
   | "destruction"
   | "hopelessness"
   | "weakness"
@@ -22,6 +25,9 @@ export type TruthLibraryEntry = {
 };
 
 export const LYING_SPIRITS: { value: LyingSpirit; label: string; summary: string }[] = [
+  { value: "unseen", label: "Unseen", summary: "No one sees me. My pain does not matter." },
+  { value: "helplessness", label: "Helplessness", summary: "I cannot resist. I have no choice." },
+  { value: "false_father", label: "A false image of God", summary: "God is harsh, distant, or disappointed in me." },
   { value: "destruction", label: "Destruction", summary: "You are broken, limited, your mind is not enough." },
   { value: "hopelessness", label: "Hopelessness", summary: "Nothing will change. It will not get better." },
   { value: "weakness", label: "Weakness", summary: "You must hide what you cannot do alone." },

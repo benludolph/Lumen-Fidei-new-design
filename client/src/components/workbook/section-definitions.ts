@@ -1,4 +1,6 @@
 import { WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
+import { WORKBOOK_SECTION_CATEGORY, WORKBOOK_CATEGORY_SECTIONS } from "@shared/workbook-categories";
+import { REVISED_CATEGORIES, REVISED_SECTIONS } from "@/data/workbook-revised";
 
 export type SectionType =
   | "list_builder"
@@ -16,6 +18,7 @@ export interface SectionField {
   label: string;
   placeholder?: string;
   required?: boolean;
+  defaultValue?: string;
   /** Controls the rendered input control. Defaults to "textarea". */
   type?: "text" | "textarea" | "enum" | "boolean";
   /** Options list — required when type is "enum". */
@@ -37,37 +40,13 @@ export interface SectionDefinition {
   actionItem?: string;
   fields: SectionField[];
   prayerHint?: string;
+  revised?: boolean;
+  teaching?: string;
+  confession?: string;
+  extraNote?: { label: string; text: string };
 }
 
-export const SECTION_CATEGORIES: SectionCategory[] = [
-  {
-    id: 1,
-    name: "Personal Sins",
-    description: "Sin, brokenness, and the patterns that give the enemy ground in your life.",
-  },
-  {
-    id: 2,
-    name: "Occult & Dark Powers",
-    description: "Involvement with occult practices, false religions, and spiritual powers that are not from God.",
-  },
-  {
-    id: 3,
-    name: "Generational Lines",
-    description: "Sins, patterns, and bondages inherited from your family line.",
-  },
-  {
-    id: 4,
-    name: "Inner Vows",
-    description: "The lies you have believed and the vows you have made that quietly govern your life.",
-  },
-  {
-    id: 5,
-    name: "Wounds & Forgiveness",
-    description: "The wounds you have received, the people you need to forgive, and the trauma that shaped you.",
-  },
-];
-
-export const SECTIONS: SectionDefinition[] = [
+const LEGACY_SECTIONS: SectionDefinition[] = [
   {
     id: 1,
     categoryId: 1,
@@ -420,6 +399,16 @@ export const SECTIONS: SectionDefinition[] = [
   },
 ];
 
+export const SECTION_CATEGORIES = REVISED_CATEGORIES;
+export const SECTIONS: SectionDefinition[] = LEGACY_SECTIONS.map((section) => {
+  const revision = REVISED_SECTIONS[section.id];
+  if (!revision) return { ...section, categoryId: WORKBOOK_SECTION_CATEGORY[section.id] };
+  const fields = revision.fields
+    ? [...revision.fields, ...section.fields.filter((field) => !revision.fields!.some((next) => next.key === field.key))]
+    : section.fields;
+  return { ...section, ...revision, fields, categoryId: WORKBOOK_SECTION_CATEGORY[section.id] };
+});
+
 const _maxSectionId = Math.max(...SECTIONS.map((s) => s.id));
 if (_maxSectionId !== WORKBOOK_MAX_SECTION_ID) {
   throw new Error(
@@ -438,5 +427,6 @@ export function getSectionName(id: number): string {
 }
 
 export function getSectionsByCategory(categoryId: number): SectionDefinition[] {
-  return SECTIONS.filter((s) => s.categoryId === categoryId);
+  const ids = WORKBOOK_CATEGORY_SECTIONS[categoryId] ?? [];
+  return SECTIONS.filter((s) => ids.includes(s.id));
 }

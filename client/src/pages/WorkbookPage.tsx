@@ -5,6 +5,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { useCohortStartDate } from "@/hooks/use-cohort";
 import { SECTION_CATEGORIES, getSectionsByCategory } from "@/components/workbook/section-definitions";
 import CategorySession from "@/components/workbook/CategorySession";
+import WorkbookAccessGate from "@/components/workbook/WorkbookAccessGate";
 import { Lock, ChevronRight, BookOpen } from "lucide-react";
 import type { WorkbookSummary } from "@shared/schema";
 
@@ -351,6 +352,7 @@ export default function WorkbookPage() {
 
   return (
     <DashboardLayout>
+      <WorkbookAccessGate bypass={isExempt || isLocked || isLoading}>
       <div
         style={{
           backgroundColor: "var(--surface-ground)",
@@ -534,6 +536,7 @@ export default function WorkbookPage() {
           </div>
         </div>
       </div>
+      </WorkbookAccessGate>
     </DashboardLayout>
   );
 }

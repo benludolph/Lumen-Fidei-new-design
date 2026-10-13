@@ -332,6 +332,8 @@ export const userProfiles = pgTable("user_profiles", {
   chronicIssues: text("chronic_issues").array().notNull(),
   chronicIdentityLabels: text("chronic_identity_labels").array().notNull(),
   bio: text("bio"),
+  faithTradition: text("faith_tradition"),
+  workbookIntroAcknowledged: boolean("workbook_intro_acknowledged").notNull().default(false),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

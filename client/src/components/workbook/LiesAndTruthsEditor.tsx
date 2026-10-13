@@ -38,6 +38,7 @@ function hasTruth(entry: WorkbookEntry): boolean {
 function getEntryData(entry: WorkbookEntry): LieEntryData {
   const d = entry.entryData as unknown as LieEntryData;
   return {
+    ...d,
     lie: d?.lie ?? "",
     spoken_by: d?.spoken_by ?? "",
     lying_spirit: d?.lying_spirit ?? "",
@@ -284,7 +285,7 @@ function DeeperPathPanel({
       {/* Stage 1 — Spirit picker */}
       <div>
         <p style={{ ...labelStyle, marginBottom: "8px" }}>
-          Step 1 — Which spirit spoke this lie?
+          What the lie says
           {state.lying_spirit && (
             <button
               type="button"
@@ -306,7 +307,7 @@ function DeeperPathPanel({
             }}
           >
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.8)", margin: 0 }}>
-              {LYING_SPIRITS.find((s) => s.value === state.lying_spirit)?.label}
+              {LYING_SPIRITS.find((s) => s.value === state.lying_spirit)?.label ?? state.lying_spirit}
             </p>
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", margin: "2px 0 0" }}>
               {LYING_SPIRITS.find((s) => s.value === state.lying_spirit)?.summary}

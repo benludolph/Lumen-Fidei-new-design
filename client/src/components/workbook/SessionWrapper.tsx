@@ -4,20 +4,20 @@ import { X } from "lucide-react";
 import { SECTIONS } from "./section-definitions";
 import SectionView from "./SectionView";
 import type { WorkbookSummary } from "@shared/schema";
+import WorkbookAccessGate from "./WorkbookAccessGate";
+import { useWorkbookProfile } from "@/hooks/use-workbook-profile";
+import { OPENING_PRAYER, CLOSING_PRAYER, NON_CATHOLIC_CLOSING_PRAYER } from "@/data/workbook-revised";
 
 interface SessionWrapperProps {
   onDismiss: () => void;
 }
 
-const OPENING_PRAYER =
-  "Lord, as we begin this time of reflection, we ask for Your grace and courage. " +
-  "Open our hearts to Your truth and let Your light illuminate anything that needs to be brought before You. Amen.";
-
-const CLOSING_PRAYER =
-  "Lord, thank You for this time of honest reflection. " +
-  "We place what we have uncovered into Your hands. May Your healing continue as we trust in Your mercy. Amen.";
-
 export default function SessionWrapper({ onDismiss }: SessionWrapperProps) {
+  return <WorkbookAccessGate categorySession onDismiss={onDismiss}><SessionContent onDismiss={onDismiss} /></WorkbookAccessGate>;
+}
+
+function SessionContent({ onDismiss }: SessionWrapperProps) {
+  const { data: profile } = useWorkbookProfile();
   const { data: summary = {}, isLoading } = useQuery<WorkbookSummary>({
     queryKey: ["/api/workbook/summary"],
   });
@@ -180,9 +180,10 @@ export default function SessionWrapper({ onDismiss }: SessionWrapperProps) {
                 margin: "0 0 40px",
                 fontStyle: "italic",
                 fontWeight: 500,
+                whiteSpace: "pre-line",
               }}
             >
-              "{OPENING_PRAYER}"
+              {OPENING_PRAYER}
             </p>
             {totalSections === 0 ? (
               <p
@@ -291,9 +292,10 @@ export default function SessionWrapper({ onDismiss }: SessionWrapperProps) {
                 margin: "0 0 40px",
                 fontStyle: "italic",
                 fontWeight: 500,
+                whiteSpace: "pre-line",
               }}
             >
-              "{CLOSING_PRAYER}"
+              {profile?.faithTradition === "Yes" ? CLOSING_PRAYER : NON_CATHOLIC_CLOSING_PRAYER}
             </p>
             <button
               type="button"

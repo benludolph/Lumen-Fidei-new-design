@@ -38,7 +38,7 @@ function EntryCard({
     mutationFn: () =>
       apiRequest("POST", `/api/workbook/${section.id}`, {
         id: entry.id,
-        entryData: form,
+        entryData: { ...(entry.entryData as Record<string, unknown>), ...form },
         position: entry.position,
       }),
     onSuccess: () => {
@@ -143,6 +143,7 @@ function EntryCard({
                   style={{ ...inputStyle, appearance: "none" as const }}
                 >
                   <option value="" disabled style={{ background: "#1a1a1a" }}>{field.placeholder ?? `Select ${field.label}`}</option>
+                  {form[field.key] && !(field.enumOptions ?? []).some((option) => option.value === form[field.key]) && <option value={form[field.key]} style={{ background: "#1a1a1a" }}>{form[field.key]}</option>}
                   {(field.enumOptions ?? []).map((opt) => (
                     <option key={opt.value} value={opt.value} style={{ background: "#1a1a1a" }}>{opt.label}</option>
                   ))}
@@ -364,7 +365,7 @@ function AddEntryForm({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<EntryData>(() =>
-    section.fields.reduce((acc, f) => ({ ...acc, [f.key]: "" }), {} as EntryData)
+    section.fields.reduce((acc, f) => ({ ...acc, [f.key]: f.defaultValue ?? "" }), {} as EntryData)
   );
   const { toast } = useToast();
 

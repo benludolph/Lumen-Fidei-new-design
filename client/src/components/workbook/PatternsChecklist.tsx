@@ -6,28 +6,32 @@ import type { WorkbookEntry } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 type Section14Data = {
+  [key: string]: unknown;
   checked: string[];
   other_freetext: string;
+  father_word: string;
 };
 
 function parseData(entry: WorkbookEntry | undefined): Section14Data {
-  if (!entry) return { checked: [], other_freetext: "" };
+  if (!entry) return { checked: [], other_freetext: "", father_word: "" };
   const d = entry.entryData as unknown as Section14Data;
   return {
+    ...d,
     checked: Array.isArray(d?.checked) ? d.checked : [],
     other_freetext: typeof d?.other_freetext === "string" ? d.other_freetext : "",
+    father_word: typeof d?.father_word === "string" ? d.father_word : "",
   };
 }
 
 export default function PatternsChecklist() {
   const { toast } = useToast();
-  const { data: entries = [], isLoading } = useQuery<WorkbookEntry[]>({
+  const { data: entries = [], isLoading, isError, refetch } = useQuery<WorkbookEntry[]>({
     queryKey: ["/api/workbook/14"],
   });
 
   const existingEntry = entries[0] as WorkbookEntry | undefined;
 
-  const [data, setData] = useState<Section14Data>({ checked: [], other_freetext: "" });
+  const [data, setData] = useState<Section14Data>({ checked: [], other_freetext: "", father_word: "" });
   const isHydrated = useRef(false);
   const isDirty = useRef(false);
   const localEntryIdRef = useRef<number | undefined>(undefined);
@@ -63,7 +67,11 @@ export default function PatternsChecklist() {
       if (responseEntry?.id !== undefined && localEntryIdRef.current === undefined) {
         localEntryIdRef.current = responseEntry.id;
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/workbook/14"] });
+      queryClient.setQueryData<WorkbookEntry[]>(["/api/workbook/14"], (old = []) =>
+        old.some((entry) => entry.id === responseEntry.id)
+          ? old.map((entry) => entry.id === responseEntry.id ? responseEntry : entry)
+          : [responseEntry, ...old]
+      );
       queryClient.invalidateQueries({ queryKey: ["/api/workbook/summary"] });
     },
     onError: () => {
@@ -116,8 +124,11 @@ export default function PatternsChecklist() {
   }
 
   const namedCheckedCount = data.checked.length;
-  const checkedCount = namedCheckedCount + (data.other_freetext.trim() ? 1 : 0);
+  const checkedCount = namedCheckedCount + (data.other_freetext.trim() && !data.checked.includes("Other") ? 1 : 0);
 
+  if (isError) {
+    return <div role="alert" style={{ color: "rgba(255,255,255,0.65)" }}><p>Your saved patterns could not be loaded.</p><button type="button" onClick={() => refetch()}>Try again</button></div>;
+  }
   if (isLoading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
@@ -148,7 +159,7 @@ export default function PatternsChecklist() {
         </p>
       )}
 
-      {/* Checklist — all 31 entries driven from DOMINANT_PATTERNS */}
+      {/* Legacy checked values stay in data even when not in these 17 choices. */}
       <div
         style={{
           borderRadius: "8px",
@@ -168,6 +179,7 @@ export default function PatternsChecklist() {
                 <label
                   style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "text" }}
                 >
+                  <input type="checkbox" checked={data.checked.includes("Other")} onChange={(e) => handleToggle("Other", e.target.checked)} aria-label="Other" style={{ marginTop: 4, accentColor: "rgba(255,255,255,0.7)" }} />
                   <div
                     style={{
                       width: "18px",
@@ -175,7 +187,7 @@ export default function PatternsChecklist() {
                       borderRadius: "4px",
                       border: `1.5px solid ${data.other_freetext.trim() ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.18)"}`,
                       background: data.other_freetext.trim() ? "rgba(255,255,255,0.12)" : "transparent",
-                      display: "flex",
+                      display: "none",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
@@ -266,8 +278,6 @@ export default function PatternsChecklist() {
                 checked={isChecked}
                 onChange={(e) => handleToggle(pattern, e.target.checked)}
                 style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }}
-                aria-hidden="true"
-                tabIndex={-1}
               />
               <span
                 style={{
@@ -284,6 +294,16 @@ export default function PatternsChecklist() {
           );
         })}
       </div>
+
+      <label style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.6)" }}>
+        What I most need to hear from the Father.
+        <textarea rows={3} value={data.father_word} data-testid="input-pattern-father-word" onChange={(e) => {
+          isDirty.current = true;
+          const next = { ...data, father_word: e.target.value };
+          setData(next);
+          scheduleSave(next);
+        }} style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 6, padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontFamily: "'Afacad', sans-serif", fontSize: "0.95rem", resize: "vertical" }} />
+      </label>
 
       {/* Auto-save indicator */}
       {saveMutation.isPending && (

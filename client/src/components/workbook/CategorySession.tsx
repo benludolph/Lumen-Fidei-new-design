@@ -3,25 +3,15 @@ import { X, ChevronLeft, ChevronRight, Scroll } from "lucide-react";
 import { SECTION_CATEGORIES, getSectionsByCategory } from "./section-definitions";
 import SectionView from "./SectionView";
 import type { WorkbookSummary } from "@shared/schema";
+import WorkbookAccessGate from "./WorkbookAccessGate";
+import { useWorkbookProfile } from "@/hooks/use-workbook-profile";
+import { OPENING_PRAYER, CLOSING_PRAYER, NON_CATHOLIC_CLOSING_PRAYER } from "@/data/workbook-revised";
 
 interface CategorySessionProps {
   categoryId: number;
   summary: WorkbookSummary;
   onDismiss: () => void;
 }
-
-const OPENING_PRAYER =
-  "Lord Jesus,\nplease guide me as I fill out these lists.\n\n" +
-  "Send the Holy Spirit to help me remember what I need to bring before You: my sins, the people I need to forgive, the things I need to renounce, and anything else that needs Your mercy.\n\n" +
-  "Help me be honest without fear.\nHelp me stay peaceful and clear.\nProtect this time from distraction, confusion, or discouragement.\n\n" +
-  "Jesus, I trust You with everything I write down.\nAmen.";
-
-const CLOSING_PRAYER =
-  "Lord Jesus,\nI have finished these lists as best I can.\n\n" +
-  "If there is anything else I need to add, please bring it to mind.\n\n" +
-  "If I have forgotten something, I trust You to show me in the right time.\n" +
-  "Thank You for guiding me, protecting me, and helping me be honest before You.\n" +
-  "Jesus, I place everything I have written into Your mercy.\nAmen.";
 
 type SessionStep = "opening" | "subsection" | "closing";
 
@@ -126,6 +116,11 @@ function PrayerView({
 }
 
 export default function CategorySession({ categoryId, summary, onDismiss }: CategorySessionProps) {
+  return <WorkbookAccessGate categorySession onDismiss={onDismiss}><CategorySessionContent categoryId={categoryId} summary={summary} onDismiss={onDismiss} /></WorkbookAccessGate>;
+}
+
+function CategorySessionContent({ categoryId, summary, onDismiss }: CategorySessionProps) {
+  const { data: profile } = useWorkbookProfile();
   const category = SECTION_CATEGORIES.find((c) => c.id === categoryId);
   const subsections = getSectionsByCategory(categoryId);
   const totalSubsections = subsections.length;
@@ -135,7 +130,7 @@ export default function CategorySession({ categoryId, summary, onDismiss }: Cate
     return !sec || (!sec.attested && sec.count === 0);
   });
 
-  const [step, setStep] = useState<SessionStep>("subsection");
+  const [step, setStep] = useState<SessionStep>("opening");
   const [subsectionIndex, setSubsectionIndex] = useState(firstUnfilled >= 0 ? firstUnfilled : 0);
 
   const currentSubsection = subsections[subsectionIndex];
@@ -509,7 +504,7 @@ export default function CategorySession({ categoryId, summary, onDismiss }: Cate
         {step === "closing" && (
           <PrayerView
             label="Closing Prayer"
-            text={CLOSING_PRAYER}
+            text={profile?.faithTradition === "Yes" ? CLOSING_PRAYER : NON_CATHOLIC_CLOSING_PRAYER}
             onBack={() => { setSubsectionIndex(totalSubsections - 1); setStep("subsection"); }}
             backLabel="← Back to sections"
             onBegin={onDismiss}
