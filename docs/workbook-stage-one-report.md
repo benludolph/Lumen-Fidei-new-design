@@ -2,6 +2,8 @@
 
 Historical Stage 1 handoff. Stage 2 supersedes the all-25-sections/prayers-unchanged boundary below; see `docs/workbook-stage-two-report.md`. The combined release still requires approval.
 
+Update: the owner approved the combined release on October 13, 2026. See `docs/workbook-combined-release-approval.md` for the refreshed counts, approval scope and release handoff. No publication or production migration was performed by that review.
+
 ## Release boundary
 
 Preview only. Nothing was published and no production data was changed. Stage 1 and Stage 2 must ship together after the prayer rewrite and eight-section retirement. Warn the owner before shipping any unrelated change from this branch. There is deliberately no feature flag.

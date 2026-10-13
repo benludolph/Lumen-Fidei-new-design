@@ -1,5 +1,7 @@
 # Freedom Workbook — Stage 2 (preview only)
 
+Update: the owner approved the combined release on October 13, 2026, including the child-prayer wording and disclosed browser-test limitation. See `docs/workbook-combined-release-approval.md`. Production counts were refreshed without changes; publication and production migration have not been performed by the approval review.
+
 ## Release boundary
 
 Stage 1 and Stage 2 must be released together, only after owner approval. This work does not publish either stage or modify production entries. The October 13 revised-prayers attachment is the source for all three prayers; its final paragraph authorizes the revised-content mapping table as the copy-and-preserve plan.
