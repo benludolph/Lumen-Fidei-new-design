@@ -305,18 +305,21 @@ id = "qGrXhYPmsygDsCG9qdFmA"
 uri = "file://attached_assets/catholic-prayer-content_1779223470845.md"
 type = "text"
 title = "Catholic Freedom Workbook — Deliverance Prayer & Categories"
+logical_id = "1fcf0318-0a53-47c4-9997-5c331b828d67"
 
 [[outputs]]
 id = "7DTud-ZJQ40A93aGW1ZOg"
 uri = "file://public/downloads/personal-deliverance-prayer.txt"
 type = "text"
 title = "Personal Deliverance Prayer"
+logical_id = "06e2a43e-c9b3-4f3a-8424-41324900a74e"
 
 [[outputs]]
 id = "51ySx-OZZi1PlTyT7_hKy"
 uri = "file://attached_assets/deliverance-workbook-full-context.txt"
 type = "text"
 title = "Deliverance Workbook — Full Context"
+logical_id = "0d45ceae-4f2c-4fb3-873a-d648f31a137c"
 
 [[outputs]]
 id = "2YRpMCn6hnj2OneBMiLnX"
@@ -324,3 +327,32 @@ uri = "file://docs/admin-audit.md"
 type = "text"
 title = "Admin Area Audit"
 description = "Read-only audit covering current state, severity-ranked findings with source paths, role comparison, and a sequenced remediation plan."
+logical_id = "5beeab92-39f2-4ad1-90a0-0205e7cfe651"
+
+[[outputs]]
+id = "rBMUpL2JzxBF04fucm6UP"
+uri = "file://generated-artifacts/deliverance-workbook/deliverance-workbook.md"
+type = "text"
+title = "Deliverance Workbook — Content & How It Works"
+description = "AI-readable document with all 25 sections, instructions and fields, three prayers across 45 pages, checklists, Scripture library, and current saving/completion rules. No participant data."
+logical_id = "41d6e646-f262-4435-b214-595428b745b5"
+content_hash = "sha256:75090185454f4e7cda6993073fec9a7a773d85521949d0d178c3f9c8f14a30f9"
+size = 134657
+mtime_ms = 1791907967222
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:62492d7b-747b-431b-b4ea-119a665943ae/41d6e646-f262-4435-b214-595428b745b5/a25f10af-b9c9-4e60-b385-8c640f7b5c72"
+storage_version_token = "1791907977202296"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "Jhb5bP6aF5gd4EW3oPf7b"
+uri = "file://generated-artifacts/deliverance-workbook/deliverance-workbook.json"
+type = "unspecified"
+title = "Deliverance Workbook — Structured Definitions"
+description = "Machine-readable companion containing the full section definitions, prayer templates, checklist options, Scripture library, and behavior notes. No participant data."
+logical_id = "8d69316e-c5f7-4f44-a086-1475e77d0a6e"
+content_hash = "sha256:c35bd9c040d7ca312262a56c06dc501e39c7fa2f5d76d649639460918f2e9497"
+size = 127593
+mtime_ms = 1791907967226
+storage_uri = "gcs://replit-rams-assets-riker/rams/assets/repl:62492d7b-747b-431b-b4ea-119a665943ae/8d69316e-c5f7-4f44-a086-1475e77d0a6e/60e5570a-422d-4bfd-ae4c-04bc029e0ab8"
+storage_version_token = "1791907979021730"
+content_type = "application/octet-stream"
