@@ -24,6 +24,12 @@ The revised prayer attachment authorizes copy-and-preserve migration: copy legac
 
 **Why:** The supplied preservation plan explicitly retains original rows.
 
+The user subsequently clarified: “I dont care about entries we have no active users.” Do not treat preservation of old entries as a release blocker on its own.
+
+**Why:** The user says there are no active users and does not need old entries preserved. This is not a request to perform an unnecessary deletion.
+
+**How to apply:** Favor the simplest working release path; retain the requirement for explicit publication approval. Recheck actual activity if circumstances change rather than assuming the user population stays empty forever.
+
 Prayer filter specifications omit terminal punctuation present in some approved workbook options. Accept both documented variants when reading rather than rewriting stored values.
 
 **Why:** Exact-copy section labels and exact-copy prayer filter tables use different punctuation for the same choices.
