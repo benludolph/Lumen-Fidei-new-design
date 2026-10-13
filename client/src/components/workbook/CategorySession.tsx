@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { X, ChevronLeft, ChevronRight, Scroll } from "lucide-react";
-import { SECTION_CATEGORIES, getSectionsByCategory } from "./section-definitions";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
+import { useWorkbookGeneral } from "@/components/workbook-admin/use-workbook-general";
 import SectionView from "./SectionView";
 import type { WorkbookSummary } from "@shared/schema";
 import WorkbookAccessGate from "./WorkbookAccessGate";
 import { useWorkbookProfile } from "@/hooks/use-workbook-profile";
-import { OPENING_PRAYER, CLOSING_PRAYER, NON_CATHOLIC_CLOSING_PRAYER } from "@/data/workbook-revised";
 
 interface CategorySessionProps {
   categoryId: number;
@@ -120,9 +120,11 @@ export default function CategorySession({ categoryId, summary, onDismiss }: Cate
 }
 
 function CategorySessionContent({ categoryId, summary, onDismiss }: CategorySessionProps) {
+  const { categories: SECTION_CATEGORIES, sections } = useWorkbookContent();
+  const { openingPrayer: OPENING_PRAYER, closingPrayer: CLOSING_PRAYER, nonCatholicClosingPrayer: NON_CATHOLIC_CLOSING_PRAYER } = useWorkbookGeneral();
   const { data: profile } = useWorkbookProfile();
   const category = SECTION_CATEGORIES.find((c) => c.id === categoryId);
-  const subsections = getSectionsByCategory(categoryId);
+  const subsections = sections.filter(section => section.categoryId === categoryId);
   const totalSubsections = subsections.length;
 
   const firstUnfilled = subsections.findIndex((s) => {

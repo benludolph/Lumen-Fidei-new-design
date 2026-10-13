@@ -1,0 +1,11 @@
+.workbook-editor { font-family: 'Afacad', sans-serif; }
+.workbook-editor-title { font-family: 'Ivy Ora Display', Georgia, serif; font-weight: 500; font-synthesis: none; }
+.workbook-editor-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; }
+.workbook-editor-nav { position: sticky; top: 20px; align-self: start; max-height: 70dvh; overflow-y: auto; }
+.workbook-editor-field { padding: 20px 0; border-bottom: 1px solid hsl(var(--border)); }
+.workbook-editor-preview { position: relative; isolation: isolate; transform: translateZ(0); background: var(--surface-ground); color: rgba(255,255,255,.8); border-radius: 10px; min-height: 520px; height: 68dvh; overflow: auto; }
+.workbook-editor-preview::after { content: ''; position: absolute; inset: 0; pointer-events: none; border: 1px solid var(--white-12); border-radius: inherit; }
+@media (max-width: 767px) {
+  .workbook-editor-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .workbook-editor-nav { position: static; max-height: 200px; }
+}

@@ -1,0 +1,2050 @@
+{
+  "sections": [
+    {
+      "id": 1,
+      "categoryId": 1,
+      "name": "Sins to bring to Confession",
+      "type": "list_builder",
+      "description": "Sin is a turning away from a Father who loves you, and it wounds your friendship with Him and with others. Seeing it clearly is the first step home, the moment the prodigal son came to himself (Luke 15:17). The Father was already watching the road.",
+      "actionItem": "Ask the Holy Spirit to show you where you have turned away from God or from others. If it helps, take one Commandment at a time. Write each thing plainly, and if you can see it, write what you were looking for. Stop when the Lord stops showing you.",
+      "fields": [
+        {
+          "key": "sin",
+          "type": "textarea",
+          "required": true,
+          "label": "Something to bring to Confession."
+        },
+        {
+          "key": "how",
+          "type": "enum",
+          "required": false,
+          "label": "How was I involved?",
+          "enumOptions": [
+            {
+              "label": "I did this",
+              "value": "I did this"
+            },
+            {
+              "label": "I encouraged, approved, or went along with it.",
+              "value": "I encouraged, approved, or went along with it."
+            }
+          ],
+          "defaultValue": "I did this"
+        },
+        {
+          "key": "seeking",
+          "type": "textarea",
+          "required": false,
+          "label": "What was I looking for?",
+          "placeholder": "e.g. to feel in control, to be noticed, to escape."
+        }
+      ],
+      "revised": true,
+      "teaching": "Sin is a failure of real love for God and neighbor (CCC 1849). The Church examines conscience by the Ten Commandments and the Beatitudes (CCC 1454). Pride, greed, envy, anger, lust, gluttony, and sloth are called capital sins because other sins grow from them (CCC 1866). We also share in another person's sin when we encourage it, approve it, or fail to stop it when we could and should have (CCC 1868).",
+      "confession": "Grave matter here includes missing Sunday Mass without a serious reason (CCC 2181), serious lies or damage to someone's reputation, theft, deliberate hatred, and helping someone obtain an abortion (CCC 2272). Name these by kind and roughly how often. Everyday impatience, unkindness, and neglected prayer are venial, and confessing them is how grace reaches the habits underneath."
+    },
+    {
+      "id": 2,
+      "categoryId": 5,
+      "name": "People I am releasing",
+      "type": "list_builder",
+      "description": "Forgiveness releases a debt you are owed into God's hands. It is a choice made with grace, and feelings often follow later. It does not require reconciliation, renewed trust, or calling what happened acceptable.",
+      "actionItem": "Ask the Lord who He wants you to release. Write the person and what they did. You may include yourself and your anger at God.",
+      "fields": [
+        {
+          "key": "person",
+          "type": "text",
+          "required": true,
+          "label": "Who."
+        },
+        {
+          "key": "who_kind",
+          "type": "enum",
+          "required": false,
+          "label": "This is.",
+          "enumOptions": [
+            {
+              "label": "Someone who hurt me",
+              "value": "Someone who hurt me"
+            },
+            {
+              "label": "Myself",
+              "value": "Myself"
+            },
+            {
+              "label": "My anger at God.",
+              "value": "My anger at God."
+            }
+          ],
+          "defaultValue": "Someone who hurt me"
+        },
+        {
+          "key": "what",
+          "type": "textarea",
+          "required": false,
+          "label": "What happened."
+        },
+        {
+          "key": "is_family_harm",
+          "label": "This affected my whole family, not just me",
+          "type": "boolean"
+        }
+      ],
+      "revised": true,
+      "teaching": "Jesus ties the mercy we receive to the mercy we give (Matthew 6:14–15). The Church acknowledges that we cannot always stop feeling or forget an injury, and teaches that a heart open to the Holy Spirit can turn hurt into compassion and prayer for the other person (CCC 2843). Deliberately wishing serious harm on someone is grave matter (CCC 2303).",
+      "confession": "Feeling hurt is not a sin. A deliberate refusal to forgive, or hatred you keep on purpose, can be confessed.",
+      "extraNote": {
+        "label": "On God and yourself",
+        "text": "God has done no wrong and needs no forgiveness. You can still bring your anger and disappointment to Him honestly, as the psalms do, and let go of your accusation against Him. With yourself, the work is receiving the forgiveness God has already given."
+      }
+    },
+    {
+      "id": 3,
+      "categoryId": 5,
+      "name": "Wounds I carry",
+      "type": "list_builder",
+      "description": "Wounds from childhood or later shape how you see yourself, God, and other people. Most wounds also taught you a way to cope, such as going numb, taking control, or keeping everyone at a distance. Those ways once protected you, and the Lord wants to meet you in the place they were built to guard.",
+      "actionItem": "Ask the Lord which wound He wants to heal first. You do not need to relive the details. Write what happened, the message you took from it, and how you learned to protect yourself. If you sense anything of His presence in that memory, write that too.",
+      "fields": [
+        {
+          "key": "whose",
+          "type": "enum",
+          "required": true,
+          "label": "Source.",
+          "enumOptions": [
+            {
+              "label": "Father",
+              "value": "Father"
+            },
+            {
+              "label": "Mother",
+              "value": "Mother"
+            },
+            {
+              "label": "Family / Childhood",
+              "value": "Family/Childhood"
+            },
+            {
+              "label": "Someone else",
+              "value": "Someone else"
+            },
+            {
+              "label": "An event.",
+              "value": "An event."
+            }
+          ]
+        },
+        {
+          "key": "what",
+          "type": "textarea",
+          "required": true,
+          "label": "What happened."
+        },
+        {
+          "key": "lie_believed",
+          "type": "textarea",
+          "required": false,
+          "label": "The message I took from it."
+        },
+        {
+          "key": "coping",
+          "type": "textarea",
+          "required": false,
+          "label": "How I learned to protect myself."
+        },
+        {
+          "key": "presence",
+          "type": "textarea",
+          "required": false,
+          "label": "What the Lord is showing me."
+        }
+      ],
+      "revised": true,
+      "teaching": "What was done to you is not your sin. The Church recognizes that fear, duress, and psychological factors reduce responsibility for what a person does afterward (CCC 1735). Spiritual healing and professional care work together.",
+      "confession": "Nothing done to you is confessed. Responses that became sin, such as hatred kept on purpose, revenge, or using others, can be brought to Confession gently.",
+      "extraNote": {
+        "label": "Care note",
+        "text": "If you are working through severe trauma, walk this section with a priest, counselor, or therapist. If a memory becomes overwhelming, stop and reach out to someone you trust."
+      }
+    },
+    {
+      "id": 4,
+      "categoryId": 1,
+      "name": "Sexuality and chastity",
+      "type": "list_builder",
+      "description": "God made sexuality for a complete gift of self in love. Used apart from that gift, it divides what He meant to join and leaves bonds that outlast the act. Nothing you write here shocks Him, and He wants your dignity restored.",
+      "actionItem": "Ask the Lord to show you where your sexuality has been used apart from love. Name relationships and habits in a few words. If a person is connected, add their name so the bond can be released in prayer.",
+      "fields": [
+        {
+          "key": "sin",
+          "type": "textarea",
+          "required": true,
+          "label": "What I need to bring to the Lord."
+        },
+        {
+          "key": "person_or_partner",
+          "type": "text",
+          "required": false,
+          "label": "Person connected."
+        }
+      ],
+      "revised": true,
+      "teaching": "Chastity is the integration of sexuality within the whole person (CCC 2337). Lust, masturbation, fornication, pornography, and prostitution are offenses against chastity (CCC 2351–2355). Adultery and contraceptive acts are offenses against marriage (CCC 2380, 2370).",
+      "confession": "These are grave matter. Name the kind and roughly how often or how long, for example \"pornography, several times a week, for about two years.\" The priest does not need details.",
+      "extraNote": {
+        "label": "Abuse is a wound",
+        "text": "Sexual abuse you suffered is not your sin, and it belongs in Movement 5 under Wounds I carry. If confusion after abuse led you into choices of your own, bring them gently; fear, habit, and psychological factors can lessen responsibility (CCC 1735, 2352)."
+      }
+    },
+    {
+      "id": 5,
+      "categoryId": 2,
+      "name": "Occult, false worship, and spiritual mixture",
+      "type": "list_builder",
+      "description": "People usually come to these practices looking for something real: guidance, protection, healing, control over an uncertain future, or contact with someone they lost. God wants to give those things Himself. Naming where you looked elsewhere returns that trust to Him, and Christ's authority over every one of these powers is already complete (Colossians 2:15).",
+      "actionItem": "Ask the Lord where you looked for power, knowledge, or protection apart from Him. Write each practice. If a spirit, deity, or being was named or called on, write that too.",
+      "fields": [
+        {
+          "key": "practice",
+          "type": "textarea",
+          "required": true,
+          "label": "What I did or took part in."
+        },
+        {
+          "key": "kind",
+          "type": "enum",
+          "required": false,
+          "label": "Kind.",
+          "enumOptions": [
+            {
+              "label": "Practice or participation",
+              "value": "Practice or participation"
+            },
+            {
+              "label": "A spell, curse, or pact I made.",
+              "value": "A spell, curse, or pact I made."
+            }
+          ],
+          "defaultValue": "Practice or participation"
+        },
+        {
+          "key": "spirit_named",
+          "type": "text",
+          "required": false,
+          "label": "Spirit, deity, or being called on."
+        }
+      ],
+      "revised": true,
+      "teaching": "The First Commandment calls us to worship and trust God alone. All divination is rejected, including horoscopes, astrology, palm reading, tarot, mediums, and consulting the dead, because it seeks control over time and people apart from God (CCC 2116). Magic, sorcery, spiritism, and charms are gravely contrary to the virtue of religion (CCC 2117), and offering worship or devotion to other gods or spirits is idolatry (CCC 2112–2113). The U.S. bishops have advised Catholics against Reiki (USCCB, 2009).",
+      "confession": "Deliberate involvement is grave matter against the First Commandment. Name the practice and roughly when. Things done as a young child or without understanding carry less responsibility, or none; bring them anyway so they can be renounced, and the priest will guide you. If you ever made a pact, offered blood, or dedicated yourself to a spirit, tell the priest, who may connect you with the diocesan exorcist."
+    },
+    {
+      "id": 6,
+      "categoryId": 4,
+      "name": "Lies and the truth",
+      "type": "lies_and_truths",
+      "description": "A single believed sentence can govern a life: \"No one sees me.\" \"I am helpless.\" \"God is disappointed in me.\" Lies like these usually arrive through a wound and stay because they once explained the pain. Freedom holds when each lie is replaced with what God says is true, the way Hagar met the God who sees her (Genesis 16:13).",
+      "actionItem": "Ask the Lord: \"What have I believed about myself, about You, or about others that is not true?\" Write each lie the way it sounds inside you, including words spoken over you and words you have said against yourself. Note who said it first, if anyone. Then find the truth in Scripture that answers it and write it in your own words.",
+      "fields": [],
+      "revised": true,
+      "teaching": "Jesus calls the devil the father of lies (John 8:44). His power is real and limited, and it cannot stop the building of God's kingdom (CCC 395). The truth is that you are made in God's image and called to share His life (CCC 356–357) and became His adopted child in baptism (CCC 1265). The Church also asks us to purify the false images of God we carry, including those drawn from our own fathers (CCC 2779).",
+      "confession": "A lie you believed is usually a wound, so the belief itself is not confessed. Confess what you chose because of it when it harmed you or others. Despair is a sin against hope when a person deliberately stops hoping for God's mercy (CCC 2091), and it can be confessed."
+    },
+    {
+      "id": 7,
+      "categoryId": 4,
+      "name": "Vows I made",
+      "type": "list_builder",
+      "description": "In moments of pain, people make quiet promises: \"I'll never need anyone.\" \"I'll never let them see me cry.\" They felt like protection. Over time they put the wound in charge of choices that belong to you and to God.",
+      "actionItem": "Ask the Lord to bring to mind any \"I will never\" or \"I will always\" you said in a hard moment. Write it as you said it. If you remember when, note it.",
+      "fields": [
+        {
+          "key": "vow",
+          "type": "textarea",
+          "required": true,
+          "label": "What I promised myself."
+        },
+        {
+          "key": "when_made",
+          "type": "text",
+          "required": false,
+          "label": "When I made it."
+        }
+      ],
+      "revised": true,
+      "teaching": "\"Inner vow\" is a term from Christian healing ministry and has no formal definition in Church teaching. The principle underneath is the Church's teaching on freedom: we grow freer each time we choose the good, and choices made from fear or hatred bind us (CCC 1731–1733).",
+      "confession": "Most vows are a wounded response and are not confessed. A vow of revenge or hatred that you have deliberately kept can be confessed."
+    },
+    {
+      "id": 11,
+      "categoryId": 1,
+      "name": "What I run to",
+      "type": "list_builder",
+      "description": "Everyone runs somewhere when they are hurting, afraid, or empty. When that place becomes the first refuge instead of God, it begins to rule. Most idols and addictions are ordinary comforts or good things asked to do what only God can do.",
+      "actionItem": "Ask the Lord: \"When I am hurting, where do I go first?\" Write each thing, then write what it gives you or helps you avoid feeling. That second answer usually points to the need God wants to meet Himself.",
+      "fields": [
+        {
+          "key": "addiction",
+          "type": "textarea",
+          "required": true,
+          "label": "What I run to."
+        },
+        {
+          "key": "what_it_gives",
+          "type": "textarea",
+          "required": false,
+          "label": "What it gives me or helps me avoid.",
+          "placeholder": "e.g. quiet, worth, relief from loneliness."
+        }
+      ],
+      "revised": true,
+      "teaching": "Idolatry is giving a created thing the place that belongs to God; money, power, pleasure, and approval can all become idols (CCC 2113). The virtue of temperance calls us to avoid abuse of food, alcohol, and drugs (CCC 2290–2291). The Church also recognizes that habit and psychological factors weaken freedom (CCC 1735, 2352), which is why the way out includes grace, accountability, and often professional help.",
+      "confession": "Grave matter includes recreational drug use (CCC 2291), drunkenness that removes reason or endangers others (CCC 2290), and gambling that deprives your family of what it needs (CCC 2413). Confess an idol of money, a person, or approval when it led you to neglect God or harm someone. With a habitual sin, keep returning; frequent Confession builds the strength the habit took."
+    },
+    {
+      "id": 13,
+      "categoryId": 1,
+      "name": "People I have hurt",
+      "type": "list_builder",
+      "description": "Wounds we received are easy to remember, and wounds we caused are easy to forget. Owning the harm you did frees you and can open the way for the other person's healing.",
+      "actionItem": "Ask the Lord whose face He brings to mind. Write the person and what you did. Mark any place where you think an apology or restitution may be owed.",
+      "fields": [
+        {
+          "key": "harm",
+          "type": "textarea",
+          "required": true,
+          "label": "Who I hurt and how."
+        },
+        {
+          "key": "amends_owed",
+          "type": "boolean",
+          "required": false,
+          "label": "I may owe an apology or restitution here."
+        }
+      ],
+      "revised": true,
+      "teaching": "Justice asks us to repair harm where we can: return what was taken (CCC 2412) and restore a reputation we damaged (CCC 2487). Prudence matters too. An apology that would reopen harm for the other person or put anyone at risk may not be the right step, and a priest can help you discern.",
+      "confession": "Name the harm by kind. Ask the priest whether amends are owed and what form they should take."
+    },
+    {
+      "id": 14,
+      "categoryId": 5,
+      "name": "The thread",
+      "type": "patterns_checklist",
+      "description": "Looking back over everything you wrote, a few themes usually repeat in different forms. Seeing the thread lets you bring the root to God instead of fighting each symptom on its own.",
+      "actionItem": "Read back over what you wrote in all five movements. Choose the two or three themes that run through it. Then write one sentence: what you most need to hear from the Father.",
+      "fields": [
+        {
+          "key": "father_word",
+          "type": "textarea",
+          "required": false,
+          "label": "What I most need to hear from the Father."
+        }
+      ],
+      "revised": true
+    },
+    {
+      "id": 15,
+      "categoryId": 3,
+      "name": "Patterns in my family line",
+      "type": "list_builder",
+      "description": "Most families carry patterns that repeat across generations, such as heavy drinking, rage, divorce, silence, or despair. You did not choose them, and you are not guilty of your ancestors' sins (Ezekiel 18:20). Patterns still shape a family, and naming one is how it begins to stop with you.",
+      "actionItem": "Ask the Lord to show you what runs on your father's side and your mother's side. Name what you already know; research is not required. If you were adopted, both families count.",
+      "fields": [
+        {
+          "key": "pattern_or_sin",
+          "type": "textarea",
+          "required": true,
+          "label": "Pattern."
+        },
+        {
+          "key": "side",
+          "type": "enum",
+          "required": false,
+          "label": "Where it shows up.",
+          "enumOptions": [
+            {
+              "label": "Father's side",
+              "value": "Father's side"
+            },
+            {
+              "label": "Mother's side",
+              "value": "Mother's side"
+            },
+            {
+              "label": "Both sides",
+              "value": "Both sides"
+            },
+            {
+              "label": "Adoptive family.",
+              "value": "Adoptive family."
+            }
+          ]
+        }
+      ],
+      "revised": true,
+      "teaching": "Personal guilt does not pass from parent to child. Original sin is a wounded state we inherit, not a personal fault (CCC 404–405). The Church does recognize that sin shapes the situations and structures others live in (CCC 408, 1869), and Scripture pairs the warning about generations with mercy to thousands (Exodus 20:5–6).",
+      "confession": "Nothing your family did is yours to confess. Where you have taken part in a pattern yourself, that belongs in Movement 1."
+    },
+    {
+      "id": 16,
+      "categoryId": 3,
+      "name": "Family members of concern",
+      "type": "list_builder",
+      "description": "Sometimes one person's choices cast a long shadow, such as an ancestor involved in the occult, a secret society, or a vow made over the family. Naming them is intercession. You are standing before God on their behalf.",
+      "actionItem": "Name the person and what concerns you. If they belonged to a lodge or oath-bound group, name it and any degree or rank you know. If the member was you, write \"myself.\"",
+      "fields": [
+        {
+          "key": "name_or_description",
+          "type": "text",
+          "required": true,
+          "label": "Who."
+        },
+        {
+          "key": "groups_or_sins_involved",
+          "type": "textarea",
+          "required": false,
+          "label": "What concerns me."
+        },
+        {
+          "key": "group",
+          "type": "text",
+          "required": false,
+          "label": "Lodge, society, or oath-bound group, with degree if known."
+        }
+      ],
+      "revised": true,
+      "teaching": "Membership in Masonic associations remains forbidden, and Catholics who join are in a state of grave sin and may not receive Holy Communion (CDF, Declaration on Masonic Associations, 1983). The Church prays for the dead and commends them to God's mercy (CCC 1032).",
+      "confession": "If you belonged to such a group yourself, confess it and tell the priest. For a relative, you pray and renounce on the family's behalf; there is nothing for you to confess."
+    },
+    {
+      "id": 20,
+      "categoryId": 2,
+      "name": "Objects in my home",
+      "type": "list_builder",
+      "description": "Repentance often takes a physical step. In Ephesus, new believers burned their books of magic in public (Acts 19:19). Removing an object closes a door you opened and shows that your heart has chosen.",
+      "actionItem": "Walk through your home and your devices once, asking the Lord what does not belong. List each object. When you have removed them, a priest can bless your home.",
+      "fields": [
+        {
+          "key": "object",
+          "type": "textarea",
+          "required": true,
+          "label": "Object."
+        },
+        {
+          "key": "plan",
+          "type": "enum",
+          "required": false,
+          "label": "What I will do.",
+          "enumOptions": [
+            {
+              "label": "Destroy or throw away",
+              "value": "Destroy or throw away"
+            },
+            {
+              "label": "Ask a priest about it",
+              "value": "Ask a priest about it"
+            },
+            {
+              "label": "Already removed.",
+              "value": "Already removed."
+            }
+          ]
+        }
+      ],
+      "revised": true,
+      "teaching": "The Church calls the wearing of charms reprehensible (CCC 2117). Objects are not to be feared as though they held power of their own, which would itself be superstition (CCC 2111). They are removed because they belong to a practice or allegiance you are leaving behind.",
+      "confession": "The object itself usually needs no confession; the practice it served belongs in the section above."
+    },
+    {
+      "id": 22,
+      "categoryId": 3,
+      "name": "Body and mind",
+      "type": "list_builder",
+      "description": "You can bring your body and mind to the Lord as they are. Jesus healed throughout His ministry, and He still heals through prayer, the sacraments, and medical care.",
+      "actionItem": "Name what you carry in body and mind. Note anything that began after a specific event. Keep following your doctor's care as you pray.",
+      "fields": [
+        {
+          "key": "infirmity",
+          "label": "Infirmity or condition",
+          "placeholder": "Name or describe it",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "key": "for_healing",
+          "label": "I am specifically asking God for healing of this",
+          "type": "boolean"
+        }
+      ],
+      "revised": true,
+      "teaching": "Illness can lead a person toward anguish or toward God (CCC 1501). The Church does not ask you to find a spiritual cause behind every illness. The Anointing of the Sick is for anyone facing serious illness or the frailty of age (CCC 1514).",
+      "confession": "Nothing here is sin. If an illness is tied to a habit of your own, that habit belongs in Movement 1."
+    },
+    {
+      "id": 23,
+      "categoryId": 3,
+      "name": "Blessing for those after me",
+      "type": "list_builder",
+      "description": "Blessing passes down a family line too. Having named what you do not want to pass on, you can ask for what you do want for those who come after you.",
+      "actionItem": "Name what you want to end with you and the blessing you ask for in its place. If you have no children, pray for nieces, nephews, godchildren, or those you mentor.",
+      "fields": [
+        {
+          "key": "concern",
+          "type": "textarea",
+          "required": true,
+          "label": "What ends with me."
+        },
+        {
+          "key": "blessing",
+          "type": "textarea",
+          "required": false,
+          "label": "The blessing I ask for them."
+        }
+      ],
+      "revised": true,
+      "teaching": "Parents are the first to hand on the faith (CCC 2223–2226), and every baptized person is called to bless (CCC 1669)."
+    },
+    {
+      "id": 25,
+      "categoryId": 3,
+      "name": "The family dead",
+      "type": "list_builder",
+      "description": "Some members of a family die in ways that leave a wound behind, and some are never mourned at all. Praying for them is love reaching back through time.",
+      "actionItem": "Go through both sides of your family as far as you know. Name those who died by suicide, violence, accident, or war; those who died young, alone, or unmourned; and every child lost to miscarriage or abortion, including your own. If a child was never named, you may give them a name.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name or relationship",
+          "placeholder": "e.g. my grandfather's brother, or a specific name",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "key": "circumstance",
+          "label": "Circumstance",
+          "placeholder": "Select",
+          "required": true,
+          "type": "enum",
+          "enumOptions": [
+            {
+              "label": "Suicide or attempted suicide",
+              "value": "Suicide or attempted suicide"
+            },
+            {
+              "label": "Murdered or violent death",
+              "value": "Murdered or violent death"
+            },
+            {
+              "label": "Tragic accident or war",
+              "value": "Tragic accident or war"
+            },
+            {
+              "label": "Untimely or early death",
+              "value": "Untimely or early death"
+            },
+            {
+              "label": "Died alone, unloved, or in an institution",
+              "value": "Died alone, unloved, or in an institution"
+            },
+            {
+              "label": "Never mourned or no Christian burial",
+              "value": "Never mourned or no Christian burial"
+            },
+            {
+              "label": "Miscarried child",
+              "value": "Miscarried child"
+            },
+            {
+              "label": "Aborted child",
+              "value": "Aborted child"
+            },
+            {
+              "label": "Other",
+              "value": "Other"
+            }
+          ]
+        },
+        {
+          "key": "notes",
+          "label": "Notes (optional)",
+          "placeholder": "Any additional context",
+          "type": "textarea"
+        },
+        {
+          "key": "named_now",
+          "label": "Name given now (optional — for unnamed children)",
+          "placeholder": "If this child was never named, what name do you give them?",
+          "type": "text"
+        }
+      ],
+      "revised": true,
+      "teaching": "The Church has always prayed for the dead and offered Mass for them (CCC 1032). For those who took their own lives, the Church does not despair of their salvation and prays for them (CCC 2283). Children who died before baptism are entrusted to God's mercy (CCC 1261).",
+      "confession": "If you had an abortion or helped someone obtain one, bring it to Confession; any priest can absolve it. Here you name and mourn the child. Project Rachel offers confidential post-abortion healing through the Church."
+    },
+    {
+      "id": 24,
+      "categoryId": 4,
+      "name": "Bonds that still hold me",
+      "type": "list_builder",
+      "description": "Some relationships leave a pull that outlasts them. You find yourself rehearsing conversations, needing someone's approval, or unable to move past them even after forgiving. Naming that pull lets the Lord set your love back in order.",
+      "actionItem": "Ask the Holy Spirit to show you who still has a hold on you. Write the person, how the bond formed, and whether you still feel its pull.",
+      "fields": [
+        {
+          "key": "person_or_relationship",
+          "label": "Who still has a hold on you?",
+          "placeholder": "Name or describe the person",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "key": "how_formed",
+          "label": "How did this bond form?",
+          "type": "enum",
+          "enumOptions": [
+            {
+              "label": "Sexual",
+              "value": "Sexual"
+            },
+            {
+              "label": "Abusive / controlling",
+              "value": "Abusive/controlling"
+            },
+            {
+              "label": "Trauma bond",
+              "value": "Trauma bond"
+            },
+            {
+              "label": "Emotional dependence / idolatry",
+              "value": "Emotional dependence/idolatry"
+            },
+            {
+              "label": "Family / parental control",
+              "value": "Family/parental control"
+            },
+            {
+              "label": "Addiction companion",
+              "value": "Addiction companion"
+            },
+            {
+              "label": "Grief / the dead",
+              "value": "Grief/the dead"
+            },
+            {
+              "label": "Occult / ritual",
+              "value": "Occult/ritual"
+            },
+            {
+              "label": "Other",
+              "value": "Other"
+            }
+          ]
+        },
+        {
+          "key": "still_pulls_at_me",
+          "label": "Does this person still have a grip on you, even after you've forgiven them?",
+          "type": "boolean"
+        }
+      ],
+      "revised": true,
+      "teaching": "\"Soul tie\" is a term from healing ministry and has no formal definition in Church teaching. The Church teaches that to love is to will the good of another (CCC 1766), and love of that kind leaves both people free. A bond built on control, fear, sexual sin, or dependence works against that freedom.",
+      "confession": "The bond itself is not confessed. If it still draws you into sin, such as ongoing contact that leads to sexual sin, that belongs in Movement 1."
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Where I have turned away",
+      "description": "The choices that turned me from God, and what I was looking for when I made them."
+    },
+    {
+      "id": 2,
+      "name": "Seeking power apart from God",
+      "description": "Where I looked for guidance, protection, or power somewhere other than God."
+    },
+    {
+      "id": 3,
+      "name": "What I inherited",
+      "description": "What my family passed to me, what I want to end with me, and what I want to hand on."
+    },
+    {
+      "id": 4,
+      "name": "What I came to believe",
+      "description": "The lies I accepted, the promises I made to protect myself, and the bonds that still pull at me."
+    },
+    {
+      "id": 5,
+      "name": "Where I was wounded",
+      "description": "What was done to me, who I am releasing, and the thread that runs through it all."
+    }
+  ],
+  "prayers": {
+    "prayer_1": {
+      "id": "prayer_1",
+      "title": "Personal Prayer for Freedom",
+      "subtitle": "Personal Prayer for Freedom",
+      "pages": [
+        {
+          "title": "Opening",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father, I come to You as Your child. Jesus, You have already won the victory over sin, death, and every evil power, and I stand in that victory today. Holy Spirit, You are the one who sets me free. Lead me through this prayer.\n\nI believe that You love me and that You see me as I am. I bring You what You have shown me, trusting that You want my freedom even more than I do.\n\nI renounce Satan, all his works, and all his empty promises. I belong to Jesus Christ.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Blessed Virgin Mary, pray for me. Saint Michael the Archangel, defend me. My guardian angel, stay close to me."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Turning back",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 1,
+              "sectionField": "sin",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Lord Jesus, I have turned away from You. I confess especially "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 1,
+                  "field": "sin",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". These were wrong, and I am sorry. I do not want to defend them or hold on to them.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 1,
+              "sectionField": "seeking",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "When I did these things, I was looking for "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 1,
+                  "field": "seeking",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". You are the one who can give me what I was really looking for. Teach me to come to You first.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 1,
+              "sectionField": "how",
+              "sectionFilter": "where_how_encouraged",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Where I encouraged or went along with the sins of others, I withdraw my agreement.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "I renounce every hold these sins have had on me, and I ask You, Lord Jesus, to close every door I opened through them."
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            1
+          ]
+        },
+        {
+          "title": "Sexuality",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 4,
+              "sectionField": "sin",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Lord Jesus, You made my body and my sexuality good, and I have used them apart from love. I confess especially "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 4,
+                  "field": "sin",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I am sorry. Restore my purity and my dignity.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 4,
+              "sectionField": "person_or_partner",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I bring before You "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 4,
+                  "field": "person_or_partner",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I release each of them to You and ask You to bless them. I renounce every unholy bond formed between us, and I ask You to set us both free.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "I renounce lust and every evil spirit that has used these sins to hold me, and I ask You, Lord Jesus, to remove them from me. Heal my memory and imagination, and give me a chaste and generous heart."
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            4
+          ]
+        },
+        {
+          "title": "What I run to",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 11,
+              "sectionField": "addiction",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, when I am hurting I have run to other things before running to You. I have run to "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 11,
+                  "field": "addiction",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 11,
+              "sectionField": "what_it_gives",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "They gave me "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 11,
+                  "field": "what_it_gives",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I want to receive what I truly need from You.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "I renounce the false comfort and false security these have offered me. Where they have become a bondage, I ask You, Lord Jesus, to break their hold and remove every evil spirit that has used them against me. Give me the help I need from others to walk free, and the humility to accept it."
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            11
+          ]
+        },
+        {
+          "title": "People I have hurt",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 13,
+              "sectionField": "harm",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Lord Jesus, I have hurt people You love. I bring before You "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 13,
+                  "field": "harm",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I am sorry. Heal what I damaged, and bless each person I hurt.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 13,
+              "sectionField": "amends_owed",
+              "sectionFilter": "where_amends_owed",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Show me how to make amends where I owe them, and give me the courage and prudence to do it well."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            13
+          ]
+        },
+        {
+          "title": "Seeking power apart from God",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 5,
+              "sectionField": "practice",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I looked for guidance, protection, and power apart from You. I repent of it, and I renounce "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 5,
+                  "field": "practice",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "inject",
+              "sectionId": 5,
+              "field": "spirit_named",
+              "format": "renounce_spirit_each",
+              "filter": "skip_empties"
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 5,
+              "sectionField": "kind",
+              "sectionFilter": "where_kind_pact",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I renounce every spell, curse, and pact I made, and I take back every consent I gave.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 5,
+              "sectionField": "practice",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I ask You, Lord Jesus, to break every bond these practices formed, to remove every evil spirit connected with them, and to fill those places with Your Holy Spirit.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 20,
+              "sectionField": "object",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I will remove from my home "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 20,
+                  "field": "object",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". Let nothing in my home stand for anyone but You."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            5,
+            20
+          ]
+        },
+        {
+          "title": "Lies and the truth",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 6,
+              "sectionField": "lie",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I have believed things about myself, about You, and about others that are not true. I renounce these lies: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 6,
+                  "field": "lie",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "inject",
+              "sectionId": 6,
+              "field": "lie",
+              "format": "lies_with_truths"
+            },
+            {
+              "type": "text",
+              "content": "\n\nI break my agreement with every lie spoken to me through other people, through my own pain, or by the enemy. I choose to stand on Your word."
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            6
+          ]
+        },
+        {
+          "title": "Vows",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 7,
+              "sectionField": "vow",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Lord Jesus, I made promises to protect myself: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 7,
+                  "field": "vow",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I made them in pain, and they have ruled parts of my life that belong to You. I renounce them. I give back to You the places in my heart I tried to guard on my own. Protect them Yourself."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            7
+          ]
+        },
+        {
+          "title": "Bonds that still hold me",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 24,
+              "sectionField": "person_or_relationship",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, some bonds still pull at me. I bring before You "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 24,
+                  "field": "person_or_relationship",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I release each person into Your hands and I bless them. I renounce every unholy bond between us, and I ask You, Lord Jesus, to cut each one and to restore to each of us what belongs to us. Set my love in order."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            24
+          ]
+        },
+        {
+          "title": "Wounds",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 3,
+              "sectionField": "what",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Jesus, You were with me when I was hurt. I bring You these wounds: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 3,
+                  "field": "what",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". What was done to me was not my fault, and I place it in Your hands.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 3,
+              "sectionField": "lie_believed",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Because of these wounds I believed "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 3,
+                  "field": "lie_believed",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I let go of those messages and ask You to tell me what is true.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 3,
+              "sectionField": "coping",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I learned to protect myself by "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 3,
+                  "field": "coping",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". Thank You for carrying me through. I give these ways to You now. Where they led me into sin, forgive me, and teach me to trust You instead.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "Come into these memories, Lord, and heal what is still wounded.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 3,
+              "sectionField": "presence",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Thank You for showing me "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 3,
+                  "field": "presence",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": "."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            3
+          ]
+        },
+        {
+          "title": "Releasing",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 2,
+              "sectionField": "person",
+              "sectionFilter": "where_who_someone",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I choose to forgive.\n\n"
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 2,
+                  "field": "person",
+                  "format": "forgive_each",
+                  "filter": "where_who_someone"
+                },
+                {
+                  "type": "text",
+                  "content": "\n\nI release them from the debt they owe me, place them in Your hands, and ask You to bless them. Where my feelings have not caught up, I trust You to heal my heart over time. I renounce bitterness, resentment, and the desire for revenge.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 2,
+              "sectionField": "what",
+              "sectionFilter": "where_who_self",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I have held my own failures against myself, especially "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 2,
+                  "field": "what",
+                  "format": "items_comma",
+                  "filter": "where_who_self"
+                },
+                {
+                  "type": "text",
+                  "content": ". You have forgiven me. I receive Your forgiveness, and I stop condemning what You have already forgiven.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 2,
+              "sectionField": "what",
+              "sectionFilter": "where_who_god",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I have been angry with You about "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 2,
+                  "field": "what",
+                  "format": "items_comma",
+                  "filter": "where_who_god"
+                },
+                {
+                  "type": "text",
+                  "content": ". I tell You so honestly. I let go of my accusation against You, and I ask You to show me Your heart in what happened."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            2
+          ]
+        },
+        {
+          "title": "The thread",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father, I see these threads running through my life: "
+            },
+            {
+              "type": "inject",
+              "sectionId": 14,
+              "field": "checked",
+              "format": "patterns_comma"
+            },
+            {
+              "type": "text",
+              "content": ". I renounce them. Wherever an evil spirit has used them, I renounce it in the name of Jesus Christ, and I ask You, Lord Jesus, to remove it from me and leave it no place to return.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 14,
+              "sectionField": "father_word",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, speak this over me: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 14,
+                  "field": "father_word",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". I receive it."
+                }
+              ]
+            }
+          ],
+          "requiresCheckedThemes": true
+        },
+        {
+          "title": "Closing",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Holy Spirit, fill every place in me that has been emptied today. Where there was a lie, put Your truth. Where there was a wound, put Your healing. Where there was fear, put Your peace. Leave no room in me for anything that is not from You.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I will bring my sins to Confession and receive Your mercy there. Blessed Virgin Mary, cover me with your mantle. Saint Michael the Archangel, defend me. All you holy saints of God, pray for me.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "faith": "non_catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Give me the courage to confess my sins to a pastor or a believer I trust, so that I may be healed.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "Jesus Christ is Lord. I belong to Him, and I rest in His victory. Amen."
+            }
+          ]
+        }
+      ]
+    },
+    "prayer_2": {
+      "id": "prayer_2",
+      "title": "Family Line Prayer",
+      "subtitle": "Family Line Prayer",
+      "pages": [
+        {
+          "title": "Standing for my family",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father, I come before You for my family: my father's side and my mother's side, those who came before me and those who will come after me.\n\nI am not here to judge anyone. I cannot repent on another person's behalf, and I do not carry their guilt. I come to forgive them, to pray for them, and to refuse to carry forward anything that did not come from You.\n\nJesus, You are Lord of my family's past, present, and future. Cover us with Your mercy."
+            }
+          ]
+        },
+        {
+          "title": "Patterns in my family line",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 15,
+              "sectionField": "pattern_or_sin",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, these patterns have run through my family:\n\n"
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 15,
+                  "field": "pattern_or_sin",
+                  "format": "pattern_side_each"
+                },
+                {
+                  "type": "text",
+                  "content": "\n\nI forgive those whose choices began these patterns or passed them on. I renounce these patterns in my own life, and I ask You to let them end with me."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            15
+          ]
+        },
+        {
+          "title": "Family members of concern",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 16,
+              "sectionField": "name_or_description",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I bring before You:\n\n"
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 16,
+                  "field": "name_or_description",
+                  "format": "ancestor_each"
+                },
+                {
+                  "type": "text",
+                  "content": "\n\nI forgive them, and I entrust each of them to Your mercy.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 16,
+              "sectionField": "group",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I renounce every oath, ritual, and dedication made through "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 16,
+                  "field": "group",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ", as far as they touch me and my family, and I ask You to break their hold on us."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            16
+          ]
+        },
+        {
+          "title": "The family dead",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father of mercy, I bring before You the members of my family who died in sorrow, in violence, or without prayer.\n\n"
+            },
+            {
+              "type": "inject",
+              "sectionId": 25,
+              "field": "name",
+              "format": "family_dead_each"
+            },
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "\n\nEternal rest grant unto them, O Lord, and let perpetual light shine upon them. May their souls and the souls of all the faithful departed, through the mercy of God, rest in peace."
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "faith": "non_catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "\n\nI place each of them in Your hands. You are the Judge of all, and You are rich in mercy."
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "\n\nI ask that no grief or fear connected with their deaths continue in our family."
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            25
+          ]
+        },
+        {
+          "title": "Forgiving those who harmed my family",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 2,
+              "sectionField": "person",
+              "sectionFilter": "where_is_family_harm",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I choose to forgive those whose sins wounded my whole family:\n\n"
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 2,
+                  "field": "person",
+                  "format": "forgive_each",
+                  "filter": "where_is_family_harm"
+                },
+                {
+                  "type": "text",
+                  "content": "\n\nI release my judgment against them and place them in Your hands."
+                }
+              ]
+            }
+          ],
+          "skipIfFilteredSectionEmpty": {
+            "sectionId": 2,
+            "filter": "where_is_family_harm"
+          }
+        },
+        {
+          "title": "Body and mind",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 22,
+              "sectionField": "infirmity",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I bring before You what I carry in body and mind, and what my family has carried: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 22,
+                  "field": "infirmity",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": ". Where any of this is connected with sin or with the patterns of my family, break that connection.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 22,
+              "sectionField": "infirmity",
+              "sectionFilter": "where_for_healing",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "According to Your will, I ask You to heal "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 22,
+                  "field": "infirmity",
+                  "format": "items_comma",
+                  "filter": "where_for_healing"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "Bless the doctors and everyone who cares for me."
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            22
+          ]
+        },
+        {
+          "title": "What ends with me",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "sectionId": 23,
+              "sectionField": "concern",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, let these end with me:\n\n"
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 23,
+                  "field": "concern",
+                  "format": "items_each"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 23,
+              "sectionField": "blessing",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "\n\nFor those who come after me, I ask: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 23,
+                  "field": "blessing",
+                  "format": "items_each"
+                },
+                {
+                  "type": "text",
+                  "content": "."
+                }
+              ]
+            }
+          ],
+          "skipIfSectionsEmpty": [
+            23
+          ]
+        },
+        {
+          "title": "Blessing over my family",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father, where my family has known curses, give blessing. Where there has been sickness, give healing. Where there has been unbelief, give faith. Where there has been violence, give peace. Where there has been abandonment, give faithfulness.\n\nHoly Spirit, fill my family.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Blessed Virgin Mary, spread your mantle over this family. Saint Michael the Archangel, defend us. Holy angels of God, guard our homes and our children.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "Jesus Christ, reign in my family. Thank You for Your mercy toward me and toward all of us. Amen."
+            }
+          ]
+        },
+        {
+          "title": "Bringing this further",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Bring these intentions to Mass and offer them silently at the Offertory, especially the members of your family you named among the dead. Any parish can arrange for a Mass to be offered for the deceased of your family. Return to this prayer as often as the Lord leads you."
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "faith": "non_catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Bring these intentions with you to worship, and ask your pastor or the ministry team to pray with you. Return to this prayer as often as the Lord leads you."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "prayer_3": {
+      "id": "prayer_3",
+      "title": "Daily Prayer",
+      "subtitle": "Daily Prayer",
+      "pages": [
+        {
+          "title": "Opening",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father, I begin this day as Your child. Jesus, You are Lord over today and over everything I will face. Holy Spirit, fill me and lead me.\n\nI belong to You. I do not need to earn Your love today. Help me live from it."
+            }
+          ]
+        },
+        {
+          "title": "Turning and releasing",
+          "nodes": [
+            {
+              "type": "in_prayer_textarea",
+              "placeholder": "Anything you want to name today?",
+              "before": "Lord, since I last prayed, I have turned from You in these ways: ",
+              "after": ". I am sorry. Forgive me and make me new.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Lead me to Confession where I need it.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "in_prayer_textarea",
+              "placeholder": "Anyone you need to forgive today?",
+              "before": "I forgive ",
+              "after": ". I release them to You and ask You to bless them.\n\n"
+            },
+            {
+              "type": "in_prayer_textarea",
+              "placeholder": "Anything pulling at you today?",
+              "before": "I renounce ",
+              "after": " in the name of Jesus Christ, and I ask You, Lord, to take it from me."
+            }
+          ]
+        },
+        {
+          "title": "The truth I stand on",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Father, I reject every lie that has shaped the way I see myself, and I receive what You say is true.\n\n"
+            },
+            {
+              "type": "inject",
+              "sectionId": 6,
+              "field": "lie",
+              "format": "lies_with_truths",
+              "emptyStateText": "Father, I receive Your word over me today. I am Your beloved child. You see me. Nothing can separate me from Your love."
+            },
+            {
+              "type": "text",
+              "content": "\n\nLet these truths go deeper than my feelings today."
+            }
+          ]
+        },
+        {
+          "title": "The thread",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Lord Jesus, I renounce "
+            },
+            {
+              "type": "inject",
+              "sectionId": 14,
+              "field": "checked",
+              "format": "patterns_comma"
+            },
+            {
+              "type": "text",
+              "content": " again today. Keep them from having any place in me.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 14,
+              "sectionField": "father_word",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, remind me today: "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 14,
+                  "field": "father_word",
+                  "format": "items_comma"
+                },
+                {
+                  "type": "text",
+                  "content": "."
+                }
+              ]
+            }
+          ],
+          "requiresCheckedThemes": true
+        },
+        {
+          "title": "My family and home",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "profileField": "familyMembers",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Father, I place my family in Your hands, especially "
+                },
+                {
+                  "type": "inject",
+                  "profileField": "familyMembers",
+                  "format": "text"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "profileField": "spouseName",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Bless "
+                },
+                {
+                  "type": "inject",
+                  "profileField": "spouseName",
+                  "format": "text"
+                },
+                {
+                  "type": "text",
+                  "content": ". Draw "
+                },
+                {
+                  "type": "inject",
+                  "profileField": "spouseName",
+                  "format": "text"
+                },
+                {
+                  "type": "text",
+                  "content": " close to You, heal what is wounded, and keep us faithful to each other.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "profileField": "childrenNames",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Bless "
+                },
+                {
+                  "type": "inject",
+                  "profileField": "childrenNames",
+                  "format": "text"
+                },
+                {
+                  "type": "text",
+                  "content": ". Protect them, strengthen their faith, and keep them from evil.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "Lord Jesus, protect my family and my home from every evil. Let my home be a place of peace and prayer.\n\n"
+            },
+            {
+              "type": "conditional_block",
+              "faith": "catholic",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Blessed Virgin Mary, cover us with your mantle. Saint Michael the Archangel, defend us. Holy angels of God, guard us."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Healing",
+          "nodes": [
+            {
+              "type": "conditional_block",
+              "profileField": "chronicIssues",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "Lord Jesus, I bring You what I carry: "
+                },
+                {
+                  "type": "inject",
+                  "profileField": "chronicIssues",
+                  "format": "text"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "profileField": "chronicIdentityLabels",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "I let go of the name "
+                },
+                {
+                  "type": "inject",
+                  "profileField": "chronicIdentityLabels",
+                  "format": "text"
+                },
+                {
+                  "type": "text",
+                  "content": ". My name is Your beloved.\n\n"
+                }
+              ]
+            },
+            {
+              "type": "conditional_block",
+              "sectionId": 22,
+              "sectionField": "infirmity",
+              "sectionFilter": "where_for_healing",
+              "nodes": [
+                {
+                  "type": "text",
+                  "content": "According to Your will, heal "
+                },
+                {
+                  "type": "inject",
+                  "sectionId": 22,
+                  "field": "infirmity",
+                  "format": "items_comma",
+                  "filter": "where_for_healing"
+                },
+                {
+                  "type": "text",
+                  "content": ".\n\n"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "content": "Heal my mind, my memory, and my imagination today. Where I need human help, give me the courage to receive it."
+            }
+          ]
+        },
+        {
+          "title": "Closing",
+          "nodes": [
+            {
+              "type": "text",
+              "content": "Holy Spirit, bring forth Your fruit in me today: love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, and self-control.\n\nJesus Christ, reign in my heart, my home, and my family today. Deliver us from evil. Amen."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "patterns": [
+    "Fear",
+    "Rejection",
+    "Shame",
+    "Control",
+    "Pride",
+    "Anger",
+    "Bitterness",
+    "Lust",
+    "Addiction",
+    "Despair",
+    "Self-hatred",
+    "Confusion",
+    "Unbelief",
+    "Occult involvement",
+    "Grief",
+    "Isolation",
+    "Other"
+  ],
+  "guidance": {
+    "1": "Serious sin here includes serious lies or damage to someone's reputation, theft, deliberate hatred, and helping someone obtain an abortion.",
+    "4": "Name these honestly by kind. Details are not needed.",
+    "5": "If you ever made a pact, offered blood, or dedicated yourself to a spirit, tell the ministry team, who will connect you with the right help.",
+    "11": "Recreational drug use, drunkenness, and gambling that harms your family are serious. With a habit, keep confessing and keep going; accountability with another believer builds strength.",
+    "13": "Ask a pastor or the ministry team whether amends are owed and what form they should take.",
+    "16": "If you belonged to such a group yourself, renounce its oaths and tell the ministry team.",
+    "20": "When the objects are gone, a pastor or the ministry team can pray over your home.",
+    "22": "Ask your pastor or the ministry team to pray over you for healing (James 5:14).",
+    "25": "If you had an abortion or helped someone obtain one, God's forgiveness reaches this too. Project Rachel offers confidential healing to people of any faith."
+  },
+  "general": {
+    "workbookTitle": "The Deliverance Workbook",
+    "workbookDescription": "A spiritual inventory to prepare for a long-form renunciation prayer. Work through each category at your own pace.",
+    "introTitle": "Three things every participant learns",
+    "mentorTitle": "Deliverance Workbook Guide",
+    "mentorDescription": "A reference for mentors — read through the five categories and their sections to understand what your participants are working through. Participant responses are private and not visible here.",
+    "mentorUnlockDescription": "The workbook opens in Week 2. Categories unlock on specific days: Personal Sins (Day 7), Occult (Day 9), Generational Lines (Day 11), Inner Vows (Day 12), Wounds & Forgiveness (Day 15).",
+    "sourcesTitle": "Sources & Acknowledgments",
+    "sources.1": "Lumen Fidei draws with gratitude on the healing and deliverance ministry tradition of the Catholic Church, and in particular on the work of Dr. Bob Schuchts and the John Paul II Healing Center (Be Healed, Ave Maria Press, 2014; Healing the Whole Person), whose \u201cseven deadly wounds\u201d and tree-of-sin frameworks inform Days 7\u20138; and Neal Lozano and Heart of the Father Ministries (Unbound: A Practical Guide to Deliverance, Chosen Books, 2010), whose keys of repentance, forgiveness, and renunciation inform Days 13\u201315 and 22.",
+    "sources.2": "The Image of God reflection (Day 3) is based on \u201cEight Themes for Prayer with Scripture\u201d by John Wickham, SJ (Prayer Companions\u2019 Handbook, Ignatian Centre Publications, 1991). Day 19 teaching adapted from My Catholic Life! (mycatholic.life). Patristic quotations (Day 27) as compiled by Catholic Answers from W.\u202fA. Jurgens, The Faith of the Early Fathers (Liturgical Press). The Prayer for Inner Healing (Day 18) is traditional; cf. Bishop Julian Porteous, Manual of Minor Exorcisms.",
+    "sources.3": "Quotations from the Catechism of the Catholic Church \u00a9 Libreria Editrice Vaticana. Used with permission.",
+    "sources.4": "Scripture quotations marked NIV are taken from the Holy Bible, New International Version\u00ae, NIV\u00ae. Copyright \u00a9 1973, 1978, 1984, 2011 by Biblica, Inc.\u2122 Used by permission of Zondervan. All rights reserved worldwide. Scripture texts from the New American Bible, revised edition \u00a9 2010, 1991, 1986, 1970 Confraternity of Christian Doctrine, Washington, D.C. Used with permission. Scripture quotations marked ESV are from the ESV\u00ae Bible, copyright \u00a9 2001 by Crossway. Used by permission. Scripture quotations marked NLT are from the Holy Bible, New Living Translation, copyright \u00a9 1996, 2004, 2015 by Tyndale House Foundation. Used by permission. Some quotations are from the Douay-Rheims Bible (public domain).",
+    "sources.5": "This program is a ministry of the Archdiocese of Chicago Spiritual Healing Ministry and is provided free of charge for spiritual formation.",
+    "intro.0": "A sin and a wound are different. A sin is what I chose. A wound is what was done to me. Sins go to Confession. Wounds go to the Lord for healing and are never confessed as my sin.",
+    "intro.1": "Grave and venial sin are different. Every grave sin is confessed by kind and number (CCC 1456). Confessing venial sins is recommended (CCC 1458). Grave matter becomes mortal sin only with full knowledge and deliberate consent (CCC 1857–1859), and the priest can help sort out what applies. Each section states plainly which of its contents are grave matter.",
+    "intro.2": "Remembering everything is not the participant's burden. An honest, careful examination is enough. A sin forgotten in good faith is forgiven with the rest, and if it comes to mind later, it goes to the next Confession.",
+    "nonCatholicIntroSecond": "Some sins are more serious than others (1 John 5:16–17). Name serious sins specifically, by kind, when you confess them.",
+    "openingPrayer": "Lord Jesus, You have already won the victory I stand in today.\n\nHoly Spirit, You know my heart better than I do. Show me what You want to bring into the light. Help me be honest with what You show me, and let that be enough for today.\n\nFather, let me see my life the way You see it, with truth and with love. Where I have turned away from You, give me the sorrow that leads home. Where I have been wounded, show me that You were there.\n\nI place this time in Your hands. Amen.",
+    "closingPrayer": "Lord Jesus, thank You for what You showed me today.\n\nI trust You with what I wrote and with what I have not yet seen. You will bring the rest to light in Your time.\n\nGive me the courage to bring my sins to Confession and the patience to let You heal my wounds.\n\nI am Your beloved child, and nothing I wrote today changes that. Amen.",
+    "nonCatholicClosingPrayer": "Lord Jesus, thank You for what You showed me today.\n\nI trust You with what I wrote and with what I have not yet seen. You will bring the rest to light in Your time.\n\nGive me the courage to confess my sins and turn from them, and the patience to let You heal my wounds.\n\nI am Your beloved child, and nothing I wrote today changes that. Amen.",
+    "bringToTheLord": "Name each of these to God plainly and ask His forgiveness. He is faithful to forgive (1 John 1:9). Serious sin is worth also speaking aloud to a pastor or a believer you trust, because confession to one another brings healing (James 5:16). If you would like to talk with a Catholic priest, the ministry team can arrange it.",
+    "acknowledgment": "The approach of the revised Freedom Workbook, including its framing of deliverance as encounter with the Father's love and its work of replacing lies with truth, draws on Sean Tobin, Big God, Little Devil.",
+    "careLine": "U.S. Suicide & Crisis Lifeline: 988. Ministry contact: Ben Ludolph, Spiritual Healing Ministry, bludolph@archchicago.org, 708-735-0908.",
+    "prayerLink.prayer_1.subtitle": "Pray once, with intention, after working through the Workbook",
+    "prayerLink.prayer_2.subtitle": "Family Line Prayer",
+    "prayerLink.prayer_3.subtitle": "Ongoing daily prayer — your living armor",
+    "lies.lieLabel": "What lie are you carrying?",
+    "lies.liePlaceholder": "Name the lie you have believed…",
+    "lies.spokenByLabel": "Who spoke this over you? (optional)",
+    "lies.spokenByPlaceholder": "A person, a voice, your own heart…",
+    "lies.panelTitle": "Claim a truth against this lie",
+    "lies.spiritLabel": "What the lie says",
+    "lies.scriptureLabel": "Step 2 — Choose a Scripture",
+    "lies.libraryEmpty": "Library entries for this spirit are being prepared. You can pick a Scripture freely or save your lie for now.",
+    "lies.freeReferenceLabel": "Or enter a reference freely",
+    "lies.freeReferencePlaceholder": "e.g. John 3:16",
+    "lies.truthLabel": "Your truth declaration (auto-filled — edit lightly)",
+    "lies.truthPlaceholder": "The Lord reminds you…",
+    "lies.declarationLabel": "Your declaration will read",
+    "lies.claimTruth": "Claim this truth",
+    "lies.spokenBy": "Spoken by:",
+    "lies.truthClaimed": "Truth claimed",
+    "lies.editTruth": "Edit truth",
+    "lies.claimAgainst": "Claim a truth against this",
+    "lies.add": "Add a lie",
+    "lies.empty": "Name the lies you have carried. The app will help you find a Scripture truth to claim against each one.",
+    "patterns.otherPlaceholder": "Describe any other pattern…",
+    "lies.spirits.unseen.label": "Unseen",
+    "lies.spirits.unseen.summary": "No one sees me. My pain does not matter.",
+    "lies.spirits.helplessness.label": "Helplessness",
+    "lies.spirits.helplessness.summary": "I cannot resist. I have no choice.",
+    "lies.spirits.false_father.label": "A false image of God",
+    "lies.spirits.false_father.summary": "God is harsh, distant, or disappointed in me.",
+    "lies.spirits.destruction.label": "Destruction",
+    "lies.spirits.destruction.summary": "You are broken, limited, your mind is not enough.",
+    "lies.spirits.hopelessness.label": "Hopelessness",
+    "lies.spirits.hopelessness.summary": "Nothing will change. It will not get better.",
+    "lies.spirits.weakness.label": "Weakness",
+    "lies.spirits.weakness.summary": "You must hide what you cannot do alone.",
+    "lies.spirits.condemnation.label": "Condemnation",
+    "lies.spirits.condemnation.summary": "You are worthless. You deserve to be hated.",
+    "lies.spirits.fear.label": "Fear",
+    "lies.spirits.fear.summary": "You are not safe. Danger is everywhere.",
+    "lies.spirits.rejection.label": "Rejection",
+    "lies.spirits.rejection.summary": "You do not belong. No one wants you.",
+    "lies.spirits.shame.label": "Shame",
+    "lies.spirits.shame.summary": "You are what you have done. You are dirty.",
+    "lies.spirits.unworthiness.label": "Unworthiness",
+    "lies.spirits.unworthiness.summary": "You do not deserve good things, or love.",
+    "lies.spirits.isolation.label": "Isolation",
+    "lies.spirits.isolation.summary": "You are alone. No one understands.",
+    "lies.spirits.anxiety.label": "Anxiety",
+    "lies.spirits.anxiety.summary": "You must control everything. You cannot rest.",
+    "lies.spirits.self_hatred.label": "Self-hatred",
+    "lies.spirits.self_hatred.summary": "You are your own enemy. You deserve punishment.",
+    "lies.spirits.confusion.label": "Confusion",
+    "lies.spirits.confusion.summary": "Nothing makes sense. You cannot trust your mind."
+  }
+}

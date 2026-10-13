@@ -1,4 +1,5 @@
 import { Link, useLocation, useSearch } from "wouter";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import { PageContainer } from "./PageContainer";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -419,6 +420,7 @@ const WORKBOOK_SLUG_TO_NAME: Record<string, string> = {
 };
 
 function WorkbookFAB() {
+  const { text } = useWorkbookContent();
   const [location, navigate] = useLocation();
   const search = useSearch();
   const [showTooltip, setShowTooltip] = useState(false);
@@ -564,7 +566,7 @@ function WorkbookFAB() {
               margin: 0,
             }}
           >
-            {isLocked ? "Available after Week 2" : "The Deliverance Workbook"}
+            {isLocked ? "Available after Week 2" : text("general.workbookTitle")}
           </p>
           {!isLocked && sectionsWithContent > 0 && (
             <p

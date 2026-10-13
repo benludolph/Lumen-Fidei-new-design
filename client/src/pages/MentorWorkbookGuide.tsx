@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { SECTION_CATEGORIES, SECTIONS } from "@/components/workbook/section-definitions";
+import type { SectionCategory, SectionDefinition } from "@/components/workbook/section-definitions";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import { ChevronDown, ChevronRight, BookOpen, Clock } from "lucide-react";
 
 const CATEGORY_UNLOCK_DAY: Record<number, number> = {
@@ -19,7 +20,7 @@ const SECTION_TYPE_LABELS: Record<string, string> = {
   strongman_checklist: "Checklist",
 };
 
-function SectionRow({ section, defaultOpen }: { section: typeof SECTIONS[0]; defaultOpen?: boolean }) {
+function SectionRow({ section, defaultOpen }: { section: SectionDefinition; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
 
   return (
@@ -122,7 +123,8 @@ function SectionRow({ section, defaultOpen }: { section: typeof SECTIONS[0]; def
   );
 }
 
-function CategoryCard({ category }: { category: typeof SECTION_CATEGORIES[0] }) {
+function CategoryCard({ category }: { category: SectionCategory }) {
+  const { sections: SECTIONS } = useWorkbookContent();
   const [open, setOpen] = useState(false);
   const unlockDay = CATEGORY_UNLOCK_DAY[category.id];
   const sections = SECTIONS.filter(s => s.categoryId === category.id);
@@ -222,6 +224,7 @@ function CategoryCard({ category }: { category: typeof SECTION_CATEGORIES[0] }) 
 }
 
 export default function MentorWorkbookGuide() {
+  const { categories: SECTION_CATEGORIES, text } = useWorkbookContent();
   return (
     <DashboardLayout>
       <PageContainer variant="content">
@@ -229,11 +232,11 @@ export default function MentorWorkbookGuide() {
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
             <BookOpen size={22} style={{ color: "var(--brand)" }} />
             <h1 className="type-title-lg" style={{ color: "var(--white-90)", margin: 0 }}>
-              Deliverance Workbook Guide
+              {text("general.mentorTitle")}
             </h1>
           </div>
           <p className="type-body-md" style={{ color: "var(--white-50)", marginBottom: "36px", maxWidth: "560px", lineHeight: "1.65" }}>
-            A reference for mentors — read through the five categories and their sections to understand what your participants are working through. Participant responses are private and not visible here.
+            {text("general.mentorDescription")}
           </p>
 
           <div
@@ -252,7 +255,7 @@ export default function MentorWorkbookGuide() {
             <div>
               <p className="type-body-sm font-semibold" style={{ color: "var(--white-70)", margin: "0 0 2px" }}>Unlock schedule</p>
               <p className="type-body-sm" style={{ color: "var(--white-40)", margin: 0, lineHeight: "1.6" }}>
-                The workbook opens in Week 2. Categories unlock on specific days: Personal Sins (Day 7), Occult (Day 9), Generational Lines (Day 11), Inner Vows (Day 12), Wounds &amp; Forgiveness (Day 15).
+                {text("general.mentorUnlockDescription")}
               </p>
             </div>
           </div>

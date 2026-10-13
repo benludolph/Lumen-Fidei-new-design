@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { DOMINANT_PATTERNS } from "@/data/patterns_data";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import type { WorkbookEntry } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,6 +24,7 @@ function parseData(entry: WorkbookEntry | undefined): Section14Data {
 }
 
 export default function PatternsChecklist() {
+  const { patterns, text, sections } = useWorkbookContent();
   const { toast } = useToast();
   const { data: entries = [], isLoading, isError, refetch } = useQuery<WorkbookEntry[]>({
     queryKey: ["/api/workbook/14"],
@@ -170,7 +171,7 @@ export default function PatternsChecklist() {
           flexDirection: "column",
         }}
       >
-        {DOMINANT_PATTERNS.map((pattern) => {
+        {patterns.map(({ value: pattern, label }) => {
           const isOther = pattern === "Other";
 
           if (isOther) {
@@ -179,7 +180,7 @@ export default function PatternsChecklist() {
                 <label
                   style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "text" }}
                 >
-                  <input type="checkbox" checked={data.checked.includes("Other")} onChange={(e) => handleToggle("Other", e.target.checked)} aria-label="Other" style={{ marginTop: 4, accentColor: "rgba(255,255,255,0.7)" }} />
+                  <input type="checkbox" checked={data.checked.includes("Other")} onChange={(e) => handleToggle("Other", e.target.checked)} aria-label={label} style={{ marginTop: 4, accentColor: "rgba(255,255,255,0.7)" }} />
                   <div
                     style={{
                       width: "18px",
@@ -209,13 +210,13 @@ export default function PatternsChecklist() {
                         color: data.other_freetext.trim() ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.5)",
                       }}
                     >
-                      Other
+                      {label}
                     </span>
                     <input
                       type="text"
                       value={data.other_freetext}
                       onChange={(e) => handleOtherChange(e.target.value)}
-                      placeholder="Describe any other pattern…"
+                      placeholder={text("general.patterns.otherPlaceholder")}
                       data-testid="input-pattern-other"
                       style={{
                         background: "rgba(255,255,255,0.04)",
@@ -288,7 +289,7 @@ export default function PatternsChecklist() {
                   userSelect: "none",
                 }}
               >
-                {pattern}
+                {label}
               </span>
             </label>
           );
@@ -296,7 +297,7 @@ export default function PatternsChecklist() {
       </div>
 
       <label style={{ display: "flex", flexDirection: "column", gap: 8, fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.6)" }}>
-        What I most need to hear from the Father.
+        {sections.find(section => section.id === 14)?.fields.find(field => field.key === "father_word")?.label}
         <textarea rows={3} value={data.father_word} data-testid="input-pattern-father-word" onChange={(e) => {
           isDirty.current = true;
           const next = { ...data, father_word: e.target.value };

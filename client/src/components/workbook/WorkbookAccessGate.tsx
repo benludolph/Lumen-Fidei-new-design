@@ -1,6 +1,7 @@
 import { useState, type ReactNode, type CSSProperties } from "react";
 import { FAITH_OPTIONS, isFaithAnswered, useWorkbookProfile, useUpdateWorkbookProfile, type FaithTradition } from "@/hooks/use-workbook-profile";
-import { WORKBOOK_INTRO, NON_CATHOLIC_INTRO_SECOND } from "@/data/workbook-revised";
+import { useWorkbookGeneral } from "@/components/workbook-admin/use-workbook-general";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 
 const panelStyle: CSSProperties = {
   maxWidth: 680, width: "100%", margin: "0 auto", padding: "36px 24px",
@@ -28,6 +29,8 @@ export function FaithTraditionEditor() {
 }
 
 export default function WorkbookAccessGate({ children, categorySession = false, onDismiss, bypass = false }: { children: ReactNode; categorySession?: boolean; onDismiss?: () => void; bypass?: boolean }) {
+  const { text } = useWorkbookContent();
+  const { intro: WORKBOOK_INTRO, nonCatholicIntroSecond: NON_CATHOLIC_INTRO_SECOND } = useWorkbookGeneral();
   const { data: profile, isLoading, isError, refetch } = useWorkbookProfile();
   const save = useUpdateWorkbookProfile();
   const [answer, setAnswer] = useState<FaithTradition | null>(null);
@@ -50,7 +53,7 @@ export default function WorkbookAccessGate({ children, categorySession = false, 
         </fieldset>
         <button type="button" style={{ ...buttonStyle, marginTop: 16, opacity: !answer || save.isPending ? 0.5 : 1 }} disabled={!answer || save.isPending} onClick={() => answer && save.mutate({ faithTradition: answer })}>{save.isPending ? "Saving…" : "Continue"}</button>
       </> : <>
-        <h1 className="font-serif" style={{ fontSize: "clamp(26px, 4vw, 40px)", lineHeight: 1.15, margin: "20px 0 28px" }}>Three things every participant learns</h1>
+        <h1 className="font-serif" style={{ fontSize: "clamp(26px, 4vw, 40px)", lineHeight: 1.15, margin: "20px 0 28px" }}>{text("general.introTitle")}</h1>
         <ol style={{ paddingLeft: 22 }}>
           {WORKBOOK_INTRO.map((point, index) => <li key={index} style={{ marginBottom: 24 }}>{index === 1 && profile?.faithTradition !== "Yes" ? NON_CATHOLIC_INTRO_SECOND : point}</li>)}
         </ol>

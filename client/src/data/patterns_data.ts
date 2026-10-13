@@ -1,19 +1,4 @@
-export const DOMINANT_PATTERNS: string[] = [
-  "Fear",
-  "Rejection",
-  "Shame",
-  "Control",
-  "Pride",
-  "Anger",
-  "Bitterness",
-  "Lust",
-  "Addiction",
-  "Despair",
-  "Self-hatred",
-  "Confusion",
-  "Unbelief",
-  "Occult involvement",
-  "Grief",
-  "Isolation",
-  "Other",
-];
+import defaults from "@shared/workbook-content-defaults.json";
+
+// Stable answer values, not the edited display labels.
+export const DOMINANT_PATTERNS: string[] = defaults.patterns;

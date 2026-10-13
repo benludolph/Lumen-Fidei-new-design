@@ -10,6 +10,7 @@ import {
   type LyingSpirit,
 } from "@/data/truth_library";
 import type { WorkbookEntry } from "@shared/schema";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 
 interface LieEntryData {
   lie: string;
@@ -81,6 +82,7 @@ function AddLieForm({
   onCancel: () => void;
 }) {
   const [lie, setLie] = useState("");
+  const { text } = useWorkbookContent();
   const [spokenBy, setSpokenBy] = useState("");
   const { toast } = useToast();
 
@@ -118,12 +120,12 @@ function AddLieForm({
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
         <label style={labelStyle}>
-          What lie are you carrying?<span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
+          {text("general.lies.lieLabel")}<span style={{ color: "rgba(255,100,100,0.6)", marginLeft: "4px" }}>*</span>
         </label>
         <textarea
           value={lie}
           onChange={(e) => setLie(e.target.value)}
-          placeholder="Name the lie you have believed…"
+          placeholder={text("general.lies.liePlaceholder")}
           data-testid="input-add-lie"
           rows={3}
           style={inputStyle}
@@ -132,12 +134,12 @@ function AddLieForm({
         />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-        <label style={labelStyle}>Who spoke this over you? (optional)</label>
+        <label style={labelStyle}>{text("general.lies.spokenByLabel")}</label>
         <input
           type="text"
           value={spokenBy}
           onChange={(e) => setSpokenBy(e.target.value)}
-          placeholder="A person, a voice, your own heart…"
+          placeholder={text("general.lies.spokenByPlaceholder")}
           data-testid="input-add-spoken-by"
           style={inputStyle}
           onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
@@ -195,6 +197,7 @@ function DeeperPathPanel({
   onClose: () => void;
 }) {
   const entryData = getEntryData(entry);
+  const { text } = useWorkbookContent();
   const [state, setState] = useState<DeeperState>({
     lying_spirit: (entryData.lying_spirit as LyingSpirit) || "",
     scripture_reference: entryData.scripture_reference || "",
@@ -271,7 +274,7 @@ function DeeperPathPanel({
   return (
     <div style={panelStyle}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <p style={{ ...labelStyle, margin: 0 }}>Claim a truth against this lie</p>
+        <p style={{ ...labelStyle, margin: 0 }}>{text("general.lies.panelTitle")}</p>
         <button
           type="button"
           onClick={onClose}
@@ -285,7 +288,7 @@ function DeeperPathPanel({
       {/* Stage 1 — Spirit picker */}
       <div>
         <p style={{ ...labelStyle, marginBottom: "8px" }}>
-          What the lie says
+          {text("general.lies.spiritLabel")}
           {state.lying_spirit && (
             <button
               type="button"
@@ -307,10 +310,10 @@ function DeeperPathPanel({
             }}
           >
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.8)", margin: 0 }}>
-              {LYING_SPIRITS.find((s) => s.value === state.lying_spirit)?.label ?? state.lying_spirit}
+              {text(`general.lies.spirits.${state.lying_spirit}.label`)}
             </p>
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", margin: "2px 0 0" }}>
-              {LYING_SPIRITS.find((s) => s.value === state.lying_spirit)?.summary}
+              {text(`general.lies.spirits.${state.lying_spirit}.summary`)}
             </p>
           </div>
         ) : (
@@ -342,10 +345,10 @@ function DeeperPathPanel({
                 }}
               >
                 <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.9rem", color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>
-                  {spirit.label}
+                  {text(`general.lies.spirits.${spirit.value}.label`)}
                 </span>
                 <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.35)", marginTop: "1px" }}>
-                  {spirit.summary}
+                  {text(`general.lies.spirits.${spirit.value}.summary`)}
                 </span>
               </button>
             ))}
@@ -357,7 +360,7 @@ function DeeperPathPanel({
       {state.stage !== "spirit" && (
         <div>
           <p style={{ ...labelStyle, marginBottom: "8px" }}>
-            Step 2 — Choose a Scripture
+            {text("general.lies.scriptureLabel")}
             {state.scripture_reference && (
               <button
                 type="button"
@@ -424,19 +427,19 @@ function DeeperPathPanel({
                 ))
               ) : (
                 <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.35)", fontStyle: "italic", margin: 0 }}>
-                  Library entries for this spirit are being prepared. You can pick a Scripture freely or save your lie for now.
+                  {text("general.lies.libraryEmpty")}
                 </p>
               )}
 
               {/* Free entry option */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <p style={{ ...labelStyle, margin: 0 }}>Or enter a reference freely</p>
+                <p style={{ ...labelStyle, margin: 0 }}>{text("general.lies.freeReferenceLabel")}</p>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="text"
                     value={state.scripture_reference}
                     onChange={(e) => setState((s) => ({ ...s, scripture_reference: e.target.value }))}
-                    placeholder="e.g. John 3:16"
+                    placeholder={text("general.lies.freeReferencePlaceholder")}
                     data-testid="input-scripture-free"
                     style={{ ...inputStyle, flex: 1 }}
                     onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)")}
@@ -478,11 +481,11 @@ function DeeperPathPanel({
       {state.stage === "truth" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            <label style={labelStyle}>Your truth declaration (auto-filled — edit lightly)</label>
+            <label style={labelStyle}>{text("general.lies.truthLabel")}</label>
             <textarea
               value={state.truth_statement}
               onChange={(e) => setState((s) => ({ ...s, truth_statement: e.target.value }))}
-              placeholder="The Lord reminds you…"
+              placeholder={text("general.lies.truthPlaceholder")}
               data-testid="input-truth-statement"
               rows={3}
               style={inputStyle}
@@ -502,7 +505,7 @@ function DeeperPathPanel({
               }}
             >
               <p style={{ ...labelStyle, margin: 0, marginBottom: "8px", color: "rgba(255,200,100,0.5)" }}>
-                Your declaration will read
+                {text("general.lies.declarationLabel")}
               </p>
               <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.93rem", color: "rgba(255,255,255,0.65)", margin: 0, lineHeight: 1.65 }}>
                 I reject the lie that{" "}
@@ -565,7 +568,7 @@ function DeeperPathPanel({
               }}
             >
               <Check style={{ width: "12px", height: "12px" }} />
-              {saveMutation.isPending ? "Saving…" : "Claim this truth"}
+              {saveMutation.isPending ? "Saving…" : text("general.lies.claimTruth")}
             </button>
           </div>
         </div>
@@ -582,6 +585,7 @@ function LieCard({
   onDeleted: () => void;
 }) {
   const [deeperOpen, setDeeperOpen] = useState(false);
+  const { text } = useWorkbookContent();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const data = getEntryData(entry);
   const truthClaimed = hasTruth(entry);
@@ -621,14 +625,14 @@ function LieCard({
           </p>
           {data.spoken_by && (
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.3)", margin: 0 }}>
-              Spoken by: {data.spoken_by}
+              {text("general.lies.spokenBy")} {data.spoken_by}
             </p>
           )}
           {truthClaimed && (
             <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "5px" }}>
               <Check style={{ width: "11px", height: "11px", color: "rgba(255,200,100,0.6)" }} />
               <span style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,200,100,0.6)" }}>
-                Truth claimed
+                {text("general.lies.truthClaimed")}
               </span>
             </div>
           )}
@@ -710,7 +714,7 @@ function LieCard({
           onMouseLeave={(e) => (e.currentTarget.style.color = truthClaimed ? "rgba(255,200,100,0.45)" : "rgba(255,255,255,0.3)")}
         >
           <ChevronDown style={{ width: "11px", height: "11px" }} />
-          {truthClaimed ? "Edit truth" : "Claim a truth against this"}
+          {truthClaimed ? text("general.lies.editTruth") : text("general.lies.claimAgainst")}
         </button>
       ) : (
         <>
@@ -746,6 +750,7 @@ function LieCard({
 }
 
 export default function LiesAndTruthsEditor() {
+  const { text } = useWorkbookContent();
   const [showAddForm, setShowAddForm] = useState(false);
 
   const { data: entries = [], isLoading } = useQuery<WorkbookEntry[]>({
@@ -841,7 +846,7 @@ export default function LiesAndTruthsEditor() {
           }}
         >
           <Plus style={{ width: "13px", height: "13px" }} />
-          Add a lie
+          {text("general.lies.add")}
         </button>
       )}
 
@@ -857,7 +862,7 @@ export default function LiesAndTruthsEditor() {
             fontStyle: "italic",
           }}
         >
-          Name the lies you have carried. The app will help you find a Scripture truth to claim against each one.
+          {text("general.lies.empty")}
         </p>
       )}
     </div>

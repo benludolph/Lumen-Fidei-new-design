@@ -12,4 +12,4 @@ The user no longer uses the legacy workbook resource UI and wants its obsolete p
 
 **Why:** The user explicitly requires this throughout this product.
 
-**How to apply:** Apply this to all IvyOra usage, including inherited heading and emphasis styles, not just the workbook.
+**How to apply:** Apply this to all IvyOra usage, including inherited heading and emphasis styles, not just the workbook. Preserve the installed face's natural appearance: its asset is named “medium,” but the user's “leave as is regular” means no added bold, not replacing that face with a different font. Other fonts should retain their intended bold styling.

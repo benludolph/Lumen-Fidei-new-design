@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import SectionView from "./SectionView";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 
 interface WorkbookSectionSheetProps {
   sectionId: number;
@@ -9,6 +10,7 @@ interface WorkbookSectionSheetProps {
 }
 
 export default function WorkbookSectionSheet({ sectionId, onClose }: WorkbookSectionSheetProps) {
+  const { text } = useWorkbookContent();
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -87,7 +89,7 @@ export default function WorkbookSectionSheet({ sectionId, onClose }: WorkbookSec
                 margin: 0,
               }}
             >
-              The Deliverance Workbook
+              {text("general.workbookTitle")}
             </p>
             <button
               onClick={onClose}

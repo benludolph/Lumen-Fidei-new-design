@@ -11,6 +11,7 @@ import { tracks, insertTrackAContentSchema, insertTrackAModuleSchema, uploadedIm
 import { trackDb as db } from "./track-db";
 import { currentTrackId, withTrack } from "./track-context";
 import { registerTrackRoutes, trackScopeMiddleware, validateTrackAssignment } from "./tracks";
+import { registerWorkbookContentRoutes } from "./workbook-content";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
@@ -216,6 +217,7 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Setup Authentication
   await setupAuth(app);
+  registerWorkbookContentRoutes(app, requireAuth, requireRole("admin"), writeLimiter);
   registerTrackRoutes(app);
   app.use("/api", trackScopeMiddleware);
 

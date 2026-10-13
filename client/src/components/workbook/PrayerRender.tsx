@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
-import { PRAYER_TEMPLATES } from "./prayer-templates";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import type {
   PrayerNode,
   TextNode,
@@ -12,10 +12,11 @@ import type {
   InjectFormat,
   PrayerTemplate,
 } from "./prayer-templates";
-import { SECTIONS } from "./section-definitions";
 import WorkbookAccessGate from "./WorkbookAccessGate";
 import { isFaithAnswered, useWorkbookProfile } from "@/hooks/use-workbook-profile";
 import type { WorkbookEntry, PrayerId, UserProfile } from "@shared/schema";
+import { PRAYER_FORMAT_COPY, formatPrayerCopy, type PrayerFormatCopy } from "@shared/workbook-prayer-copy";
+import { formatPrayerNodes } from "@/components/workbook-admin/prayer-copy";
 
 interface PrayerRenderProps {
   prayerId: PrayerId;
@@ -86,6 +87,8 @@ export function evaluateInjectToString(
   node: InjectNode,
   allEntries: Record<number, WorkbookEntry[]>,
   profile: UserProfile | null | undefined,
+  patternLabels: Record<string, string> = {},
+  copy: PrayerFormatCopy = PRAYER_FORMAT_COPY,
 ): string {
   // ── User Profile ──
   if (node.profileField) {
@@ -108,8 +111,9 @@ export function evaluateInjectToString(
       ? (data.checked as string[]).filter(Boolean)
       : [];
     if (!checked.length) return "";
-    if (node.format === "patterns_comma") return joinComma(checked);
-    return joinComma(checked.map((n) => `every spirit of ${n}`));
+    const displayed = checked.map(value => patternLabels[value] ?? value);
+    if (node.format === "patterns_comma") return joinComma(displayed);
+    return joinComma(displayed.map(value => formatPrayerCopy(copy.everySpirit, { value })));
   }
 
   // ── Standard list_builder fields ──
@@ -178,6 +182,8 @@ export function renderNodes(
   setTextareaValue: (key: string, val: string) => void,
   pageIndex: number,
   keyPrefix = "",
+  patternLabels: Record<string, string> = {},
+  copy: PrayerFormatCopy = PRAYER_FORMAT_COPY,
 ): React.ReactNode {
   return nodes.map((node, ni) => {
     const key = `${keyPrefix}${pageIndex}-${ni}`;
@@ -253,6 +259,8 @@ export function renderNodes(
             setTextareaValue,
             pageIndex,
             `${key}-`,
+            patternLabels,
+            copy,
           )}
         </span>
       );
@@ -275,7 +283,7 @@ export function renderNodes(
                 key={ii}
                 style={{ display: "block", ...HIGHLIGHT_STYLE, marginBottom: "4px" }}
               >
-                {item}, go in the Name of Jesus Christ.
+                {formatPrayerCopy(copy.infirmity, { value: item })}
               </span>
             ))}
           </span>
@@ -323,13 +331,13 @@ export function renderNodes(
                     lineHeight: 1.65,
                   }}
                 >
-                  {"I reject the lie that "}
-                  <strong style={{ color: "#e8c88a" }}>{d.lie}</strong>
-                  {". The Lord reminds me: "}
-                  <strong style={{ color: "#e8c88a" }}>{d.truth_statement}</strong>
+                  {formatPrayerNodes(copy.lie, {
+                    lie: <strong style={{ color: "#e8c88a" }}>{d.lie}</strong>,
+                    truth: <strong style={{ color: "#e8c88a" }}>{d.truth_statement}</strong>,
+                  })}
                   {d.scripture_reference
                     && d.scripture_text?.trim()
-                    ? `. As Scripture says, ${d.scripture_reference}: "${d.scripture_text}"`
+                    ? formatPrayerCopy(copy.scripture, { reference: d.scripture_reference, scripture: d.scripture_text })
                     : "."}
                 </span>
               );
@@ -365,46 +373,47 @@ export function renderNodes(
             sentence = d[inj.field!] ?? "";
           } else if (inj.format === "renounce_each") {
             const val = d[inj.field!] ?? "";
-            sentence = `In the name of Jesus Christ, and by the power of His Blood, I renounce ${val} in our family line.`;
+            sentence = formatPrayerCopy(copy.renounce, { value: val });
           } else if (inj.format === "renounce_lodge_each") {
             const val = d[inj.field!] ?? "";
-            sentence = `I renounce ${val} and every oath, degree, penalty, and curse connected to it.`;
+            sentence = formatPrayerCopy(copy.lodge, { value: val });
           } else if (inj.format === "renounce_simple_each") {
             const val = d[inj.field!] ?? "";
-            sentence = `I renounce ${val}.`;
+            sentence = formatPrayerCopy(copy.simple, { value: val });
           } else if (inj.format === "renounce_spirit_each") {
             const val = d[inj.field!] ?? "";
-            sentence = `I renounce ${val}. I will not serve you. Jesus Christ is my only Lord.`;
+            sentence = formatPrayerCopy(copy.spirit, { value: val });
           } else if (inj.format === "pattern_side_each") {
             const sides: Record<string, string> = {
-              "Father's side": "father's side", "Mother's side": "mother's side",
-              "Both": "both sides", "Both sides": "both sides",
-              "Adoptive": "adoptive family", "Adoptive family": "adoptive family",
-              "Adoptive family.": "adoptive family",
+              "Father's side": copy.fathersSide, "Mother's side": copy.mothersSide,
+              "Both": copy.bothSides, "Both sides": copy.bothSides,
+              "Adoptive": copy.adoptiveFamily, "Adoptive family": copy.adoptiveFamily,
+              "Adoptive family.": copy.adoptiveFamily,
             };
             const side = sides[d.side];
             sentence = `${d[inj.field!] ?? ""}${side ? ` (${side})` : ""}`;
           } else if (inj.format === "forgive_each") {
             const person = d.person ?? "";
-            const what = d.what?.trim() ? ` for ${d.what.trim()}` : "";
-            sentence = `I forgive ${person}${what}.`;
+            sentence = d.what?.trim()
+              ? formatPrayerCopy(copy.forgiveWithHarm, { name: person, value: d.what.trim() })
+              : formatPrayerCopy(copy.forgive, { name: person });
           } else if (inj.format === "let_end_each") {
             const val = d[inj.field!] ?? "";
-            sentence = `Let ${val} end with me.`;
+            sentence = formatPrayerCopy(copy.letEnd, { value: val });
           } else if (inj.format === "ancestor_each") {
             const name = d.name_or_description ?? "";
             const groups = d.groups_or_sins_involved?.trim();
             sentence = groups ? `${name} — ${groups}` : name;
           } else if (inj.format === "family_dead_each") {
-            const name = d.name?.trim() || "this member of our family";
+            const name = d.name?.trim() || copy.familyMember;
             const circumstance = d.circumstance ?? "";
             const isChild = circumstance === "Miscarried child" || circumstance === "Aborted child";
             if (isChild) {
-              const childName = d.named_now?.trim() || "known to You by name";
-              sentence = `I entrust this child, ${childName}, to Your mercy. I acknowledge this child as part of our family, and I mourn this child now. Receive this child into Your arms.`;
+              const childName = d.named_now?.trim() || copy.childName;
+              sentence = formatPrayerCopy(copy.child, { name: childName });
             } else {
               if (!d.name?.trim()) return null;
-              sentence = `I remember ${name} before You. I mourn this loss, and I entrust ${name} to Your mercy.`;
+              sentence = formatPrayerCopy(copy.familyDead, { name });
             }
           }
 
@@ -424,7 +433,7 @@ export function renderNodes(
       }
 
       // ── Inline format ──
-      const value = evaluateInjectToString(inj, allEntries, profile);
+      const value = evaluateInjectToString(inj, allEntries, profile, patternLabels, copy);
       if (!value) return null;
       return (
         <span key={key} style={HIGHLIGHT_STYLE}>
@@ -474,7 +483,10 @@ export default function PrayerRender({ prayerId, onDone }: PrayerRenderProps) {
 }
 
 function PrayerContent({ prayerId, onDone }: PrayerRenderProps) {
-  const template = PRAYER_TEMPLATES[prayerId];
+  const { prayers, sections: SECTIONS, patterns, text } = useWorkbookContent();
+  const copy = Object.fromEntries(Object.keys(PRAYER_FORMAT_COPY).map(key => [key, text(`general.formats.${key}`)])) as PrayerFormatCopy;
+  const patternLabels = Object.fromEntries(patterns.map(pattern => [pattern.value, pattern.label]));
+  const template = prayers[prayerId];
   const [pageIndex, setPageIndex] = useState(0);
   const [textareaValues, setTextareaValuesState] = useState<Record<string, string>>({});
 
@@ -517,6 +529,7 @@ function PrayerContent({ prayerId, onDone }: PrayerRenderProps) {
   const currentPage = visiblePages[pageIndex] ?? visiblePages[0];
   const isFirst = pageIndex === 0;
   const isLast = pageIndex >= visiblePages.length - 1;
+  if (!currentPage) return <div style={{ padding: 32 }}><p>No prayer pages are available for these entries.</p><button type="button" onClick={onDone}>Done</button></div>;
 
   return (
     <div
@@ -562,7 +575,7 @@ function PrayerContent({ prayerId, onDone }: PrayerRenderProps) {
             }
           >
             <ChevronLeft style={{ width: "12px", height: "12px" }} />
-            The Deliverance Workbook
+            {text("general.workbookTitle")}
           </button>
 
           <div
@@ -676,6 +689,9 @@ function PrayerContent({ prayerId, onDone }: PrayerRenderProps) {
                 textareaValues,
                 setTextareaValue,
                 pageIndex,
+                "",
+                patternLabels,
+                copy,
               )}
             </div>
           )}

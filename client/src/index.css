@@ -14,14 +14,33 @@
 @font-face {
   font-family: 'Ivy Ora Display';
   src: url('/fonts/ivy-ora-display-medium.otf') format('opentype');
-  font-weight: 500;
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 
-.font-serif {
-  font-weight: 600;
+@font-face {
+  font-family: 'IvyOra Display';
+  src: url('/fonts/ivy-ora-display-medium.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IvyOra';
+  src: url('/fonts/ivy-ora-display-medium.otf') format('opentype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+* { font-synthesis: none; }
+.font-serif, [class*="type-display-"], [style*="IvyOra"], [style*="Ivy Ora"] {
+  font-weight: 500 !important;
+  font-synthesis: none;
+}
+:is(.font-serif, [class*="type-display-"], [style*="IvyOra"], [style*="Ivy Ora"]) > :is(strong, b):not([style*="font-family"]):not([class*="type-body-"]):not(.font-sans) {
+  font-weight: inherit;
 }
 
 /* ── Dark App Color Token Layer ──────────────────────────────────────
@@ -141,8 +160,8 @@
   --chart-4: 280 50% 50%;
   --chart-5: 40 70% 55%;
 
-  --font-sans: 'Inter', sans-serif;
-  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Afacad', sans-serif;
+  --font-serif: 'Ivy Ora Display', Georgia, serif;
   --font-mono: Menlo, monospace;
   --radius: .5rem;
   --shadow-2xs: 0px 2px 0px 0px hsl(40 20% 50% / 0.00);

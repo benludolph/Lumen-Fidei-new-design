@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import PrayerRender from "./PrayerRender";
 import type { PrayerId } from "@shared/schema";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 
 interface PrayerSheetProps {
   prayerId: PrayerId;
@@ -11,6 +12,7 @@ interface PrayerSheetProps {
 }
 
 export default function PrayerSheet({ prayerId, onClose, onDone }: PrayerSheetProps) {
+  const { prayers } = useWorkbookContent();
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -23,11 +25,6 @@ export default function PrayerSheet({ prayerId, onClose, onDone }: PrayerSheetPr
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const PRAYER_LABELS: Record<PrayerId, string> = {
-    prayer_1: "Personal Prayer for Freedom",
-    prayer_2: "Family Line Prayer",
-    prayer_3: "Daily Prayer",
-  };
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300 }}>
@@ -95,7 +92,7 @@ export default function PrayerSheet({ prayerId, onClose, onDone }: PrayerSheetPr
                 margin: 0,
               }}
             >
-              {PRAYER_LABELS[prayerId]}
+              {prayers[prayerId].title}
             </p>
             <button
               onClick={onClose}

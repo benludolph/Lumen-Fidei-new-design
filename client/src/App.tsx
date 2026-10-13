@@ -23,7 +23,7 @@ import PreviewLesson from "@/pages/PreviewLesson";
 import PrayerToolkit from "@/pages/PrayerToolkit";
 import CaptivityBuilderResource from "@/pages/CaptivityBuilderResource";
 import ConfessionFinderResource from "@/pages/ConfessionFinderResource";
-import FreedomWorkbookResource from "@/pages/FreedomWorkbookResource";
+import { WorkbookContentProvider } from "@/components/workbook-admin/WorkbookContentProvider";
 import WorkbookPage from "@/pages/WorkbookPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ProgramOverview from "@/pages/ProgramOverview";
@@ -56,7 +56,7 @@ function ProtectedRoute({
     return <Redirect to={fallback} />;
   }
 
-  return <Component key={`${user.id}-${user.track || ""}`} />;
+  return <WorkbookContentProvider key={`${user.id}-${user.track || ""}`}><Component /></WorkbookContentProvider>;
 }
 
 // Preserve the legacy testimonies URL.
@@ -134,11 +134,14 @@ function Router() {
       </Route>
 
       <Route path="/resources/tools/freedom-workbook/:sectionId">
-        <ProtectedRoute component={FreedomWorkbookResource} />
+        <Redirect to="/workbook" />
       </Route>
 
       <Route path="/resources/tools/freedom-workbook">
-        <ProtectedRoute component={FreedomWorkbookResource} />
+        <Redirect to="/workbook" />
+      </Route>
+      <Route path="/resources/tools/daily-renewal">
+        <Redirect to="/workbook" />
       </Route>
 
       <Route path="/profile">

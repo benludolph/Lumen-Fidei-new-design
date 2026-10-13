@@ -29,7 +29,7 @@ node -e "
 const { Pool } = require('pg');
 const fs = require('fs');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-pool.query(fs.readFileSync('scripts/workbook-stage-one-schema.sql', 'utf8'))
+pool.query(fs.readFileSync('scripts/workbook-stage-one-schema.sql', 'utf8') + fs.readFileSync('scripts/workbook-editor-schema.sql', 'utf8'))
   .then(() => pool.end())
   .catch(e => { console.error(e.message); pool.end(); process.exitCode = 1; });
 "

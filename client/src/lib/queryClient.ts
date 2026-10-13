@@ -1,6 +1,13 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { trackFetch as fetch } from "@/lib/track-context";
 
+export class ApiRequestError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -9,12 +16,12 @@ async function throwIfResNotOk(res: Response) {
       const details = payload.errors || payload.details;
       const message = payload.message || payload.error;
       if (message || details) {
-        throw new Error(`${message || "Request failed"}${details ? `: ${Array.isArray(details) ? details.join("; ") : JSON.stringify(details)}` : ""}`);
+        throw new ApiRequestError(`${message || "Request failed"}${details ? `: ${Array.isArray(details) ? details.join("; ") : JSON.stringify(details)}` : ""}`, res.status);
       }
     } catch (error) {
       if (error instanceof Error && !(error instanceof SyntaxError)) throw error;
     }
-    throw new Error(`${res.status}: ${text}`);
+    throw new ApiRequestError(`${res.status}: ${text}`, res.status);
   }
 }
 

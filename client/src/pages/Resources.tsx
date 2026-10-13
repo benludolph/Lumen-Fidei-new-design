@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useAuth } from "@/hooks/use-auth";
@@ -124,6 +125,7 @@ function getResourceSubtext(name: string): string {
 }
 
 function FreedomWorkbookCard() {
+  const { text } = useWorkbookContent();
   const [hovered, setHovered] = useState(false);
   return (
     <Link href="/workbook">
@@ -181,7 +183,7 @@ function FreedomWorkbookCard() {
         <div className="flex items-end justify-between w-full relative z-[3]">
           <div className="flex-1 min-w-0">
             <p className="type-display-sm mb-2 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: "#f7f8f8", letterSpacing: "-0.1402px" }}>
-              The Deliverance Workbook
+              {text("general.workbookTitle")}
             </p>
             <p className="type-body-xs" style={{ color: "#8a8f98" }}>
               5-category spiritual inventory

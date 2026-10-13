@@ -5,6 +5,15 @@ import { z } from "zod";
 
 // === TABLE DEFINITIONS ===
 
+// Authored workbook copy is global; never contains participant answers.
+export const workbookEditorialContent = pgTable("workbook_editorial_content", {
+  id: text("id").primaryKey(),
+  draft: jsonb("draft").$type<import("./workbook-content").WorkbookDocument>().notNull(),
+  applied: jsonb("applied").$type<import("./workbook-content").WorkbookDocument>().notNull(),
+  revision: integer("revision").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Managed by connect-pg-simple; retained in schema diffs, never curriculum data.
 export const sessions = pgTable("session", {
   sid: varchar("sid").primaryKey(),

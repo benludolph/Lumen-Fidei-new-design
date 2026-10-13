@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { useCohortStartDate } from "@/hooks/use-cohort";
-import { SECTION_CATEGORIES, getSectionsByCategory } from "@/components/workbook/section-definitions";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import CategorySession from "@/components/workbook/CategorySession";
 import WorkbookAccessGate from "@/components/workbook/WorkbookAccessGate";
 import { Lock, ChevronRight, BookOpen } from "lucide-react";
@@ -86,7 +86,8 @@ function CategoryCard({
   summary: WorkbookSummary;
   onClick: () => void;
 }) {
-  const subsections = getSectionsByCategory(categoryId);
+  const { sections } = useWorkbookContent();
+  const subsections = sections.filter(section => section.categoryId === categoryId);
   const total = subsections.length;
   const filled = subsections.filter((s) => {
     const sec = summary[s.id];
@@ -320,6 +321,7 @@ function LockedState() {
 }
 
 export default function WorkbookPage() {
+  const { categories: SECTION_CATEGORIES, text } = useWorkbookContent();
   const { data: cohortData, isLoading: cohortLoading } = useCohortStartDate();
   const { data: summary = {}, isLoading: summaryLoading } = useQuery<WorkbookSummary>({
     queryKey: ["/api/workbook/summary"],
@@ -389,10 +391,10 @@ export default function WorkbookPage() {
                   margin: "0 0 12px",
                 }}
               >
-                The Deliverance Workbook
+                {text("general.workbookTitle")}
               </h1>
               <p className="type-body-lg" style={{ color: "var(--white-60)", margin: 0 }}>
-                A spiritual inventory to prepare for a long-form renunciation prayer. Work through each category at your own pace.
+                {text("general.workbookDescription")}
               </p>
             </div>
 

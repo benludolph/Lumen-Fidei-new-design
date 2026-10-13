@@ -22,7 +22,7 @@ import { ConfessionFinderSlide } from "./ConfessionFinderSlide";
 import { GuidedPrayerProcessSlide } from "./GuidedPrayerProcessSlide";
 import { SelectionRevealSlide } from "./SelectionRevealSlide";
 import { BentoRevealSlide } from "./BentoRevealSlide";
-import { getSectionById, SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-definitions";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import type { WorkbookSummary, WorkbookStreakStatus, PrayerId } from "@shared/schema";
@@ -2917,8 +2917,9 @@ function WorkbookLinkRow({
   summary: WorkbookSummary;
   onInteracted?: () => void;
 }) {
-  const section = sectionId != null ? getSectionById(sectionId) : undefined;
-  const displayName = section?.name ?? label ?? "The Deliverance Workbook";
+  const { sections, text } = useWorkbookContent();
+  const section = sectionId != null ? sections.find(section => section.id === sectionId) : undefined;
+  const displayName = section?.name ?? label ?? text("general.workbookTitle");
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const sec = sectionId != null ? summary[sectionId] : undefined;
@@ -2955,7 +2956,7 @@ function WorkbookLinkRow({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
             <p style={{ fontFamily: "'Afacad', sans-serif", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", margin: 0 }}>
-              The Deliverance Workbook
+              {text("general.workbookTitle")}
             </p>
             {isComplete && <CheckCircle2 style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }} />}
           </div>
@@ -2984,7 +2985,7 @@ function WorkbookLinkRow({
           </button>
         ) : (
           <a
-            href="/resources/tools/freedom-workbook"
+            href="/workbook"
             data-testid="button-open-workbook"
             style={{
               display: "inline-flex", alignItems: "center", padding: "8px 16px", borderRadius: "6px",
@@ -3065,6 +3066,7 @@ function WorkbookSessionSlide({
   const [dismissed, setDismissed] = useState(false);
 
   // Auto-populate: group all sections by category, filter to only incomplete ones
+  const { sections: SECTIONS, categories: SECTION_CATEGORIES } = useWorkbookContent();
   const allSections = SECTIONS.map(def => {
     const sec = (summary as WorkbookSummary)[def.id];
     const isComplete = sec ? (sec.attested || sec.count > 0) : false;
@@ -3224,19 +3226,10 @@ function PrayerLinkSlide({
     /* use defaults */
   }
 
-  const PRAYER_NAMES: Record<PrayerId, string> = {
-    prayer_1: "Personal Prayer for Freedom",
-    prayer_2: "Family Line Prayer",
-    prayer_3: "Daily Prayer",
-  };
-  const PRAYER_SUBTITLES: Record<PrayerId, string> = {
-    prayer_1: "Pray once, with intention, after working through the Workbook",
-    prayer_2: "Family Line Prayer",
-    prayer_3: "Ongoing daily prayer — your living armor",
-  };
+  const { prayers, text } = useWorkbookContent();
 
-  const displayName = label || PRAYER_NAMES[prayerId];
-  const subtitle = PRAYER_SUBTITLES[prayerId];
+  const displayName = label || prayers[prayerId].title;
+  const subtitle = text(`general.prayerLink.${prayerId}.subtitle`);
 
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -3287,7 +3280,7 @@ function PrayerLinkSlide({
                 margin: 0,
               }}
             >
-              The Deliverance Workbook
+              {text("general.workbookTitle")}
             </p>
             {isComplete && (
               <CheckCircle2 style={{ width: "13px", height: "13px", color: "rgba(100,210,130,0.75)", flexShrink: 0 }} />

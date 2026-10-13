@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import lumenIcon from "@/assets/images/logo.png";
 import { useQuery } from "@tanstack/react-query";
+import { confirmWorkbookNavigation } from "@/components/workbook-admin/use-editor-navigation";
 import { 
   BookOpen, 
   Users, 
@@ -56,6 +57,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   if (!user) return null;
 
   const handleLogout = () => {
+    if (!confirmWorkbookNavigation()) return;
     if (onNavClick) onNavClick();
     logout();
   };

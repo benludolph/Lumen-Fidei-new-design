@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { TrackManagement, TrackAssignment } from "@/components/TrackManagement";
 import { useTracks } from "@/hooks/use-tracks";
 import { trackFetch as fetch, getSelectedTrackId, activityLocalStorage as localStorage } from "@/lib/track-context";
-import { SECTIONS, SECTION_CATEGORIES } from "@/components/workbook/section-definitions";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers, useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { Shell } from "@/components/layout/Shell";
@@ -45,6 +45,7 @@ import { api, type ContentBackup, type SafeUser } from "@shared/routes";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import WorkbookContentEditor from "@/components/workbook-admin/WorkbookContentEditor";
 
 type CohortRecord = {
   id: number;
@@ -234,8 +235,17 @@ export default function Admin() {
 }
 
 function ContentTabView() {
+  const [view, setView] = useState("tracks");
   return (
-    <TrackManagement>{trackId => <TrackAContentManagementView key={trackId} />}</TrackManagement>
+    <div className="space-y-6">
+      <Tabs value={view} onValueChange={setView}>
+        <TabsList>
+          <TabsTrigger value="tracks">Track content</TabsTrigger>
+          <TabsTrigger value="workbook" data-testid="tab-workbook-content">Workbook · All tracks</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      {view === "tracks" ? <TrackManagement>{trackId => <TrackAContentManagementView key={trackId} />}</TrackManagement> : <WorkbookContentEditor />}
+    </div>
   );
 }
 
@@ -4170,6 +4180,7 @@ const CROSS_GRID_DUAL_DEFAULT = JSON.stringify({
 }, null, 2);
 
 function WorkbookLinkSlideEditor({ content, onChange, index, idPrefix }: { content: string; onChange: (val: string) => void; index: number; idPrefix: string }) {
+  const { sections: SECTIONS, categories: SECTION_CATEGORIES } = useWorkbookContent();
   let parsed: { sectionId?: number | null; sectionIds?: number[]; label?: string } = {};
   try { parsed = JSON.parse(content || "{}"); } catch { /* ignore */ }
 

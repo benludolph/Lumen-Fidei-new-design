@@ -3,7 +3,8 @@ import { ChevronLeft } from "lucide-react";
 import ListBuilder from "./ListBuilder";
 import LiesAndTruthsEditor from "./LiesAndTruthsEditor";
 import PatternsChecklist from "./PatternsChecklist";
-import { getSectionById } from "./section-definitions";
+import { useWorkbookContent } from "@/components/workbook-admin/WorkbookContentProvider";
+import { useIsWorkbookPreview } from "@/components/workbook-admin/preview-context";
 import SectionGuidance from "./SectionGuidance";
 import WorkbookAccessGate from "./WorkbookAccessGate";
 
@@ -18,7 +19,9 @@ export default function SectionView({ sectionId, inSheet, onClose }: SectionView
 }
 
 function SectionContent({ sectionId, inSheet, onClose }: SectionViewProps) {
-  const section = getSectionById(sectionId);
+  const { sections, text } = useWorkbookContent();
+  const preview = useIsWorkbookPreview();
+  const section = sections.find(section => section.id === sectionId);
 
   if (!section) {
     return (
@@ -74,7 +77,7 @@ function SectionContent({ sectionId, inSheet, onClose }: SectionViewProps) {
                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.3)")}
               >
                 <ChevronLeft style={{ width: "12px", height: "12px" }} />
-                The Deliverance Workbook
+                {text("general.workbookTitle")}
               </span>
             </Link>
           )}
@@ -90,7 +93,7 @@ function SectionContent({ sectionId, inSheet, onClose }: SectionViewProps) {
               marginBottom: "8px",
             }}
           >
-            Section {sectionId} · The Deliverance Workbook
+            Section {sectionId} · {text("general.workbookTitle")}
           </p>
           <h1
             className="font-serif"
@@ -157,6 +160,7 @@ function SectionContent({ sectionId, inSheet, onClose }: SectionViewProps) {
         </div>
 
         {/* Content — dispatch by section type */}
+        <fieldset disabled={preview} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         {section.type === "lies_and_truths" ? (
           <LiesAndTruthsEditor />
         ) : section.type === "patterns_checklist" ? (
@@ -164,6 +168,7 @@ function SectionContent({ sectionId, inSheet, onClose }: SectionViewProps) {
         ) : (
           <ListBuilder key={section.id} section={section} onClose={onClose} />
         )}
+        </fieldset>
       </div>
     </div>
   );
