@@ -6,8 +6,7 @@ import { sendPasswordResetEmail } from "./email";
 import crypto from "crypto";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { WORKBOOK_CATEGORY_SECTIONS, isActiveWorkbookSection } from "@shared/workbook-categories";
-import { tracks, insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, surveyResponses, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, testimonies, testimonyParts, cohorts, users as usersTable, type User, WORKBOOK_MAX_SECTION_ID } from "@shared/schema";
+import { tracks, insertTrackAContentSchema, insertTrackAModuleSchema, uploadedImages, trackAContent, trackAModules, trackASnapshots, prelimModules, practiceResources, chatFlowResponses, cohortSettings, moduleOverlays, testimonies, testimonyParts, cohorts, users as usersTable, type User } from "@shared/schema";
 import { trackDb as db } from "./track-db";
 import { currentTrackId, withTrack } from "./track-context";
 import { registerTrackRoutes, trackScopeMiddleware, validateTrackAssignment } from "./tracks";
@@ -15,6 +14,15 @@ import { registerWorkbookContentRoutes } from "./workbook-content";
 import { registerTestimonyRoutes } from "./features/testimonies/routes";
 import { registerFinderRoutes } from "./features/finders/routes";
 import { registerCertificateRoutes } from "./features/certificate/routes";
+import type { RouteDependencies } from "./features/shared";
+import { registerPeopleRoutes, registerPeopleDeletionRoutes, registerPeopleDetailsRoutes, registerMentorActivityRoutes } from "./features/people/routes";
+import { registerProfilePhotoRoutes, registerProfileRoutes } from "./features/profile/routes";
+import { registerSurveyRoutes, registerGuidedPrayerResponseRoutes, registerAdminSurveyRoutes, registerAnswerRoutes } from "./features/responses/routes";
+import { registerMessageRoutes, registerAdminMessageRoutes } from "./features/messages/routes";
+import { registerResourceRoutes } from "./features/resources/routes";
+import { registerCohortListRoutes, registerCohortSettingsRoutes, registerCohortCreationRoutes } from "./features/cohorts/routes";
+import { registerBackupRoutes } from "./features/backups/routes";
+import { registerWorkbookModuleRoutes, registerWorkbookEntryRoutes } from "./features/workbook/routes";
 import { eq, sql, and, gt } from "drizzle-orm";
 import rateLimit from "express-rate-limit";
 import sanitizeHtml from "sanitize-html";
@@ -218,6 +226,12 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  const dependencies: RouteDependencies = {
+    requireAuth, requireRole, writeLimiter, messageLimiter, uploadLimiter, upload,
+    stripHtml, sanitizeUser, sanitizeUsers, computeCurrentProgramDay, effectiveCurrentDay,
+    hashPassword, validateTrackAssignment,
+  };
+
   // Setup Authentication
   await setupAuth(app);
   registerWorkbookContentRoutes(app, requireAuth, requireRole("admin"), writeLimiter);
@@ -363,152 +377,7 @@ export async function registerRoutes(
     res.json({ message: "Password reset successfully." });
   });
 
-  // === Users ===
-  
-  app.get(api.users.list.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const role = req.query.role as "participant" | "mentor" | undefined;
-    const all = req.query.all === "true";
-    
-    if (req.user!.role === 'participant') {
-      const partnerIds = await storage.getConversationPartnerIds(req.user!.id);
-      if (partnerIds.length === 0) return res.json([]);
-      const partners = await Promise.all(partnerIds.map(id => storage.getUser(id)));
-      const validPartners = partners.filter((u): u is NonNullable<typeof u> => u != null && u.id !== req.user!.id);
-      return res.json(sanitizeUsers(validPartners));
-    }
-    
-    // Mentors: always scoped to their own mentees plus admins only
-    if (req.user!.role === 'mentor') {
-      const allUsers = await storage.getAllUsers();
-      const mentees = allUsers.filter(u => u.mentorId === req.user!.id);
-      const admins = allUsers.filter(u => u.role === 'admin');
-      const contacts = [...admins, ...mentees].filter(u => u.id !== req.user!.id);
-      return res.json(sanitizeUsers(contacts));
-    }
-    
-    // Admin sees all (exclude self from listing for new conversations)
-    if (role) {
-      const users = await storage.getUsersByRole(role);
-      res.json(sanitizeUsers(users));
-    } else {
-      const users = await storage.getAllUsers();
-      // If requesting for new conversations, exclude self
-      if (all) {
-        res.json(sanitizeUsers(users.filter(u => u.id !== req.user!.id)));
-      } else {
-        res.json(sanitizeUsers(users));
-      }
-    }
-  });
-
-  // Get a single user's public profile (used by participants to get mentor photo)
-  app.get('/api/users/:id', requireAuth, async (req, res) => {
-    const targetId = Number(req.params.id);
-    if (isNaN(targetId)) return res.sendStatus(400);
-    const target = await storage.getUser(targetId);
-    if (!target) return res.sendStatus(404);
-
-    // Participants can only fetch their own mentor
-    if (req.user!.role === 'participant') {
-      if (target.id !== req.user!.mentorId && target.id !== req.user!.id) {
-        return res.sendStatus(403);
-      }
-    }
-    // Mentors can fetch their mentees or admins
-    if (req.user!.role === 'mentor') {
-      const isMentee = target.mentorId === req.user!.id;
-      const isAdmin = target.role === 'admin';
-      const isSelf = target.id === req.user!.id;
-      if (!isMentee && !isAdmin && !isSelf) {
-        return res.sendStatus(403);
-      }
-    }
-    res.json(sanitizeUser(target));
-  });
-
-  app.post(api.users.create.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Only admins can create users" });
-    }
-
-    try {
-      const input = api.users.create.input.parse(req.body);
-      try { await validateTrackAssignment(input.track, input.contentVariantSnapshotId); }
-      catch (error) { return res.status(400).json({ message: (error as Error).message }); }
-      // Normalize email to lowercase for case-insensitive matching
-      const normalizedEmail = input.email.toLowerCase().trim();
-      const existing = await storage.getUserByUsername(normalizedEmail);
-      if (existing) {
-        return res.status(400).json({ message: "Email already taken" });
-      }
-      
-      // Hash the password before storing
-      const hashedPassword = await hashPassword(input.password);
-      // Auto-assign to active cohort for participants and mentors
-      let cohortId: number | null = null;
-      if (input.role === 'participant' || input.role === 'mentor') {
-        const activeCohort = await storage.getActiveCohort();
-        if (activeCohort) cohortId = activeCohort.id;
-      }
-      const user = await storage.createUser({
-        ...input,
-        email: normalizedEmail,
-        password: hashedPassword,
-        ...(cohortId !== null ? { cohortId } : {}),
-      });
-      res.status(201).json(sanitizeUser(user));
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: err.errors[0].message });
-      }
-      throw err;
-    }
-  });
-
-  app.patch(api.users.update.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') return res.sendStatus(403);
-    
-    const userId = Number(req.params.id);
-    const input = api.users.update.input.parse(req.body);
-    const existingUser = await storage.getUser(userId);
-    if (!existingUser) return res.sendStatus(404);
-    if (input.track !== undefined && input.track !== existingUser.track && input.contentVariantSnapshotId === undefined) {
-      input.contentVariantSnapshotId = null;
-    }
-    try {
-      await validateTrackAssignment(input.track === undefined ? existingUser.track : input.track,
-        input.contentVariantSnapshotId === undefined ? existingUser.contentVariantSnapshotId : input.contentVariantSnapshotId);
-    } catch (error) { return res.status(400).json({ message: (error as Error).message }); }
-    
-    // Hash the password if it is being updated
-    const updateData = input.password
-      ? { ...input, password: await hashPassword(input.password) }
-      : input;
-
-    const updated = await storage.updateUser(userId, updateData);
-    res.json(sanitizeUser(updated));
-  });
-
-  app.post('/api/admin/users/:id/deactivate', requireRole('admin'), async (req, res) => {
-    const userId = Number(req.params.id);
-    if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
-    const target = await storage.getUser(userId);
-    if (!target) return res.status(404).json({ message: "User not found" });
-    if (target.role === 'admin') return res.status(403).json({ message: "Cannot deactivate an admin account" });
-    const updated = await storage.updateUser(userId, { isActive: false });
-    res.json(sanitizeUser(updated));
-  });
-
-  app.post('/api/admin/users/:id/reactivate', requireRole('admin'), async (req, res) => {
-    const userId = Number(req.params.id);
-    if (isNaN(userId)) return res.status(400).json({ message: "Invalid user ID" });
-    const target = await storage.getUser(userId);
-    if (!target) return res.status(404).json({ message: "User not found" });
-    const updated = await storage.updateUser(userId, { isActive: true });
-    res.json(sanitizeUser(updated));
-  });
+  registerPeopleRoutes(app, dependencies);
 
   // === Track A Content ===
 
@@ -750,72 +619,7 @@ export async function registerRoutes(
     }
   });
 
-  // === Mentor Profile Photo Upload ===
-
-  // Mentor uploads their own profile photo
-  app.post('/api/mentor/upload-photo', requireRole('mentor', 'admin'), uploadLimiter, upload.single('image'), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No image file provided" });
-    }
-    try {
-      const ext = path.extname(req.file.originalname);
-      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
-      const filename = `mentor_photo_${req.user!.id}_${Date.now()}${ext}`;
-      const base64Data = req.file.buffer.toString("base64");
-
-      await db.insert(uploadedImages).values({
-        filename,
-        mimeType: req.file.mimetype,
-        data: base64Data,
-      }).onConflictDoUpdate({
-        target: uploadedImages.filename,
-        set: { data: base64Data, mimeType: req.file.mimetype },
-      });
-
-      const photoUrl = `/api/images/${filename}`;
-      await storage.updateUser(req.user!.id, { profilePhotoUrl: photoUrl });
-
-      res.json({ url: photoUrl });
-    } catch (error) {
-      console.error("Mentor photo upload error:", error);
-      res.status(500).json({ message: "Failed to save photo" });
-    }
-  });
-
-  // Admin sets profile photo for any mentor
-  app.post('/api/admin/mentor/:mentorId/upload-photo', requireRole('admin'), uploadLimiter, upload.single('image'), async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ message: "No image file provided" });
-    }
-    const mentorId = Number(req.params.mentorId);
-    const mentor = await storage.getUser(mentorId);
-    if (!mentor || (mentor.role !== 'mentor' && mentor.role !== 'admin')) {
-      return res.status(404).json({ message: "Mentor not found" });
-    }
-    try {
-      const ext = path.extname(req.file.originalname);
-      const base = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, "_");
-      const filename = `mentor_photo_${mentorId}_${Date.now()}${ext}`;
-      const base64Data = req.file.buffer.toString("base64");
-
-      await db.insert(uploadedImages).values({
-        filename,
-        mimeType: req.file.mimetype,
-        data: base64Data,
-      }).onConflictDoUpdate({
-        target: uploadedImages.filename,
-        set: { data: base64Data, mimeType: req.file.mimetype },
-      });
-
-      const photoUrl = `/api/images/${filename}`;
-      await storage.updateUser(mentorId, { profilePhotoUrl: photoUrl });
-
-      res.json({ url: photoUrl });
-    } catch (error) {
-      console.error("Admin mentor photo upload error:", error);
-      res.status(500).json({ message: "Failed to save photo" });
-    }
-  });
+  registerProfilePhotoRoutes(app, dependencies);
 
   app.post('/api/admin/upload-pdf', requireRole('admin'), uploadLimiter, async (req, res) => {
     const { filename: originalFilename, data: base64Data, mimeType } = req.body ?? {};
@@ -903,274 +707,15 @@ export async function registerRoutes(
     }
   });
 
-  // === Survey Responses ===
+  registerSurveyRoutes(app, dependencies);
 
-  const surveyBatchSchema = z.object({
-    track: z.string(),
-    dayNumber: z.number().int(),
-    responses: z.array(z.object({
-      questionIndex: z.number().int(),
-      questionLabel: z.string(),
-      questionType: z.string(),
-      response: z.string(),
-    })).min(1),
-  });
+  registerGuidedPrayerResponseRoutes(app, dependencies);
 
-  // Submit survey responses (batch)
-  app.post('/api/survey-responses', requireAuth, writeLimiter, async (req, res) => {
-    try {
-      const body = surveyBatchSchema.parse(req.body);
-      const userId = req.user!.id;
-      const rows = body.responses.map(r => ({
-        userId,
-        track: body.track,
-        dayNumber: body.dayNumber,
-        questionIndex: r.questionIndex,
-        questionLabel: r.questionLabel,
-        questionType: r.questionType,
-        response: r.response,
-      }));
-      await db.insert(surveyResponses).values(rows);
-      res.status(201).json({ success: true });
-    } catch (e) {
-      if (e instanceof z.ZodError) return res.status(400).json({ message: "Invalid request", errors: e.errors });
-      console.error("Survey submit error:", e);
-      res.status(500).json({ message: "Failed to save survey responses" });
-    }
-  });
+  registerAdminSurveyRoutes(app, dependencies);
 
-  // Check if current user already submitted a survey for a given day
-  app.get('/api/survey-responses/submitted', requireAuth, async (req, res) => {
-    try {
-      const dayNumber = parseInt(req.query.dayNumber as string);
-      if (isNaN(dayNumber)) return res.status(400).json({ message: "dayNumber required" });
-      const userId = req.user!.id;
-      const existing = await db.select({ id: surveyResponses.id })
-        .from(surveyResponses)
-        .where(and(eq(surveyResponses.userId, userId), eq(surveyResponses.dayNumber, dayNumber)))
-        .limit(1);
-      res.json({ submitted: existing.length > 0 });
-    } catch (e) {
-      console.error("Survey check error:", e);
-      res.status(500).json({ message: "Failed to check survey status" });
-    }
-  });
+  registerAnswerRoutes(app, dependencies);
 
-  // === Guided Prayer Process Responses ===
-
-  app.get('/api/guided-prayer-responses', requireAuth, async (req, res) => {
-    try {
-      const dayNumber = parseInt(req.query.dayNumber as string, 10);
-      const slideIndex = parseInt(req.query.slideIndex as string, 10);
-      if (isNaN(dayNumber) || isNaN(slideIndex)) {
-        return res.status(400).json({ message: "dayNumber and slideIndex are required integers" });
-      }
-      const row = await storage.getGuidedPrayerResponse(req.user!.id, dayNumber, slideIndex);
-      res.json(row ?? null);
-    } catch (e) {
-      console.error("Guided prayer GET error:", e);
-      res.status(500).json({ message: "Failed to fetch guided prayer response" });
-    }
-  });
-
-  app.post('/api/guided-prayer-responses', requireAuth, writeLimiter, async (req, res) => {
-    try {
-      const bodySchema = z.object({
-        dayNumber: z.number().int(),
-        slideIndex: z.number().int().min(0),
-        variables: z.record(z.union([z.string(), z.array(z.string())])),
-      });
-      const body = bodySchema.parse(req.body);
-      const row = await storage.upsertGuidedPrayerResponse(req.user!.id, body.dayNumber, body.slideIndex, body.variables);
-      res.status(201).json(row);
-    } catch (e) {
-      if (e instanceof z.ZodError) return res.status(400).json({ message: "Invalid request", errors: e.errors });
-      console.error("Guided prayer POST error:", e);
-      res.status(500).json({ message: "Failed to save guided prayer response" });
-    }
-  });
-
-  app.get('/api/admin/guided-prayer-responses', requireRole('admin', 'mentor'), async (req, res) => {
-    try {
-      const userId = parseInt(req.query.userId as string, 10);
-      if (isNaN(userId)) return res.status(400).json({ message: "userId is required" });
-      if (req.user!.role === 'mentor') {
-        const targetUser = await storage.getUser(userId);
-        if (!targetUser || targetUser.mentorId !== req.user!.id) {
-          return res.sendStatus(403);
-        }
-      }
-      const rows = await storage.getGuidedPrayerResponsesByUserId(userId);
-      res.json(rows);
-    } catch (e) {
-      console.error("Admin guided prayer GET error:", e);
-      res.status(500).json({ message: "Failed to fetch guided prayer responses" });
-    }
-  });
-
-  // Admin: get all survey responses for a track + day
-  app.get('/api/admin/survey-responses', requireRole('admin'), async (req, res) => {
-    try {
-      const track = req.query.track as string | undefined;
-      const dayNumber = req.query.dayNumber !== undefined ? parseInt(req.query.dayNumber as string) : undefined;
-      const hasTrack = !!track;
-      const hasDay = dayNumber !== undefined && !isNaN(dayNumber);
-      let rows;
-      if (hasTrack && hasDay) {
-        rows = await db.select().from(surveyResponses)
-          .where(and(eq(surveyResponses.track, track!), eq(surveyResponses.dayNumber, dayNumber!)))
-          .orderBy(surveyResponses.submittedAt);
-      } else if (hasTrack) {
-        rows = await db.select().from(surveyResponses)
-          .where(eq(surveyResponses.track, track!))
-          .orderBy(surveyResponses.submittedAt);
-      } else if (hasDay) {
-        rows = await db.select().from(surveyResponses)
-          .where(eq(surveyResponses.dayNumber, dayNumber!))
-          .orderBy(surveyResponses.submittedAt);
-      } else {
-        rows = await db.select().from(surveyResponses).orderBy(surveyResponses.submittedAt);
-      }
-      res.json(rows);
-    } catch (e) {
-      console.error("Admin survey responses error:", e);
-      res.status(500).json({ message: "Failed to fetch survey responses" });
-    }
-  });
-
-  // === Answers ===
-
-  app.get(api.answers.list.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    let targetUserId = req.user!.id;
-    
-    // Mentors/Admins can view others
-    if (req.query.userId && (req.user!.role === 'mentor' || req.user!.role === 'admin')) {
-      targetUserId = Number(req.query.userId);
-      // Mentor check: is this my mentee?
-      if (req.user!.role === 'mentor') {
-          const targetUser = await storage.getUser(targetUserId);
-          if (targetUser?.mentorId !== req.user!.id) {
-              return res.sendStatus(403);
-          }
-      }
-    }
-    
-    const answers = await storage.getUserAnswers(targetUserId);
-    res.json(answers);
-  });
-
-  app.post(api.answers.create.path, writeLimiter, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const input = api.answers.create.input.parse(req.body);
-    
-    const answer = await storage.createUserAnswer({
-      ...input,
-      content: stripHtml(input.content),
-      userId: req.user!.id
-    });
-    
-    res.status(201).json(answer);
-  });
-
-  // === Journal ===
-
-  app.get('/api/journal', requireRole('participant', 'superuser'), async (req, res) => {
-    const modules = await storage.getJournalEntries(req.user!.id);
-    res.json(modules);
-  });
-
-  // === Chat ===
-
-  // Unread message count - must be BEFORE the :otherUserId route
-  app.get(api.chat.unreadCount.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const count = await storage.getUnreadMessageCount(req.user!.id);
-    res.json({ count });
-  });
-
-  app.get(api.chat.unreadByConversation.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const counts = await storage.getUnreadMessageCountsBySender(req.user!.id);
-    res.json(counts);
-  });
-
-  // Mark messages as read for the current user. If a sender is supplied,
-  // only that conversation is marked read; otherwise preserve the legacy
-  // mark-all behavior for callers that still use this endpoint.
-  app.post("/api/messages/mark-read", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const senderId = Number(req.body?.senderId);
-    if (Number.isInteger(senderId) && senderId > 0) {
-      await storage.markMessagesAsRead(senderId, req.user!.id);
-    } else {
-      await storage.markAllMessagesAsRead(req.user!.id);
-    }
-    res.json({ success: true });
-  });
-
-  app.get(api.chat.list.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const otherUserId = Number(req.params.otherUserId);
-    const otherUser = await storage.getUser(otherUserId);
-    if (!otherUser) return res.status(404).json({ message: "User not found" });
-    
-    // Access control:
-    // - Participants can only view messages with their mentor
-    // - Mentors can view messages with their mentees OR admins
-    // - Admins can view messages with anyone
-    if (req.user!.role === 'participant') {
-      if (!req.user!.mentorId) {
-        return res.status(403).json({ message: "No mentor assigned" });
-      }
-      if (otherUserId !== req.user!.mentorId) {
-        return res.status(403).json({ message: "You can only view messages with your mentor" });
-      }
-    } else if (req.user!.role === 'mentor') {
-      const isMentee = otherUser.mentorId === req.user!.id;
-      const isAdmin = otherUser.role === 'admin';
-      if (!isMentee && !isAdmin) {
-        return res.status(403).json({ message: "You can only view messages with your mentees or admin" });
-      }
-    }
-    
-    const messages = await storage.getMessages(req.user!.id, otherUserId);
-    res.json(messages);
-  });
-
-  app.post(api.chat.send.path, messageLimiter, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const input = api.chat.send.input.parse(req.body);
-    const receiver = await storage.getUser(input.receiverId);
-    if (!receiver) return res.status(404).json({ message: "Receiver not found" });
-    
-    if (req.user!.role === 'participant') {
-      if (input.receiverId !== req.user!.mentorId) {
-        return res.status(403).json({ message: "You can only message your assigned mentor" });
-      }
-    } else if (req.user!.role === 'mentor') {
-      const isMentee = receiver.mentorId === req.user!.id;
-      const isAdmin = receiver.role === 'admin';
-      if (!isMentee && !isAdmin) {
-        return res.status(403).json({ message: "You can only message your mentees or admin" });
-      }
-    }
-
-    const message = await storage.createMessage({
-      senderId: req.user!.id,
-      receiverId: input.receiverId,
-      content: stripHtml(input.content)
-    });
-    
-    res.status(201).json(message);
-  });
+  registerMessageRoutes(app, dependencies);
 
   // === Track Requirements ===
   
@@ -1192,34 +737,7 @@ export async function registerRoutes(
     res.json(req_);
   });
 
-  // === Practice Resources ===
-  
-  app.get(api.practiceResources.list.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const resources = await storage.getAllPracticeResources();
-    res.json(resources);
-  });
-
-  app.get(api.practiceResources.get.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    const identifier = decodeURIComponent(String(req.params.idOrName ?? req.params.name));
-    const numericId = parseInt(identifier, 10);
-    const resource = (!isNaN(numericId) && String(numericId) === identifier)
-      ? await storage.getPracticeResourceById(numericId)
-      : await storage.getPracticeResourceByName(identifier);
-    if (!resource) return res.status(404).json({ message: "Practice resource not found" });
-    res.json(resource);
-  });
-
-  app.put("/api/practice-resources/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    if (req.user!.role !== "admin") return res.sendStatus(403);
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-    const resource = await storage.updatePracticeResourceById(id, req.body);
-    if (!resource) return res.status(404).json({ message: "Practice resource not found" });
-    res.json(resource);
-  });
+  registerResourceRoutes(app);
 
   // === Prayer Completions ===
   
@@ -1326,47 +844,9 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
-  // === Admin Routes ===
+  registerPeopleDeletionRoutes(app);
 
-  app.delete(api.admin.deleteUser.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const userId = Number(req.params.id);
-    const user = await storage.getUser(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    
-    await storage.deleteUser(userId);
-    res.json({ message: "User deleted" });
-  });
-
-  // === Cohorts list ===
-  app.get(api.admin.listCohorts.path, requireRole('admin'), async (req, res) => {
-    const list = await storage.listCohorts();
-    res.json(list.map(c => ({
-      id: c.id,
-      name: c.name,
-      startDate: c.startDate.toISOString(),
-      endDate: c.endDate ? c.endDate.toISOString() : null,
-      status: c.status,
-      createdAt: c.createdAt.toISOString(),
-    })));
-  });
-
-  // === Active cohort ===
-  app.get(api.admin.getActiveCohort.path, requireRole('admin'), async (req, res) => {
-    const cohort = await storage.getActiveCohort();
-    if (!cohort) return res.json(null);
-    res.json({
-      id: cohort.id,
-      name: cohort.name,
-      startDate: cohort.startDate.toISOString(),
-      endDate: cohort.endDate ? cohort.endDate.toISOString() : null,
-      status: cohort.status,
-      createdAt: cohort.createdAt.toISOString(),
-    });
-  });
+  registerCohortListRoutes(app, dependencies);
 
   app.get(api.admin.progress.path, async (req, res) => {
     if (!req.isAuthenticated() || req.user!.role !== 'admin') {
@@ -1457,46 +937,7 @@ export async function registerRoutes(
     res.json(progressData);
   });
 
-  // === Cohort (Public) ===
-  
-  app.get(api.cohort.getStartDate.path, async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    
-    const startDateStr = await storage.getCohortSetting("cohort_start_date");
-    const globalDay = computeCurrentProgramDay(startDateStr);
-    
-    // Admins and superusers always see all 30 days unlocked;
-    // participants with a manualDayOverride use that value instead of the cohort calendar.
-    const role = req.user!.role;
-    const resolvedDay = (role === 'admin' || role === 'superuser') ? 30 : effectiveCurrentDay(req.user, globalDay);
-    
-    res.json({ startDate: startDateStr, currentDay: resolvedDay });
-  });
-
-  // === Cohort Settings (Admin) ===
-  
-  app.get(api.admin.cohortSettings.get.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const startDate = await storage.getCohortSetting("cohort_start_date");
-    res.json({ startDate });
-  });
-
-  app.post(api.admin.cohortSettings.update.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const { startDate } = req.body;
-    if (!startDate || typeof startDate !== 'string') {
-      return res.status(400).json({ message: "Start date is required" });
-    }
-    
-    await storage.setCohortSetting("cohort_start_date", startDate);
-    res.json({ startDate });
-  });
+  registerCohortSettingsRoutes(app, dependencies);
 
   // === Per-Module Reflection Overlay Settings ===
 
@@ -1572,49 +1013,7 @@ export async function registerRoutes(
     }
   });
 
-  // === Start New Cohort ===
-  
-  app.post(api.admin.startNewCohort.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    try {
-      const input = api.admin.startNewCohort.input.parse(req.body);
-      
-      let completionsCleared = 0;
-      
-      if (input.clearCompletions) {
-        completionsCleared = await storage.clearAllPrayerCompletions();
-      }
-
-      // Archive current active cohort if one exists
-      const activeCohort = await storage.getActiveCohort();
-      if (activeCohort) {
-        await storage.archiveCohort(activeCohort.id, new Date());
-      }
-
-      // Create new cohort record
-      const newCohort = await storage.createCohort(input.name, new Date(input.startDate));
-
-      // Assign all non-admin users with no cohortId to this new cohort (new users joining)
-      // (existing users keep their old cohortId pointing to the archived cohort)
-      
-      await storage.setCohortSetting("cohort_start_date", input.startDate);
-      
-      res.json({ 
-        message: "New cohort started successfully",
-        startDate: input.startDate,
-        cohortId: newCohort.id,
-        completionsCleared,
-      });
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: err.errors[0].message });
-      }
-      throw err;
-    }
-  });
+  registerCohortCreationRoutes(app);
 
   // === Admin Password Reset ===
   
@@ -1642,94 +1041,7 @@ export async function registerRoutes(
     }
   });
 
-  // === Admin User Details ===
-  
-  app.get(api.admin.userDetails.path, async (req, res) => {
-    if (!req.isAuthenticated() || req.user!.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-    
-    const userId = Number(req.params.id);
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    
-    // Get mentor name
-    let mentorName: string | null = null;
-    if (user.mentorId) {
-      const mentor = await storage.getUser(user.mentorId);
-      mentorName = mentor?.name || null;
-    }
-    
-    const cohortStartDate = await storage.getCohortSetting("cohort_start_date");
-    const currentDay = computeCurrentProgramDay(cohortStartDate);
-    
-    // Get prayer completions
-    const prayerCompletions = await storage.getUserPrayerCompletions(userId);
-    
-    // Calculate days completed based on track
-    let daysCompleted: number;
-    if (Boolean(user.track)) {
-      daysCompleted = new Set(prayerCompletions.filter(c => c.period === 'morning').map(c => c.dayNumber)).size;
-    } else {
-      const dayMap = new Map<number, { morning: boolean, evening: boolean }>();
-      prayerCompletions.forEach(c => {
-        if (!dayMap.has(c.dayNumber)) dayMap.set(c.dayNumber, { morning: false, evening: false });
-        const d = dayMap.get(c.dayNumber)!;
-        if (c.period === 'morning') d.morning = true;
-        if (c.period === 'evening') d.evening = true;
-      });
-      daysCompleted = 0;
-      dayMap.forEach(s => { if (s.morning && s.evening) daysCompleted++; });
-    }
-    
-    // Graduation: 80% of 30 days = 24 days
-    const totalDays = currentTrackId() === "A" ? 30 : (await storage.getAllTrackAContent()).filter(c => c.dayNumber > 0).length;
-    const graduationEligible = totalDays > 0 && daysCompleted >= Math.ceil(totalDays * 0.8);
-    
-    // Get answers
-    const answers = await storage.getUserAnswers(userId);
-    
-    // Get all daily content to get questions
-    const allContent = await storage.getAllTrackAContent();
-    
-    // Enrich answers with question texts
-    const enrichedAnswers = answers.map(a => {
-      const dayContent = allContent.find(c => c.dayNumber === a.dayNumber);
-      return {
-        id: a.id,
-        dayNumber: a.dayNumber,
-        content: a.content,
-        createdAt: a.createdAt.toISOString(),
-        questions: null,
-      };
-    });
-    
-    res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        track: user.track,
-        mentorId: user.mentorId,
-        mentorName,
-        startDate: user.startDate?.toISOString() || null,
-        currentDay,
-        daysCompleted,
-        totalPossibleDays: Math.min(currentDay, totalDays),
-        totalDays,
-        graduationEligible,
-      },
-      answers: enrichedAnswers,
-      prayerCompletions: prayerCompletions.map(c => ({
-        dayNumber: c.dayNumber,
-        period: c.period,
-        completedAt: c.completedAt.toISOString(),
-      })),
-    });
-  });
+  registerPeopleDetailsRoutes(app, dependencies);
 
   // === Admin CSV Export Routes ===
   
@@ -2230,147 +1542,9 @@ export async function registerRoutes(
     res.json(updated);
   });
 
-  app.get('/api/admin/backup', requireRole('admin'), async (req, res) => {
-    try {
-      const [
-        dbPrelimModules,
-        dbTrackAContent,
-        dbTrackAModules,
-        dbModuleOverlays,
-        dbPracticeResources,
-        dbCohortSettings,
-      ] = await Promise.all([
-        db.select().from(prelimModules),
-        db.select().from(trackAContent),
-        db.select().from(trackAModules),
-        db.select().from(moduleOverlays),
-        db.select().from(practiceResources),
-        db.select().from(cohortSettings),
-      ]);
+  registerBackupRoutes(app, dependencies);
 
-      const backup = {
-        version: 1,
-        trackId: currentTrackId(),
-        exportedAt: new Date().toISOString(),
-        data: {
-          prelim_modules: dbPrelimModules,
-          track_a_content: dbTrackAContent,
-          track_a_modules: dbTrackAModules,
-          daily_content: [],
-          module_overlays: dbModuleOverlays,
-          practice_resources: dbPracticeResources,
-          cohort_settings: dbCohortSettings,
-        },
-      };
-
-      const filename = `lumen-fidei-backup-${new Date().toISOString().split('T')[0]}.json`;
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.json(backup);
-    } catch (error) {
-      console.error("Backup error:", error);
-      res.status(500).json({ message: "Failed to create backup" });
-    }
-  });
-
-  const backupRestoreSchema = z.object({
-    version: z.literal(1),
-    trackId: z.string().optional(),
-    exportedAt: z.string(),
-    data: z.object({
-      prelim_modules: z.array(z.object({ position: z.number(), title: z.string() }).passthrough()),
-      track_a_content: z.array(z.object({ dayNumber: z.number(), weekNumber: z.number(), centralTheme: z.string() }).passthrough()),
-      track_a_modules: z.array(z.object({ weekNumber: z.number(), title: z.string(), subtitle: z.string() }).passthrough()),
-      daily_content: z.array(z.object({ dayNumber: z.number(), weekNumber: z.number(), weekTitle: z.string() }).passthrough()),
-      module_overlays: z.array(z.object({ contextKey: z.string() }).passthrough()),
-      practice_resources: z.array(z.object({ name: z.string(), type: z.string(), content: z.string() }).passthrough()),
-      cohort_settings: z.array(z.object({ key: z.string(), value: z.string() }).passthrough()),
-      uploaded_images: z.array(z.object({ filename: z.string(), mimeType: z.string(), data: z.string() }).passthrough()).optional(),
-    }),
-  });
-
-  app.post('/api/admin/restore', requireRole('admin'), async (req, res) => {
-    try {
-      const parsed = backupRestoreSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ message: "Invalid backup file format", errors: parsed.error.errors });
-      }
-
-      if ((parsed.data.trackId || "A") !== currentTrackId()) return res.status(400).json({ message: "Select the track this backup belongs to before restoring it." });
-      const { data } = parsed.data;
-
-      await db.transaction(async (tx) => {
-        // Always delete all content tables first so restore is exact regardless of array length
-        await tx.delete(prelimModules);
-        await tx.delete(trackAContent);
-        await tx.delete(trackAModules);
-        await tx.delete(moduleOverlays);
-        await tx.delete(cohortSettings);
-
-        for (const row of data.prelim_modules) {
-          const { id: _id, ...rest } = row;
-          await tx.insert(prelimModules).values(rest);
-        }
-
-        for (const row of data.track_a_content) {
-          const { id: _id, ...rest } = row;
-          await tx.insert(trackAContent).values(rest);
-        }
-
-        for (const row of data.track_a_modules) {
-          const { id: _id, ...rest } = row;
-          await tx.insert(trackAModules).values(rest);
-        }
-
-        for (const row of data.module_overlays) {
-          const { updatedAt: _ua, ...rest } = row;
-          await tx.insert(moduleOverlays).values(rest as any);
-        }
-
-        for (const row of data.cohort_settings) {
-          const { id: _id, updatedAt: _ua, ...rest } = row;
-          await tx.insert(cohortSettings).values(rest);
-        }
-      });
-
-      const counts = {
-        prelim_modules: data.prelim_modules.length,
-        track_a_content: data.track_a_content.length,
-        track_a_modules: data.track_a_modules.length,
-        daily_content: 0,
-        module_overlays: data.module_overlays.length,
-        practice_resources: 0,
-        cohort_settings: data.cohort_settings.length,
-      };
-
-      res.json({ message: "Restore completed successfully", counts });
-    } catch (error) {
-      console.error("Restore error:", error);
-      res.status(500).json({ message: "Restore failed. No changes were saved." });
-    }
-  });
-
-  // === Admin Message Management ===
-
-  app.get('/api/admin/messages/:userId1/:userId2', requireRole('admin'), async (req, res) => {
-    const userId1 = Number(req.params.userId1);
-    const userId2 = Number(req.params.userId2);
-    if (isNaN(userId1) || isNaN(userId2)) {
-      return res.status(400).json({ message: "Invalid user IDs" });
-    }
-    const msgs = await storage.getMessagesBetweenUsers(userId1, userId2);
-    res.json(msgs);
-  });
-
-  app.delete('/api/admin/messages/:userId1/:userId2', requireRole('admin'), async (req, res) => {
-    const userId1 = Number(req.params.userId1);
-    const userId2 = Number(req.params.userId2);
-    if (isNaN(userId1) || isNaN(userId2)) {
-      return res.status(400).json({ message: "Invalid user IDs" });
-    }
-    const count = await storage.deleteMessagesBetweenUsers(userId1, userId2);
-    res.json({ message: `Deleted ${count} messages`, count });
-  });
+  registerAdminMessageRoutes(app, dependencies);
 
   // === Prelim Modules ===
 
@@ -2642,357 +1816,13 @@ export async function registerRoutes(
     }
   });
 
-  // === Workbook Modules ===
+  registerWorkbookModuleRoutes(app, dependencies);
 
-  // GET /api/workbook-modules — all modules with completion + unlock status for the current user
-  app.get('/api/workbook-modules', requireAuth, async (req, res) => {
-    // Exempt participants skip the lesson workbook entirely — return an empty list
-    if ((req.user! as any).workbookExempt) {
-      return res.json([]);
-    }
-    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'superuser';
-    const [modules, completions] = await Promise.all([
-      storage.getAllLessonWorkbookModules(),
-      storage.getLessonWorkbookCompletionsByUser(req.user!.id),
-    ]);
-    const completedIds = new Set(completions.map(c => c.workbookModuleId));
-    const morningCompletions = await storage.getUserPrayerCompletions(req.user!.id);
-    const morningDays = new Set(
-      morningCompletions.filter(c => c.period === 'morning').map(c => c.dayNumber)
-    );
-    const result = modules.map(m => {
-      const completed = completedIds.has(m.id);
-      const unlocked = morningDays.has(m.dayNumber);
-      const accessible = isAdmin || completed || unlocked;
-      return {
-        id: m.id,
-        dayNumber: m.dayNumber,
-        title: m.title,
-        completed,
-        unlocked,
-        // Only expose slides & completionMessage when the module is accessible
-        ...(accessible ? { slides: m.slides, completionMessage: m.completionMessage } : {}),
-      };
-    });
-    res.json(result);
-  });
+  registerWorkbookEntryRoutes(app, dependencies);
 
-  // GET /api/workbook-modules/:id — full module with slides (gated by unlock)
-  app.get('/api/workbook-modules/:id', requireAuth, async (req, res) => {
-    if ((req.user! as any).workbookExempt) {
-      return res.status(403).json({ error: 'Workbook is not required for your program path' });
-    }
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.sendStatus(400);
-    const mod = await storage.getLessonWorkbookModule(id);
-    if (!mod) return res.sendStatus(404);
-    const isAdmin = req.user!.role === 'admin' || req.user!.role === 'superuser';
-    if (!isAdmin) {
-      const [completions, morningCompletions] = await Promise.all([
-        storage.getLessonWorkbookCompletionsByUser(req.user!.id),
-        storage.getUserPrayerCompletions(req.user!.id),
-      ]);
-      const alreadyCompleted = completions.some(c => c.workbookModuleId === id);
-      const morningDone = morningCompletions.some(c => c.period === 'morning' && c.dayNumber === mod.dayNumber);
-      if (!alreadyCompleted && !morningDone) {
-        return res.status(403).json({ error: 'Complete parent day morning prayer to unlock this workbook' });
-      }
-    }
-    res.json(mod);
-  });
+  registerProfileRoutes(app, dependencies);
 
-  // GET /api/workbook-completions — current user's workbook completions
-  app.get('/api/workbook-completions', requireAuth, async (req, res) => {
-    const completions = await storage.getLessonWorkbookCompletionsByUser(req.user!.id);
-    res.json(completions);
-  });
-
-  // POST /api/workbook-completions/:id — mark a workbook module complete
-  app.post('/api/workbook-completions/:id', requireAuth, writeLimiter, async (req, res) => {
-    if ((req.user! as any).workbookExempt) {
-      return res.status(403).json({ error: 'Workbook is not required for your program path' });
-    }
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.sendStatus(400);
-    const mod = await storage.getLessonWorkbookModule(id);
-    if (!mod) return res.sendStatus(404);
-    const morningCompletions = await storage.getUserPrayerCompletions(req.user!.id);
-    const morningDone = morningCompletions.some(c => c.period === 'morning' && c.dayNumber === mod.dayNumber);
-    if (!morningDone && req.user!.role !== 'admin' && req.user!.role !== 'superuser') {
-      return res.status(403).json({ error: 'Parent day morning prayer must be completed first' });
-    }
-    const completion = await storage.completeLessonWorkbookModule(req.user!.id, id);
-    res.json(completion);
-  });
-
-  // GET /api/admin/workbook-modules — admin: list all modules
-  app.get('/api/admin/workbook-modules', requireRole('admin'), async (req, res) => {
-    const modules = await storage.getAllLessonWorkbookModules();
-    res.json(modules);
-  });
-
-  // POST /api/admin/workbook-modules — admin: create a new module
-  app.post('/api/admin/workbook-modules', requireRole('admin'), async (req, res) => {
-    const { dayNumber, title, slides, completionMessage } = req.body;
-    if (!dayNumber || !title) return res.status(400).json({ error: 'dayNumber and title required' });
-    const mod = await storage.upsertLessonWorkbookModule({ dayNumber, title, slides: slides ?? [], completionMessage: completionMessage ?? null });
-    res.status(201).json(mod);
-  });
-
-  // PATCH /api/admin/workbook-modules/:id — admin: update a module's title/slides
-  app.patch('/api/admin/workbook-modules/:id', requireRole('admin'), async (req, res) => {
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.sendStatus(400);
-    const existing = await storage.getLessonWorkbookModule(id);
-    if (!existing) return res.sendStatus(404);
-    const { title, slides, completionMessage } = req.body;
-    const mod = await storage.upsertLessonWorkbookModule({
-      dayNumber: existing.dayNumber,
-      title: title ?? existing.title,
-      slides: slides ?? existing.slides ?? [],
-      completionMessage: completionMessage !== undefined ? completionMessage : existing.completionMessage,
-    });
-    res.json(mod);
-  });
-
-  // DELETE /api/admin/workbook-modules/:id — admin: delete a module
-  app.delete('/api/admin/workbook-modules/:id', requireRole('admin'), async (req, res) => {
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.sendStatus(400);
-    await storage.deleteLessonWorkbookModule(id);
-    res.json({ success: true });
-  });
-
-  // PUT /api/admin/workbook-modules — admin: upsert a module by dayNumber (used by admin panel)
-  app.put('/api/admin/workbook-modules', requireRole('admin'), async (req, res) => {
-    const { dayNumber, title, slides, completionMessage } = req.body;
-    if (!dayNumber || !title) return res.status(400).json({ error: 'dayNumber and title required' });
-    const mod = await storage.upsertLessonWorkbookModule({ dayNumber, title, slides: slides ?? [], completionMessage: completionMessage ?? null });
-    res.json(mod);
-  });
-
-  // === Deliverance Workbook ===
-
-  // GET /api/workbook/summary — aggregated section counts + attestations
-  app.get("/api/workbook/summary", requireAuth, async (req, res) => {
-    if ((req.user! as any).workbookExempt) return res.json({});
-    const summary = await storage.getWorkbookSummary(req.user!.id);
-    res.json(summary);
-  });
-
-  // Trigger-day → category mapping for progressive unlock
-  const WORKBOOK_TRIGGER_DAY_CATEGORY: Record<number, number> = {
-    7: 1,  // Personal Sins
-    9: 2,  // Occult & Dark Powers
-    11: 3, // Generational Lines
-    12: 4, // Inner Vows
-    15: 5, // Wounds & Forgiveness
-  };
-
-  // Section-to-category mapping (mirrors client section-definitions.ts after swap)
-
-  // GET /api/workbook/unlock-status — which categories the current user has unlocked
-  app.get("/api/workbook/unlock-status", requireAuth, async (req, res) => {
-    const user = req.user!;
-    if (user.role === 'admin' || user.role === 'superuser') {
-      return res.json({ unlockedCategories: [1, 2, 3, 4, 5] });
-    }
-    if ((user as any).workbookExempt) {
-      return res.json({ unlockedCategories: [], exempt: true });
-    }
-    if (user.track !== 'A') {
-      return res.json({ unlockedCategories: [] });
-    }
-    // Primary signal: morning prayer completion on the trigger day.
-    // Fallback signal: user already has workbook entries or attestations in that
-    // category's sections (data survives even if prayer completion records are lost).
-    const [completions, workbookSummary] = await Promise.all([
-      storage.getUserPrayerCompletions(user.id),
-      storage.getWorkbookSummary(user.id),
-    ]);
-    const completedDays = new Set(
-      completions.filter(c => c.period === 'morning').map(c => c.dayNumber)
-    );
-    const sectionsWithData = new Set(
-      Object.entries(workbookSummary)
-        .filter(([, v]) => v.count > 0 || v.attested)
-        .map(([sId]) => Number(sId))
-    );
-
-    const unlockedCategories: number[] = [];
-    for (const [dayStr, catId] of Object.entries(WORKBOOK_TRIGGER_DAY_CATEGORY)) {
-      const hasPrayer = completedDays.has(Number(dayStr));
-      const hasWorkbookData = (WORKBOOK_CATEGORY_SECTIONS[catId] ?? []).some(
-        (sId: number) => sectionsWithData.has(sId)
-      );
-      if (hasPrayer || hasWorkbookData) {
-        unlockedCategories.push(catId);
-      }
-    }
-    return res.json({ unlockedCategories });
-  });
-
-  // GET /api/workbook/week4-ready — whether all 5 workbook categories have ≥1 entry or attestation
-  app.get("/api/workbook/week4-ready", requireAuth, async (req, res) => {
-    const user = req.user!;
-    if (user.role === 'admin' || user.role === 'superuser') {
-      return res.json({ ready: true });
-    }
-    if ((user as any).workbookExempt) {
-      return res.json({ ready: true });
-    }
-    if (user.track !== 'A') {
-      return res.json({ ready: false });
-    }
-    const summary = await storage.getWorkbookSummary(user.id);
-    const allCategoriesReady = Object.values(WORKBOOK_CATEGORY_SECTIONS).every((sectionIds) =>
-      sectionIds.some(id => {
-        const sec = summary[id];
-        return sec && (sec.count > 0 || sec.attested);
-      })
-    );
-    return res.json({ ready: allCategoriesReady });
-  });
-
-  // GET /api/workbook/:sectionId — entries for one section
-  app.get("/api/workbook/:sectionId", requireAuth, async (req, res) => {
-    if ((req.user! as any).workbookExempt) return res.json([]);
-    const sectionId = Number(req.params.sectionId);
-    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
-    const entries = await storage.getWorkbookEntries(req.user!.id, sectionId);
-    res.json(entries);
-  });
-
-  // POST /api/workbook/:sectionId — create or update an entry
-  app.post("/api/workbook/:sectionId", requireAuth, writeLimiter, async (req, res) => {
-    if ((req.user! as any).workbookExempt) {
-      return res.status(403).json({ error: 'Workbook is not required for your program path' });
-    }
-    const sectionId = Number(req.params.sectionId);
-    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
-
-    const schema = z.object({
-      id: z.number().optional(),
-      entryData: z.record(z.string(), z.unknown()),
-      position: z.number().optional(),
-    });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) return res.status(400).json({ message: parsed.error.errors[0].message });
-
-    let { id, entryData, position } = parsed.data;
-
-    // Section 17: upsert by junior_spirit_ref — find existing entry for this spirit
-    if (sectionId === 17 && !id) {
-      const ref = typeof entryData.junior_spirit_ref === "string" ? entryData.junior_spirit_ref : null;
-      if (ref) {
-        const existing = await storage.getWorkbookEntries(req.user!.id, 17);
-        const match = existing.find((e) => {
-          const d = e.entryData as Record<string, unknown>;
-          return d.junior_spirit_ref === ref;
-        });
-        if (match) id = match.id;
-      }
-    }
-
-    const entry = await storage.upsertWorkbookEntry(req.user!.id, sectionId, entryData as Record<string, unknown>, position ?? 0, id);
-    res.json(entry);
-  });
-
-  // DELETE /api/workbook/entry/:id — delete an entry (verifies ownership)
-  app.delete("/api/workbook/entry/:id", requireAuth, async (req, res) => {
-    if ((req.user! as any).workbookExempt) {
-      return res.status(403).json({ error: 'Workbook is not required for your program path' });
-    }
-    const id = Number(req.params.id);
-    if (isNaN(id)) return res.sendStatus(400);
-    await storage.deleteWorkbookEntry(id, req.user!.id);
-    res.sendStatus(204);
-  });
-
-  // POST /api/workbook/attest/:sectionId — set attestation
-  app.post("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
-    if ((req.user! as any).workbookExempt) {
-      return res.status(403).json({ error: 'Workbook is not required for your program path' });
-    }
-    const sectionId = Number(req.params.sectionId);
-    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
-    await storage.setWorkbookAttestation(req.user!.id, sectionId);
-    res.sendStatus(204);
-  });
-
-  // DELETE /api/workbook/attest/:sectionId — clear attestation
-  app.delete("/api/workbook/attest/:sectionId", requireAuth, async (req, res) => {
-    if ((req.user! as any).workbookExempt) {
-      return res.status(403).json({ error: 'Workbook is not required for your program path' });
-    }
-    const sectionId = Number(req.params.sectionId);
-    if (!isActiveWorkbookSection(sectionId)) return res.status(410).json({ error: "This workbook section has been retired." });
-    if (isNaN(sectionId) || sectionId < 1 || sectionId > WORKBOOK_MAX_SECTION_ID) return res.sendStatus(400);
-    await storage.clearWorkbookAttestation(req.user!.id, sectionId);
-    res.sendStatus(204);
-  });
-
-  // === User Profile ===
-
-  // GET /api/user-profile — returns current user's profile, or empty defaults if not yet created
-  app.get("/api/user-profile", requireAuth, async (req, res) => {
-    const profile = await storage.getUserProfile(req.user!.id);
-    if (!profile) {
-      return res.json({
-        id: null,
-        userId: req.user!.id,
-        familyMembers: [],
-        spouseName: "",
-        childrenNames: [],
-        chronicIssues: [],
-        chronicIdentityLabels: [],
-        updatedAt: null,
-        faithTradition: null,
-        workbookIntroAcknowledged: false,
-      });
-    }
-    res.json(profile);
-  });
-
-  // PUT /api/user-profile — upserts the current user's profile
-  app.put("/api/user-profile", requireAuth, writeLimiter, async (req, res) => {
-    const schema = z.object({
-      familyMembers: z.array(z.string().max(200)).max(100),
-      spouseName: z.string().max(300),
-      childrenNames: z.array(z.string().max(200)).max(50),
-      chronicIssues: z.array(z.string().max(500)).max(100),
-      chronicIdentityLabels: z.array(z.string().max(300)).max(100),
-      bio: z.string().max(2000).optional().nullable(),
-      faithTradition: z.enum(["Yes", "No, I'm a Christian of another tradition", "No, I'm exploring faith"]).nullable().optional(),
-      workbookIntroAcknowledged: z.boolean().optional(),
-    }).partial();
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ message: parsed.error.errors[0].message });
-    }
-    const profile = await storage.upsertUserProfile(req.user!.id, parsed.data);
-    res.json(profile);
-  });
-
-  // PATCH /api/user/name — lets the current user update their own display name
-  app.patch("/api/user/name", requireAuth, writeLimiter, async (req, res) => {
-    const schema = z.object({ name: z.string().min(1).max(200).trim() });
-    const parsed = schema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ message: parsed.error.errors[0].message });
-    }
-    const updated = await storage.updateUser(req.user!.id, { name: parsed.data.name });
-    res.json(sanitizeUser(updated));
-  });
-
-  // GET /api/mentor/activity-summary — returns last-active date + unread count per mentee for the current mentor
-  app.get("/api/mentor/activity-summary", requireRole("mentor", "admin"), async (req, res) => {
-    const summary = await storage.getMenteeActivitySummary(req.user!.id);
-    res.json(summary);
-  });
+  registerMentorActivityRoutes(app, dependencies);
 
   // Seed Data
   await seed();
