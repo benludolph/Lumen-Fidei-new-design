@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Check, Eye, LockKeyhole, Save, Search } from "lucide-react";
 import { apiRequest, ApiRequestError } from "@/lib/queryClient";
@@ -35,28 +35,32 @@ export default function WorkbookContentEditor() {
     refetchOnWindowFocus: false,
   });
   const [local, setLocal] = useState<WorkbookDocument | null>(null);
-  const initialized = useRef(false);
+  // Keep the displayed baseline and revision together. A background query refresh
+  // must not authorize discarding another editor's changes we have not loaded.
+  const [saved, setSaved] = useState<EditorState | null>(null);
   const [group, setGroup] = useState("");
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState(false);
   const [confirmApply, setConfirmApply] = useState(false);
+  const [discardRevision, setDiscardRevision] = useState<number | null>(null);
   const [conflict, setConflict] = useState(false);
   const [notice, setNotice] = useState("");
   const groups = useMemo(() => Array.from(new Set(WORKBOOK_FIELDS.map(field => field.group))), []);
   useEffect(() => {
-    if (query.data && !initialized.current) {
+    if (query.data && !saved) {
       setLocal(structuredClone(query.data.draft));
-      initialized.current = true;
+      setSaved(query.data);
       setGroup(groups[0] ?? "");
     }
-  }, [query.data, groups]);
-  const dirty = !!(local && query.data && !same(local, query.data.draft));
-  const unapplied = !!(query.data && !same(query.data.draft, query.data.applied));
+  }, [query.data, groups, saved]);
+  const dirty = !!(local && saved && !same(local, saved.draft));
+  const unapplied = !!(saved && !same(saved.draft, saved.applied));
   const save = useMutation({
     mutationFn: async () => readState(await apiRequest("PUT", "/api/admin/workbook-content/draft", {
-      document: local, revision: query.data!.revision,
+      document: local, revision: saved!.revision,
     })),
     onSuccess: state => {
+      setSaved(state);
       client.setQueryData(EDITOR_QUERY, state);
       setLocal(structuredClone(state.draft));
       setConflict(false);
@@ -65,8 +69,9 @@ export default function WorkbookContentEditor() {
     onError: error => { setConflict(error instanceof ApiRequestError && error.status === 409); setNotice(error.message); },
   });
   const apply = useMutation({
-    mutationFn: async () => readState(await apiRequest("POST", "/api/admin/workbook-content/apply", { revision: query.data!.revision })),
+    mutationFn: async () => readState(await apiRequest("POST", "/api/admin/workbook-content/apply", { revision: saved!.revision })),
     onSuccess: state => {
+      setSaved(state);
       client.setQueryData(EDITOR_QUERY, state);
       client.setQueryData(WORKBOOK_CONTENT_QUERY, { document: state.applied, revision: state.revision });
       setConfirmApply(false);
@@ -74,12 +79,29 @@ export default function WorkbookContentEditor() {
     },
     onError: error => { setConfirmApply(false); setConflict(error instanceof ApiRequestError && error.status === 409); setNotice(error.message); },
   });
-  const busy = save.isPending || apply.isPending;
+  const discard = useMutation({
+    mutationFn: async () => readState(await apiRequest("POST", "/api/admin/workbook-content/discard-draft", { revision: discardRevision })),
+    onSuccess: state => {
+      setSaved(state);
+      client.setQueryData(EDITOR_QUERY, state);
+      setLocal(structuredClone(state.draft));
+      setDiscardRevision(null);
+      setConflict(false);
+      setNotice("Draft discarded. The saved draft now matches the applied wording. Participant wording has not changed.");
+    },
+    onError: error => {
+      setDiscardRevision(null);
+      setConflict(error instanceof ApiRequestError && error.status === 409);
+      setNotice(error.message);
+    },
+  });
+  const busy = save.isPending || apply.isPending || discard.isPending;
   useEditorNavigation(dirty, busy);
   async function reload() {
     if (dirty && !window.confirm("Reload the latest saved draft? Your unsaved changes will be discarded.")) return;
     const result = await query.refetch();
     if (result.data && !result.isError) {
+      setSaved(result.data);
       setLocal(structuredClone(result.data.draft));
       setConflict(false); setNotice("Latest saved draft loaded.");
     }
@@ -89,7 +111,7 @@ export default function WorkbookContentEditor() {
     <p className="text-muted-foreground mb-4">No draft has been loaded. Please try again.</p>
     <Button onClick={() => query.refetch()}>Retry</Button>
   </div>;
-  if (!local || !query.data) return <div className="space-y-4 p-6" aria-busy="true" aria-label="Loading workbook editor">
+  if (!local || !saved) return <div className="space-y-4 p-6" aria-busy="true" aria-label="Loading workbook editor">
     {[40, 90, 75, 90].map((width, index) => <div key={index} className="h-10 rounded bg-muted animate-pulse" style={{ width: `${width}%` }} />)}
   </div>;
   const fields = WORKBOOK_FIELDS.filter(field => search
@@ -108,15 +130,16 @@ export default function WorkbookContentEditor() {
           <Button variant="outline" disabled={!dirty || busy || conflict} onClick={() => { setNotice(""); save.mutate(); }} data-testid="button-workbook-save-draft">
             <Save className="w-4 h-4 mr-2" />{save.isPending ? "Saving draft…" : "Save draft"}
           </Button>
+          <Button variant="outline" disabled={(!unapplied && !dirty) || busy || conflict} onClick={() => setDiscardRevision(saved.revision)} data-testid="button-workbook-discard-draft">Discard saved draft</Button>
           <Button disabled={dirty || !unapplied || busy || conflict} onClick={() => setConfirmApply(true)} data-testid="button-workbook-apply">Apply changes</Button>
         </div>
       </div>
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground mt-5">
-        <span className="flex gap-2 items-center"><Check className="w-4 h-4" />{dirty ? "Unsaved edits" : "Draft saved"} · Revision {query.data.revision}</span>
+        <span className="flex gap-2 items-center"><Check className="w-4 h-4" />{dirty ? "Unsaved edits" : "Draft saved"} · Revision {saved.revision}</span>
         <span>{unapplied ? "Saved draft differs from applied content" : "Saved draft matches applied content"}</span>
       </div>
       {dirty && <p className="text-sm mt-2 text-muted-foreground">Save your edits before applying. Preview includes your unsaved wording.</p>}
-      {notice && <p className="text-sm mt-4" role={save.isError || apply.isError ? "alert" : "status"}>{notice}</p>}
+      {notice && <p className="text-sm mt-4" role={save.isError || apply.isError || discard.isError ? "alert" : "status"}>{notice}</p>}
       {conflict && <div role="alert" className="mt-4 p-4 border rounded-lg bg-muted"><p className="mb-3">Someone else changed this workbook. Reload the latest saved draft before making further changes. Your edits have not replaced theirs.</p><Button variant="outline" onClick={reload}>Reload latest draft</Button></div>}
     </header>
     <div className="p-5 sm:p-7 workbook-editor-grid">
@@ -143,6 +166,13 @@ export default function WorkbookContentEditor() {
         </div>)}
       </div>
     </div>
+    <Dialog open={discardRevision !== null} onOpenChange={open => { if (!open && !discard.isPending) setDiscardRevision(null); }}><DialogContent><DialogHeader>
+      <DialogTitle className="workbook-editor-title">Discard the saved draft?</DialogTitle>
+      <DialogDescription>The saved draft will be replaced with an exact copy of the currently applied workbook wording. Applied participant content will not change. This does not change participant answers, completion rules or publishing settings. This cannot be undone.</DialogDescription>
+    </DialogHeader>
+      {dirty && <p className="text-sm text-destructive" role="alert">You also have unsaved edits in this editor. These will be discarded too.</p>}
+      <div className="flex justify-end gap-2 mt-4"><Button variant="outline" onClick={() => setDiscardRevision(null)} disabled={busy}>Cancel</Button><Button variant="destructive" disabled={busy || conflict} onClick={() => { setNotice(""); discard.mutate(); }} data-testid="button-workbook-confirm-discard">{discard.isPending ? "Discarding…" : "Discard saved draft"}</Button></div>
+    </DialogContent></Dialog>
     <Dialog open={confirmApply} onOpenChange={setConfirmApply}><DialogContent><DialogHeader>
       <DialogTitle className="workbook-editor-title">Apply the saved draft?</DialogTitle>
       <DialogDescription>Participant workbook wording in the current environment will use this saved draft. This does not publish the project or change participant answers, fields, unlocks or prayer logic.</DialogDescription>
