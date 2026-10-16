@@ -2,3 +2,4 @@
 - [Track schema reconciliation](track-schema-reconciliation.md) — merge-time schema repair must remain separate from destructive B/C retirement.
 - [Workbook revision boundaries](workbook-release-boundary.md) — preview-only until both stages ship together; exact-copy, first-access faith question and counts-only impact rules.
 - [Workbook editing and typography](workbook-editor-direction.md) — retire obsolete workbook UI, consolidate editing, and never bold IvyOra.
+- [GitHub authorization](github-authorization.md) — a healthy integration does not establish working Git authentication; verify the Git provider separately.
