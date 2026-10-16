@@ -1,71 +1,67 @@
 # Lumen Fidei
 
-Lumen Fidei is a full-stack web application for a 30-day spiritual program, offering time-gated content, progress tracking, and mentor-participant messaging across three user roles: Participant, Mentor, and Admin.
+Lumen Fidei is a full-stack spiritual formation app with cohort-based lessons, progress tracking, mentor-participant messaging, and the Deliverance Workbook. User roles are `participant`, `mentor`, `admin`, and `superuser`.
 
-## Run & Operate
+## Commands
 
-- **Run Dev**: `npm run dev`
-- **Build**: `npm run build`
-- **Typecheck**: `npm run typecheck`
-- **Codegen**: `drizzle-kit generate`
-- **DB Push**: `drizzle-kit push`
-- **Env Vars**: `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- **Development**: `npm run dev` — starts `server/index.ts` with tsx.
+- **Typecheck**: `npm run check`.
+- **Build**: `npm run build` — runs `script/build.ts` to build the client and server.
+- **Production start**: `npm start` — runs `dist/index.cjs` after building.
+- **Database schema push**: `npm run db:push` — changes the database; do not run as a routine verification step.
 
 ## Stack
 
-- **Frontend**: React 18, TypeScript, Wouter, TanStack React Query, Tailwind CSS, shadcn/ui (New York style), React Hook Form, Zod
-- **Backend**: Node.js (ES modules), Express 5, TypeScript
-- **Authentication**: Passport.js (local strategy), express-session, bcryptjs
-- **ORM**: Drizzle ORM
-- **Validation**: Zod
-- **Build Tool**: Vite, esbuild
+- **Frontend**: React 18, TypeScript, Wouter, TanStack React Query, Tailwind CSS, shadcn/ui, React Hook Form.
+- **Backend**: Node.js, Express 5, TypeScript.
+- **Database and validation**: PostgreSQL, Drizzle ORM, Zod.
+- **Authentication**: Passport local strategy, express-session, bcryptjs.
+- **Build tools**: Vite and esbuild.
 
-## Where things live
+## Project map
 
-- **Frontend Source**: `client/src/`
-- **Backend Source**: `server/src/`
-- **Database Schema**: `server/src/db/schema.ts`
-- **API Routes**: `server/src/routes.ts`
-- **Environment Variables**: `.env`
-- **Main CSS/Theming**: `client/src/index.css`
-- **Font Files**: `client/public/fonts/`
-- **Track A Seed Data**: `server/track-a-content-data.ts`
-- **Track B Seed Data**: `server/content-data.ts`
-- **Lesson Flow Components**: `client/src/components/lesson/`
+- `client/src/App.tsx` — client routing and protected-page setup.
+- `client/src/pages/` — page components; `Admin.tsx` contains much of the admin interface.
+- `client/src/components/lesson/` — lesson player and slide components.
+- `client/src/components/TrackManagement.tsx` — admin track management.
+- `client/src/components/workbook/` — participant workbook sections, sessions, and prayer rendering.
+- `client/src/components/workbook-admin/` — workbook editor, content provider, and isolated previews.
+- `client/src/hooks/` — client data and interaction hooks.
+- `client/src/lib/queryClient.ts` — API request helpers and query client.
+- `client/src/index.css` — shared styling and typography; font assets are in `client/public/fonts/`.
+- `server/` — backend source; `index.ts` configures and starts Express.
+- `server/routes.ts` — primary API routes and startup seeding.
+- `server/auth.ts` — authentication and session setup.
+- `server/storage.ts` — database storage operations.
+- `server/db.ts` — PostgreSQL connection and Drizzle instance.
+- `server/tracks.ts`, `server/track-context.ts`, `server/track-db.ts` — track APIs and request-scoped database access.
+- `server/track-a-content-data.ts` — initial Track A lesson content.
+- `server/content-data.ts` — practice/resource seed content, not a separate Track B lesson implementation.
+- `server/workbook-content.ts` — workbook editorial APIs, including revision-checked draft, apply, and discard operations.
+- `shared/schema.ts` — database tables, related validation schemas, and types.
+- `shared/workbook-categories.ts` — workbook category mapping.
+- `shared/workbook-content.ts`, `shared/workbook-content-defaults.json`, `shared/workbook-prayer-copy.ts` — editable workbook text catalog, initial content, protected structure, and personalized prayer wording.
+- `drizzle.config.ts` — Drizzle configuration pointing to `shared/schema.ts`.
+- `script/` — build, export, migration, and focused test scripts.
+- `scripts/` — post-merge setup, schema SQL, and maintenance scripts.
+- `migrations/` and `server/migrations/` — existing SQL migrations.
+- `docs/` — feature notes and release instructions.
+- `artifacts/mockup-sandbox/` — separate design-preview sandbox, not the main application.
 
-## Architecture decisions
+## How the app fits together
 
-- **Time-Gating Logic**: Uses `calendarDaysToProgramDay()` utility in `server/routes.ts` for cohort-based content release, allowing past day review but blocking future content.
-- **Image/Audio Storage**: All user-uploaded images and audio are stored as base64 in the `uploaded_images` database table for persistence and served via a unified `GET /api/images/:filename` endpoint.
-- **Dashboard Layouts**: Implements distinct "Grid" (gothic cathedral aesthetic) and "Detail/Lesson Flow" (clean, white background) modes to separate content browsing from consumption.
-- **Track A Lesson Flow**: Designed as a Duolingo-style stepped lesson with a state machine, supporting various interactive slide types and dynamic quiz expansion at runtime.
-- **Dynamic Content Styling**: Uses CSS variables (`--surface-ground`, `--surface-base`, etc.) for theming, ensuring consistent design across the application.
+- **Tracks** share the Track A lesson schema and editor/player mechanics. Admins can create new, initially empty draft tracks; do not assume separate Track B/C implementations. Some table, hook, and component names still contain `trackA`.
+- **Scheduling** is handled in `server/routes.ts`, including `calendarDaysToProgramDay()`. The program skips Sundays; future lessons are gated, while past-day review and completion are supported. Admin/superuser access and day overrides affect gating.
+- **Lessons** store slides as JSON. A quiz slide can expand into multiple question/result steps at runtime.
+- **Messaging** uses HTTP requests and query polling (`client/src/hooks/use-chat.ts`), not a WebSocket chat transport.
+- **Workbook wording** is global across tracks. Saved drafts are separate from applied participant content. Preview uses synthetic answers; text editing must preserve field keys, stored option values, prayer insertions, and unlock rules. See `docs/workbook-content-editing.md`.
+- **Media** includes database-backed uploads and static project assets. Upload limits and serving handlers are defined in `server/routes.ts`; do not assume all media has the same limit or storage path.
+- **Configuration** is read from environment variables, not an assumed checked-in `.env` file. Core settings include `DATABASE_URL`, `SESSION_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`. Keep secret values out of code and documentation.
 
-## Product
+## Working constraints and checks
 
-- **User Roles**: Participant, Mentor, Admin with specific capabilities.
-- **Content Delivery**: 30 days of time-gated spiritual content, supporting two distinct program tracks (A and B).
-- **Progress Tracking**: Users mark daily completions, visualized in an admin dashboard with completion rates and graduation status.
-- **Real-time Messaging**: Secure, role-based chat between mentors and participants with unread notifications.
-- **Admin Management**: Comprehensive tools for user, content, cohort, and message management, including a visual slide editor for Track A content.
-- **Mobile Responsiveness**: Fully optimized for mobile devices.
-
-## User preferences
-
-Preferred communication style: Simple, everyday language.
-
-## Gotchas
-
-- **Image/Audio Uploads**: Maximum file sizes are enforced (5MB for images, 15MB for audio).
-- **Sunday Banners**: Sundays are visual breaks in the dashboard grid; they are not program days and have no associated content or completion tracking.
-- **Track A Quiz Slides**: A single quiz slide in the database (`slides` JSON) expands into multiple question slides and a result slide at runtime.
-- **Past Day Completion**: Participants can complete missed past days, but future days remain locked until their scheduled unlock date.
-
-## Pointers
-
-- **shadcn/ui Docs**: `https://ui.shadcn.com/docs`
-- **Drizzle ORM Docs**: `https://orm.drizzle.team/docs/overview`
-- **React Hook Form Docs**: `https://react-hook-form.com/get-started`
-- **Tailwind CSS Docs**: `https://tailwindcss.com/docs`
-- **Passport.js Docs**: `http://www.passportjs.org/docs/`
-- **Zod Docs**: `https://zod.dev/`
+- **Never bold IvyOra.** Preserve the installed font's natural appearance, including inherited heading/emphasis styles; other fonts may still use bold.
+- **Workbook release** requires explicit owner approval. Do not publish workbook revisions incidentally with unrelated fixes; consult `docs/workbook-combined-release-approval.md`.
+- **Database changes** need scoped review. Read `scripts/post-merge.sh` and the relevant migration before running setup; do not treat schema reconciliation as permission to delete records.
+- **Verification**: use `npm run check` for TypeScript. Focused scripts include `npx tsx script/test-track-isolation.ts`, `npx tsx script/test-workbook-content.ts`, and `npx tsx script/test-workbook-discard.ts`. Review scripts before running database-dependent checks.
+- Use simple, everyday language when reporting work.
